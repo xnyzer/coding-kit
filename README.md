@@ -19,8 +19,9 @@ Auf einem eingerichteten Rechner (gh + claude vorhanden):
 ```
 
 Auf einem neuen Rechner: Repo klonen und den idempotenten Installer ausführen — er prüft
-gh/claude, richtet Marketplace + Plugin ein, legt die Personal-Config an und bietet die
-Toolchain-Installation an:
+gh/claude, richtet Marketplace + Plugin ein, legt die Personal-Config an, bietet die
+globale `~/.claude/CLAUDE.md` aus der Kit-Vorlage an und installiert auf Wunsch die
+Toolchain:
 
 ```bash
 git clone https://github.com/xnyzer/coding-kit.git && cd coding-kit && ./install.sh
@@ -104,6 +105,7 @@ plugins/coding-kit/               Das Plugin
   skills/<name>/SKILL.md          Die vier Core-Skills
   hooks/hooks.json + *.sh         Projekterkennender Stop-Hook
 default.json                      Renovate-Shareable-Preset (Root = Preset-Konvention)
+templates/global-CLAUDE.md        Vorlage der globalen ~/.claude/CLAUDE.md (House-Defaults)
 docs/                             Pflege-Doku (Skill-Authoring, Renovate-Preset)
 install.sh                        Neuer-Rechner-Bootstrap (idempotent)
 scripts/validate.py               Kit-Validator (läuft in `just check` + CI)

@@ -15,6 +15,7 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-001 | Kit-Grundgerüst → **Plugin (4 Core-Skills, projekterkennender Stop-Hook), Marketplace „xnyzer", Renovate-Preset, Installer, Doku, Validator + CI.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
 | F-002 | Begleit-Skills → **name-it, choose-license, choose-stack, define-requirements, refine-requirements (Plugin 0.2.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
 | F-003 | /new-project-Orchestrator → **Short-Info → Abfragen → Plan → Instanziierung nach MANIFEST, Trockenlauf-Modus (Plugin 0.3.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
+| F-004 | Globale CLAUDE.md-Vorlage → **templates/global-CLAUDE.md (aktiviert den Installer-Schritt), Legacy-Migration abgeschlossen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
 
 ---
 
@@ -26,16 +27,6 @@ _Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
 ---
 
 ## Feature-Ideen (Backlog)
-
-### F-004 — Globale CLAUDE.md-Vorlage
-
-**Problem:** Die globalen House-Defaults liegen in einer Legacy-Datei, die Claude Code
-nicht lädt; der Installer kann die globale CLAUDE.md noch nicht einrichten.
-
-**Idee:** Schlanke Vorlage `templates/global-CLAUDE.md` im Kit (persönliche Werte aus der
-Personal-Config), Migration der Legacy-Inhalte, Installer-Schritt aktivieren.
-
-**Abhängigkeiten:** F-001.
 
 ### F-005 — Pflege-Skills
 
@@ -58,6 +49,6 @@ next-feature: F-006
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
-F-004 Globale CLAUDE.md-Vorlage
+F-004 Globale CLAUDE.md-Vorlage (DONE)
 F-005 Pflege-Skills
 -->
