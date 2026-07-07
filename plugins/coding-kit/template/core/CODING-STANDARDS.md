@@ -1,0 +1,139 @@
+# {{PROJECT_NAME}} — Coding Standards
+
+Binding rules for every code change. This document is the working instruction — whoever
+writes or reviews code follows these rules. The language-agnostic rules below always
+apply; **stack-specific rules are in the final section** (provided by the stack module).
+
+---
+
+## 1. Mindset
+
+- **No workarounds.** Always fix the root cause. No `// HACK`, no `// TODO: fix later`.
+- **Fix errors immediately.** Don't defer, don't ignore, don't dismiss as "pre-existing".
+  Linter/diagnostic warnings count as errors.
+- **Use established patterns.** Don't invent your own when a proven one exists. For
+  anything security-critical (crypto, auth, session handling), use a vetted library —
+  never hand-roll.
+- **Code must be production-ready when first written.** No "good enough for now".
+- **Dead code is deleted.** No commented-out blocks, no unused imports, no unreachable paths.
+
+---
+
+## 2. Files & structure
+
+- **File names:** use the stack's casing convention (see the stack section); descriptive,
+  consistent.
+- **Tests** live next to or mirror the code they test, following the stack's convention.
+- **File length:** target under 300 lines — at 300, check whether it can be split.
+  Hard limit 500. Exception: clearly delimited modules with section comments.
+- **Section comments** structure large files: short, descriptive, visually set apart
+  (ASCII rules). No rambling block comments.
+
+---
+
+## 3. Functions & methods
+
+- **Target: under 30 lines** — a function does one thing. **Hard limit: 50 lines.**
+  Exception: sequential orchestration functions up to ~80 lines.
+- **Naming:** verb first — `parseConfig`, `renderGallery`. Follow the stack's casing.
+- **Booleans:** `is`/`has`/`can`/`should` — `isExpired`, `hasChanges`.
+- **Exported functions:** explicit return type where the language supports it.
+- **Maximum 3 parameters** — beyond that, an options object/struct.
+
+---
+
+## 4. Naming & imports
+
+- **Descriptive names**, no single letters except trivial loop indices. Names reveal intent.
+- **No magic values** — named constants for timeouts, limits, defaults.
+- **Imports grouped and ordered:** standard library, third-party, local. No unused
+  imports. No wildcard imports where the language allows specificity.
+
+---
+
+## 5. Control flow
+
+- **Early returns / guard clauses** over deep nesting. Handle the error/edge case first,
+  keep the happy path unindented.
+- **No deeply nested conditionals** (target max 2–3 levels).
+- **Exhaustive handling** of enums/variants — no silent fall-through.
+
+---
+
+## 6. Error handling & resilience
+
+- **Typed/custom errors** with clear names. Raise in the core, handle centrally.
+- **No empty catch / error-swallowing.** Never leak internal details (stack traces,
+  internal paths) to users or clients.
+- **Fail loud, fail early:** invalid state stops with a clear message; never continue
+  with silently-wrong results. On security-relevant paths, fail **closed**.
+- **No unhandled rejections/panics** on production paths.
+
+---
+
+## 7. Security & secrets
+
+- **No hand-rolled crypto/auth.** Vetted libraries only.
+- **Never commit secrets** — no tokens, passwords, private keys, private emails, or
+  deployment internals (IPs, hostnames, key names). Operational internals belong in
+  `private/` (gitignored). gitleaks runs pre-commit; treat it as a backstop, not an excuse.
+- **All secrets via config/env**; an example env file contains only placeholders and is
+  always complete.
+- **Config validation at startup** — missing/invalid values fail fast with a clear
+  message, never silent misbehaviour.
+- **No secrets in logs** (mask keys, tokens, credentials).
+- **Pinned versions** instead of `latest` for images, actions, and dependencies.
+  **All dependencies permissive-licensed (no GPL/AGPL)** — deviations only as a conscious,
+  documented decision.
+
+---
+
+## 8. Configuration & observability
+
+- **Everything configurable, nothing hardcoded:** endpoints, limits, ports, paths — via
+  config/env with sane defaults.
+- **Structured logging** where the project runs as a service; log level via env; relevant
+  events measurable without leaking secrets.
+
+---
+
+## 9. Testing
+
+- **Business logic has unit tests**, using the stack's standard test framework.
+- **Negative tests are mandatory** wherever input is untrusted or a boundary is enforced:
+  the invalid, the malformed, and the hostile case must be rejected — with a test proving it.
+- **Never commit with red tests.** Fix pre-existing red tests anyway, or report them
+  explicitly.
+- `just check` (format check + lint + types + tests) must be green before any commit.
+
+---
+
+## 10. Write-then-verify
+
+- **After every edit, verify the result** — re-read the file, run the relevant check, or
+  execute the affected path. Never report something as done without tool evidence.
+- Applies to docs the same as to code: links resolve, referenced files exist, examples run.
+- When a change spans several files, verify the **whole chain** once at the end
+  (`just check` at minimum), not just the last file touched.
+
+---
+
+## 11. Commits, branches & pull requests
+
+- **Conventional Commits**, English, imperative mood; justify trade-offs briefly in the
+  body (`Decision: X over Y because …`).
+- Body ends with `Co-Authored-By: Claude <noreply@anthropic.com>` where applicable.
+- **Commit email = GitHub noreply** — verify before each commit; never a private address.
+- **Never auto-commit** — always wait for the owner's explicit "yes".
+- **Focused commits** — one concern per commit.
+- **Trunk-based:** short-lived feature branches onto `main`; PRs optional for solo work
+  but CI must be green either way; **squash-merge**; delete the branch after merge.
+
+---
+
+## 12. Stack-specific rules
+
+<!-- module:coding-standards -->
+_No stack module instantiated — this project runs docs-only. When a stack module is added
+(`/choose-stack`), its rules are inserted here._
+<!-- /module:coding-standards -->
