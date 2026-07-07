@@ -4,6 +4,19 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.3.0 — 2026-07-07
+
+- `new-project` — der Orchestrator: Short-Info-Erhebung (M1), Abfragen mit Defaults
+  (Name/Lizenz/Sichtbarkeit/Modul/Doku-Sprache/group_id/Anforderungen, Sub-Skills
+  aufrufbar, Aufschieben erlaubt), Plan mit Bestätigung, dann: `gh repo create
+  --template` (kein git init), Instanziierung streng nach MANIFEST (Platzhalter,
+  adapt-/optional-Marker, public-only, Modul-Kontrakt, Aufräumen der Template-Dateien),
+  `template-version`-Stempel, Repo-Settings inkl. Marker-Topic `coding-kit`,
+  Verifikation `mise install && just setup && just check`, Personendaten-grep,
+  Erst-Commit nur nach OK, Graphiti-Seeding. Trockenlauf via Argument `dry-run`;
+  jeder außenwirksame Schritt einzeln bestätigt. Prüft `manifest-format` und bricht
+  bei unbekannter Formatversion ab.
+
 ## 0.2.0 — 2026-07-07
 
 Begleit-Skills (einzeln nutzbar und von `/new-project` aufrufbar):

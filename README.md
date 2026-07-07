@@ -34,6 +34,7 @@ Die Skills erscheinen namespaced als `/coding-kit:<skill>`:
 
 | Skill | Zweck |
 |-------|-------|
+| `/coding-kit:new-project` | **Der Orchestrator:** Short-Info → Abfragen (Name/Lizenz/Stack/…, Sub-Skills aufrufbar) → Plan → Repo aus dem project-template bauen, verifizieren, Erst-Commit nach OK. Trockenlauf: Argument `dry-run`. |
 | `/coding-kit:add-feature` | Neue Aufgabe analysieren und mit F-Nummer ins PROGRESS-Backlog aufnehmen. |
 | `/coding-kit:prep-step` | Aufgabe vor der Umsetzung analysieren, ggf. in Substeps zerlegen, Plan festhalten. |
 | `/coding-kit:step-done` | Abschluss-Checkliste: Review, `just check`, Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Pflege, Commit-Frage. |
@@ -67,7 +68,6 @@ während im Projekt uncommittete Änderungen liegen, erinnert er einmal pro Stop
 
 ### Geplant (Roadmap siehe PROGRESS.md)
 
-- **`/new-project`:** Orchestrator, der aus dem project-template ein fertiges Repo macht.
 - **Pflege-Skills:** `/update-conventions` (Template ↔ Projekte, bidirektional),
   `/check-upstreams` (Watchliste externer Repos).
 
@@ -113,6 +113,9 @@ private/                          Gitignoriert — private Notizen/Quellen
 ## Pflege
 
 - Regeln für neue/geänderte Skills: [docs/skill-authoring.md](docs/skill-authoring.md).
+- Installierte Version aktualisieren: `claude plugin marketplace update xnyzer`, dann
+  `claude plugin update coding-kit@xnyzer` (voll qualifiziert — der kurze Name wird
+  nicht gefunden); Session-Neustart wendet die Änderung an.
 - Jede inhaltliche Plugin-Änderung bumpt die Version in `plugin.json` und bekommt einen
   `CHANGELOG.md`-Eintrag (im selben Commit).
 - `just setup` installiert die Git-Hooks (gitleaks + Validator), `just check` ist das

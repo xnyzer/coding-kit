@@ -14,6 +14,7 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 |------|--------------|--------|
 | F-001 | Kit-Grundgerüst → **Plugin (4 Core-Skills, projekterkennender Stop-Hook), Marketplace „xnyzer", Renovate-Preset, Installer, Doku, Validator + CI.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
 | F-002 | Begleit-Skills → **name-it, choose-license, choose-stack, define-requirements, refine-requirements (Plugin 0.2.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
+| F-003 | /new-project-Orchestrator → **Short-Info → Abfragen → Plan → Instanziierung nach MANIFEST, Trockenlauf-Modus (Plugin 0.3.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
 
 ---
 
@@ -25,18 +26,6 @@ _Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
 ---
 
 ## Feature-Ideen (Backlog)
-
-### F-003 — /new-project-Orchestrator
-
-**Problem:** Neue Projekte entstehen noch durch Ableiten aus Altprojekten.
-
-**Idee:** Orchestrator-Skill: Short-Info erheben (M1), Abfragen mit Defaults
-(Name/Lizenz/Stack/Sichtbarkeit/Doku-Sprache/group_id/Anforderungen), Plan anzeigen,
-nach Bestätigung ausführen: `gh repo create --template`, Platzhalter füllen, Modul
-einsetzen, `template-version` stempeln, Verifikation (`mise install && just setup &&
-just check`), Erst-Commit nur nach OK, Graphiti-Seeding. Trockenlauf-Modus.
-
-**Abhängigkeiten:** F-002 (erledigt).
 
 ### F-004 — Globale CLAUDE.md-Vorlage
 
@@ -68,7 +57,7 @@ Cleanup-Strategie für lokale Skill-Kopien.
 next-feature: F-006
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
-F-003 /new-project-Orchestrator
+F-003 /new-project-Orchestrator (DONE)
 F-004 Globale CLAUDE.md-Vorlage
 F-005 Pflege-Skills
 -->
