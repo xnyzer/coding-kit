@@ -1,0 +1,16 @@
+{
+  "description": "coding-kit stop hook — reminds about uncommitted changes in kit-managed projects (detected via PROGRESS.md FEATURE-INDEX or .claude/template-version). Silent everywhere else.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/stop-reminder.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

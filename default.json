@@ -1,0 +1,9 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "Shareable Renovate preset for xnyzer projects — reference it via extends: ['github>xnyzer/coding-kit'].",
+    "Base: config:recommended, GitHub Actions pinned to digests, PRs labelled 'dependencies'."
+  ],
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "labels": ["dependencies"]
+}

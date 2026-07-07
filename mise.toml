@@ -1,0 +1,9 @@
+# Tools for working on the kit repo itself.
+[tools]
+uv = "0"
+just = "1"
+lefthook = "2"
+gitleaks = "8"
+
+[settings]
+lockfile = true

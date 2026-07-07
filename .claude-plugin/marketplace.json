@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "xnyzer",
+  "description": "Persönlicher Claude-Code-Marketplace von xnyzer. Enthält das coding-kit-Plugin: generische Workflow-Skills, Stop-Hook und Renovate-Preset für alle Projekte.",
+  "owner": {
+    "name": "xnyzer"
+  },
+  "plugins": [
+    {
+      "name": "coding-kit",
+      "description": "Generische Workflow-Skills (add-feature, prep-step, step-done, audit-code) plus projekterkennender Stop-Hook. Stack-agnostisch über just-Rezepte; Projektspezifika kommen aus der Projekt-CLAUDE.md.",
+      "author": {
+        "name": "xnyzer"
+      },
+      "category": "development",
+      "source": "./plugins/coding-kit",
+      "homepage": "https://github.com/xnyzer/coding-kit"
+    }
+  ]
+}

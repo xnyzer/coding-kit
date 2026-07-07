@@ -1,0 +1,9 @@
+{
+  "name": "coding-kit",
+  "version": "0.1.0",
+  "description": "Generische Workflow-Skills (add-feature, prep-step, step-done, audit-code) plus projekterkennender Stop-Hook. Stack-agnostisch über just-Rezepte; Projektspezifika kommen aus der Projekt-CLAUDE.md.",
+  "author": {
+    "name": "xnyzer"
+  },
+  "homepage": "https://github.com/xnyzer/coding-kit"
+}
