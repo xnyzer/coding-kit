@@ -4,6 +4,25 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.4.0 — 2026-07-07
+
+Pflege-Skills:
+
+- `update-conventions` — bidirektionaler Konventions-Sync. Abwärts: Projekte via
+  Marker-Topic + lokale Checkouts finden, deterministischer Abgleich über
+  template-version-Stempel + MANIFEST (Soll-Fassung instanziieren, Diff + Bestätigung
+  je Datei, Override-Schutz vor dem Diffen, seed nie anfassen), Altprojekt-Migrationen
+  als einzeln bestätigte Schritte (heuristischer Abgleich, instructions.md→CLAUDE.md,
+  Core-Skill-Kopien entfernen bei installiertem Plugin, Renovate-Onboarding,
+  Tooling-Nachrüstung, Stempel setzen). Aufwärts („promote"): projektlokale Änderung
+  generalisieren und mit VERSION-Bump + CHANGELOG (+ MANIFEST) in den Kern heben —
+  oder als Override registrieren.
+- `check-upstreams` — Watchliste externer Vorbild-Repos (`upstreams.json` im Kit-Repo):
+  Neuerungen seit dem persistierten Ref zusammenfassen (gh compare/releases),
+  Übernahme-Vorschläge, Ref-Update nach Bestätigung. Startliste: die Muster-Quelle
+  ai-coding-starter-kit (Ref auf Analysestand) und betterleaks als
+  gitleaks-Nachfolge-Kandidat (Erstprüfung offen).
+
 ## 0.3.0 — 2026-07-07
 
 - `new-project` — der Orchestrator: Short-Info-Erhebung (M1), Abfragen mit Defaults

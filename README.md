@@ -45,6 +45,8 @@ Die Skills erscheinen namespaced als `/coding-kit:<skill>`:
 | `/coding-kit:choose-stack` | Modul-Empfehlung für Neuanlage oder Nachrüsten/Wechsel EINES Moduls im Bestand (Diff + Bestätigung). |
 | `/coding-kit:define-requirements` | Interview → REQUIREMENTS.md (Übergangs-Artefakt) → initiale PROGRESS.md mit F-Nummern. |
 | `/coding-kit:refine-requirements` | Zurück zur Spec: Diagnose mit drei Pfaden, darf Features splitten, datiertes Decision Log. |
+| `/coding-kit:update-conventions` | Konventions-Sync Template ⇄ Projekte: abwärts verteilen (Diff + Bestätigung, Override-Schutz, Altprojekt-Migrationen), aufwärts „promoten". |
+| `/coding-kit:check-upstreams` | Watchliste externer Vorbild-Repos prüfen (`upstreams.json`), Neuerungen seit letztem Ref, Übernahme-Vorschläge. |
 
 Der übliche Zyklus: `add-feature` → `prep-step` → implementieren → `step-done`.
 
@@ -66,11 +68,6 @@ während im Projekt uncommittete Änderungen liegen, erinnert er einmal pro Stop
 - Als „uncommitted" zählen geänderte und neue (nicht ignorierte) Dateien; `private/` und
   anderes Gitignoriertes lösen nichts aus.
 - Abschalten: Plugin deaktivieren (`claude plugin disable coding-kit`) oder committen. 😉
-
-### Geplant (Roadmap siehe PROGRESS.md)
-
-- **Pflege-Skills:** `/update-conventions` (Template ↔ Projekte, bidirektional),
-  `/check-upstreams` (Watchliste externer Repos).
 
 ## Renovate-Preset
 
@@ -105,6 +102,7 @@ plugins/coding-kit/               Das Plugin
   skills/<name>/SKILL.md          Die vier Core-Skills
   hooks/hooks.json + *.sh         Projekterkennender Stop-Hook
 default.json                      Renovate-Shareable-Preset (Root = Preset-Konvention)
+upstreams.json                    Watchliste für /check-upstreams (persistierte Refs)
 templates/global-CLAUDE.md        Vorlage der globalen ~/.claude/CLAUDE.md (House-Defaults)
 docs/                             Pflege-Doku (Skill-Authoring, Renovate-Preset)
 install.sh                        Neuer-Rechner-Bootstrap (idempotent)

@@ -1,7 +1,7 @@
 {
   "name": "coding-kit",
-  "version": "0.3.0",
-  "description": "Der /new-project-Orchestrator samt Begleit-Skills (name-it, choose-license, choose-stack, define-requirements, refine-requirements) und generischen Workflow-Skills (add-feature, prep-step, step-done, audit-code) plus projekterkennender Stop-Hook. Stack-agnostisch über just-Rezepte; Projektspezifika kommen aus der Projekt-CLAUDE.md.",
+  "version": "0.4.0",
+  "description": "Der /new-project-Orchestrator samt Begleit-Skills (name-it, choose-license, choose-stack, define-requirements, refine-requirements), generischen Workflow-Skills (add-feature, prep-step, step-done, audit-code) und Pflege-Skills (update-conventions, check-upstreams) plus projekterkennender Stop-Hook. Stack-agnostisch über just-Rezepte; Projektspezifika kommen aus der Projekt-CLAUDE.md.",
   "author": {
     "name": "xnyzer"
   },

@@ -1,0 +1,21 @@
+{
+  "$comment": "Watchliste für /coding-kit:check-upstreams — je Repo der zuletzt geprüfte Ref. Der Skill aktualisiert last_checked_ref/last_checked_at nach jedem Lauf (Commit nach Bestätigung).",
+  "upstreams": [
+    {
+      "name": "ai-coding-starter-kit",
+      "repo": "AlexPEClub/ai-coding-starter-kit",
+      "why": "Muster-Quelle des Kits (Interview-, Refine-, Write-then-Verify-, Context-Recovery-, Spec- und Settings-Muster) — beobachten, ob neue übernehmenswerte Muster entstehen.",
+      "last_checked_ref": "21a97bb597aab7f0376fe82eb7db9e7e17d455c3",
+      "last_checked_at": "2026-07-07",
+      "notes": "Analyse abgeschlossen (2026-07-07): eigenes Kit statt Fork; sechs Muster in eigenen Worten übernommen. Kein neuer Push seit der Analyse."
+    },
+    {
+      "name": "betterleaks",
+      "repo": "betterleaks/betterleaks",
+      "why": "Nachfolger von gitleaks vom selben Autor; gitleaks ist feature-complete und erhält nur noch Security-Patches. Kandidat für den Wechsel des Secrets-Scanners in lefthook.yml (Kit, Template, Projekte), sobald reif.",
+      "last_checked_ref": null,
+      "last_checked_at": null,
+      "notes": "Erstprüfung offen: Reifegrad, brew-Formel, pre-commit-Aufrufform, Migrationsaufwand gitleaks → betterleaks (Drop-in laut Ankündigung)."
+    }
+  ]
+}
