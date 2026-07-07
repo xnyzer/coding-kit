@@ -1,9 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": [
-    "Renovate for the template repo itself.",
-    "TODO(D3): switch extends to the coding-kit shareable preset (github>xnyzer/coding-kit)."
+    "Renovate for the template repo itself — extends the coding-kit shareable preset."
   ],
-  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
-  "labels": ["dependencies"]
+  "extends": ["github>xnyzer/coding-kit"]
 }
