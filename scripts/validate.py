@@ -35,7 +35,21 @@ KNOWN_HOOK_EVENTS = {
 
 # The kit ships no placeholder tokens — any double-braced UPPERCASE token is a
 # mistake. GitHub Actions' github.* expressions are lowercase and never match.
+# Exception: SKILL.md files may NAME the template's registered placeholders,
+# because the skills document the /new-project contract with project-template.
 PLACEHOLDER_RE = re.compile(r"\{\{\s*([A-Z][A-Z0-9_]*)\s*\}\}")
+TEMPLATE_REGISTRY_PLACEHOLDERS = {
+    "PROJECT_NAME",
+    "PROJECT_NAME_SNAKE",
+    "PROJECT_DESCRIPTION",
+    "OWNER",
+    "YEAR",
+    "GROUP_ID",
+    "CODEQL_LANGUAGES",
+    "LIVING_DOC_LANGUAGE",
+    "LICENSE_SPDX",
+    "TEMPLATE_VERSION",
+}
 
 ABS_PATH_RE = re.compile(r"/(?:Users|home)/[A-Za-z0-9_.-]+")
 IPV4_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
@@ -88,6 +102,8 @@ def check_syntax(path: Path, text: str, findings: list[str]) -> None:
 def check_privacy(path: Path, text: str, findings: list[str]) -> None:
     rel = path.relative_to(REPO_ROOT)
     for match in PLACEHOLDER_RE.finditer(text):
+        if path.name == "SKILL.md" and match.group(1) in TEMPLATE_REGISTRY_PLACEHOLDERS:
+            continue
         findings.append(f"{rel}: stray placeholder {match.group(0)!r} — the kit ships none")
     for match in ABS_PATH_RE.finditer(text):
         findings.append(f"{rel}: absolute local path leaked — {match.group(0)!r}")

@@ -38,6 +38,11 @@ Die Skills erscheinen namespaced als `/coding-kit:<skill>`:
 | `/coding-kit:prep-step` | Aufgabe vor der Umsetzung analysieren, ggf. in Substeps zerlegen, Plan festhalten. |
 | `/coding-kit:step-done` | Abschluss-Checkliste: Review, `just check`, Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Pflege, Commit-Frage. |
 | `/coding-kit:audit-code` | Vollaudit (Code, Security, Deps, Deployment) → `AUDIT-RESULTS.md`, fixt nichts. |
+| `/coding-kit:name-it` | Namenskandidaten nach Kriterien + Verfügbarkeits-Checks (GitHub/npm/PyPI, Domain optional). |
+| `/coding-kit:choose-license` | Kurzinterview → Lizenz-Empfehlung (Default Apache-2.0, „TBD" gültig). |
+| `/coding-kit:choose-stack` | Modul-Empfehlung für Neuanlage oder Nachrüsten/Wechsel EINES Moduls im Bestand (Diff + Bestätigung). |
+| `/coding-kit:define-requirements` | Interview → REQUIREMENTS.md (Übergangs-Artefakt) → initiale PROGRESS.md mit F-Nummern. |
+| `/coding-kit:refine-requirements` | Zurück zur Spec: Diagnose mit drei Pfaden, darf Features splitten, datiertes Decision Log. |
 
 Der übliche Zyklus: `add-feature` → `prep-step` → implementieren → `step-done`.
 
@@ -62,8 +67,6 @@ während im Projekt uncommittete Änderungen liegen, erinnert er einmal pro Stop
 
 ### Geplant (Roadmap siehe PROGRESS.md)
 
-- **Begleit-Skills:** `/name-it`, `/choose-license`, `/choose-stack`,
-  `/define-requirements`, `/refine-requirements`.
 - **`/new-project`:** Orchestrator, der aus dem project-template ein fertiges Repo macht.
 - **Pflege-Skills:** `/update-conventions` (Template ↔ Projekte, bidirektional),
   `/check-upstreams` (Watchliste externer Repos).
@@ -90,6 +93,7 @@ Installer an. Enthält, was nicht zur Laufzeit ermittelbar ist, plus Offline-Fal
 | `CODING_KIT_GIT_AUTHOR_NAME` | Git-Autorname |
 | `CODING_KIT_GIT_NOREPLY_EMAIL` | GitHub-Noreply-Adresse für Commits |
 | `CODING_KIT_PROJECTS_DIR` | Wurzelverzeichnis der Projekte |
+| `CODING_KIT_TEMPLATE_REPO` | _(optional)_ Override für das Template-Repo; Default: `<github-login>/project-template` |
 
 ## Repo-Struktur
 

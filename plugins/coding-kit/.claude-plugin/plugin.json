@@ -1,7 +1,7 @@
 {
   "name": "coding-kit",
-  "version": "0.1.0",
-  "description": "Generische Workflow-Skills (add-feature, prep-step, step-done, audit-code) plus projekterkennender Stop-Hook. Stack-agnostisch über just-Rezepte; Projektspezifika kommen aus der Projekt-CLAUDE.md.",
+  "version": "0.2.0",
+  "description": "Generische Workflow-Skills (add-feature, prep-step, step-done, audit-code), Begleit-Skills für die Projektanlage (name-it, choose-license, choose-stack, define-requirements, refine-requirements) plus projekterkennender Stop-Hook. Stack-agnostisch über just-Rezepte; Projektspezifika kommen aus der Projekt-CLAUDE.md.",
   "author": {
     "name": "xnyzer"
   },
