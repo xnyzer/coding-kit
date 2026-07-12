@@ -4,6 +4,88 @@ Abgeschlossene Aufgaben mit Detail und Begründung. Neueste oben.
 
 ---
 
+## F-008 — Workflow-Skill build-step + autonome Läufe (2026-07-13)
+
+**Was entstanden ist (Plugin 0.5.0):**
+
+- **build-step** — schließt die Lücke der Implementierungsphase (bisher formloses
+  „setze F-xxx um"): prep-step-Plan laden, Substeps mit Verifikation je Schritt
+  abarbeiten (Write-then-Verify, just-Checks, Abnahmekriterien einzeln gegen
+  Tool-Ausgaben abhaken), je Substep Übergabe an step-done. Leitplanken: Plan-Treue,
+  Scope-Schutz (Entdeckungen → add-feature statt still mitbauen), nie pushen, keine
+  History-Rewrites, PROGRESS-Pflege nur via step-done.
+- **Modus `autonom`:** baut nicht, sondern richtet einen `/goal`-Lauf ein (verifiziert
+  gegen die Claude-Code-Doku: /goal hält die Session Turn für Turn am Arbeiten, bis
+  ein Prüfmodell die Bedingung als erfüllt bewertet; Skills können /goal nicht selbst
+  absetzen). Ablauf: Kontext + Plan laden → Voraussetzungen nennen (Trust-Dialog,
+  Hooks, Auto-Modus für unbeaufsichtigte Läufe) → einmalige laufbezogene
+  Commit-Freigabe einholen → fertige Goal-Zeile ausgeben (Varianten mit/ohne
+  Freigabe, Turn-Limit als Stopp-Klausel, ~5 Turns je Substep) → enden; der Lauf
+  startet mit dem Absenden der Goal-Zeile durch den Nutzer.
+- **Commit-Granularität entschieden:** step-done + Commit je Substep (prep-step
+  zerlegt in einzeln lauffähige Substeps = natürliche Commit-Grenzen; Commits sind
+  im autonomen Lauf die Checkpoints gegen Entgleisung).
+- **step-done erweitert:** Ausnahme-Regel zur Commit-Frage — bei dokumentierter
+  laufbezogener Freigabe committen ohne Nachfrage (nach grünen Checks/Scans, nie
+  Push); ohne Freigabe im autonomen Lauf Commit-Vorschlag festhalten und
+  weiterarbeiten statt auf Antwort blockieren (schließt die Grauzone, in der ein
+  Goal-Lauf sonst raten würde).
+- **Vorlagen-Sync:** Halbsatz in `templates/global-CLAUDE.md` und (per
+  Übernahme-Regel der Vorlage) in der live `~/.claude/CLAUDE.md`: laufbezogene
+  Freigabe zählt als Fragen, Push bleibt tabu.
+- README: build-step-Zeile, Zyklus-Satz mit drei Implementierungswegen
+  (build-step / teach-step / frei + step-done), neue Anleitung „Autonomer Lauf
+  (build-step + /goal)".
+
+## F-007 — Workflow-Skill teach-step (2026-07-13)
+
+**Was entstanden ist (Plugin 0.5.0):**
+
+- **teach-step** — Lehrer-Modus für die Implementierungsphase: der Nutzer setzt eine
+  Aufgabe (F-Nummer) selbst um, der Skill leitet sokratisch an, gibt gestufte Hilfe
+  (Leitfrage → Tipp → Hinweis mit Datei:Zeile → Pseudocode → Musterlösung nur auf
+  ausdrückliche Anfrage, erklärt statt zum Kopieren), kontrolliert per `git diff` +
+  Re-Lesen und lässt Tests über die just-Rezepte laufen.
+- **Schreibverbot zweistufig:** hart via `disallowed-tools: Write, Edit, NotebookEdit`
+  im Frontmatter; für Bash per Anweisung (nur lesend/prüfend — keine Redirects, kein
+  `sed -i`/`rm`/`mv`, kein `git add`/`commit`). Bitten um Selbst-Implementierung lehnt
+  der Skill ab und bietet stattdessen das Beenden des Lehrer-Modus an.
+- **Lern-Interview (M1), gemeinsam mit dem Nutzer designt:** (1) Vertrautheit mit
+  drei verhaltensverankerten Stufen (Neuland/Grundlagen/Routiniert — jede Option
+  nennt, was sie bewirkt), (2) Lernziel mit vier Optionen (Default „Struktur &
+  Verdrahtung" — welche Datei wohin, wie Teile verbunden werden; dazu Sprache &
+  Syntax, Konzept & Design, Diese Codebase). Der Führungsgrad wird nicht abgefragt,
+  sondern abgeleitet (Trittsteine/Wegweiser/Kompass, per Zuruf änderbar);
+  Nachkalibrierungs-Regel: Antworten sind Startpunkt, kein Vertrag.
+- **Graphiti-Lernprofil (optional):** Level/Themen des Nutzers in der persönlichen
+  group_id (Konvention `main`) nachschlagen und fortschreiben — bekannte Antworten
+  überspringen das Interview.
+- Abgrenzung: PROGRESS-Pflege, Scans und Commit bleiben bei `step-done`; teach-step
+  schreibt keine Doku und committet nie.
+- Entscheidungen: Platzierung im coding-kit statt eigenem Trainer-Plugin (an
+  prep-step/step-done-Workflow gekoppelt; Extraktion später billig). Bash bewusst
+  erlaubt, damit der Lehrer Tests laufen lassen kann — Nutzer entschied sich gegen
+  das strengere Bash-Verbot.
+
+## F-006 — Utility-Skill refine-prompt (2026-07-13)
+
+**Was entstanden ist (Plugin 0.5.0):**
+
+- **refine-prompt** — übergebenen Prompt analysieren (Ziel, Zielgruppe, Ausgabeformat,
+  impliziter Kontext), Schwachstellen benennen (Unklarheiten, fehlende Rollen-/
+  Kontextangaben, fehlende Erfolgskriterien), nach Prompt-Engineering-Best-Practices
+  neu formulieren und den verbesserten Prompt anschließend ausführen. Ausgabe:
+  Schwachstellen → verbesserter Prompt (kopierbar) → Ergebnis.
+- Nur manuell aufrufbar (`disable-model-invocation: true`); bei leerem `$ARGUMENTS`
+  wird nach dem Prompt gefragt (M1). Kein Projektkontext-/M4-Baustein nötig — der
+  Skill fasst nichts im Projekt an.
+- Erster Skill der neuen Kategorie **Utility-Skills** (Plugin-Description entsprechend
+  erweitert); Skill-Text vom Nutzer ausformuliert, bei der Aufnahme gegen
+  `docs/skill-authoring.md` geprüft (Korrekturen: Namespacing `/coding-kit:refine-prompt`,
+  M1-Fallback ergänzt).
+
+---
+
 ## F-005 — Pflege-Skills (2026-07-07)
 
 **Was entstanden ist (Plugin 0.4.0):**

@@ -4,6 +4,42 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.5.0 — 2026-07-13
+
+Neue Skills:
+
+- `build-step` (Workflow) — die bisher fehlende Implementierungsphase als Skill:
+  prep-step-Plan laden, Substeps mit Verifikation je Schritt abarbeiten
+  (Write-then-Verify, just-Checks, Abnahmekriterien gegen Tool-Ausgaben abhaken),
+  je Substep an step-done übergeben; Scope-Schutz (Entdeckungen → add-feature statt
+  still mitbauen), nie pushen. Mit Argument `autonom` baut er nicht, sondern
+  bereitet einen `/goal`-Lauf vor: Regeln laden, einmalige laufbezogene
+  Commit-Freigabe einholen, fertige Goal-Zeile ausgeben (Varianten mit/ohne
+  Commit-Freigabe, Turn-Limit als Stopp-Klausel).
+
+- `teach-step` (Workflow) — Feature geführt selbst umsetzen: der Skill agiert als
+  Coding-Lehrer, der Nutzer schreibt allen Code selbst. Sokratischer Lehr-Loop je
+  Häppchen (orientieren → Arbeitsauftrag → kontrollieren via git diff/Re-Lesen →
+  Tests über just → Verständnisfrage), gestufte Hilfe (Leitfrage → Tipp → Hinweis →
+  Pseudocode → Musterlösung nur auf Anfrage), Lern-Interview mit Defaults, optionales
+  Graphiti-Lernprofil (persönliche group_id). Schreibverbot hart via
+  `disallowed-tools: Write, Edit, NotebookEdit`; Bash nur lesend/prüfend erlaubt.
+  Abschluss (PROGRESS, Scans, Commit) bleibt bei `step-done`.
+- `refine-prompt` (Utility) — übergebenen Prompt analysieren (Ziel, Zielgruppe,
+  Format, Kontext), Schwachstellen benennen, nach Prompt-Engineering-Best-Practices
+  neu formulieren und den verbesserten Prompt anschließend ausführen. Nur manuell
+  aufrufbar (`disable-model-invocation`).
+
+Geänderte Skills & Vorlagen:
+
+- `step-done` — Ausnahme-Regel zur Commit-Frage: Bei ausdrücklicher, laufbezogener
+  Commit-Freigabe des Nutzers (autonomer build-step-Lauf) wird nach grünen Checks
+  und Scans ohne erneute Nachfrage committet — nie gepusht, keine History-Rewrites.
+  Ohne Freigabe im autonomen Lauf: Commit-Vorschlag festhalten und weiterarbeiten
+  statt blockieren.
+- `templates/global-CLAUDE.md` — Halbsatz zur Commit-Regel: eine ausdrückliche,
+  laufbezogene Freigabe zählt als Fragen; Push bleibt auch dann tabu.
+
 ## 0.4.0 — 2026-07-07
 
 Pflege-Skills:

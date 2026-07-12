@@ -92,6 +92,12 @@ In der Sprache der lebenden Doku (siehe Schritt 0):
 
 - **Nie automatisch committen!** Den Nutzer fragen und eine aussagekräftige
   Conventional-Commits-Message auf Englisch vorschlagen.
+- **Ausnahme — autonomer Lauf:** Hat der Nutzer für den laufenden Lauf ausdrücklich
+  Commits freigegeben (z. B. beim Start von `/coding-kit:build-step … autonom`; die
+  Freigabe muss im Verlauf dokumentiert sein), committe nach grünen Checks und Scans
+  ohne erneute Nachfrage — **nie pushen, nie ältere Historie ändern.** Läuft ein
+  autonomer Lauf **ohne** solche Freigabe: Commit-Message als Vorschlag festhalten
+  und weiterarbeiten, nicht auf eine Antwort warten.
 - Im Body Designentscheidungen kurz begründen (`Decision: X over Y because …`); hat der
   Nutzer abgewogen: „User chose X over Y because …".
 

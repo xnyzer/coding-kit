@@ -38,8 +38,10 @@ Die Skills erscheinen namespaced als `/coding-kit:<skill>`:
 | `/coding-kit:new-project` | **Der Orchestrator:** Short-Info → Abfragen (Name/Lizenz/Stack/…, Sub-Skills aufrufbar) → Plan → Repo aus dem project-template bauen, verifizieren, Erst-Commit nach OK. Trockenlauf: Argument `dry-run`. |
 | `/coding-kit:add-feature` | Neue Aufgabe analysieren und mit F-Nummer ins PROGRESS-Backlog aufnehmen. |
 | `/coding-kit:prep-step` | Aufgabe vor der Umsetzung analysieren, ggf. in Substeps zerlegen, Plan festhalten. |
+| `/coding-kit:build-step` | Aufgabe plan-treu umsetzen: Substep für Substep mit Verifikation, je Substep step-done. Mit `autonom` bereitet er stattdessen einen `/goal`-Lauf vor. |
 | `/coding-kit:step-done` | Abschluss-Checkliste: Review, `just check`, Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Pflege, Commit-Frage. |
 | `/coding-kit:audit-code` | Vollaudit (Code, Security, Deps, Deployment) → `AUDIT-RESULTS.md`, fixt nichts. |
+| `/coding-kit:teach-step` | Lehrer-Modus: Aufgabe selbst umsetzen, der Skill leitet sokratisch an, prüft und testet — schreibt nie Code. |
 | `/coding-kit:name-it` | Namenskandidaten nach Kriterien + Verfügbarkeits-Checks (GitHub/npm/PyPI, Domain optional). |
 | `/coding-kit:choose-license` | Kurzinterview → Lizenz-Empfehlung (Default Apache-2.0, „TBD" gültig). |
 | `/coding-kit:choose-stack` | Modul-Empfehlung für Neuanlage oder Nachrüsten/Wechsel EINES Moduls im Bestand (Diff + Bestätigung). |
@@ -47,8 +49,29 @@ Die Skills erscheinen namespaced als `/coding-kit:<skill>`:
 | `/coding-kit:refine-requirements` | Zurück zur Spec: Diagnose mit drei Pfaden, darf Features splitten, datiertes Decision Log. |
 | `/coding-kit:update-conventions` | Konventions-Sync Template ⇄ Projekte: abwärts verteilen (Diff + Bestätigung, Override-Schutz, Altprojekt-Migrationen), aufwärts „promoten". |
 | `/coding-kit:check-upstreams` | Watchliste externer Vorbild-Repos prüfen (`upstreams.json`), Neuerungen seit letztem Ref, Übernahme-Vorschläge. |
+| `/coding-kit:refine-prompt` | Übergebenen Prompt analysieren, Schwachstellen benennen, nach Best Practices neu formulieren und ausführen. |
 
-Der übliche Zyklus: `add-feature` → `prep-step` → implementieren → `step-done`.
+Der übliche Zyklus: `add-feature` → `prep-step` → `build-step` → `step-done` (je
+Substep). Für die Implementierungsphase gibt es drei Wege: `build-step` baut
+diszipliniert, `teach-step` leitet dich durch die eigene Umsetzung, oder du
+implementierst frei und schließt mit `step-done` ab.
+
+### Autonomer Lauf (build-step + /goal)
+
+Ganze Features samt Substeps unbeaufsichtigt bauen lassen — über den eingebauten
+Claude-Code-Befehl `/goal`, der die Session Turn für Turn weiterarbeiten lässt, bis
+eine Abschlussbedingung erfüllt ist:
+
+1. `/coding-kit:prep-step F-NNN` — Plan mit Substeps steht in der PROGRESS.md.
+2. `/coding-kit:build-step F-NNN autonom` — lädt Plan und Disziplin-Regeln, fragt
+   einmalig die Commit-Freigabe für den Lauf ab (je Substep ein Commit als
+   Checkpoint; Push bleibt immer tabu) und gibt die fertige `/goal`-Zeile aus.
+3. Die ausgegebene `/goal`-Zeile absenden — der Lauf startet sofort. `/goal` ohne
+   Argument zeigt den Status, `/goal clear` bricht ab.
+
+Für unbeaufsichtigte Läufe zusätzlich den Auto-Modus aktivieren (sonst stoppt der
+Lauf am ersten Permission-Prompt). Der Stop-Hook des Kits meldet sich während des
+Laufs weiter — die Arbeits-Turns schieben die Erinnerung planmäßig auf.
 
 Alle Skills sind **stack-agnostisch**: Sie rufen nur die just-Standardrezepte
 (`just check` / `test` / `lint`) auf und lesen Projektspezifika (Graphiti-group_id,

@@ -17,6 +17,9 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-003 | /new-project-Orchestrator → **Short-Info → Abfragen → Plan → Instanziierung nach MANIFEST, Trockenlauf-Modus (Plugin 0.3.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
 | F-004 | Globale CLAUDE.md-Vorlage → **templates/global-CLAUDE.md (aktiviert den Installer-Schritt), Legacy-Migration abgeschlossen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
 | F-005 | Pflege-Skills → **update-conventions (bidirektional, Override-Schutz, Migrationen) + check-upstreams mit upstreams.json (Plugin 0.4.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
+| F-006 | Utility-Skill refine-prompt → **Prompt analysieren, Schwachstellen benennen, neu formulieren, ausführen (Plugin 0.5.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-13 |
+| F-007 | Workflow-Skill teach-step → **Lehrer-Modus: sokratisch angeleitete Eigenumsetzung, hartes Schreibverbot, Lern-Interview + Graphiti-Lernprofil (Plugin 0.5.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-13 |
+| F-008 | Workflow-Skill build-step + autonome Läufe → **Implementierungsphase als Skill (plan-treu, Verifikation je Substep, step-done je Substep); Modus `autonom` bereitet /goal-Läufe vor; laufbezogene Commit-Freigabe in step-done + globaler Vorlage (Plugin 0.5.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-13 |
 
 ---
 
@@ -35,10 +38,13 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-006
+next-feature: F-009
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
 F-004 Globale CLAUDE.md-Vorlage (DONE)
 F-005 Pflege-Skills (DONE)
+F-006 Utility-Skill refine-prompt (DONE)
+F-007 Workflow-Skill teach-step (DONE)
+F-008 Workflow-Skill build-step + autonome Läufe (DONE)
 -->
