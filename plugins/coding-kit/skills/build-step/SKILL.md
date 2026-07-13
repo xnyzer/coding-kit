@@ -46,8 +46,10 @@ dokumentiert ist — im Zweifel neu fragen.
 - Aufgabe aus der `PROGRESS.md` lesen: Beschreibung, Substeps, Dateien,
   Abhängigkeiten, Abnahmekriterien; `CODING-STANDARDS.md` lesen (falls vorhanden).
 - Unerledigte Abhängigkeiten → stoppen und melden, nicht drumherum bauen.
-- Kein Plan bzw. keine Substeps: kleine Aufgaben (siehe Größenmaßstab in prep-step)
-  direkt umsetzen; bei Mittel/Groß zuerst `/coding-kit:prep-step` empfehlen.
+- **Status-Marker prüfen:** `BACKLOG` heißt nur aufgenommen, nicht geplant → zuerst
+  `/coding-kit:prep-step` empfehlen, nicht ungeplant losbauen; `PLANNED` → bauen.
+  Alt-Eintrag ohne Status-Zeile: kleine Aufgaben (siehe Größenmaßstab in prep-step)
+  direkt umsetzen, bei Mittel/Groß zuerst prep-step empfehlen.
 
 ## 2. Umsetzung — je Substep
 

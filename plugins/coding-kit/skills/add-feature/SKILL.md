@@ -1,6 +1,6 @@
 ---
 name: add-feature
-description: Neue Aufgabe auf die Roadmap setzen. Analysiert die Idee, prüft Überschneidungen mit der PROGRESS.md, formuliert sie aus und trägt sie nach Freigabe ein.
+description: Neue Aufgabe auf die Roadmap setzen. Analysiert die Idee, prüft Überschneidungen mit der PROGRESS.md, formuliert sie aus und trägt sie nach Freigabe mit Status-Marker BACKLOG ein.
 disable-model-invocation: false
 ---
 
@@ -59,24 +59,37 @@ neue Einträge schreibst du ausschließlich als **F-NNN** (dreistellig; Substeps
 Buchstaben: F-006a). Fehlt der FEATURE-INDEX-Block, lege ihn an und übernimm bestehende
 Nummern unverändert — nichts umnummerieren.
 
-**Basisformat (immer, in der Sprache der lebenden Doku):**
+**Status-Marker:** Jeder Eintrag trägt direkt unter der Überschrift eine
+`**Status:**`-Zeile mit einem sprachinvarianten Token: `BACKLOG` = nur aufgenommen
+(nächste Station `/coding-kit:prep-step`), `PLANNED` = geplant (bereit für
+`/coding-kit:build-step`). Fertiges wandert in die Done-Tabelle und wird im
+FEATURE-INDEX als `(DONE)` markiert. Neue Einträge bekommen immer `BACKLOG`.
+
+**Basisformat (immer, in der Sprache der lebenden Doku; Status-Token sprachinvariant):**
 
 ```markdown
 ### F-NNN — [Name]
+
+**Status:** BACKLOG
 
 **Problem:** [1–2 Sätze — was fehlt, warum es zählt]
 
 **Idee:** [2–3 Sätze Lösungsansatz]
 
-**Mögliche Umsetzung:**
-- [Technische Details, Architektur-Skizze]
+**Lösungsskizze:**
+- [Grobe Richtung: Ansatz, betroffene Bereiche — wenige Bullets, unverbindlich]
 - [Neue Endpunkte, Config, Dependencies — Dependencies nur permissiv lizenziert, kein GPL/AGPL]
 
 **Abhängigkeiten:** [Einträge, die vorher fertig sein müssen]
 ```
 
-Optionale Zusatzabschnitte für komplexe Aufgaben: Technischer Ansatz, Ablauf (nummeriert),
-Konfiguration, Noch zu analysieren. Stil und Detailtiefe an bestehende Einträge anpassen.
+**Die Lösungsskizze ist unverbindlich** — eine grobe Richtung vom Zeitpunkt der
+Erfassung, keine Vorwegnahme der Planung: keine Dateilisten, keine Zerlegung in
+Schritte, keine Abnahmekriterien. Das macht `/coding-kit:prep-step` zur Umsetzungszeit
+gegen den dann aktuellen Codestand. Optionaler Zusatzabschnitt für komplexe Aufgaben:
+„Noch zu analysieren" (offene Fragen/Entscheidungen). Stil an bestehende Einträge
+anpassen; Alt-Einträge nutzen ggf. die Überschrift „Mögliche Umsetzung" — nicht
+umbenennen.
 
 ## 5. Festhalten
 

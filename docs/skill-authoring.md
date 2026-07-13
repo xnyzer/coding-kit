@@ -62,6 +62,12 @@ formulieren, Trigger-Situationen nennen.
 - **F-Nummern-Toleranz:** Alt-Formate (F-9, F9, „1.2") lesen, Neues ausschließlich als
   F-NNN (dreistellig, Substeps F-006a) schreiben; `next-feature:` aus dem
   FEATURE-INDEX-Block.
+- **Status-Marker-Konvention:** PROGRESS-Einträge tragen unter der Überschrift eine
+  `**Status:**`-Zeile mit sprachinvariantem Token — `BACKLOG` (aufgenommen, setzt
+  add-feature) → `PLANNED` (geplant, setzt prep-step; zusätzlich `(PLANNED)` im
+  FEATURE-INDEX) → fertig = Done-Tabelle + `(DONE)` im Index (setzt step-done).
+  Alt-Einträge ohne Status-Zeile tolerant lesen (Substeps vorhanden ≈ geplant) und
+  die Zeile bei der nächsten Berührung nachziehen.
 - **Nie automatisch committen** — Commits werden vorbereitet und vorgeschlagen, der
   Nutzer entscheidet.
 

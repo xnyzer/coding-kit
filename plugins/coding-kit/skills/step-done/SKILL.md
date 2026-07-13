@@ -77,7 +77,9 @@ In der Sprache der lebenden Doku (siehe Schritt 0):
 - **PROGRESS.md:** Detailabschnitt **entfernen** und eine Zeile in die Done-Tabelle:
   `| F-004a | Kurzbeschreibung | JJJJ-MM-TT |`
 - Bei komplett fertiger F-Nummer: Eintrag im `<!-- FEATURE-INDEX … -->` als `(DONE)`
-  markieren. **Direkt tun, ohne zu fragen.**
+  markieren — ein `(PLANNED)`-Suffix wird ersetzt. **Direkt tun, ohne zu fragen.**
+- Eine `**Status:**`-Zeile (BACKLOG/PLANNED) wandert nicht mit ins Archiv — beim
+  Übernehmen entfernen; den Zustand „fertig" tragen Done-Tabelle und `(DONE)`-Marker.
 - **F-Nummern-Toleranz:** Alt-Formate lesen, aber alles Neue als F-NNN schreiben; fehlt
   der FEATURE-INDEX-Block, anlegen und bestehende Nummern unverändert übernehmen.
 

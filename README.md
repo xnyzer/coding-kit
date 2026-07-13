@@ -36,8 +36,8 @@ Die Skills erscheinen namespaced als `/coding-kit:<skill>`:
 | Skill | Zweck |
 |-------|-------|
 | `/coding-kit:new-project` | **Der Orchestrator:** Short-Info → Abfragen (Name/Lizenz/Stack/…, Sub-Skills aufrufbar) → Plan → Repo aus dem project-template bauen, verifizieren, Erst-Commit nach OK. Trockenlauf: Argument `dry-run`. |
-| `/coding-kit:add-feature` | Neue Aufgabe analysieren und mit F-Nummer ins PROGRESS-Backlog aufnehmen. |
-| `/coding-kit:prep-step` | Aufgabe vor der Umsetzung analysieren, ggf. in Substeps zerlegen, Plan festhalten. |
+| `/coding-kit:add-feature` | Neue Aufgabe analysieren und mit F-Nummer ins PROGRESS-Backlog aufnehmen (Status `BACKLOG`); Umsetzungsideen nur als grobe Lösungsskizze. |
+| `/coding-kit:prep-step` | Aufgabe vor der Umsetzung analysieren: Lösungsskizze gegen den aktuellen Codestand hinterfragen, ggf. in Substeps zerlegen, Plan festhalten (Status `PLANNED`). |
 | `/coding-kit:build-step` | Aufgabe plan-treu umsetzen: Substep für Substep mit Verifikation, je Substep step-done. Mit `autonom` bereitet er stattdessen einen `/goal`-Lauf vor. |
 | `/coding-kit:step-done` | Abschluss-Checkliste: Review, `just check`, Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Pflege, Commit-Frage. |
 | `/coding-kit:audit-code` | Vollaudit (Code, Security, Deps, Deployment) → `AUDIT-RESULTS.md`, fixt nichts. |
@@ -52,9 +52,11 @@ Die Skills erscheinen namespaced als `/coding-kit:<skill>`:
 | `/coding-kit:refine-prompt` | Übergebenen Prompt analysieren, Schwachstellen benennen, nach Best Practices neu formulieren und ausführen. |
 
 Der übliche Zyklus: `add-feature` → `prep-step` → `build-step` → `step-done` (je
-Substep). Für die Implementierungsphase gibt es drei Wege: `build-step` baut
-diszipliniert, `teach-step` leitet dich durch die eigene Umsetzung, oder du
-implementierst frei und schließt mit `step-done` ab.
+Substep). Die `**Status:**`-Zeile im PROGRESS-Eintrag zeigt die Station: `BACKLOG` =
+nur aufgenommen (→ prep-step), `PLANNED` = geplant (→ build-step), fertig =
+Done-Tabelle + `(DONE)` im FEATURE-INDEX. Für die Implementierungsphase gibt es drei
+Wege: `build-step` baut diszipliniert, `teach-step` leitet dich durch die eigene
+Umsetzung, oder du implementierst frei und schließt mit `step-done` ab.
 
 ### Autonomer Lauf (build-step + /goal)
 

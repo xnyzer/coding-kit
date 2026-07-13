@@ -1,6 +1,6 @@
 ---
 name: prep-step
-description: Aufgabe vor der Umsetzung vorbereiten. Analysiert den Umfang, zerlegt bei Bedarf in Substeps und schreibt den Plan nach Freigabe in die PROGRESS.md.
+description: Aufgabe vor der Umsetzung vorbereiten. Hinterfragt die Lösungsskizze gegen den aktuellen Codestand, analysiert den Umfang, zerlegt bei Bedarf in Substeps und schreibt Plan + Status-Marker PLANNED nach Freigabe in die PROGRESS.md.
 disable-model-invocation: true
 ---
 
@@ -33,8 +33,14 @@ nicht wiederholen, nichts raten.
 - Abhängigkeiten prüfen: sind sie erledigt (Done-Tabelle oben + FEATURE-INDEX unten)?
 - Falls vorhanden: `REQUIREMENTS.md` und `THREAT-MODEL.md` für den vollen Kontext lesen.
 
-## 2. Umfang analysieren
+## 2. Lösungsskizze hinterfragen & Umfang analysieren
 
+- **Die Lösungsskizze im Eintrag ist ein Schnappschuss von der Erfassung — nicht der
+  Plan** (Alt-Einträge: „Mögliche Umsetzung"). Sie war ggf. schnell notiert und kann
+  veraltet sein: jede Annahme gegen den aktuellen Codestand verifizieren (gibt es die
+  genannten Stellen/Mechanismen noch?), nichts ungeprüft übernehmen.
+- **Eigene Ideen einbringen:** Siehst du heute einen besseren Ansatz, schlage ihn vor —
+  mit Begründung, was gegenüber der Skizze anders ist und warum.
 - Welche Dateien/Komponenten müssen entstehen oder geändert werden?
 - Gibt es bestehenden Code/Config zum Wiederverwenden?
 - Welche neue Config (Env-Vars), Endpunkte, Dependencies werden nötig? Neue Dependencies
@@ -61,6 +67,9 @@ Substeps erben die Nummer der Elternaufgabe mit Buchstaben (F-004 → F-004a, F-
 **Einschätzung:** Klein / Mittel / Groß
 **Geschätzter Umfang:** ~N Zeilen, N Dateien
 
+**Bewertung der Lösungsskizze:** [was trägt, was ist überholt, was du anders
+vorschlägst — mit Begründung; entfällt, wenn der Eintrag keine Skizze hat]
+
 **Substeps:** (nur bei Mittel/Groß)
 1. [Nummer]a — [Name]: [was, welche Dateien, Abnahmekriterium]
 2. …
@@ -73,11 +82,17 @@ Substeps erben die Nummer der Elternaufgabe mit Buchstaben (F-004 → F-004a, F-
 
 **Auf OK warten — NICHT mit der Umsetzung beginnen!**
 
-## 5. Substeps in der PROGRESS.md festhalten
+## 5. Plan & Status in der PROGRESS.md festhalten
 
-Nach Freigabe (in der Sprache der lebenden Doku):
+Nach Freigabe (in der Sprache der lebenden Doku; Status-Token sprachinvariant):
 
-- **Klein:** nichts ändern — der bestehende Eintrag genügt.
+- **Immer — Status-Marker setzen:** die `**Status:**`-Zeile des Eintrags auf `PLANNED`
+  setzen (fehlt sie — Alt-Eintrag —, direkt unter der Überschrift anlegen) und die
+  Zeile der F-Nummer im `<!-- FEATURE-INDEX … -->` mit `(PLANNED)` markieren. Der
+  Marker zeigt, wo die Aufgabe steht: `BACKLOG` → prep-step, `PLANNED` → build-step.
+- **Immer — Skizze nachziehen:** Weicht der freigegebene Plan von der Lösungsskizze ab,
+  die Skizze im Eintrag kurz auf den beschlossenen Stand bringen.
+- **Klein:** sonst nichts ändern — der bestehende Eintrag genügt.
 - **Mittel/Groß:** Substeps direkt unter der Elternaufgabe einfügen, im vorhandenen Format
   (Was / Dateien / Abhängigkeiten / Abnahmekriterien als Checkboxen). Elternaufgabe als
   Überschrift/Kontext behalten. Neue Nummern immer als F-NNN mit Buchstaben-Substeps.

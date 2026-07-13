@@ -4,6 +4,32 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.6.0 — 2026-07-13
+
+Status-Marker-Konvention + schärfere Grenze zwischen add-feature und prep-step:
+
+- PROGRESS-Einträge tragen jetzt eine sprachinvariante `**Status:**`-Zeile:
+  `BACKLOG` (nur aufgenommen → prep-step) → `PLANNED` (geplant → build-step);
+  fertig bleibt Done-Tabelle + `(DONE)` im FEATURE-INDEX. prep-step markiert
+  zusätzlich die Index-Zeile mit `(PLANNED)`. Alt-Einträge ohne Status-Zeile
+  werden tolerant gelesen (Substeps vorhanden ≈ geplant) und beim nächsten
+  Kontakt nachgezogen.
+- `add-feature` — „Mögliche Umsetzung" heißt jetzt „Lösungsskizze" und ist
+  explizit eine grobe, unverbindliche Richtung: keine Dateilisten, keine
+  Zerlegung in Schritte, keine Abnahmekriterien (das bleibt prep-step);
+  optionale Ablauf-/Ansatz-Zusatzabschnitte gestrichen. Neue Einträge starten
+  mit `Status: BACKLOG`.
+- `prep-step` — hinterfragt die Lösungsskizze, statt sie blind zu übernehmen:
+  jede Annahme gegen den aktuellen Codestand verifizieren, eigene/bessere
+  Ansätze mit Begründung vorschlagen; Plan-Vorlage um „Bewertung der
+  Lösungsskizze" ergänzt. Setzt nach Freigabe `Status: PLANNED` (auch bei
+  kleinen Aufgaben) und zieht die Skizze auf den beschlossenen Stand nach.
+- `build-step` — prüft beim Plan-Laden den Status-Marker: `BACKLOG` → erst
+  prep-step empfehlen statt ungeplant zu bauen.
+- `step-done` — `(DONE)` ersetzt ein `(PLANNED)`-Suffix im FEATURE-INDEX; die
+  Status-Zeile wandert nicht mit ins Archiv.
+- `docs/skill-authoring.md` — Status-Marker-Konvention als Pflicht-Baustein.
+
 ## 0.5.0 — 2026-07-13
 
 Neue Skills:
