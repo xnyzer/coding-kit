@@ -1,6 +1,6 @@
 ---
 name: build-step
-description: Vorbereitete Aufgabe (F-Nummer) diszipliniert umsetzen — liest den prep-step-Plan, arbeitet Substeps mit Verifikation je Schritt ab und übergibt je Substep an step-done. Mit Argument „autonom" wird nicht gebaut, sondern ein /goal-Lauf vorbereitet (Regeln laden, Commit-Freigabe einholen, fertige Goal-Zeile ausgeben). Nur manuell per /coding-kit:build-step aufrufbar.
+description: Vorbereitete Aufgabe (F-Nummer) diszipliniert umsetzen — liest den prep-step-Plan, arbeitet Substeps mit Verifikation je Schritt ab. Interaktiv endet jeder Substep mit einer step-done-Empfehlung (du prüfst und schließt selbst ab); nur im autonomen /goal-Lauf läuft step-done je Substep automatisch. Mit Argument „autonom" wird nicht gebaut, sondern ein /goal-Lauf vorbereitet (Regeln laden, Commit-Freigabe einholen, fertige Goal-Zeile ausgeben). Nur manuell per /coding-kit:build-step aufrufbar.
 disable-model-invocation: true
 ---
 
@@ -53,6 +53,9 @@ dokumentiert ist — im Zweifel neu fragen.
 
 ## 2. Umsetzung — je Substep
 
+**Modus erkennen:** Ein aktiver `/goal`-Lauf mit erteilter Commit-Freigabe = **autonom**;
+jede andere Nutzung = **interaktiv**. Der Modus steuert Schritt 5.
+
 1. Substep-Ziel und Abnahmekriterien kurz nennen.
 2. Umsetzen. **Write-then-Verify:** nach jedem Edit die Datei re-lesen; nichts als
    erledigt melden, was nicht per Tool-Ausgabe belegt ist.
@@ -60,16 +63,23 @@ dokumentiert ist — im Zweifel neu fragen.
    `just test` / `just lint`); ohne justfile die projektüblichen Checks aus
    CLAUDE.md/README. Rot → sofort fixen, nie rot weiterarbeiten.
 4. Abnahmekriterien einzeln gegen Tool-Ausgaben prüfen und abhaken.
-5. `/coding-kit:step-done` für den Substep ausführen (Review, Scans, PROGRESS,
-   Commit-Frage bzw. — im autonomen Lauf — die dort geregelte Freigabe-Ausnahme).
+5. **Substep abschließen — modusabhängig:**
+   - **Interaktiv (Normalfall):** step-done *nicht* automatisch starten. Den Substep als
+     gebaut-und-verifiziert melden und `/coding-kit:step-done` **empfehlen** — du prüfst
+     und passt ggf. an, bevor der Schritt wirklich fertig ist. Der nächste Substep folgt
+     erst nach deinem Abschluss bzw. ausdrücklichem „weiter".
+   - **Autonomer `/goal`-Lauf:** `/coding-kit:step-done` je Substep automatisch ausführen
+     (Review, Scans, PROGRESS, Commit über die dort geregelte Freigabe-Ausnahme) — die
+     `/goal`-Abschlussbedingung verlangt genau das. Dann direkt der nächste Substep.
 
-Dann der nächste Substep, bis die Aufgabe komplett ist.
+Dann der nächste Substep, bis die Aufgabe komplett ist — autonom fortlaufend, interaktiv
+erst, nachdem du den aktuellen Substep abgeschlossen hast.
 
 ## 3. Abschluss
 
 Kurzes Fazit: was gebaut wurde, Abweichungen vom Plan (mit Begründung), was als neue
-F-Nummer notiert wurde. Der letzte step-done-Lauf markiert die Eltern-F-Nummer als
-DONE.
+F-Nummer notiert wurde. Im autonomen Lauf markiert der letzte step-done-Lauf die
+Eltern-F-Nummer als DONE; interaktiv erledigst du das mit deinem abschließenden step-done.
 
 ## Autonomer Lauf (Argument „autonom")
 

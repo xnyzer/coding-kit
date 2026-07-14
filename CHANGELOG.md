@@ -4,6 +4,18 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.7.0 — 2026-07-14
+
+`build-step` entkoppelt den step-done-Handoff vom Bauen:
+
+- **Interaktiv (Normalfall):** build-step baut und verifiziert den Substep, startet
+  step-done aber **nicht mehr automatisch** — es empfiehlt `/coding-kit:step-done`,
+  damit du prüfen und ggf. anpassen kannst, bevor der Schritt fertig ist. Der nächste
+  Substep folgt erst nach deinem Abschluss bzw. ausdrücklichem „weiter".
+- **Autonomer `/goal`-Lauf:** unverändert — step-done läuft je Substep automatisch
+  durch (die `/goal`-Abschlussbedingung verlangt genau das). Modus-Signal: ein aktiver
+  `/goal`-Lauf mit erteilter Commit-Freigabe = autonom, jede andere Nutzung = interaktiv.
+
 ## 0.6.0 — 2026-07-13
 
 Status-Marker-Konvention + schärfere Grenze zwischen add-feature und prep-step:
