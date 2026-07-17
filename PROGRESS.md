@@ -35,13 +35,126 @@ _Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
 
 ## Feature-Ideen (Backlog)
 
-_Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer.
-(Nichts offen.)_
+_Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer._
+
+> **Kontext F-013–F-016 (Composable CODING-STANDARDS):** project-template stellt den
+> §13-Slot (`<!-- module:coding-standards -->`) von „einmal einfügen" auf **anhängen**
+> um — mit Pro-Fragment-Markern, einem Fragment-Katalog (vorgeschlagen
+> `modules/standards/`: react, prisma, api-design, docker, nginx, …) und einem
+> Framework→Fragment-Mapping; Stack-Module **deklarieren** ihre Fragmente. Der exakte
+> Fragment-Vertrag (Marker-Schema, Katalog-Ort, Deklarationsform) entsteht in
+> **project-template F-002** (Autoring der Web-Fragmente: dortiges F-003). F-013–F-016
+> koppeln an diesen Vertrag — gegen das F-002-Ergebnis planen oder co-designen.
+
+### F-012 — add-skill: Template-HOW-TO synchron halten
+
+**Status:** BACKLOG
+
+**Problem:** Die Skill-Übersicht in project-templates `core/HOW-TO-CODE-WITH-CLAUDE.md`
+fällt hinter den Skill-Bestand des coding-kit zurück — neue oder geänderte Skills werden
+dort nicht nachgezogen, weil kein Prozessschritt daran erinnert.
+
+**Idee:** Der repo-lokale Skill add-skill bekommt in Schritt 3
+(Vollständigkeits-Checkliste) einen zusätzlichen Haken: Gehört der neue/geänderte Skill
+zum Projekt-Alltag (Dev-Loop) oder zur Projekt-Pflege, wird die Skill-Übersicht in
+project-templates `core/HOW-TO-CODE-WITH-CLAUDE.md` mitgepflegt — unter Beachtung der
+Sync-Invariante jenes Repos (VERSION + CHANGELOG).
+
+**Lösungsskizze:**
+- Checklisten-Punkt in `.claude/skills/add-skill/SKILL.md` Schritt 3 ergänzen.
+- Kriterium formulieren, wann ein Skill in die Template-Übersicht gehört
+  (Dev-Loop/Pflege ja, rein kit-interne Skills nein).
+
+**Abhängigkeiten:** keine — unabhängig von project-template F-002, kann vorgezogen
+werden.
+
+### F-013 — choose-stack: Multi-Fragment-Einbau
+
+**Status:** BACKLOG
+
+**Problem:** choose-stack installiert heute den EINEN `CODING-STANDARDS.part.md` eines
+Stack-Moduls in den §13-Slot. Nach der Umstellung auf komponierbare Fragmente
+(project-template F-002) deklariert ein Modul MEHRERE Fragmente — der bisherige
+Einbau-Mechanismus greift dann nicht mehr.
+
+**Idee:** choose-stack liest die vom Modul deklarierten Fragmente und hängt sie einzeln
+an den §13-Append-Slot an — Pro-Fragment-Marker respektierend und idempotent (bereits
+vorhandene Fragmente werden nicht doppelt eingefügt).
+
+**Lösungsskizze:**
+- Einbau-Logik in `plugins/coding-kit/skills/choose-stack/SKILL.md` von
+  „ein Part in den Slot" auf „deklarierte Fragmente anhängen" umstellen.
+- Marker-Schema und Deklarationsform aus dem F-002-Vertrag übernehmen, nicht neu
+  erfinden.
+
+**Abhängigkeiten:** project-template F-002 (Fragment-Vertrag).
+
+### F-014 — update-conventions: Pro-Fragment-Refresh
+
+**Status:** BACKLOG
+
+**Problem:** update-conventions aktualisiert CODING-STANDARDS bislang als einen
+Modul-Part. Mit dem Append-Slot und Pro-Fragment-Markern muss es einzelne Fragmente
+downstream aktualisieren können, ohne projektlokal ergänzte Fragmente zu überschreiben.
+
+**Idee:** update-conventions versteht den Append-Slot und die Pro-Fragment-Marker,
+gleicht je Fragment gegen den Katalog ab und aktualisiert nur Fragmente, die aus dem
+Template stammen — der bestehende Override-Schutz gilt unverändert weiter.
+
+**Lösungsskizze:**
+- Refresh-Logik in `plugins/coding-kit/skills/update-conventions/SKILL.md` auf
+  Fragment-Granularität heben (erkennen, abgleichen, einzeln erneuern).
+- Projektlokale Fragmente (ohne Katalog-Pendant bzw. mit Override) unangetastet lassen.
+
+**Abhängigkeiten:** project-template F-002 (Fragment-Vertrag).
+
+### F-015 — prep-step: Framework-Erkennung mit Fragment-Vorschlag
+
+**Status:** BACKLOG
+
+**Problem:** Führt eine Aufgabe ein neues Framework oder eine neue Dependency ein,
+wächst der Standards-Bestand des Projekts nicht mit — es gibt keinen Prozessschritt, der
+das fehlende Fragment bemerkt („Standards wachsen mit").
+
+**Idee:** prep-step erkennt in §2 (Analyse), wenn die Aufgabe ein Framework einführt,
+für das im Projekt noch kein Standards-Fragment vorliegt. Existiert im Katalog ein
+passendes Fragment, schlägt es dessen Anhängen vor; existiert keins, schlägt es vor,
+eins zu autoren und ins Template zurückzugeben.
+
+**Lösungsskizze:**
+- Erkennungs-Hook in `plugins/coding-kit/skills/prep-step/SKILL.md` §2 ergänzen
+  (Framework→Fragment-Mapping aus dem Katalog nutzen).
+- Vorschlags-Pfade: Fragment anhängen (Mechanik aus F-013) bzw. Autoring + Upstream-
+  Rückgabe anstoßen.
+
+**Abhängigkeiten:** project-template F-002 (Katalog + Mapping); baut sinnvoll auf F-013
+auf (Anhänge-Mechanik).
+
+### F-016 — step-done: Standards-Coverage-Backstop
+
+**Status:** BACKLOG
+
+**Problem:** Auch mit Erkennung in prep-step (F-015) kann ein Framework ohne
+zugehöriges Standards-Fragment durchrutschen — etwa wenn es erst während der Umsetzung
+dazukommt. Es fehlt ein Backstop am Ende des Zyklus.
+
+**Idee:** step-done verifiziert beim Abschluss, dass für die im Projekt tatsächlich
+genutzten Frameworks die passenden Standards-Fragmente vorhanden sind, und meldet
+Lücken — nichts wird ohne seinen Standard abgeschlossen.
+
+**Lösungsskizze:**
+- Coverage-Check in `plugins/coding-kit/skills/step-done/SKILL.md` ergänzen
+  (genutzte Frameworks ermitteln, gegen vorhandene Fragment-Marker abgleichen).
+- Nutzt dasselbe Framework→Fragment-Mapping wie F-015; meldet Lücken, blockiert aber
+  nach Nutzerentscheid nicht zwingend.
+
+**Abhängigkeiten:** project-template F-002 (Fragment-Vertrag + Mapping); inhaltlich
+verwandt mit F-015 (gemeinsames Mapping), aber unabhängig umsetzbar.
 
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-012
+next-feature: F-017
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -53,4 +166,9 @@ F-008 Workflow-Skill build-step + autonome Läufe (DONE)
 F-009 Repo-lokaler Pflege-Skill add-skill (DONE)
 F-010 Status-Marker + Grenze add-feature/prep-step (DONE)
 F-011 build-step vom step-done-Handoff entkoppeln (DONE)
+F-012 add-skill: Template-HOW-TO synchron halten
+F-013 choose-stack: Multi-Fragment-Einbau
+F-014 update-conventions: Pro-Fragment-Refresh
+F-015 prep-step: Framework-Erkennung mit Fragment-Vorschlag
+F-016 step-done: Standards-Coverage-Backstop
 -->
