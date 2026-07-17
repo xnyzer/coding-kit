@@ -5,6 +5,39 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-002a — Composable CODING-STANDARDS: fragment contract + catalog scaffold (2026-07-17)
+
+**Problem:** The §13 stack slot took a single inserted module part, so a project could not
+compose standards for several frameworks or grow them over time. F-002a lays the contract for
+composable fragments; migration (F-002b) and validator support (F-002c) follow.
+
+**What was built (5 files):**
+
+- `MANIFEST.md`: registered the `<!-- fragment:NAME -->` … `<!-- /fragment:NAME -->` marker;
+  updated the `module:coding-standards` marker and the `CODING-STANDARDS.part.md`
+  module-contract row to append/wrap semantics; new "## Standards fragments" section (catalog,
+  the `MODULE.md` `Standards fragments:` declaration, policy, assembly boundary).
+- `core/CODING-STANDARDS.md`: §13 slot now documents append + per-fragment markers.
+- `modules/standards/README.md` (new): catalog scaffold — framework→fragment mapping table
+  (empty until fragments are authored) + how a module declares fragments.
+- `VERSION` 0.2.0 → 0.3.0; `CHANGELOG.md` entry.
+
+**Notable decisions:**
+
+- Central reusable catalog `modules/standards/` (not fragments buried per stack module) — a
+  fragment like `react`/`docker` can be pulled by any module that needs it.
+- Fragments are self-wrapping (each file carries its own `fragment:NAME` markers); skills
+  concatenate, no wrapping at runtime.
+- A module pulls its own language fragment implicitly and declares additional catalog fragments
+  via a `Standards fragments:` line in its `MODULE.md`.
+- Runtime assembly stays coding-kit logic; F-002 defines only the contract + data + validator.
+  Full end-to-end composition needs the coding-kit `choose-stack` change (tracked separately).
+
+**Verification:** `just check` (validator) green; §13 slot and MANIFEST section reviewed;
+internal link `../../MANIFEST.md` resolves; secrets/privacy scan clean.
+
+---
+
 ## F-001 — Initial template build (2026-07-07)
 
 **Problem:** No reusable template existed; every new project re-derived its setup from old

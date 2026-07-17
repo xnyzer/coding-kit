@@ -4,6 +4,18 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.3.0] — 2026-07-17
+
+### Added
+- Composable CODING-STANDARDS fragments — contract + scaffold. The §13 stack slot is now
+  append-capable: standards fragments are each wrapped in `<!-- fragment:NAME -->` …
+  `<!-- /fragment:NAME -->` and appended inside `<!-- module:coding-standards -->`, so a project
+  composes several language/framework fragments instead of a single inserted block. Adds the
+  `modules/standards/` catalog (`README.md` with the framework→fragment mapping; the fragments
+  themselves are authored next) and documents the marker, the module `Standards fragments:`
+  declaration, and the catalog in `MANIFEST.md`. Migrating the existing go/python/ts-node parts
+  and validator support follow separately.
+
 ## [0.2.0] — 2026-07-17
 
 Refinements surfaced by running `/update-conventions` against an instantiated project, and

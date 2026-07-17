@@ -148,7 +148,13 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 
 ## 13. Stack-specific rules
 
+Stack rules are composed here from **standards fragments** — one self-contained block per
+language or framework, each wrapped in `<!-- fragment:NAME -->` … `<!-- /fragment:NAME -->` and
+appended inside the slot below. A stack module contributes its own language fragment plus any
+catalog fragments it declares; adding a framework later appends its fragment, and nothing above
+this section changes. Contract: `MANIFEST.md` § Standards fragments.
+
 <!-- module:coding-standards -->
 _No stack module instantiated — this project runs docs-only. When a stack module is added
-(`/choose-stack`), its rules are inserted here._
+(`/choose-stack`), its fragments are appended here, each wrapped in `<!-- fragment:NAME -->`._
 <!-- /module:coding-standards -->

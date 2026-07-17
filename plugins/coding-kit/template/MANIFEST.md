@@ -31,7 +31,8 @@ lowercase and therefore never collide).
 |--------|---------|
 | `<!-- template:adapt: hint -->` | Spot `/new-project` must concretise from the short-info — never raw-copy. |
 | `<!-- template:optional:NAME -->` … `<!-- /template:optional:NAME -->` | Block kept or removed at instantiation (used: `graphiti`). |
-| `<!-- module:coding-standards -->` | Slot where the module's `CODING-STANDARDS.part.md` is inserted. |
+| `<!-- module:coding-standards -->` … `<!-- /module:coding-standards -->` | Slot in `CODING-STANDARDS.md` §13 where standards fragments are **appended** (each wrapped in `fragment:NAME`), not single-inserted. |
+| `<!-- fragment:NAME -->` … `<!-- /fragment:NAME -->` | Wraps one self-contained standards fragment inside the `module:coding-standards` slot. `NAME` = a catalog fragment (`modules/standards/`) or a stack module's own language fragment. See § Standards fragments. |
 | `# module:gitignore` / `# module:ci-jobs` | Append points for module parts in non-HTML files. |
 | `<!-- override: reason -->` | Project-local deviation. `/update-conventions` never touches a file/section carrying it. Register in `.claude/convention-overrides.md`. |
 
@@ -90,13 +91,34 @@ Each `modules/<name>/` may provide (all optional except `MODULE.md`):
 | `justfile` | `justfile` | **replaces** the core justfile; must implement the standard recipe set | managed |
 | `mise.part.toml` | `mise.toml` | `[tools]` entries merged into the core file | managed |
 | `gitignore.part` | `.gitignore` | appended below the `# module:gitignore` marker | managed |
-| `CODING-STANDARDS.part.md` | `CODING-STANDARDS.md` | inserted at the `<!-- module:coding-standards -->` slot | managed |
+| `CODING-STANDARDS.part.md` | `CODING-STANDARDS.md` | the module's own language fragment — appended in the `module:coding-standards` slot, wrapped as `fragment:<module>`; a module may also declare catalog fragments (§ Standards fragments) | managed |
 | `ci.part.yml` | `.github/workflows/ci.yml` | jobs appended below the `# module:ci-jobs` marker | managed |
 | `files/**` | project root (same relative path) | copied after placeholder substitution | per file, see `MODULE.md` |
 
 **Standard recipe set** every module's justfile must implement (skills call only these):
 `setup`, `dev`, `test`, `lint`, `format`, `check`, `build`. `check` is the full gate
 (format check + lint + types + tests) and must be green before any commit.
+
+## Standards fragments
+
+`modules/standards/` is a catalog of reusable, framework-granular `CODING-STANDARDS` fragments
+(e.g. `react`, `prisma`, `docker`), separate from the per-language stack modules — a fragment
+can be pulled by any module that needs it. Each fragment is a self-contained file
+`modules/standards/<name>.md` whose body is wrapped in `<!-- fragment:<name> -->` …
+`<!-- /fragment:<name> -->` and **appended** inside the `<!-- module:coding-standards -->` slot
+of a project's `CODING-STANDARDS.md`.
+
+- **Catalog** — `modules/standards/README.md` lists every fragment and the framework→fragment
+  mapping (which dependency/framework each fragment covers). `/prep-step` uses the mapping to
+  detect a newly introduced framework whose fragment is not yet present.
+- **Declaration** — a stack module contributes its own language fragment (its
+  `CODING-STANDARDS.part.md`, wrapped as `fragment:<module>`) implicitly, and declares any
+  additional catalog fragments — in order — via a `Standards fragments:` line in its `MODULE.md`
+  (omit the line, or leave it empty, to pull none).
+- **Policy** — managed. `/update-conventions` refreshes each fragment by its `fragment:NAME`
+  marker, respecting overrides; a project-added fragment not in the catalog is left untouched.
+- **Assembly** — appending the fragments at instantiation / `/choose-stack` is coding-kit logic;
+  this manifest defines only the contract and the data.
 
 ## Version stamp
 
