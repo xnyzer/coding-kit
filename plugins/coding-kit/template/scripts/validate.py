@@ -49,6 +49,11 @@ ALLOWED_EMAIL_DOMAINS = (
     "example.org",
 )
 
+# Real standards-fragment markers use lowercase-kebab names; documentation placeholders
+# (`fragment:NAME`, `fragment:<name>`) are uppercase or bracketed and never match.
+FRAGMENT_MARKER_RE = re.compile(r"<!--\s*(/?)fragment:([a-z0-9][a-z0-9-]*)\s*-->")
+STANDARDS_DECL_RE = re.compile(r"Standards fragments:(.*)")
+
 
 def iter_files() -> list[Path]:
     files = []
@@ -108,6 +113,47 @@ def check_privacy(path: Path, text: str, findings: list[str]) -> None:
         findings.append(f"{rel}: email address leaked — {email}")
 
 
+def check_fragment_markers(path: Path, text: str, findings: list[str]) -> None:
+    """Every `<!-- fragment:NAME -->` must be balanced by a matching close, in order."""
+    rel = path.relative_to(REPO_ROOT)
+    stack: list[str] = []
+    for match in FRAGMENT_MARKER_RE.finditer(text):
+        closing, name = match.group(1), match.group(2)
+        if not closing:
+            stack.append(name)
+        elif not stack:
+            findings.append(f"{rel}: closing fragment marker for '{name}' without a matching open")
+        elif stack[-1] != name:
+            findings.append(
+                f"{rel}: fragment marker mismatch — expected close for '{stack[-1]}', got '{name}'"
+            )
+        else:
+            stack.pop()
+    for name in stack:
+        findings.append(f"{rel}: fragment '{name}' is opened but never closed")
+
+
+def check_fragment_declarations(findings: list[str]) -> None:
+    """Every fragment a `MODULE.md` declares must exist in the `modules/standards/` catalog."""
+    catalog_dir = REPO_ROOT / "modules" / "standards"
+    if not catalog_dir.is_dir():
+        return
+    catalog = {p.stem for p in catalog_dir.glob("*.md") if p.name != "README.md"}
+    for module_doc in sorted(REPO_ROOT.glob("modules/*/MODULE.md")):
+        rel = module_doc.relative_to(REPO_ROOT)
+        match = STANDARDS_DECL_RE.search(module_doc.read_text(encoding="utf-8"))
+        if not match:
+            continue
+        head = re.split(r"\s[—–]\s", match.group(1).lstrip("*").strip())[0].strip()
+        if head.lower() in ("", "(none)", "none"):
+            continue
+        for name in (n.strip().strip("`") for n in head.split(",")):
+            if name and name.lower() != "none" and name not in catalog:
+                findings.append(
+                    f"{rel}: declares standards fragment '{name}' not found in modules/standards/"
+                )
+
+
 def main() -> int:
     findings: list[str] = []
     for path in iter_files():
@@ -118,6 +164,9 @@ def main() -> int:
         check_syntax(path, text, findings)
         check_placeholders(path, text, findings)
         check_privacy(path, text, findings)
+        check_fragment_markers(path, text, findings)
+
+    check_fragment_declarations(findings)
 
     if findings:
         print(f"validate: {len(findings)} finding(s):")

@@ -15,54 +15,13 @@ decomposes, `/step-done` finishes (review, docs, commit question).
 | F-001 | Initial template build → **core/ + modules (docs-only, ts-node, python, go; stubs swift-ios/java), MANIFEST format 1, validator + CI, all checks green.** Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
 | F-002a | Composable CODING-STANDARDS: fragment contract + catalog scaffold. Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-17 |
 | F-002b | Composable CODING-STANDARDS: migrate existing modules to the fragment scheme. Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-17 |
+| F-002c | Composable CODING-STANDARDS: validator support (fragment markers + declarations). Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-17 |
 
 ---
 
 ## Open tasks — work top to bottom
 
-### F-002 — Composable CODING-STANDARDS fragments
-
-**Status:** PLANNED
-
-**Problem:** The template assembles CODING-STANDARDS from one language-agnostic core plus a
-single stack-module part inserted at the §13 slot. A project using several frameworks (e.g.
-React + Prisma + Docker) cannot compose their standards, and standards cannot grow as new
-frameworks are adopted mid-project — so such projects keep a full CODING-STANDARDS override
-instead of inheriting the template.
-
-**Idea:** Break stack-specific standards into framework-granular fragments and make the §13
-slot append-capable, so a project inherits core + exactly the fragments for the frameworks it
-uses, and can add more later.
-
-**Solution sketch (decided at prep-step):**
-- §13 becomes append-capable: fragments are appended inside the existing
-  `<!-- module:coding-standards -->` slot, each **self-wrapped** in `<!-- fragment:NAME -->`
-  … `<!-- /fragment:NAME -->` (model: the `# module:gitignore` append marker). Skills
-  concatenate; no wrapping at runtime.
-- Fragments live in a central, reusable catalog `modules/standards/` (react/prisma/docker/…),
-  authored in F-003; F-002 only scaffolds the catalog + a framework→fragment mapping.
-- A stack module pulls its own `CODING-STANDARDS.part.md` (its language-core fragment)
-  implicitly, and declares any **additional** catalog fragments via a "Standards fragments"
-  line in its `MODULE.md` (empty for go/python/ts-node).
-- Runtime assembly (appending fragments on new-project / choose-stack) is coding-kit logic,
-  tracked separately; F-002 defines the contract + data + validator only. Sync-invariant
-  (VERSION + CHANGELOG + MANIFEST) applies to the template-content substeps.
-
-**Dependencies:** none in project-template (F-001 done). Co-dependent with the coding-kit side
-(choose-stack multi-fragment, prep-step/step-done detection) for a full end-to-end assembly —
-that side is tracked separately in the coding-kit repo.
-
-**Substeps:** _(F-002a, F-002b done — see the Done table and `PROGRESS-ARCHIVE.md`.)_
-
-#### F-002c — Validator support
-- **What:** extend `scripts/validate.py` to (a) check `<!-- fragment:NAME -->` markers are
-  balanced/well-formed and (b) check every "Standards fragments" name declared in a `MODULE.md`
-  resolves to a catalog fragment (no dangling declarations).
-- **Files:** `scripts/validate.py` (repo tooling — no VERSION bump).
-- **Dependencies:** F-002a, F-002b.
-- **Acceptance:**
-  - [ ] Validator flags a malformed fragment marker and a dangling declaration (verified).
-  - [ ] `just check` green.
+_No prepared tasks. Plan the next backlog item (F-003) via `/prep-step`._
 
 ---
 
@@ -138,7 +97,7 @@ procedure graduates into a reusable coding-kit skill.
 <!-- FEATURE-INDEX
 next-feature: F-005
 F-001 Initial template build (DONE)
-F-002 Composable CODING-STANDARDS fragments (PLANNED)
+F-002 Composable CODING-STANDARDS fragments (DONE)
 F-003 Web-standards fragments (BACKLOG)
 F-004 Remediate already-published real-name leaks (BACKLOG)
 -->

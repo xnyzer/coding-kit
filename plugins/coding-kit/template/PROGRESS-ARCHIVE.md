@@ -5,6 +5,34 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-002c — Composable CODING-STANDARDS: validator support (2026-07-17)
+
+**Problem:** Nothing enforced the new fragment contract, so a malformed fragment marker or a
+`MODULE.md` declaring a non-existent catalog fragment would pass silently.
+
+**What was built (1 file — repo tooling, no VERSION bump):**
+
+- `scripts/validate.py`: two new checks — (a) `check_fragment_markers` scans every file for
+  `<!-- fragment:NAME -->` markers and stack-verifies they are balanced and well-nested; (b)
+  `check_fragment_declarations` parses each `modules/*/MODULE.md` "Standards fragments"
+  declaration and flags any fragment name absent from the `modules/standards/` catalog.
+
+**Notable decisions:**
+
+- The marker regex matches lowercase-kebab names only (`[a-z0-9][a-z0-9-]*`), so documentation
+  placeholders (`fragment:NAME` uppercase, `fragment:<name>` bracketed) never false-positive —
+  keeping the MANIFEST / README / §13 example markers clean.
+- No VERSION bump: `validate.py` is repo tooling, not shipped template content.
+
+**Verification:** `just check` green on the real repo; temporary fixtures confirmed both checks
+fire (unclosed `fragment:zzz`; dangling declaration `nope`), then removed and re-verified green.
+
+**This completes F-002** (composable CODING-STANDARDS fragments): contract + catalog scaffold
+(F-002a), module migration (F-002b), validator (F-002c). Web fragments follow in F-003; the
+coding-kit-side assembly is tracked separately.
+
+---
+
 ## F-002b — Composable CODING-STANDARDS: migrate existing modules (2026-07-17)
 
 **Problem:** After F-002a defined the fragment contract, the existing stack modules still shipped
