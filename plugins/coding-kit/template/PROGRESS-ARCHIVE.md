@@ -5,6 +5,43 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-004a — Remediate real-name leaks: history rewrite + force-push (2026-07-18)
+
+**Problem:** A concrete downstream project name had been committed and pushed in the initial
+build (in `modules/go/MODULE.md` and the F-001 archive entry). The working tree was scrubbed
+in F-002b, but the published history still held the name.
+
+**What was done (history-only operation; no tracked file changes, no VERSION bump):**
+
+- Full detection first: history-wide scan of all refs (blobs, commit messages, spelling
+  variants) against the owner's private name blocklist plus personal-data patterns (emails,
+  IPs, local paths, real names). Result: exactly one leaked string in two files across four
+  commits; commit identities all GitHub-noreply; nothing else.
+- Rewrote the history in a fresh scratchpad clone with `git filter-repo --replace-text`,
+  literally replacing the leaked name with a redaction token. All commits got new SHAs (root
+  commit included); the rewrite was force-pushed to `origin/main` after explicit owner
+  approval — also publishing the previously unpushed F-002a–F-003b commits in rewritten form.
+- Working repo switched onto the rewritten history (`git reset --soft`, uncommitted work
+  preserved); old local objects purged via `git reflog expire` + `git gc --prune=now`;
+  scratchpad artifacts (clone + replacements file) deleted.
+
+**Verification:** history-wide scan after the rewrite = 0 hits (rewritten clone and working
+repo); HEAD tree hash identical before/after (byte-identical content); `git ls-remote` shows
+`main` on the rewritten head; `just check` green.
+
+**Notable decisions:**
+
+- **Accepted residual risk, no GitHub support request:** the old, now-unreferenced commits
+  stay reachable on GitHub via direct SHA URLs until garbage-collected. Accepted because the
+  leaked string is a project name (not a secret) and the repo has no forks or stars, so the
+  old SHAs are effectively known to no one.
+- The repo's own agent guardrail (deny on `git push --force`) was respected: the force-push
+  was executed by the owner in their terminal, not by the agent.
+- Downstream re-fix was not needed: `MODULE.md` is never copied into instantiated projects
+  (MANIFEST module contract), so no instantiated repo ever carried the leak.
+
+---
+
 ## F-003b — Web-standards fragments: api-design + docker + nginx (2026-07-17)
 
 **Problem:** After F-003a (react, prisma), the web catalog still lacked the API and
