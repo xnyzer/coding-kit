@@ -5,6 +5,33 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-004b — Remediate real-name leaks: private blocklist check in the validator (2026-07-18)
+
+**Problem:** Nothing prevented a private name from slipping into the public tree again — the
+privacy lint only covered generic patterns (paths, IPs, emails), not the owner's project
+names, and the name list itself must never live in the public tree.
+
+**What was built (1 file — repo tooling, no VERSION bump):**
+
+- `scripts/validate.py`: new `check_blocklist` — loads `private/blocklist.txt` if present
+  (one term per line, `#` comments) and flags any case-insensitive substring hit in scanned
+  files. The blocklist is gitignored (`private/*`) and absent in CI, where the check silently
+  skips; locally lefthook's pre-commit runs `just check`, so the gate fires before every
+  commit. `private/` is in SKIP_DIRS, so the list itself is never scanned and its terms never
+  appear in CI output.
+- `private/blocklist.txt` (untracked): seeded with the owner's private project names.
+
+**Verification:** `git check-ignore` confirms the blocklist is ignored; `just check` green
+with the seeded list; a temporary fixture containing a listed term made the check fail
+(exit 1), removed → green again; with the blocklist moved aside the validator stays green
+(CI-safe silent skip).
+
+**This completes F-004:** history purged and force-pushed (F-004a), recurrence guarded by the
+local blocklist gate (F-004b). Generalizing the remediation procedure into a reusable
+coding-kit skill remains a coding-kit backlog idea.
+
+---
+
 ## F-004a — Remediate real-name leaks: history rewrite + force-push (2026-07-18)
 
 **Problem:** A concrete downstream project name had been committed and pushed in the initial

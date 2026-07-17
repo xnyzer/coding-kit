@@ -49,6 +49,11 @@ ALLOWED_EMAIL_DOMAINS = (
     "example.org",
 )
 
+# Private name blocklist: gitignored, so absent in CI — the check silently skips there.
+# One term per line; `#` starts a comment. The file itself is never scanned (private/ is
+# in SKIP_DIRS), so listed terms never leak through validator output in CI.
+BLOCKLIST_FILE = REPO_ROOT / "private" / "blocklist.txt"
+
 # Real standards-fragment markers use lowercase-kebab names; documentation placeholders
 # (`fragment:NAME`, `fragment:<name>`) are uppercase or bracketed and never match.
 FRAGMENT_MARKER_RE = re.compile(r"<!--\s*(/?)fragment:([a-z0-9][a-z0-9-]*)\s*-->")
@@ -113,6 +118,25 @@ def check_privacy(path: Path, text: str, findings: list[str]) -> None:
         findings.append(f"{rel}: email address leaked — {email}")
 
 
+def load_blocklist() -> list[str]:
+    if not BLOCKLIST_FILE.is_file():
+        return []
+    terms = []
+    for line in BLOCKLIST_FILE.read_text(encoding="utf-8").splitlines():
+        term = line.strip()
+        if term and not term.startswith("#"):
+            terms.append(term.lower())
+    return terms
+
+
+def check_blocklist(path: Path, text: str, findings: list[str], terms: list[str]) -> None:
+    rel = path.relative_to(REPO_ROOT)
+    lower = text.lower()
+    for term in terms:
+        if term in lower:
+            findings.append(f"{rel}: blocklisted term leaked — {term!r}")
+
+
 def check_fragment_markers(path: Path, text: str, findings: list[str]) -> None:
     """Every `<!-- fragment:NAME -->` must be balanced by a matching close, in order."""
     rel = path.relative_to(REPO_ROOT)
@@ -156,6 +180,7 @@ def check_fragment_declarations(findings: list[str]) -> None:
 
 def main() -> int:
     findings: list[str] = []
+    blocklist = load_blocklist()
     for path in iter_files():
         try:
             text = path.read_text(encoding="utf-8")
@@ -164,6 +189,7 @@ def main() -> int:
         check_syntax(path, text, findings)
         check_placeholders(path, text, findings)
         check_privacy(path, text, findings)
+        check_blocklist(path, text, findings, blocklist)
         check_fragment_markers(path, text, findings)
 
     check_fragment_declarations(findings)
