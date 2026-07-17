@@ -51,7 +51,21 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 
 ---
 
-## 5. Control flow
+## 5. Comments & documentation
+
+- **Comment the "why", not the "what".** The code shows what it does; a comment earns its
+  place by explaining a non-obvious reason, constraint, or trade-off — never by restating
+  the code.
+- **Document the public surface.** Every exported function, type, and non-obvious
+  configuration field carries a doc-comment in the language's convention (JSDoc, docstring,
+  GoDoc, …): purpose, parameters, and return value/units where not self-evident.
+- **Language: English** for all comments, doc-comments, and identifiers. The only exception
+  is user-facing text, which goes through the project's i18n/localisation layer — never
+  hardcoded.
+
+---
+
+## 6. Control flow
 
 - **Early returns / guard clauses** over deep nesting. Handle the error/edge case first,
   keep the happy path unindented.
@@ -60,7 +74,7 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 
 ---
 
-## 6. Error handling & resilience
+## 7. Error handling & resilience
 
 - **Typed/custom errors** with clear names. Raise in the core, handle centrally.
 - **No empty catch / error-swallowing.** Never leak internal details (stack traces,
@@ -71,12 +85,13 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 
 ---
 
-## 7. Security & secrets
+## 8. Security & secrets
 
 - **No hand-rolled crypto/auth.** Vetted libraries only.
-- **Never commit secrets** — no tokens, passwords, private keys, private emails, or
-  deployment internals (IPs, hostnames, key names). Operational internals belong in
-  `private/` (gitignored). gitleaks runs pre-commit; treat it as a backstop, not an excuse.
+- **Never commit secrets or private identifiers** — no tokens, passwords, private keys,
+  private emails, real names (people, customers, concrete projects), or deployment internals
+  (IPs, hostnames, key names). Operational internals belong in `private/` (gitignored).
+  gitleaks runs pre-commit; treat it as a backstop, not an excuse.
 - **All secrets via config/env**; an example env file contains only placeholders and is
   always complete.
 - **Config validation at startup** — missing/invalid values fail fast with a clear
@@ -88,7 +103,7 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 
 ---
 
-## 8. Configuration & observability
+## 9. Configuration & observability
 
 - **Everything configurable, nothing hardcoded:** endpoints, limits, ports, paths — via
   config/env with sane defaults.
@@ -97,7 +112,7 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 
 ---
 
-## 9. Testing
+## 10. Testing
 
 - **Business logic has unit tests**, using the stack's standard test framework.
 - **Negative tests are mandatory** wherever input is untrusted or a boundary is enforced:
@@ -108,7 +123,7 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 
 ---
 
-## 10. Write-then-verify
+## 11. Write-then-verify
 
 - **After every edit, verify the result** — re-read the file, run the relevant check, or
   execute the affected path. Never report something as done without tool evidence.
@@ -118,7 +133,7 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 
 ---
 
-## 11. Commits, branches & pull requests
+## 12. Commits, branches & pull requests
 
 - **Conventional Commits**, English, imperative mood; justify trade-offs briefly in the
   body (`Decision: X over Y because …`).
@@ -131,7 +146,7 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 
 ---
 
-## 12. Stack-specific rules
+## 13. Stack-specific rules
 
 <!-- module:coding-standards -->
 _No stack module instantiated — this project runs docs-only. When a stack module is added

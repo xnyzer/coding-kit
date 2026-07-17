@@ -14,7 +14,7 @@ enforces the floor. Build backend: `uv_build`.
 | `justfile` | replaces core justfile; `check` = ruff format-check + ruff lint + pyright + pytest |
 | `mise.part.toml` | python (current stable major.minor) + uv |
 | `gitignore.part` | .venv, caches, dist |
-| `CODING-STANDARDS.part.md` | Python rules for §12 |
+| `CODING-STANDARDS.part.md` | Python rules for §13 |
 | `files/` | pyproject.toml, src/ package skeleton, tests/ |
 
 ## File policies (files/)

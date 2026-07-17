@@ -26,12 +26,26 @@ Guide for working with Claude Code in the {{PROJECT_NAME}} project.
 
 ## Overview: skills
 
+**Daily development loop** — a task moves `BACKLOG → PLANNED → implemented → done`:
+
 | Skill | When to use | What happens |
 |-------|-------------|--------------|
-| `/add-feature` | Put a new task on the roadmap | Analysis → write-up → entry in PROGRESS.md |
-| `/prep-step` | Before implementing a task | Analysis → decomposition → plan in PROGRESS.md → ask whether to start |
-| `/step-done` | After finishing a task/substep | Code review → secrets & privacy scan → docs → commit question |
-| `/audit-code` | One-off check of the whole project | Check → results in AUDIT-RESULTS.md (gitignored) |
+| `/add-feature` | Put a new task on the roadmap | Analysis → write-up → entry in PROGRESS.md (status **BACKLOG**) |
+| `/prep-step` | Plan a task before building it | Questions the sketch against the code, sizes it, decomposes into substeps → plan in PROGRESS.md (status **PLANNED**) |
+| `/build-step` | Implement a planned task | Works the plan substep by substep, verifying each; ends every substep with a `/step-done` recommendation |
+| `/step-done` | After finishing a task/substep | Code review → `just check` → secrets & privacy scan → docs → commit question |
+| `/teach-step` | Implement it yourself, guided | Socratic guidance — you write all the code; Claude reads it, gives graded hints, runs tests, writes nothing itself |
+| `/audit-code` | One-off audit of existing code | Check (optionally scoped to an area or path) → results in AUDIT-RESULTS.md (gitignored) |
+
+**Occasional project maintenance:**
+
+| Skill | When to use |
+|-------|-------------|
+| `/choose-stack` | Add a stack module later, or switch modules |
+| `/choose-license` | Pick or change the project license |
+| `/update-conventions` | Pull template updates into this project (respects overrides) |
+| `/define-requirements` | Elicit requirements (M1 interview → `REQUIREMENTS.md`) |
+| `/refine-requirements` | Go back to the spec when something fundamental changed |
 
 ---
 
@@ -50,20 +64,24 @@ Claude: Records the F-number in PROGRESS.md, updates the feature index
 
 ---
 
-## Workflow 2: Prepare & implement a task
+## Workflow 2: Prepare, implement & finish a task
 
 ```
 You:    /prep-step F-002
 Claude: Analysis… size assessment… substeps if needed (F-002a, F-002b, …)
 You:    yes, write that in
-Claude: Records the plan in PROGRESS.md — should I start with F-002a?
-You:    yes
-Claude: Implements F-002a…
+Claude: Records the plan in PROGRESS.md (status PLANNED)
+You:    /build-step F-002
+Claude: Implements F-002a, verifies it, recommends /step-done
 You:    /step-done
 Claude: Review, checks, PROGRESS-ARCHIVE, commit question
 You:    yes, commit
 Claude: Committed. Continue with F-002b?
 ```
+
+Three skills, one per phase: `/prep-step` plans (→ `PLANNED`), `/build-step` implements the
+plan substep by substep, `/step-done` reviews and finishes each substep. Prefer to write the
+code yourself? Use `/teach-step` instead of `/build-step` — it guides you and writes nothing.
 
 **Size assessment:** Small (<200 lines, <5 files) → direct. Medium → 2–3 substeps.
 Large → 3–5 substeps. `/prep-step` without an argument takes the next open task.

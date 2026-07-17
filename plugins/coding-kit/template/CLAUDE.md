@@ -19,9 +19,12 @@ and `MANIFEST.md`.
 
 - **Repo root = this repository itself** (its own docs, CI, settings). **`core/` and
   `modules/` = template content** that ships into projects. Never mix the two.
-- Template content is **English** and **free of personal data**: no real names, private
-  emails, absolute local paths, IPs, or hostnames. Identity is parameterised
-  (`{{OWNER}}`, …) or resolved at runtime (`git config`, `gh api`) by the skills.
+- The whole repo is public — template content **and** its own docs (README, CHANGELOG,
+  MANIFEST) alike are **English** and **free of personal data**: no real names (people,
+  customers, or concrete downstream projects), private emails, absolute local paths, IPs,
+  or hostnames. In template content, identity is parameterised (`{{OWNER}}`, …) or resolved
+  at runtime (`git config`, `gh api`) by the skills; in the changelog and other docs, refer
+  to instantiated projects generically ("a downstream project"), never by name.
 - Placeholder and marker conventions are defined in `MANIFEST.md`. Use only the documented
   placeholders; register new ones there first.
 - **Sync invariant:** every change to a managed template file requires, in the same commit —

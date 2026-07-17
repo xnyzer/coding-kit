@@ -14,4 +14,4 @@
 - **Naming:** camelCase for values/functions, PascalCase for types/classes,
   kebab-case file names.
 - **Dependencies:** exact-pinned by the lockfile (`pnpm-lock.yaml`, committed); Renovate
-  keeps them fresh. Permissive licenses only (§7).
+  keeps them fresh. Permissive licenses only (§8).

@@ -25,10 +25,12 @@ README.md -->
 <!-- template:adapt: current state in one or two sentences; keep updated as the project
 evolves (the /step-done skill maintains this) -->
 
-Read in order: `README.md`, `REQUIREMENTS.md` (while it exists), `PROGRESS.md`
-(+ `PROGRESS-ARCHIVE.md` for past decisions). **To continue: open `PROGRESS.md`, take the
-first open task, run `/prep-step` to plan, then `/step-done` to finish.** Work the open
-tasks top to bottom.
+Read `README.md` and `REQUIREMENTS.md` (while it exists). Then `PROGRESS.md`: its open-tasks
+section and the `FEATURE-INDEX` block are the working context — read those; when the file
+has grown large, scan the Done table and backlog instead of reading every entry. Skip
+`PROGRESS-ARCHIVE.md` at startup — consult it only for the rationale of a specific finished
+task. **To continue: open `PROGRESS.md`, take the first open task, run `/prep-step` to plan,
+`/build-step` to implement, then `/step-done` to finish.** Work the open tasks top to bottom.
 
 ## Conventions
 
@@ -49,7 +51,8 @@ tasks top to bottom.
 
 Tasks are F-numbers in `PROGRESS.md` (+ `FEATURE-INDEX` block); finished work is archived
 in `PROGRESS-ARCHIVE.md`. Skills come from the **coding-kit plugin**: `/add-feature`
-(intake), `/prep-step` (plan + decompose), `/step-done` (review, secrets scan, docs,
-commit question), `/audit-code` (full audit). Details: `HOW-TO-CODE-WITH-CLAUDE.md`.
+(intake), `/prep-step` (plan + decompose), `/build-step` (implement the plan), `/step-done`
+(review, secrets scan, docs, commit question), `/audit-code` (full audit). Details:
+`HOW-TO-CODE-WITH-CLAUDE.md`.
 Coding rules: `CODING-STANDARDS.md`. Project-local deviations from template conventions
 are registered in `.claude/convention-overrides.md`.

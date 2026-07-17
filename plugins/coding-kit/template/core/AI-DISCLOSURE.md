@@ -29,12 +29,9 @@ owner.
 - The project owner steers direction, priorities, and acceptance criteria
 - The AI does not deploy, publish, or make irreversible changes without explicit approval
 
-<!-- template:optional:security-tool -->
-## Why this matters for a security tool
+## Why this matters
 
-{{PROJECT_NAME}} is security-relevant software. AI-written code does not exempt it from
-scrutiny: it is built on vetted libraries (no hand-rolled crypto), the design is
-fail-closed, and a mandatory human-approved security review precedes any public exposure.
-The quality of the result depends on both sides: precise requirements and competent
-execution, plus deliberate review of the security-critical paths.
-<!-- /template:optional:security-tool -->
+This project follows a collaboration model where a non-developer drives the work through
+clear requirements, critical questioning, and iterative feedback — with the AI handling the
+technical implementation. The quality of the result depends on both sides: precise
+requirements and competent execution.

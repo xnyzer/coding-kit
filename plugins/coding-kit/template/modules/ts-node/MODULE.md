@@ -15,7 +15,7 @@ bundler-free Node ESM), **Biome** as formatter + linter (warnings fail the gate)
 | `justfile` | replaces core justfile; `check` = Biome CI (format+lint) + `tsc --noEmit` + vitest |
 | `mise.part.toml` | node (LTS major) + pnpm |
 | `gitignore.part` | node_modules, dist, coverage |
-| `CODING-STANDARDS.part.md` | TypeScript rules for §12 |
+| `CODING-STANDARDS.part.md` | TypeScript rules for §13 |
 | `files/` | package.json, tsconfig(.build).json, biome.json, vitest.config.ts, src sample |
 
 ## File policies (files/)

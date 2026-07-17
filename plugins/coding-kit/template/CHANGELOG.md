@@ -4,6 +4,49 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.2.0] — 2026-07-17
+
+Refinements surfaced by running `/update-conventions` against an instantiated project, and
+one template bug it exposed. Project-specific divergences there (a pnpm toolchain, filled
+`template:adapt` slots, a fuller stack-specific CODING-STANDARDS, a bilingual HOW-TO) stay as
+registered overrides in that project and were not promoted.
+
+### Added
+- `core/AI-DISCLOSURE.md`: a general "Why this matters" section (human/AI collaboration
+  model), present for every project.
+- `core/CODING-STANDARDS.md`: new language-agnostic section 5 "Comments & documentation"
+  (comment the *why*; document the public surface; English identifiers) — sections 6–13
+  renumbered accordingly.
+- `core/CODING-STANDARDS.md` §8: the "never commit" list now names real identifiers
+  (people, customers, concrete projects) alongside secrets and deployment internals.
+
+### Changed
+- `core/CLAUDE.md`: add `/build-step` to the build chain in both "Status & where to start"
+  (`prep-step → build-step → step-done`) and the "Workflow & skills" skill list.
+- `core/CLAUDE.md`: scale the startup reading guidance — read `README`/`REQUIREMENTS` and
+  `PROGRESS.md`'s open tasks + `FEATURE-INDEX`; scan (don't fully read) a large Done
+  table/backlog; consult `PROGRESS-ARCHIVE.md` on demand, not at startup. Saves context.
+- `core/HOW-TO-CODE-WITH-CLAUDE.md`: refresh the skill overview to match the current
+  coding-kit — add `/build-step`, `/teach-step` and a grouped "project maintenance" table
+  (`/choose-stack`, `/choose-license`, `/update-conventions`, define/refine-requirements);
+  note `/audit-code`'s optional scope; rewrite Workflow 2 as the `prep-step → build-step →
+  step-done` loop with the `BACKLOG → PLANNED → done` status markers.
+- `modules/{go,python,ts-node}`: section cross-references follow the renumbering above —
+  `CODING-STANDARDS.part.md` (§6→§7 errors, §9→§10 tests, §7→§8 licenses) and `MODULE.md`
+  (§12→§13, the stack slot). References to §1–§4 are unaffected.
+
+### Removed
+- `core/AI-DISCLOSURE.md`: the optional `security-tool` block. Its content was
+  engineering-practice claims (vetted libraries, fail-closed, mandatory security review),
+  not AI disclosure, and it duplicated `CODING-STANDARDS.md` §7/§8; the security policy
+  belongs in `SECURITY.md`. The file is now identical in every project — `MANIFEST.md`
+  updated accordingly (the `template:optional` mechanism remains, used by `graphiti`).
+
+### Fixed
+- `core/private/README.md` now exists. `MANIFEST.md` listed it as a managed source and
+  `.gitignore` whitelists it (`!private/README.md`), but the file was missing — every
+  instantiation lacked the `private/` convention marker.
+
 ## [0.1.0] — 2026-07-07
 
 ### Added

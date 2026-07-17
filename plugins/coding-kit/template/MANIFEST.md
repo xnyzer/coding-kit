@@ -30,7 +30,7 @@ lowercase and therefore never collide).
 | Marker | Meaning |
 |--------|---------|
 | `<!-- template:adapt: hint -->` | Spot `/new-project` must concretise from the short-info — never raw-copy. |
-| `<!-- template:optional:NAME -->` … `<!-- /template:optional:NAME -->` | Block kept or removed at instantiation (used: `graphiti`, `security-tool`). |
+| `<!-- template:optional:NAME -->` … `<!-- /template:optional:NAME -->` | Block kept or removed at instantiation (used: `graphiti`). |
 | `<!-- module:coding-standards -->` | Slot where the module's `CODING-STANDARDS.part.md` is inserted. |
 | `# module:gitignore` / `# module:ci-jobs` | Append points for module parts in non-HTML files. |
 | `<!-- override: reason -->` | Project-local deviation. `/update-conventions` never touches a file/section carrying it. Register in `.claude/convention-overrides.md`. |
@@ -58,7 +58,7 @@ lowercase and therefore never collide).
 | `core/CONTRIBUTING.md` | `CONTRIBUTING.md` | managed |
 | `core/SECURITY.md` | `SECURITY.md` | managed (contains adapt slots) |
 | `core/HOW-TO-CODE-WITH-CLAUDE.md` | `HOW-TO-CODE-WITH-CLAUDE.md` | managed |
-| `core/AI-DISCLOSURE.md` | `AI-DISCLOSURE.md` | managed (optional block: `security-tool`) |
+| `core/AI-DISCLOSURE.md` | `AI-DISCLOSURE.md` | managed (identical in every project) |
 | `core/.claude/settings.json` | `.claude/settings.json` | managed |
 | `core/.claude/README.md` | `.claude/README.md` | managed |
 | `core/.claude/convention-overrides.md` | `.claude/convention-overrides.md` | seed |

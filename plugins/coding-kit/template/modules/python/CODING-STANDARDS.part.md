@@ -13,4 +13,4 @@
 - **Naming:** snake_case for functions/modules, PascalCase for classes, UPPER_SNAKE for
   constants.
 - **Dependencies:** locked in `uv.lock` (committed); Renovate keeps them fresh.
-  Permissive licenses only (§7).
+  Permissive licenses only (§8).

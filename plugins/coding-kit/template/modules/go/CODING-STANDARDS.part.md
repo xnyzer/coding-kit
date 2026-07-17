@@ -8,7 +8,7 @@
 - **Naming:** Go conventions — `MixedCaps`, exported identifiers documented; package
   names short, lower-case, no underscores. The verb-first/`is`/`has` intent rules (§3)
   still apply.
-- **Errors:** return `error`, never panic on a production path (§6). Wrap with
+- **Errors:** return `error`, never panic on a production path (§7). Wrap with
   `fmt.Errorf("…: %w", err)`; define sentinel/typed errors for domain failures. Check
   every returned error — no `_ =` discards on meaningful paths.
 - **Context:** thread `context.Context` as the first parameter through request/IO paths;
@@ -16,6 +16,6 @@
 - **Concurrency:** no shared state without synchronisation; no goroutine leaks (bounded
   lifetimes, respect `ctx`). Tests run with `-race`.
 - **Tests:** standard `testing` package, table-driven where it helps; `_test.go` next to
-  the code. Negative tests for every boundary (§9).
+  the code. Negative tests for every boundary (§10).
 - **Dependencies:** `go.mod`/`go.sum` pinned; `go mod tidy` clean; permissive licenses
-  only — enforced by `just license-check` and the CI license job (§7).
+  only — enforced by `just license-check` and the CI license job (§8).
