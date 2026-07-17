@@ -16,47 +16,65 @@ decomposes, `/step-done` finishes (review, docs, commit question).
 | F-002a | Composable CODING-STANDARDS: fragment contract + catalog scaffold. Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-17 |
 | F-002b | Composable CODING-STANDARDS: migrate existing modules to the fragment scheme. Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-17 |
 | F-002c | Composable CODING-STANDARDS: validator support (fragment markers + declarations). Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-17 |
+| F-003a | Web-standards fragments: react + prisma. Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-17 |
 
 ---
 
 ## Open tasks — work top to bottom
 
-_No prepared tasks. Plan the next backlog item (F-003) via `/prep-step`._
-
----
-
-## Feature ideas (backlog)
-
 ### F-003 — Web-standards fragments (react / prisma / api-design / docker / nginx)
 
-**Status:** BACKLOG
+**Status:** PLANNED
 
 **Problem:** F-002 delivers the composable-fragment infrastructure but no web/full-stack
 content to compose. Without authored fragments for the common full-stack building blocks, a
 downstream full-stack project still cannot inherit its standards from the template and keeps a
 full CODING-STANDARDS override.
 
-**Idea:** Author framework-specific standards fragments for the common full-stack building
-blocks — React, Prisma, API design, Docker, Nginx — generalized from proven project standards
-(project-specific detail and names removed), so a full-stack project inherits core + these
-fragments.
+**Idea:** Author framework-general standards fragments for the common full-stack building
+blocks — React, Prisma, API design, Docker, Nginx — generalized from proven full-stack sources
+and senior-improved (not a copy), so a full-stack project inherits core + these fragments.
 
-**Solution sketch:**
-- One fragment per building block in the F-002 catalog: `react`, `prisma`, `api-design`,
-  `docker`, `nginx` (extend later as needed).
-- Generalize from a real project's standards: keep the framework-specific rules, strip
-  project-specific detail and any names.
-- Register each in the framework→fragment mapping and wire them into the relevant stack
-  module's declared fragments.
-- Sync-invariant applies (VERSION + CHANGELOG + MANIFEST), `just check` stays green.
+**Solution sketch (decided at prep-step):**
+- Five self-wrapped catalog fragments in `modules/standards/`: `react`, `prisma`, `api-design`,
+  `docker`, `nginx`. Framework-general, **name-free**, no version pins ("current LTS" style);
+  verify current framework practice while authoring.
+- Senior additions folded in: `react` gets design-token / slot-based-layout discipline (no
+  hardcoded visual values); `api-design` gets thin-routes/fat-services and the API security
+  boundary (input validation, status codes, rate limiting, security headers).
+- Register each in the `modules/standards/README.md` framework→fragment mapping.
+- No declaring stack module in F-003 — the catalog is a library; a full-stack module or the
+  coding-kit prep-step hook wires fragments in later.
+- Per fragment: a coverage check against the real full-stack sources (reported to the user,
+  kept name-free / out of the repo) so no framework-general rule is silently dropped.
 
-**Dependencies:** F-002 (fragment infrastructure + catalog + markers) must be done first.
+**Dependencies:** F-002 (fragment infrastructure) — done.
 
-**Still to analyze:**
-- Which stack module(s) pull these — the existing `ts-node` vs. a new full-stack module.
-- Where the line sits vs. core §1–§13: is `api-design` general enough to be near-core, or
-  strictly web-specific?
-- How opinionated to make each fragment (generalize vs. keep sharp).
+**Substeps:** _(F-003a done — see the Done table and `PROGRESS-ARCHIVE.md`.)_
+
+#### F-003b — API/infra fragments: api-design + docker + nginx
+- **What:** author `modules/standards/{api-design,docker,nginx}.md` (self-wrapped, generalized,
+  senior-improved — api-design incl. thin-routes + security boundary); add mapping rows.
+- **Files:** `modules/standards/{api-design,docker,nginx}.md` (new), `modules/standards/README.md`,
+  `VERSION`, `CHANGELOG.md`.
+- **Dependencies:** F-002.
+- **Acceptance:**
+  - [ ] Three fragments valid and mapping updated.
+  - [ ] Coverage check reported; name-free; no version pins.
+  - [ ] `just check` green; sync-invariant satisfied.
+
+**Notes / boundaries (from prep-step source analysis):**
+- Domain-specific rules (e.g. a media-player provider abstraction) are correctly **not**
+  generalized — they stay project-local; nothing framework-general is lost.
+- Two valuable non-web patterns — async in-flight/promise dedup, and audit/activity logging —
+  fit none of the five web fragments; tracked as follow-ups F-005/F-006 (core promotion /
+  backend or observability fragment).
+- Language: fragments are English; adopting projects with German standards switch or translate
+  those sections when inheriting.
+
+---
+
+## Feature ideas (backlog)
 
 ### F-004 — Remediate already-published real-name leaks
 
@@ -92,12 +110,53 @@ procedure graduates into a reusable coding-kit skill.
 - Which downstream repos were instantiated from the affected module before the fix.
 - How to store the name blocklist without leaking it (private/ vs. runtime resolution).
 
+### F-005 — Async in-flight / promise-dedup concurrency standard
+
+**Status:** BACKLOG
+
+**Problem:** When several independent triggers can start the same expensive or side-effectful
+async operation (a migration, an external call, a cache populate, a token refresh), running each
+independently causes duplicate work, wasted load, or corruption from a half-done shared state.
+This is a general senior pattern surfaced while sourcing the web fragments (F-003) but it is not
+web-framework-specific, so it belongs in the core standard or a backend fragment, not in F-003.
+
+**Idea:** Capture the in-flight-map / promise-dedup pattern as a language-agnostic standard:
+when to apply (shared mutable state + multiple async triggers + expensive/side-effectful work),
+when not to (cheap idempotent reads), and the correctness rule (never set the "done" marker
+before the awaited work completes, or concurrent readers see a half-finished state).
+
+**Solution sketch:**
+- Decide the home: a new core subsection (near error handling / resilience) vs. a `backend`
+  standards fragment in the catalog. Language-agnostic wording; illustrative, name-free example.
+
+**Dependencies:** none. (Related: informed by F-003 source analysis.)
+
+### F-006 — Audit / activity-logging standard
+
+**Status:** BACKLOG
+
+**Problem:** Mutating and administrative actions should leave an audit trail, but this is neither
+a web framework nor one of the F-003 fragments — it went uncaptured. A downstream project
+inheriting the template's standards would otherwise lose this rule.
+
+**Idea:** Capture audit/activity logging as a standard: which actions must be logged (mutations,
+admin/security-relevant operations), what a log entry carries (actor, action, target, time —
+no secrets), and how it differs from application logging.
+
+**Solution sketch:**
+- Decide the home: a core observability subsection vs. an `observability`/`audit-logging`
+  standards fragment. Framework-general, name-free.
+
+**Dependencies:** none. (Related: informed by F-003 source analysis.)
+
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-005
+next-feature: F-007
 F-001 Initial template build (DONE)
 F-002 Composable CODING-STANDARDS fragments (DONE)
-F-003 Web-standards fragments (BACKLOG)
+F-003 Web-standards fragments (PLANNED)
 F-004 Remediate already-published real-name leaks (BACKLOG)
+F-005 Async in-flight / promise-dedup concurrency standard (BACKLOG)
+F-006 Audit / activity-logging standard (BACKLOG)
 -->

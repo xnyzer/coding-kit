@@ -5,6 +5,38 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-003a — Web-standards fragments: react + prisma (2026-07-17)
+
+**Problem:** The composable-standards catalog (`modules/standards/`) existed but held no
+fragments — a full-stack project had nothing to compose for its frontend/data layer.
+
+**What was built (5 files; VERSION 0.3.1 → 0.4.0):**
+
+- `modules/standards/react.md` (new): React standard — function components + hooks, typed props,
+  custom hooks, local/server-state discipline, component size, design-token/slot-based styling,
+  accessibility, i18n, performance.
+- `modules/standards/prisma.md` (new): Prisma standard — deliberate querying (no N+1, paginate,
+  transactions, one shared client, explicit constraint handling) and immutable migrations with
+  DB-enforced integrity.
+- `modules/standards/README.md`: registered both in the framework→fragment mapping.
+- `VERSION`, `CHANGELOG.md`.
+
+**Notable decisions:**
+
+- Generalized from real full-stack sources and **senior-hardened** (not a copy): added
+  server-state-via-cache-layer, stable list keys, controlled inputs, accessibility and a lazy-UI
+  error boundary to `react`; deliberate `select`, one shared client, explicit constraint-violation
+  handling and indexing to `prisma`.
+- **Name-free**, no version pins; project-specific rules (domain abstractions, project theme
+  specifics) deliberately left out. A coverage check against the sources confirmed no
+  framework-general rule was dropped.
+
+**Verification:** `just check` green (markers balanced, no dangling declarations, privacy lint);
+both fragments self-wrapped and mapped. (Same commit also lands the F-003 plan and the F-005/F-006
+intake.)
+
+---
+
 ## F-002c — Composable CODING-STANDARDS: validator support (2026-07-17)
 
 **Problem:** Nothing enforced the new fragment contract, so a malformed fragment marker or a

@@ -4,6 +4,16 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.4.0] — 2026-07-17
+
+### Added
+- Standards fragments `react` and `prisma` in the `modules/standards/` catalog (the first
+  entries), generalized from real full-stack sources and senior-hardened: `react` covers
+  function-component/hooks discipline, component size, design-token/slot-based styling,
+  accessibility, i18n and performance; `prisma` covers deliberate querying (no N+1,
+  paginate, transactions, one client, explicit constraint handling) and immutable
+  migrations with DB-enforced integrity. Registered in the framework→fragment mapping.
+
 ## [0.3.1] — 2026-07-17
 
 ### Changed

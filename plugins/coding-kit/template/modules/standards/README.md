@@ -16,7 +16,8 @@ Every fragment plus the framework→fragment mapping — the dependency/framewor
 
 | Fragment | Covers | Frameworks / dependency signals |
 |----------|--------|---------------------------------|
-| _(none yet — fragments are authored in a follow-up)_ | — | — |
+| `react` | React components, styling/theming, i18n, a11y, performance | `react`, `react-dom` |
+| `prisma` | Prisma data access, schema & migrations | `prisma`, `@prisma/client` |
 
 ## How a module pulls fragments
 
