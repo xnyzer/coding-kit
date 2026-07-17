@@ -5,6 +5,39 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-003b — Web-standards fragments: api-design + docker + nginx (2026-07-17)
+
+**Problem:** After F-003a (react, prisma), the web catalog still lacked the API and
+infrastructure standards a full-stack project needs.
+
+**What was built (6 files; VERSION 0.4.0 → 0.5.0):**
+
+- `modules/standards/api-design.md` (new): thin-routes/fat-services, URL/method/status
+  conventions, schema-validated request/response, and the web security boundary (explicit
+  permission-based authorization, rate limiting, forbidden patterns, credentials & data
+  protection, security headers).
+- `modules/standards/docker.md` (new): multi-stage images, non-root runtime, layer caching,
+  healthchecks, PID-1 signal handling, compose, entrypoint & startup.
+- `modules/standards/nginx.md` (new): reverse-proxy hardening — per-location header
+  re-declaration, WebSocket, compression, SPA cache strategy, HSTS placement.
+- `modules/standards/README.md`: three mapping rows; `VERSION`, `CHANGELOG.md`.
+
+**Notable decisions:**
+
+- Generalized from real full-stack sources and senior-hardened (idempotency, `Retry-After`,
+  cursor pagination, no stack traces to clients; proxy timeouts / modern TLS). Name-free, no
+  version pins; project-specific rules (RBAC internals, activity-log calls, a GDPR ticket
+  reference) removed.
+- A coverage check against the sources confirmed no framework-general rule was dropped.
+
+**Verification:** `just check` green (markers balanced, no dangling declarations, privacy lint).
+
+**This completes F-003:** the web standards catalog now holds react, prisma, api-design, docker,
+nginx. Composing them into a project is the coding-kit side (a full-stack module or the prep-step
+hook), tracked separately.
+
+---
+
 ## F-003a — Web-standards fragments: react + prisma (2026-07-17)
 
 **Problem:** The composable-standards catalog (`modules/standards/`) existed but held no

@@ -18,6 +18,9 @@ Every fragment plus the framework→fragment mapping — the dependency/framewor
 |----------|--------|---------------------------------|
 | `react` | React components, styling/theming, i18n, a11y, performance | `react`, `react-dom` |
 | `prisma` | Prisma data access, schema & migrations | `prisma`, `@prisma/client` |
+| `api-design` | REST API design, request/response validation, web security boundary | `express`, `fastify`, `koa`, `hono`, `nestjs` |
+| `docker` | Container images, compose, entrypoint & startup | `Dockerfile`, `docker-compose.yml` |
+| `nginx` | Reverse proxy: headers, caching, SPA serving, WebSocket | `nginx.conf`, `nginx` |
 
 ## How a module pulls fragments
 

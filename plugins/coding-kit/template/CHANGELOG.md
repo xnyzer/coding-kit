@@ -4,6 +4,18 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.5.0] — 2026-07-17
+
+### Added
+- Standards fragments `api-design`, `docker`, and `nginx` in the `modules/standards/` catalog,
+  completing the initial web set. `api-design` covers thin-routes/fat-services, URL/method/
+  status conventions, schema-validated request/response, and the web security boundary
+  (explicit authorization, rate limiting, forbidden patterns, credentials & data protection,
+  security headers); `docker` covers multi-stage images, non-root runtime, layer caching,
+  healthchecks, PID-1 signal handling, compose and entrypoint/startup; `nginx` covers the
+  reverse-proxy hardening (per-location header re-declaration, WebSocket, compression, SPA
+  cache strategy, HSTS placement). Generalized and senior-hardened; registered in the mapping.
+
 ## [0.4.0] — 2026-07-17
 
 ### Added

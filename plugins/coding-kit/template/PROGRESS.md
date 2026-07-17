@@ -17,60 +17,13 @@ decomposes, `/step-done` finishes (review, docs, commit question).
 | F-002b | Composable CODING-STANDARDS: migrate existing modules to the fragment scheme. Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-17 |
 | F-002c | Composable CODING-STANDARDS: validator support (fragment markers + declarations). Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-17 |
 | F-003a | Web-standards fragments: react + prisma. Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-17 |
+| F-003b | Web-standards fragments: api-design + docker + nginx. Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-17 |
 
 ---
 
 ## Open tasks — work top to bottom
 
-### F-003 — Web-standards fragments (react / prisma / api-design / docker / nginx)
-
-**Status:** PLANNED
-
-**Problem:** F-002 delivers the composable-fragment infrastructure but no web/full-stack
-content to compose. Without authored fragments for the common full-stack building blocks, a
-downstream full-stack project still cannot inherit its standards from the template and keeps a
-full CODING-STANDARDS override.
-
-**Idea:** Author framework-general standards fragments for the common full-stack building
-blocks — React, Prisma, API design, Docker, Nginx — generalized from proven full-stack sources
-and senior-improved (not a copy), so a full-stack project inherits core + these fragments.
-
-**Solution sketch (decided at prep-step):**
-- Five self-wrapped catalog fragments in `modules/standards/`: `react`, `prisma`, `api-design`,
-  `docker`, `nginx`. Framework-general, **name-free**, no version pins ("current LTS" style);
-  verify current framework practice while authoring.
-- Senior additions folded in: `react` gets design-token / slot-based-layout discipline (no
-  hardcoded visual values); `api-design` gets thin-routes/fat-services and the API security
-  boundary (input validation, status codes, rate limiting, security headers).
-- Register each in the `modules/standards/README.md` framework→fragment mapping.
-- No declaring stack module in F-003 — the catalog is a library; a full-stack module or the
-  coding-kit prep-step hook wires fragments in later.
-- Per fragment: a coverage check against the real full-stack sources (reported to the user,
-  kept name-free / out of the repo) so no framework-general rule is silently dropped.
-
-**Dependencies:** F-002 (fragment infrastructure) — done.
-
-**Substeps:** _(F-003a done — see the Done table and `PROGRESS-ARCHIVE.md`.)_
-
-#### F-003b — API/infra fragments: api-design + docker + nginx
-- **What:** author `modules/standards/{api-design,docker,nginx}.md` (self-wrapped, generalized,
-  senior-improved — api-design incl. thin-routes + security boundary); add mapping rows.
-- **Files:** `modules/standards/{api-design,docker,nginx}.md` (new), `modules/standards/README.md`,
-  `VERSION`, `CHANGELOG.md`.
-- **Dependencies:** F-002.
-- **Acceptance:**
-  - [ ] Three fragments valid and mapping updated.
-  - [ ] Coverage check reported; name-free; no version pins.
-  - [ ] `just check` green; sync-invariant satisfied.
-
-**Notes / boundaries (from prep-step source analysis):**
-- Domain-specific rules (e.g. a media-player provider abstraction) are correctly **not**
-  generalized — they stay project-local; nothing framework-general is lost.
-- Two valuable non-web patterns — async in-flight/promise dedup, and audit/activity logging —
-  fit none of the five web fragments; tracked as follow-ups F-005/F-006 (core promotion /
-  backend or observability fragment).
-- Language: fragments are English; adopting projects with German standards switch or translate
-  those sections when inheriting.
+_No prepared tasks. Plan a backlog item via `/prep-step`._
 
 ---
 
@@ -155,7 +108,7 @@ no secrets), and how it differs from application logging.
 next-feature: F-007
 F-001 Initial template build (DONE)
 F-002 Composable CODING-STANDARDS fragments (DONE)
-F-003 Web-standards fragments (PLANNED)
+F-003 Web-standards fragments (DONE)
 F-004 Remediate already-published real-name leaks (BACKLOG)
 F-005 Async in-flight / promise-dedup concurrency standard (BACKLOG)
 F-006 Audit / activity-logging standard (BACKLOG)
