@@ -4,6 +4,15 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.3.1] — 2026-07-17
+
+### Changed
+- Migrated the existing stack modules to the fragment scheme: each module's
+  `CODING-STANDARDS.part.md` (go/python/ts-node) is now wrapped in `<!-- fragment:<module> -->`
+  … `<!-- /fragment:<module> -->` markers (content otherwise unchanged), and each `MODULE.md`
+  declares its (empty) `Standards fragments` set. Makes the parts conform to the append
+  contract without changing any rule text.
+
 ## [0.3.0] — 2026-07-17
 
 ### Added

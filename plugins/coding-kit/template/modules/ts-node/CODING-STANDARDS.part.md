@@ -1,3 +1,4 @@
+<!-- fragment:ts-node -->
 ### TypeScript (ts-node module)
 
 - **Runtime:** current Node LTS via mise; `engines` in `package.json` enforces the floor.
@@ -15,3 +16,4 @@
   kebab-case file names.
 - **Dependencies:** exact-pinned by the lockfile (`pnpm-lock.yaml`, committed); Renovate
   keeps them fresh. Permissive licenses only (§8).
+<!-- /fragment:ts-node -->

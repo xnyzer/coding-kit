@@ -1,3 +1,4 @@
+<!-- fragment:python -->
 ### Python (python module)
 
 - **Runtime:** current stable Python via mise; `requires-python` enforces the floor.
@@ -14,3 +15,4 @@
   constants.
 - **Dependencies:** locked in `uv.lock` (committed); Renovate keeps them fresh.
   Permissive licenses only (§8).
+<!-- /fragment:python -->

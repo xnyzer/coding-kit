@@ -18,6 +18,9 @@ bundler-free Node ESM), **Biome** as formatter + linter (warnings fail the gate)
 | `CODING-STANDARDS.part.md` | TypeScript rules for §13 |
 | `files/` | package.json, tsconfig(.build).json, biome.json, vitest.config.ts, src sample |
 
+**Standards fragments:** (none) — this module contributes only its own `fragment:ts-node`
+language fragment; it pulls no catalog fragments from `modules/standards/`.
+
 ## File policies (files/)
 
 | File | Policy |

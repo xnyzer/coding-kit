@@ -14,6 +14,7 @@ decomposes, `/step-done` finishes (review, docs, commit question).
 |------|-------------|-----------|
 | F-001 | Initial template build → **core/ + modules (docs-only, ts-node, python, go; stubs swift-ios/java), MANIFEST format 1, validator + CI, all checks green.** Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
 | F-002a | Composable CODING-STANDARDS: fragment contract + catalog scaffold. Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-17 |
+| F-002b | Composable CODING-STANDARDS: migrate existing modules to the fragment scheme. Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-17 |
 
 ---
 
@@ -51,19 +52,7 @@ uses, and can add more later.
 (choose-stack multi-fragment, prep-step/step-done detection) for a full end-to-end assembly —
 that side is tracked separately in the coding-kit repo.
 
-**Substeps:** _(F-002a done — see the Done table and `PROGRESS-ARCHIVE.md`.)_
-
-#### F-002b — Migrate existing modules
-- **What:** wrap each existing `CODING-STANDARDS.part.md` (go/python/ts-node) in
-  `<!-- fragment:<module> -->` markers **without changing its content**; add the (empty)
-  "Standards fragments" declaration to each `MODULE.md`.
-- **Files:** `modules/{go,python,ts-node}/CODING-STANDARDS.part.md` + `MODULE.md`, `VERSION`,
-  `CHANGELOG.md`.
-- **Dependencies:** F-002a.
-- **Acceptance:**
-  - [ ] All three modules conform; part content unchanged (marker-only diff).
-  - [ ] A hand-simulated assembly (core §13 + a module fragment) is valid Markdown.
-  - [ ] `just check` green; sync-invariant satisfied.
+**Substeps:** _(F-002a, F-002b done — see the Done table and `PROGRESS-ARCHIVE.md`.)_
 
 #### F-002c — Validator support
 - **What:** extend `scripts/validate.py` to (a) check `<!-- fragment:NAME -->` markers are
@@ -110,11 +99,46 @@ fragments.
   strictly web-specific?
 - How opinionated to make each fragment (generalize vs. keep sharp).
 
+### F-004 — Remediate already-published real-name leaks
+
+**Status:** BACKLOG
+
+**Problem:** The "no real names" rule now covers the whole repo including its git history, but
+a concrete downstream project name was already committed and pushed in the initial build (in a
+module file and the F-001 archive). The working tree is now scrubbed, yet the public history
+still holds the name, and any repo instantiated from that module before the fix carries it too.
+Scrubbing the tree does not remove it from history.
+
+**Idea:** Define — and apply to this repo — a procedure to remediate already-published leaks:
+detect the leaked strings across history, purge them via a history rewrite, force-push, and
+re-fix any instantiated downstream repos; plus a prevention step. Consider whether the
+procedure graduates into a reusable coding-kit skill.
+
+**Solution sketch:**
+- Detection: scan history across refs (`git log -S`, `git grep` over history) against a private
+  blocklist of the owner's real project/personal names.
+- Remediation: rewrite history with `git filter-repo` to purge the strings; force-push; account
+  for existing clones/forks.
+- Downstream: enumerate repos instantiated from the affected module and re-fix + rewrite them.
+- Prevention: consider a validator / pre-commit blocklist check — keeping the blocklist itself
+  out of the public tree (`private/` or resolved at runtime).
+
+**Dependencies:** none (the project-template working tree is already scrubbed).
+
+**Still to analyze:**
+- Repo placement: remediate only this repo's history + a documented procedure here, vs. a
+  reusable coding-kit skill (cross-repo). Likely: fix here, generalize in coding-kit.
+- History-rewrite blast radius: `git filter-repo` + force-push breaks existing clones/forks —
+  needs explicit go-ahead (outward-facing, effectively irreversible).
+- Which downstream repos were instantiated from the affected module before the fix.
+- How to store the name blocklist without leaking it (private/ vs. runtime resolution).
+
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-004
+next-feature: F-005
 F-001 Initial template build (DONE)
 F-002 Composable CODING-STANDARDS fragments (PLANNED)
 F-003 Web-standards fragments (BACKLOG)
+F-004 Remediate already-published real-name leaks (BACKLOG)
 -->

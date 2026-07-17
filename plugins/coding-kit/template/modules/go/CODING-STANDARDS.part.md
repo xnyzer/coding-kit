@@ -1,3 +1,4 @@
+<!-- fragment:go -->
 ### Go (go module)
 
 - **Go version:** pinned via mise + the `go.mod` directive (they move together). No `latest`.
@@ -19,3 +20,4 @@
   the code. Negative tests for every boundary (§10).
 - **Dependencies:** `go.mod`/`go.sum` pinned; `go mod tidy` clean; permissive licenses
   only — enforced by `just license-check` and the CI license job (§8).
+<!-- /fragment:go -->

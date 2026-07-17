@@ -5,6 +5,37 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-002b — Composable CODING-STANDARDS: migrate existing modules (2026-07-17)
+
+**Problem:** After F-002a defined the fragment contract, the existing stack modules still shipped
+their `CODING-STANDARDS.part.md` as unwrapped blocks — not conforming to the new append/marker
+scheme.
+
+**What was built (8 files):**
+
+- `modules/{go,python,ts-node}/CODING-STANDARDS.part.md`: each wrapped in
+  `<!-- fragment:<module> -->` … `<!-- /fragment:<module> -->` markers; rule text unchanged
+  (marker-only diff — exactly 6 insertions total, markers balanced open=close per module).
+- `modules/{go,python,ts-node}/MODULE.md`: added a `Standards fragments: (none)` declaration —
+  these single-package language modules pull no catalog fragments.
+- `VERSION` 0.3.0 → 0.3.1; `CHANGELOG.md` entry.
+
+**Also in this commit (privacy scrub, not F-002b scope):** replaced a concrete downstream project
+name with a neutral wording in `modules/go/MODULE.md` and the F-001 archive entry, per the
+repo-wide no-real-names rule. Remediating the already-published git history is tracked as F-004.
+
+**Notable decisions:**
+
+- Fragments self-wrap (the marker lives in the fragment file), so the coding-kit assembly just
+  concatenates — no wrapping at runtime.
+- A module's own language part is `fragment:<module>`; catalog fragments are declared separately
+  and are none for these three.
+
+**Verification:** `just check` green; marker-only diff confirmed; markers balanced; declarations
+present in all three `MODULE.md`; working-tree name scan clean.
+
+---
+
 ## F-002a — Composable CODING-STANDARDS: fragment contract + catalog scaffold (2026-07-17)
 
 **Problem:** The §13 stack slot took a single inserted module part, so a project could not
@@ -68,8 +99,8 @@ projects.
   conventions and module append marker, editorconfig/gitattributes, ADR scaffold.
 - **modules/:** docs-only (core defaults), ts-node (pnpm + strict tsconfig per current
   `tsc --init` set + nodenext ESM + Biome + vitest; no Corepack dependency), python
-  (uv + src layout + uv_build + ruff + pyright strict + pytest), go (distilled from the
-  [redacted-downstream-project] gold standard: gofmt gate, golangci-lint v2 standard set, -race
+  (uv + src layout + uv_build + ruff + pyright strict + pytest), go (distilled from a
+  production Go service gold standard: gofmt gate, golangci-lint v2 standard set, -race
   tests, go-licenses gate locally + as CI job), swift-ios/java as documented stubs.
 
 **Notable decisions:**

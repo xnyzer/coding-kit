@@ -17,6 +17,9 @@ enforces the floor. Build backend: `uv_build`.
 | `CODING-STANDARDS.part.md` | Python rules for §13 |
 | `files/` | pyproject.toml, src/ package skeleton, tests/ |
 
+**Standards fragments:** (none) — this module contributes only its own `fragment:python`
+language fragment; it pulls no catalog fragments from `modules/standards/`.
+
 ## File policies (files/)
 
 | File | Policy |

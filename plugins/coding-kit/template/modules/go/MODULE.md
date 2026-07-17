@@ -1,6 +1,6 @@
 # Module: go
 
-Go — distilled from the [redacted-downstream-project] gold standard: **gofmt/goimports** mandatory
+Go — distilled from a production Go service gold standard: **gofmt/goimports** mandatory
 (via `golangci-lint fmt`), **go vet + golangci-lint** (v2 config, `standard` linter set),
 **tests with `-race`**, and a **license gate** (`go-licenses`, no GPL/AGPL/LGPL) both
 locally and as an extra CI job. Go version = current stable via mise + `go.mod` directive.
@@ -17,6 +17,9 @@ locally and as an extra CI job. Go version = current stable via mise + `go.mod` 
 | `CODING-STANDARDS.part.md` | Go rules for §13 |
 | `ci.part.yml` | extra CI job: license gate |
 | `files/` | go.mod, main.go + test sample, .golangci.yml |
+
+**Standards fragments:** (none) — this module contributes only its own `fragment:go` language
+fragment; it pulls no catalog fragments from `modules/standards/`.
 
 ## File policies (files/)
 
