@@ -11,16 +11,20 @@ Each fragment is a self-contained file `<name>.md` whose body is wrapped in
 
 ## Catalog
 
-Every fragment plus the framework→fragment mapping — the dependency/framework signals that
-`/prep-step` matches to detect a newly introduced framework whose fragment is not yet present.
+Every fragment plus the trigger→fragment mapping. Most triggers are dependency/framework
+signals that `/prep-step` matches to detect a newly introduced framework whose fragment is
+not yet present. A fragment without any dependency signal declares a **project
+characteristic** instead (marked *characteristic:*); evaluating those — in the requirements
+interview at instantiation, or when a matching feature is planned — is coding-kit logic.
 
-| Fragment | Covers | Frameworks / dependency signals |
-|----------|--------|---------------------------------|
+| Fragment | Covers | Trigger — dependency signal / project characteristic |
+|----------|--------|------------------------------------------------------|
 | `react` | React components, styling/theming, i18n, a11y, performance | `react`, `react-dom` |
 | `prisma` | Prisma data access, schema & migrations | `prisma`, `@prisma/client` |
 | `api-design` | REST API design, request/response validation, web security boundary | `express`, `fastify`, `koa`, `hono`, `nestjs` |
 | `docker` | Container images, compose, entrypoint & startup | `Dockerfile`, `docker-compose.yml` |
 | `nginx` | Reverse proxy: headers, caching, SPA serving, WebSocket | `nginx.conf`, `nginx` |
+| `audit-logging` | Accountability trail for mutating/admin actions: scope, entry contents, properties, retention | *characteristic:* service with user/admin mutations |
 
 ## How a module pulls fragments
 

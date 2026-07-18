@@ -4,6 +4,21 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.7.0] — 2026-07-18
+
+### Added
+- Standards fragment `audit-logging` in the `modules/standards/` catalog: accountability
+  trail for services with user/admin mutations — what must be logged (domain mutations,
+  permission/role changes, auth and admin operations, including denied attempts), what an
+  entry carries (actor, action, target, timestamp, outcome — never secrets or full
+  payloads), properties (append-only, coupled to the mutation, queryable, deliberate
+  retention), and the separation from application logging.
+
+### Changed
+- `modules/standards/README.md`: the catalog mapping now supports **project-characteristic
+  triggers** alongside dependency signals — for fragments (like `audit-logging`) that no
+  package manifest can reveal; evaluating those triggers stays coding-kit logic.
+
 ## [0.6.0] — 2026-07-18
 
 ### Added

@@ -5,6 +5,39 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-006 — Audit / activity-logging standard (2026-07-18)
+
+**Problem:** Mutating and administrative actions should leave an audit trail, but this is
+neither a web framework nor one of the F-003 fragments — it went uncaptured, and a downstream
+project inheriting the template's standards would have lost the rule.
+
+**What was built (4 files; VERSION 0.6.0 → 0.7.0):**
+
+- `modules/standards/audit-logging.md` (new): accountability trail for services with
+  user/admin mutations — what must be logged (domain mutations, permission/role changes,
+  auth and admin operations, including denied attempts), what an entry carries (actor,
+  action, target, timestamp, outcome — never secrets or full payloads), properties
+  (append-only, coupled to the mutation, queryable, deliberate retention), and the
+  separation from application logging (accountability vs. debugging).
+- `modules/standards/README.md`: registered the fragment; the catalog mapping now supports
+  **project-characteristic triggers** alongside dependency signals, for fragments no package
+  manifest can reveal.
+- `VERSION`, `CHANGELOG.md`.
+
+**Notable decisions:**
+
+- **Catalog fragment, not a core section** (decided with the owner): an audit trail is real
+  architecture and would be wrong to impose on libraries, CLIs, or local tools.
+- **Trigger is a project characteristic** ("service with user/admin mutations"), evaluated by
+  coding-kit — in the requirements interview at instantiation, or when a matching feature is
+  planned. This repo only defines the data and the contract, as with dependency signals.
+
+**Verification:** `just check` green (fragment markers balanced, no dangling declarations,
+privacy + blocklist lint); no module declares the fragment — valid, it is pulled per project
+characteristic.
+
+---
+
 ## F-005 — Async in-flight / promise-dedup concurrency standard (2026-07-18)
 
 **Problem:** Several independent triggers starting the same expensive or side-effectful async
