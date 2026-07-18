@@ -4,6 +4,17 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.6.0] — 2026-07-18
+
+### Added
+- `core/CODING-STANDARDS.md` §7 (heading extended to "Error handling, resilience &
+  concurrency"): two language-agnostic concurrency rules — deduplicate concurrent async
+  work via an in-flight promise/future that every concurrent caller awaits (applies where
+  shared mutable state, several independent async triggers, and expensive or side-effectful
+  work meet; cheap idempotent reads need no guard), and set the completion marker only
+  after the awaited work finishes, so concurrent readers never observe a half-finished
+  state as done. No section renumbering.
+
 ## [0.5.0] — 2026-07-17
 
 ### Added

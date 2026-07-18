@@ -5,6 +5,38 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-005 — Async in-flight / promise-dedup concurrency standard (2026-07-18)
+
+**Problem:** Several independent triggers starting the same expensive or side-effectful async
+operation (a token refresh, a migration, a cache populate, an external call) cause duplicate
+work, wasted load, or corruption from a half-done shared state. Surfaced during the F-003
+source analysis; not web-framework-specific.
+
+**What was built (3 files; VERSION 0.5.0 → 0.6.0):**
+
+- `core/CODING-STANDARDS.md` §7, heading extended to "Error handling, resilience &
+  concurrency": two new bullets — **deduplicate concurrent async work** (the first caller
+  stores its in-flight promise/future and every concurrent caller awaits that same one;
+  applies where shared mutable state, several independent async triggers, and expensive or
+  side-effectful work meet; cheap idempotent reads need no guard) and **completion marker
+  last** (the "done" flag is set only after the awaited work completes, so concurrent readers
+  never observe a half-finished state as done).
+- `VERSION`, `CHANGELOG.md`.
+
+**Notable decisions:**
+
+- **Core, not a catalog fragment** (decided with the owner): the pattern has no
+  dependency-based trigger — the situation emerges mid-development, and a fragment pulled
+  only after someone notices the problem class arrives too late. As a conditional rule it
+  costs unaffected projects almost nothing.
+- **Heading extension instead of a new numbered section** — §§8–13 keep their numbers; the
+  §13 slot is referenced externally (MANIFEST, module docs), so renumbering would ripple.
+
+**Verification:** `just check` green; §7 re-read; the only §7 cross-reference in the tree
+(`modules/go/CODING-STANDARDS.part.md`) refers to the section number, which is unchanged.
+
+---
+
 ## F-004b — Remediate real-name leaks: private blocklist check in the validator (2026-07-18)
 
 **Problem:** Nothing prevented a private name from slipping into the public tree again — the

@@ -74,7 +74,7 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 
 ---
 
-## 7. Error handling & resilience
+## 7. Error handling, resilience & concurrency
 
 - **Typed/custom errors** with clear names. Raise in the core, handle centrally.
 - **No empty catch / error-swallowing.** Never leak internal details (stack traces,
@@ -82,6 +82,14 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 - **Fail loud, fail early:** invalid state stops with a clear message; never continue
   with silently-wrong results. On security-relevant paths, fail **closed**.
 - **No unhandled rejections/panics** on production paths.
+- **Deduplicate concurrent async work.** Where shared mutable state, several independent
+  async triggers, and expensive or side-effectful work meet (a token refresh, a migration,
+  a cache populate, an external call), the first caller stores its in-flight promise/future
+  and every concurrent caller awaits that same one — the operation never runs twice in
+  parallel. Cheap idempotent reads need no such guard.
+- **Completion marker last.** Set the "done" flag only after the awaited work has
+  completed — never before, or concurrent readers observe a half-finished state as
+  finished.
 
 ---
 
