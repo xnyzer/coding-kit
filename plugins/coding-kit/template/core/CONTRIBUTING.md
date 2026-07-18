@@ -45,7 +45,9 @@ than cleaning.
 
 Never commit secrets, tokens, passwords, private keys, private email addresses, or
 deployment internals (IPs, hostnames, key names). Operational internals belong in the
-gitignored `private/` directory. The pre-commit hook runs gitleaks on staged changes.
+gitignored `private/` directory. The pre-commit hook runs gitleaks (secrets) and a
+privacy lint (local paths, IPs, emails, plus terms from an optional gitignored
+`private/blocklist.txt` — see `private/README.md`) on staged changes.
 
 ## Code style
 

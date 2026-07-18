@@ -78,6 +78,7 @@ lowercase and therefore never collide).
 | `core/.gitattributes` | `.gitattributes` | managed |
 | `core/.gitignore` | `.gitignore` | managed (module appends below marker) |
 | `core/private/README.md` | `private/README.md` | managed |
+| `core/scripts/privacy-lint.sh` | `scripts/privacy-lint.sh` | managed |
 | `core/docs/adr/README.md` | same path | managed |
 | `core/docs/adr/0000-template.md` | same path | managed |
 

@@ -4,6 +4,19 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.8.0] — 2026-07-18
+
+### Added
+- `core/scripts/privacy-lint.sh` plus a `privacy-lint` pre-commit job in
+  `core/lefthook.yml`: every project now blocks commits that would leak private
+  identifiers. Generic patterns (absolute local paths, IPs and email addresses outside
+  the documentation allowlists) always apply; an optional gitignored
+  `private/blocklist.txt` adds project-private terms and is silently skipped where
+  absent (e.g. in CI). POSIX sh + grep only — no new toolchain dependency. Convention
+  documented in `core/private/README.md`; the secrets-policy section in
+  `core/CONTRIBUTING.md` now names the full pre-commit gate; registered as a managed
+  file in `MANIFEST.md`.
+
 ## [0.7.1] — 2026-07-18
 
 ### Changed

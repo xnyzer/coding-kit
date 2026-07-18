@@ -5,6 +5,46 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-008 — Ship the privacy lint + private blocklist to projects (2026-07-18)
+
+**Problem:** Downstream projects had only gitleaks (secrets) as a commit gate — nothing
+caught private names, local paths, IPs, or private emails, although the conventions demand
+living docs stay publishable. The template repo gained this guard in F-004b; projects had
+none of it. The coding-kit `/step-done` privacy scan is soft and does not know the owner's
+private names.
+
+**What was built (7 files; VERSION 0.7.1 → 0.8.0):**
+
+- `core/scripts/privacy-lint.sh` (new managed file): POSIX sh + grep, no other toolchain.
+  Generic patterns always on (absolute local paths, IPs and emails outside the documentation
+  allowlists — defaults mirror this repo's `validate.py`); optional gitignored
+  `private/blocklist.txt` (one term per line, `#` comments, case-insensitive substring)
+  adds project-private terms, silently skipped where absent (CI). Scans the staged files
+  lefthook passes; `--all` re-invokes over `git ls-files` (NUL-safe) for tree audits;
+  skips `private/`, `mise.lock`, binary/empty files.
+- `core/lefthook.yml`: third pre-commit job `privacy-lint` next to secrets-scan/format.
+- `core/private/README.md`: blocklist convention documented; `core/CONTRIBUTING.md`:
+  secrets-policy section now names the full pre-commit gate (gitleaks + privacy lint).
+- `MANIFEST.md` (new managed-file row), `VERSION`, `CHANGELOG.md`.
+
+**Notable decisions:**
+
+- **Shell instead of Python** (decided with the owner): the core toolchain guarantees no
+  Python (mise pins just/lefthook/gitleaks), and the patterns are plain regexes — POSIX
+  sh + grep exist in every git environment. On Windows that means Git Bash or WSL; a bare
+  cmd/PowerShell setup fails loudly, never silently (noted in the script header).
+- Downstream CI integration deliberately out of scope — justfiles are module-owned;
+  the pre-commit gate is the deliverable.
+- Kept as a hard, deterministic complement to the model-driven `/step-done` privacy scan;
+  the blocklist is the only control that knows the owner's actual private names.
+
+**Verification:** 9-case sandbox suite green on macOS/BSD grep (clean file, path/IP/email
+leaks, allowlisted values, blocklist hit case-insensitive, blocklist absent → silent skip,
+binary skip, `--all` aggregation, no-args exit 0); `just check` green — the validator scans
+the new script without false positives from its own regex literals.
+
+---
+
 ## F-007 — Refresh repo docs for the fragment catalog (2026-07-18)
 
 **Problem:** After F-002/F-003/F-006 the repo docs lagged behind the fragment mechanism: the

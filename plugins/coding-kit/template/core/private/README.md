@@ -15,6 +15,14 @@ stays discoverable; its contents are not.
 - Working material with private context (e.g. the original project brief) that must stay out
   of the tracked tree.
 
+## blocklist.txt
+
+Optional: `private/blocklist.txt` — one project-private term per line (`#` starts a
+comment): real project names, codenames, customer identifiers. The pre-commit privacy lint
+(`scripts/privacy-lint.sh`) blocks any commit whose staged files contain a listed term
+(case-insensitive). Like everything here it is gitignored; where it is absent (e.g. in CI),
+only the lint's generic patterns run.
+
 ## Rules
 
 - **Never** copy anything from here into a tracked file. The living docs (README, PROGRESS,
