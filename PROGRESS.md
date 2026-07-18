@@ -45,6 +45,9 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 > Fragment-Vertrag (Marker-Schema, Katalog-Ort, Deklarationsform) entsteht in
 > **project-template F-002** (Autoring der Web-Fragmente: dortiges F-003). F-013–F-016
 > koppeln an diesen Vertrag — gegen das F-002-Ergebnis planen oder co-designen.
+> Stand: seit project-template VERSION 0.7.0 liegt der Katalog mit Mapping vor
+> (`modules/standards/README.md`, manifest-format 1); Mapping-Zeilen können auch
+> Eigenschafts-Trigger tragen → F-017.
 
 ### F-012 — add-skill: Template-HOW-TO synchron halten
 
@@ -151,10 +154,42 @@ Lücken — nichts wird ohne seinen Standard abgeschlossen.
 **Abhängigkeiten:** project-template F-002 (Fragment-Vertrag + Mapping); inhaltlich
 verwandt mit F-015 (gemeinsames Mapping), aber unabhängig umsetzbar.
 
+### F-017 — Eigenschafts-Trigger für Standards-Fragmente auswerten
+
+**Status:** BACKLOG
+
+**Problem:** Der Fragment-Katalog des project-template (ab dessen VERSION 0.7.0,
+`modules/standards/README.md`, manifest-format 1) kennt Mapping-Zeilen mit
+Projekteigenschafts-Triggern (*characteristic:* …; erster Fall: `audit-logging` mit
+„service with user/admin mutations"). Solche Trigger sind über Paket-Manifeste nicht
+erkennbar — sie müssen aus Projektwissen kommen. Ohne Kit-Unterstützung wird ein
+Eigenschafts-Fragment nie gezogen.
+
+**Idee:** Die Kit-Skills werten die im Katalog deklarierten Eigenschafts-Trigger zur
+Laufzeit aus — an drei Stellen im Lebenszyklus: Anforderungs-Interview,
+Feature-Planung, Nachrüstung im Bestandsprojekt. Nichts wird hardcodiert; Trigger-Daten
+kommen ausschließlich aus dem Katalog-README.
+
+**Lösungsskizze:**
+- define-requirements bzw. /new-project-Flow: deklarierte Eigenschafts-Trigger im
+  Interview abfragen (z. B. „Gibt es Nutzer-/Admin-Aktionen, die Daten verändern?");
+  Treffer → Fragment bei der Instanziierung mitkomponieren.
+- prep-step §2: Feature-Beschreibung zusätzlich gegen die Eigenschafts-Trigger matchen
+  (komplementär zur Dependency-Erkennung aus F-015); Treffer ohne vorhandenes
+  Fragment → Anhängen vorschlagen.
+- choose-stack (Bestandsprojekt-Modus): Eigenschafts-Fragmente nachrüstbar machen —
+  sie sind in keinem MODULE.md deklariert; Auswahl als Projektentscheidung mit
+  Bestätigung wie beim Modulwechsel.
+- Mapping zur Laufzeit aus dem Katalog-README lesen (manifest-format 1) — nichts im
+  Kit hardcoden.
+
+**Abhängigkeiten:** F-013 (Fragment-Anhänge-Mechanik); der prep-step-Teil wird
+idealerweise zusammen mit F-015 umgesetzt (gleiche Stelle, komplementärer Signaltyp).
+
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-017
+next-feature: F-018
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -171,4 +206,5 @@ F-013 choose-stack: Multi-Fragment-Einbau
 F-014 update-conventions: Pro-Fragment-Refresh
 F-015 prep-step: Framework-Erkennung mit Fragment-Vorschlag
 F-016 step-done: Standards-Coverage-Backstop
+F-017 Eigenschafts-Trigger für Standards-Fragmente auswerten
 -->
