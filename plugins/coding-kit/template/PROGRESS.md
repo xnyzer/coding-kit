@@ -22,6 +22,7 @@ decomposes, `/step-done` finishes (review, docs, commit question).
 | F-004b | Real-name leak prevention: private blocklist check in the validator. Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-18 |
 | F-005 | Core concurrency rules: in-flight dedup + completion marker last (§7, VERSION 0.6.0). Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-18 |
 | F-006 | Standards fragment `audit-logging` + characteristic triggers in the catalog (VERSION 0.7.0). Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-18 |
+| F-007 | Repo docs refreshed for the fragment catalog: root README structure, modules/README pointer (VERSION 0.7.1). Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-18 |
 
 ---
 
@@ -38,11 +39,12 @@ _Empty. Intake new ideas via `/add-feature`._
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-007
+next-feature: F-008
 F-001 Initial template build (DONE)
 F-002 Composable CODING-STANDARDS fragments (DONE)
 F-003 Web-standards fragments (DONE)
 F-004 Remediate already-published real-name leaks (DONE)
 F-005 Async in-flight / promise-dedup concurrency standard (DONE)
 F-006 Audit / activity-logging standard (DONE)
+F-007 Refresh repo docs for the fragment catalog (DONE)
 -->

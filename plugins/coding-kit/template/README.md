@@ -17,7 +17,9 @@ core/       Files every project receives (governance docs, .claude/, .github/, t
             English, personal-data-free, parameterised with `{{…}}` placeholder tokens.
 modules/    Per-stack additions (docs-only, ts-node, python, go; stubs: swift-ios, java).
             A module contributes its justfile, mise tools, gitignore entries, CI parts,
-            and a language section for CODING-STANDARDS.md.
+            and its language fragment (plus any declared catalog fragments) composed
+            into CODING-STANDARDS.md. modules/standards/ holds the cross-cutting
+            catalog of reusable standards fragments with the trigger→fragment mapping.
 MANIFEST.md Which files are managed by the template (core vs. module), their update
             policy, and the placeholder/marker conventions.
 VERSION     Template version, stamped into projects as .claude/template-version.

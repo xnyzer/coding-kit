@@ -5,6 +5,29 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-007 — Refresh repo docs for the fragment catalog (2026-07-18)
+
+**Problem:** After F-002/F-003/F-006 the repo docs lagged behind the fragment mechanism: the
+root README still described a module's standards contribution as "a language section" and did
+not mention the `modules/standards/` catalog at all; `modules/README.md` listed only stack
+modules, leaving the `standards/` directory unexplained.
+
+**What was built (4 files; VERSION 0.7.0 → 0.7.1):**
+
+- `README.md` (repo-own doc, outside template content): structure overview now describes the
+  fragment mechanism (language fragment + declared catalog fragments) and lists
+  `modules/standards/` with the trigger→fragment mapping.
+- `modules/README.md`: pointer that `standards/` is not a stack module but the cross-cutting
+  fragment catalog, linking its README.
+- `VERSION`, `CHANGELOG.md` (patch bump — catalog/module README is template content per
+  F-002/F-003 precedent; the root README alone would not have bumped).
+
+**Verification:** `just check` green; wording matches `MANIFEST.md` § Standards fragments;
+`core/README.md` checked and deliberately unchanged (project-facing seed, references no
+fragment mechanics).
+
+---
+
 ## F-006 — Audit / activity-logging standard (2026-07-18)
 
 **Problem:** Mutating and administrative actions should leave an audit trail, but this is

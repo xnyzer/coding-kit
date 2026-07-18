@@ -4,6 +4,13 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.7.1] — 2026-07-18
+
+### Changed
+- `modules/README.md`: clarify that `standards/` is not a stack module but the
+  cross-cutting catalog of reusable CODING-STANDARDS fragments, with a pointer to its
+  own README.
+
 ## [0.7.0] — 2026-07-18
 
 ### Added
