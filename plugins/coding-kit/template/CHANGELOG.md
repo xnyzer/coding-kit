@@ -4,6 +4,31 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.9.0] — 2026-07-19
+
+Docs alignment with the current coding-kit skill set; no rule text or file set changed.
+
+### Changed
+- `core/HOW-TO-CODE-WITH-CLAUDE.md`: refresh the skill overview for the current coding-kit —
+  `/prep-step` additionally checks standards coverage when a task introduces new
+  frameworks/dependencies (matching the catalog's dependency signals **and** characteristic
+  triggers; proposes appending missing catalog fragments, or authoring a project-local
+  fragment with a manual adoption proposal for the template); `/step-done` gains a
+  non-blocking, diff-based standards-coverage backstop (new manifest dependencies or signal
+  files without a fragment are reported with an append proposal); `/choose-stack` composes
+  the module's declared catalog fragments (append, idempotent per `fragment:NAME` marker)
+  and retrofits characteristic fragments after confirmation; `/update-conventions` syncs
+  fragment-granular and downward only, never touching project-local fragments;
+  `/define-requirements` asks the catalog's characteristic triggers in the interview.
+- `modules/standards/README.md`: describe trigger evaluation as implemented — `/prep-step`
+  matches both signal types; characteristic triggers are asked in the requirements
+  interview, at feature planning, and retrofittable via `/choose-stack`.
+- Sync direction made explicit across the docs (`MANIFEST.md` § Sync direction, root
+  `README.md`, root `CONTRIBUTING.md`): convention flow is exclusively downward
+  (template → project); the former upstream/promote path is gone — contributions from
+  projects arrive as manually initiated adoption proposals (template session or GitHub
+  issue), never as automatic writes.
+
 ## [0.8.0] — 2026-07-18
 
 ### Added

@@ -42,6 +42,11 @@ Semantic versioning of the template itself: any change to a managed file bumps `
 and gets a `CHANGELOG.md` entry. `/update-conventions` uses the stamped version plus
 `MANIFEST.md` to diff a project against the template baseline.
 
+Convention flow is exclusively downward (template → project). Conventions originate here;
+improvements discovered in a downstream project come back only as a manually initiated
+adoption proposal (a session in this repository, or a GitHub issue) — never as an
+automatic write. See `MANIFEST.md` (§ Sync direction).
+
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE).

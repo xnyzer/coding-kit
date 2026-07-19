@@ -17,6 +17,13 @@ Every change to a managed template file requires, in the same commit:
 
 `/update-conventions` in downstream projects depends on this — breaking it breaks updates.
 
+## Where conventions originate
+
+Conventions always originate **here in the template** and flow exclusively downward
+(template → project) via `/new-project` and `/update-conventions`. Improvements discovered
+in an instantiated project are contributed as a manually initiated adoption proposal — a
+session in this repository, or a GitHub issue — never as an automatic write from a project.
+
 ## Rules for template content
 
 - English only, free of personal data: no real names, private emails, absolute local

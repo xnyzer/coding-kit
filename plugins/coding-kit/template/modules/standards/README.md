@@ -12,10 +12,12 @@ Each fragment is a self-contained file `<name>.md` whose body is wrapped in
 ## Catalog
 
 Every fragment plus the trigger→fragment mapping. Most triggers are dependency/framework
-signals that `/prep-step` matches to detect a newly introduced framework whose fragment is
-not yet present. A fragment without any dependency signal declares a **project
-characteristic** instead (marked *characteristic:*); evaluating those — in the requirements
-interview at instantiation, or when a matching feature is planned — is coding-kit logic.
+signals; a fragment without any dependency signal declares a **project characteristic**
+instead (marked *characteristic:*). `/prep-step` matches **both** trigger types when a task
+introduces new frameworks or dependencies. Characteristic triggers are additionally asked
+in the requirements interview (`/define-requirements`) and can be retrofitted via
+`/choose-stack` (confirmed before appending). Evaluating triggers is coding-kit logic;
+this catalog defines only the mapping.
 
 | Fragment | Covers | Trigger — dependency signal / project characteristic |
 |----------|--------|------------------------------------------------------|

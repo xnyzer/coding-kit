@@ -31,9 +31,9 @@ Guide for working with Claude Code in the {{PROJECT_NAME}} project.
 | Skill | When to use | What happens |
 |-------|-------------|--------------|
 | `/add-feature` | Put a new task on the roadmap | Analysis → write-up → entry in PROGRESS.md (status **BACKLOG**) |
-| `/prep-step` | Plan a task before building it | Questions the sketch against the code, sizes it, decomposes into substeps → plan in PROGRESS.md (status **PLANNED**) |
+| `/prep-step` | Plan a task before building it | Questions the sketch against the code, sizes it, decomposes into substeps → plan in PROGRESS.md (status **PLANNED**). If the task introduces a new framework/dependency, checks standards coverage against the fragment catalog — matching dependency signals **and** characteristic triggers — and proposes appending missing catalog fragments, or authoring a project-local fragment (with a manual adoption proposal for the template) |
 | `/build-step` | Implement a planned task | Works the plan substep by substep, verifying each; ends every substep with a `/step-done` recommendation |
-| `/step-done` | After finishing a task/substep | Code review → `just check` → secrets & privacy scan → docs → commit question |
+| `/step-done` | After finishing a task/substep | Code review → `just check` → secrets & privacy scan → standards-coverage backstop → docs → commit question |
 | `/teach-step` | Implement it yourself, guided | Socratic guidance — you write all the code; Claude reads it, gives graded hints, runs tests, writes nothing itself |
 | `/audit-code` | One-off audit of existing code | Check (optionally scoped to an area or path) → results in AUDIT-RESULTS.md (gitignored) |
 
@@ -41,10 +41,10 @@ Guide for working with Claude Code in the {{PROJECT_NAME}} project.
 
 | Skill | When to use |
 |-------|-------------|
-| `/choose-stack` | Add a stack module later, or switch modules |
+| `/choose-stack` | Add a stack module later, or switch modules. Composes the module's declared catalog fragments (append, idempotent per `fragment:NAME` marker) and can retrofit characteristic fragments after confirmation |
 | `/choose-license` | Pick or change the project license |
-| `/update-conventions` | Pull template updates into this project (respects overrides) |
-| `/define-requirements` | Elicit requirements (M1 interview → `REQUIREMENTS.md`) |
+| `/update-conventions` | Pull template updates into this project — fragment-granular and downward only (template → project). Respects overrides; project-local fragments are never touched, only reported with a manually triggerable adoption proposal for the template |
+| `/define-requirements` | Elicit requirements (M1 interview → `REQUIREMENTS.md`). The interview also asks the fragment catalog's characteristic triggers (e.g. audit-logging: "Are there user/admin actions that mutate data?") |
 | `/refine-requirements` | Go back to the spec when something fundamental changed |
 
 ---
@@ -95,9 +95,12 @@ Large → 3–5 substeps. `/prep-step` without an argument takes the next open t
 2. **Secrets & privacy scan** — working tree + commit draft for secrets/keys/IPs/private
    emails; living docs for private info (names, customers, local paths). Findings are
    fixed or moved to `private/` before any commit is proposed.
-3. **PROGRESS.md / PROGRESS-ARCHIVE.md** — Done table updated, detail section archived.
-4. **Graphiti** — knowledge-graph update (if configured).
-5. **Commit** — asks whether to commit; proposes a Conventional Commits message and
+3. **Standards-coverage backstop** — diff-based: new manifest dependencies or signal files
+   without a matching standards fragment are reported as a gap, with a proposal to append
+   the fragment. Non-blocking — it never stops the finish.
+4. **PROGRESS.md / PROGRESS-ARCHIVE.md** — Done table updated, detail section archived.
+5. **Graphiti** — knowledge-graph update (if configured).
+6. **Commit** — asks whether to commit; proposes a Conventional Commits message and
    verifies the commit email is a GitHub noreply address.
 
 ---

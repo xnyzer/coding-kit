@@ -36,6 +36,14 @@ lowercase and therefore never collide).
 | `# module:gitignore` / `# module:ci-jobs` | Append points for module parts in non-HTML files. |
 | `<!-- override: reason -->` | Project-local deviation. `/update-conventions` never touches a file/section carrying it. Register in `.claude/convention-overrides.md`. |
 
+## Sync direction
+
+Convention flow is **exclusively downward**: template → project, via `/new-project` and
+`/update-conventions`. There is no automated upstream path. Conventions always originate
+in this template; an improvement discovered in a project reaches the template as a
+**manually initiated adoption proposal** (a session in this repository, or a GitHub
+issue) — never as an automatic write from a project.
+
 ## Policies
 
 - **managed** — owned by the template. `/update-conventions` may propose an overwrite
@@ -109,15 +117,18 @@ can be pulled by any module that needs it. Each fragment is a self-contained fil
 `<!-- /fragment:<name> -->` and **appended** inside the `<!-- module:coding-standards -->` slot
 of a project's `CODING-STANDARDS.md`.
 
-- **Catalog** — `modules/standards/README.md` lists every fragment and the framework→fragment
-  mapping (which dependency/framework each fragment covers). `/prep-step` uses the mapping to
-  detect a newly introduced framework whose fragment is not yet present.
+- **Catalog** — `modules/standards/README.md` lists every fragment and the trigger→fragment
+  mapping (dependency/framework signals and project-characteristic triggers). `/prep-step`
+  matches both trigger types to detect a newly introduced framework or characteristic whose
+  fragment is not yet present.
 - **Declaration** — a stack module contributes its own language fragment (its
   `CODING-STANDARDS.part.md`, wrapped as `fragment:<module>`) implicitly, and declares any
   additional catalog fragments — in order — via a `Standards fragments:` line in its `MODULE.md`
   (omit the line, or leave it empty, to pull none).
 - **Policy** — managed. `/update-conventions` refreshes each fragment by its `fragment:NAME`
-  marker, respecting overrides; a project-added fragment not in the catalog is left untouched.
+  marker — fragment-granular and downward only (template → project), respecting overrides.
+  A project-added fragment not in the catalog is never written to; it is reported as a
+  manually triggerable adoption proposal for the template (see § Sync direction).
 - **Assembly** — appending the fragments at instantiation / `/choose-stack` is coding-kit logic;
   this manifest defines only the contract and the data.
 

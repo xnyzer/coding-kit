@@ -5,6 +5,48 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-009 — Align docs with the current coding-kit skill set (2026-07-19)
+
+**Problem:** The coding-kit plugin (0.13.0) gained fragment-catalog capabilities in several
+skills, and convention inheritance became exclusively downward (template → project; the
+promote path was removed) — the docs in this repo still described the older state.
+
+**What was changed (7 files; VERSION 0.8.0 → 0.9.0):**
+
+- `core/HOW-TO-CODE-WITH-CLAUDE.md` (managed): both skill tables updated — `/prep-step`
+  checks standards coverage for newly introduced frameworks/dependencies (dependency
+  signals **and** characteristic triggers; proposes catalog fragments or project-local
+  authoring with a manual template-adoption proposal); `/step-done` gains the non-blocking
+  diff-based standards-coverage backstop (also added as step 3 in the detail section);
+  `/choose-stack` composes declared catalog fragments (idempotent per `fragment:NAME`
+  marker) and retrofits characteristic fragments after confirmation; `/update-conventions`
+  syncs fragment-granular and downward only; `/define-requirements` asks the catalog's
+  characteristic triggers in the interview.
+- `modules/standards/README.md`: catalog intro rewritten — `/prep-step` matches both
+  trigger types; characteristic triggers are asked at the requirements interview, at
+  feature planning, and retrofittable via `/choose-stack`.
+- Sync direction made explicit: new `MANIFEST.md` § Sync direction, a paragraph under
+  Versioning in the root `README.md`, and a "Where conventions originate" section in the
+  root `CONTRIBUTING.md` — conventions originate in the template and flow downward only;
+  contributions from projects arrive as manually initiated adoption proposals (template
+  session or GitHub issue), never as automatic writes. The standards-fragments policy row
+  now states project-local fragments are never written to, only reported.
+- `VERSION`, `CHANGELOG.md` (entry [0.9.0]).
+
+**Notable decisions:**
+
+- A repo-wide grep (promote/upstream/bidirectional and paraphrases) found no doc actively
+  describing an upward sync — the hits were unrelated (Code of Conduct, SECURITY, nginx
+  upstream) plus a historical note in CHANGELOG 0.2.0, which stays untouched as history.
+  The new policy is therefore stated affirmatively rather than by deleting old text.
+- No plugin version number in template texts (per the no-static-versions rule); the
+  CHANGELOG entry says "current coding-kit".
+
+**Verification:** `just check` (validator) green; diff reviewed in full; secrets/privacy
+scan clean; MANIFEST cross-reference (§ Sync direction) resolves.
+
+---
+
 ## F-008 — Ship the privacy lint + private blocklist to projects (2026-07-18)
 
 **Problem:** Downstream projects had only gitleaks (secrets) as a commit gate — nothing
