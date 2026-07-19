@@ -24,6 +24,7 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-010 | Status-Marker-Konvention + schärfere Grenze add-feature/prep-step → **`Status:`-Zeile mit Tokens BACKLOG/PLANNED in PROGRESS-Einträgen, „Lösungsskizze" statt Vorab-Plan in add-feature, prep-step hinterfragt die Skizze gegen den Codestand; Begleitanpassungen in build-step/step-done (Plugin 0.6.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-13 |
 | F-011 | build-step vom step-done-Handoff entkoppeln → **interaktiv wird step-done nur empfohlen (Nutzer prüft/schließt selbst ab), nur im autonomen `/goal`-Lauf läuft es je Substep automatisch; Modus-Signal = aktiver /goal-Lauf mit Commit-Freigabe (Plugin 0.7.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-14 |
 | F-013 | choose-stack: Multi-Fragment-Einbau → **Modus B hängt Sprachfragment + deklarierte Katalog-Fragmente idempotent an den §13-Slot an (Vertrag: project-template MANIFEST § Standards fragments); Modulwechsel tauscht nur das Sprachfragment, Katalog-Fragmente bleiben; new-project-Referenz nachgezogen (Plugin 0.8.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
+| F-014 | update-conventions: Pro-Fragment-Refresh → **zwei Diff-Ebenen (Core-Datei-Diff mit injiziertem Ist-Slot + Fragment-Abgleich je `fragment:NAME`), fehlende deklarierte Fragmente werden zum Anhängen angeboten, Fragment-Promote in den Katalog (Plugin 0.9.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 
 ---
 
@@ -71,25 +72,6 @@ Sync-Invariante jenes Repos (VERSION + CHANGELOG).
 
 **Abhängigkeiten:** keine — unabhängig von project-template F-002, kann vorgezogen
 werden.
-
-### F-014 — update-conventions: Pro-Fragment-Refresh
-
-**Status:** BACKLOG
-
-**Problem:** update-conventions aktualisiert CODING-STANDARDS bislang als einen
-Modul-Part. Mit dem Append-Slot und Pro-Fragment-Markern muss es einzelne Fragmente
-downstream aktualisieren können, ohne projektlokal ergänzte Fragmente zu überschreiben.
-
-**Idee:** update-conventions versteht den Append-Slot und die Pro-Fragment-Marker,
-gleicht je Fragment gegen den Katalog ab und aktualisiert nur Fragmente, die aus dem
-Template stammen — der bestehende Override-Schutz gilt unverändert weiter.
-
-**Lösungsskizze:**
-- Refresh-Logik in `plugins/coding-kit/skills/update-conventions/SKILL.md` auf
-  Fragment-Granularität heben (erkennen, abgleichen, einzeln erneuern).
-- Projektlokale Fragmente (ohne Katalog-Pendant bzw. mit Override) unangetastet lassen.
-
-**Abhängigkeiten:** project-template F-002 (Fragment-Vertrag).
 
 ### F-015 — prep-step: Framework-Erkennung mit Fragment-Vorschlag
 
@@ -183,7 +165,7 @@ F-010 Status-Marker + Grenze add-feature/prep-step (DONE)
 F-011 build-step vom step-done-Handoff entkoppeln (DONE)
 F-012 add-skill: Template-HOW-TO synchron halten
 F-013 choose-stack: Multi-Fragment-Einbau (DONE)
-F-014 update-conventions: Pro-Fragment-Refresh
+F-014 update-conventions: Pro-Fragment-Refresh (DONE)
 F-015 prep-step: Framework-Erkennung mit Fragment-Vorschlag
 F-016 step-done: Standards-Coverage-Backstop
 F-017 Eigenschafts-Trigger für Standards-Fragmente auswerten

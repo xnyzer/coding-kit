@@ -1,6 +1,6 @@
 ---
 name: update-conventions
-description: Konventionen zwischen project-template und Projekten synchron halten — bidirektional. Abwärts verteilt Template-Updates in Projekte (deterministisch via template-version + MANIFEST, Diff + Bestätigung je Datei, Override-Schutz, Migrationen für Altprojekte). Aufwärts („promote") hebt eine bewährte projektlokale Änderung in den Template-Kern (mit VERSION-Bump + CHANGELOG). Nichts wird ungefragt überschrieben.
+description: Konventionen zwischen project-template und Projekten synchron halten — bidirektional. Abwärts verteilt Template-Updates in Projekte (deterministisch via template-version + MANIFEST, Diff + Bestätigung je Datei bzw. je Standards-Fragment, Override-Schutz, Migrationen für Altprojekte). Aufwärts („promote") hebt eine bewährte projektlokale Änderung in den Template-Kern oder ein Fragment in den Katalog (mit VERSION-Bump + CHANGELOG). Nichts wird ungefragt überschrieben.
 disable-model-invocation: true
 ---
 
@@ -21,6 +21,8 @@ Wie `/choose-stack` § 0: Template-Checkout auflösen (lokal unter
 `$CODING_KIT_PROJECTS_DIR/project-template`, sonst `gh repo clone`). `MANIFEST.md`
 lesen; **`manifest-format` prüfen** (dieser Skill kann Format `1` — sonst abbrechen und
 auf ein Kit-Update verweisen). Aktuelle Template-`VERSION` und `CHANGELOG.md` merken.
+Für den Fragment-Abgleich zusätzlich MANIFEST § Standards fragments und
+`modules/standards/README.md` (Fragment-Katalog) lesen.
 
 ## Kontext-Recovery
 
@@ -53,7 +55,10 @@ Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf überneh
    **module**-Parts des eingebauten Moduls (erkennbar an justfile-Kopf/mise.toml;
    im Zweifel fragen) aus dem aktuellen Template instanziieren — Platzhalter füllen,
    Marker-Logik wie `/new-project` § 4b. **Policies beachten:** `seed` nie anfassen;
-   `public-only` nur bei public Repos.
+   `public-only` nur bei public Repos. **Sonderfall `CODING-STANDARDS.md`:** in der
+   Soll-Fassung den Slot `<!-- module:coding-standards -->` mit dem **Ist-Slot des
+   Projekts** füllen — der Datei-Diff (Schritt 5) zeigt so nur Core-Änderungen; die
+   Fragmente im Slot gleicht Schritt 6 einzeln ab.
 4. **Override-Schutz (VOR dem Diffen):** `.claude/convention-overrides.md` lesen und
    Projekt-Dateien auf Inline-Marker `<!-- override: … -->` scannen. Registrierte
    Dateien/Abschnitte werden **nie** angefasst — nur informativ auflisten.
@@ -61,7 +66,16 @@ Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf überneh
    fragen: **übernehmen** / **so lassen** (einmalig) / **als Override registrieren**
    (Eintrag in `convention-overrides.md` mit Grund) / **promoten** (Änderung ist
    besser als das Template → Richtung AUFWÄRTS für diese Datei).
-6. Abschluss pro Projekt: Stempel auf die neue VERSION setzen, `just check` muss grün
+6. **Fragment-Abgleich (CODING-STANDARDS-Slot, je Fragment):** die
+   `fragment:NAME`-Blöcke im Slot einzeln gegen ihr Template-Pendant diffen — das
+   Sprachfragment gegen `CODING-STANDARDS.part.md` des Moduls, Katalog-Fragmente gegen
+   `modules/standards/<name>.md`. Je Fragment dieselben Entscheidungen wie in
+   Schritt 5; ein Inline-`<!-- override: … -->` im Block schützt genau dieses
+   Fragment. **Ohne Template-Pendant → projektlokal: nie anfassen, nur informativ
+   auflisten.** Deklariert das `MODULE.md` inzwischen Fragmente, die im Projekt
+   fehlen → Anhängen anbieten (Mechanik wie `/choose-stack`, idempotent). Bestehende
+   Fragmente in-place ersetzen, Neues ans Slot-Ende — nie umsortieren.
+7. Abschluss pro Projekt: Stempel auf die neue VERSION setzen, `just check` muss grün
    sein (Write-then-Verify), Commit-Vorschlag (z. B.
    `chore: sync template conventions <alt> -> <neu>`) — **nur nach OK**, dann Push-Frage.
 
@@ -100,7 +114,9 @@ Erst der Abgleich, dann jede Migration als **eigener bestätigter Schritt**:
    projektlokale Abweichung"?
    - **In den Kern:** Änderung **generalisieren** (Projektwerte zurück zu Platzhaltern,
      Projektspezifika raus, Englisch, personendatenfrei) und im Template-Checkout
-     einpflegen. **Sync-Invariante des Templates gilt:** VERSION-Bump + CHANGELOG-Eintrag
+     einpflegen. Ein projektlokales Standards-Fragment wird dabei zum
+     Katalog-Fragment: generalisiert nach `modules/standards/<name>.md` plus
+     Katalog-Zeile (Trigger-Mapping) im dortigen README. **Sync-Invariante des Templates gilt:** VERSION-Bump + CHANGELOG-Eintrag
      (+ MANIFEST bei neuen/entfernten/umpolicten Dateien) **im selben Commit**;
      `just check` im Template muss grün sein. Commit-/Push-Frage. Danach anbieten:
      Abwärts-Lauf, um die Änderung in die anderen Projekte zu tragen.

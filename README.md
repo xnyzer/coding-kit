@@ -47,7 +47,7 @@ Die Skills erscheinen namespaced als `/coding-kit:<skill>`:
 | `/coding-kit:choose-stack` | Modul-Empfehlung für Neuanlage oder Nachrüsten/Wechsel EINES Moduls im Bestand (Diff + Bestätigung); baut die vom Modul deklarierten Standards-Fragmente komponierbar ein. |
 | `/coding-kit:define-requirements` | Interview → REQUIREMENTS.md (Übergangs-Artefakt) → initiale PROGRESS.md mit F-Nummern. |
 | `/coding-kit:refine-requirements` | Zurück zur Spec: Diagnose mit drei Pfaden, darf Features splitten, datiertes Decision Log. |
-| `/coding-kit:update-conventions` | Konventions-Sync Template ⇄ Projekte: abwärts verteilen (Diff + Bestätigung, Override-Schutz, Altprojekt-Migrationen), aufwärts „promoten". |
+| `/coding-kit:update-conventions` | Konventions-Sync Template ⇄ Projekte: abwärts verteilen (Diff + Bestätigung je Datei bzw. je Standards-Fragment, Override-Schutz, Altprojekt-Migrationen), aufwärts „promoten" — auch Fragmente in den Katalog. |
 | `/coding-kit:check-upstreams` | Watchliste externer Vorbild-Repos prüfen (`upstreams.json`), Neuerungen seit letztem Ref, Übernahme-Vorschläge. |
 | `/coding-kit:refine-prompt` | Übergebenen Prompt analysieren, Schwachstellen benennen, nach Best Practices neu formulieren und ausführen. |
 

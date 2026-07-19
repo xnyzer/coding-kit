@@ -4,6 +4,24 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.9.0 — 2026-07-19
+
+`update-conventions` gleicht CODING-STANDARDS fragment-granular ab (Gegenstück zum
+choose-stack-Einbau aus 0.8.0):
+
+- **Zwei Diff-Ebenen abwärts:** Der Datei-Diff der `CODING-STANDARDS.md` hält den
+  §13-Slot konstant (Ist-Slot wird in die Soll-Fassung injiziert) und zeigt nur
+  Core-Änderungen; die `fragment:NAME`-Blöcke im Slot werden einzeln gegen ihr
+  Template-Pendant gedifft — Entscheidung je Fragment (übernehmen / lassen /
+  Override / promoten). Projektlokale Fragmente ohne Template-Pendant werden nie
+  angefasst, nur aufgelistet; Inline-Override-Marker schützen einzelne Fragmente.
+- **Neu deklarierte Fragmente:** Fehlt im Projekt ein inzwischen vom `MODULE.md`
+  deklariertes Katalog-Fragment, bietet der Abwärts-Lauf das Anhängen an (Mechanik
+  wie `/choose-stack`, idempotent; Bestehendes in-place, Neues ans Slot-Ende, nie
+  umsortieren).
+- **Promote:** Ein bewährtes projektlokales Fragment kann generalisiert in den
+  Katalog wandern (`modules/standards/<name>.md` + Katalog-Zeile im README).
+
 ## 0.8.0 — 2026-07-19
 
 `choose-stack` baut Standards-Fragmente komponierbar ein (Vertrag: project-template
