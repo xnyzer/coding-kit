@@ -25,6 +25,7 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-011 | build-step vom step-done-Handoff entkoppeln → **interaktiv wird step-done nur empfohlen (Nutzer prüft/schließt selbst ab), nur im autonomen `/goal`-Lauf läuft es je Substep automatisch; Modus-Signal = aktiver /goal-Lauf mit Commit-Freigabe (Plugin 0.7.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-14 |
 | F-013 | choose-stack: Multi-Fragment-Einbau → **Modus B hängt Sprachfragment + deklarierte Katalog-Fragmente idempotent an den §13-Slot an (Vertrag: project-template MANIFEST § Standards fragments); Modulwechsel tauscht nur das Sprachfragment, Katalog-Fragmente bleiben; new-project-Referenz nachgezogen (Plugin 0.8.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 | F-014 | update-conventions: Pro-Fragment-Refresh → **zwei Diff-Ebenen (Core-Datei-Diff mit injiziertem Ist-Slot + Fragment-Abgleich je `fragment:NAME`), fehlende deklarierte Fragmente werden zum Anhängen angeboten, Fragment-Promote in den Katalog (Plugin 0.9.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
+| F-015 | prep-step: Framework-Erkennung mit Fragment-Vorschlag → **Schritt 2a „Standards-Abdeckung" mit Kosten-Gate; matcht Dependency-Signale UND Eigenschafts-Trigger (F-017-Touchpoint miterledigt); Vorschlags-Pfade Anhängen bzw. Autoring + Promote (Plugin 0.10.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 
 ---
 
@@ -73,28 +74,6 @@ Sync-Invariante jenes Repos (VERSION + CHANGELOG).
 **Abhängigkeiten:** keine — unabhängig von project-template F-002, kann vorgezogen
 werden.
 
-### F-015 — prep-step: Framework-Erkennung mit Fragment-Vorschlag
-
-**Status:** BACKLOG
-
-**Problem:** Führt eine Aufgabe ein neues Framework oder eine neue Dependency ein,
-wächst der Standards-Bestand des Projekts nicht mit — es gibt keinen Prozessschritt, der
-das fehlende Fragment bemerkt („Standards wachsen mit").
-
-**Idee:** prep-step erkennt in §2 (Analyse), wenn die Aufgabe ein Framework einführt,
-für das im Projekt noch kein Standards-Fragment vorliegt. Existiert im Katalog ein
-passendes Fragment, schlägt es dessen Anhängen vor; existiert keins, schlägt es vor,
-eins zu autoren und ins Template zurückzugeben.
-
-**Lösungsskizze:**
-- Erkennungs-Hook in `plugins/coding-kit/skills/prep-step/SKILL.md` §2 ergänzen
-  (Framework→Fragment-Mapping aus dem Katalog nutzen).
-- Vorschlags-Pfade: Fragment anhängen (Mechanik aus F-013) bzw. Autoring + Upstream-
-  Rückgabe anstoßen.
-
-**Abhängigkeiten:** project-template F-002 (Katalog + Mapping); baut sinnvoll auf F-013
-auf (Anhänge-Mechanik).
-
 ### F-016 — step-done: Standards-Coverage-Backstop
 
 **Status:** BACKLOG
@@ -136,17 +115,18 @@ kommen ausschließlich aus dem Katalog-README.
 - define-requirements bzw. /new-project-Flow: deklarierte Eigenschafts-Trigger im
   Interview abfragen (z. B. „Gibt es Nutzer-/Admin-Aktionen, die Daten verändern?");
   Treffer → Fragment bei der Instanziierung mitkomponieren.
-- prep-step §2: Feature-Beschreibung zusätzlich gegen die Eigenschafts-Trigger matchen
-  (komplementär zur Dependency-Erkennung aus F-015); Treffer ohne vorhandenes
-  Fragment → Anhängen vorschlagen.
+- prep-step: **miterledigt in F-015** — dessen Schritt „2a. Standards-Abdeckung"
+  matcht beide Signaltypen inkl. der Eigenschafts-Trigger gegen die
+  Aufgabenbeschreibung.
 - choose-stack (Bestandsprojekt-Modus): Eigenschafts-Fragmente nachrüstbar machen —
   sie sind in keinem MODULE.md deklariert; Auswahl als Projektentscheidung mit
   Bestätigung wie beim Modulwechsel.
 - Mapping zur Laufzeit aus dem Katalog-README lesen (manifest-format 1) — nichts im
   Kit hardcoden.
 
-**Abhängigkeiten:** F-013 (Fragment-Anhänge-Mechanik); der prep-step-Teil wird
-idealerweise zusammen mit F-015 umgesetzt (gleiche Stelle, komplementärer Signaltyp).
+**Abhängigkeiten:** F-013 (Fragment-Anhänge-Mechanik) — erledigt; der prep-step-Teil
+ist in F-015 miterledigt, verbleibender Umfang: define-requirements-Interview +
+choose-stack-Nachrüstpfad.
 
 ---
 
@@ -166,7 +146,7 @@ F-011 build-step vom step-done-Handoff entkoppeln (DONE)
 F-012 add-skill: Template-HOW-TO synchron halten
 F-013 choose-stack: Multi-Fragment-Einbau (DONE)
 F-014 update-conventions: Pro-Fragment-Refresh (DONE)
-F-015 prep-step: Framework-Erkennung mit Fragment-Vorschlag
+F-015 prep-step: Framework-Erkennung mit Fragment-Vorschlag (DONE)
 F-016 step-done: Standards-Coverage-Backstop
 F-017 Eigenschafts-Trigger für Standards-Fragmente auswerten
 -->

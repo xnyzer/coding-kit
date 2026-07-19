@@ -1,6 +1,6 @@
 ---
 name: prep-step
-description: Aufgabe vor der Umsetzung vorbereiten. Hinterfragt die Lösungsskizze gegen den aktuellen Codestand, analysiert den Umfang, zerlegt bei Bedarf in Substeps und schreibt Plan + Status-Marker PLANNED nach Freigabe in die PROGRESS.md.
+description: Aufgabe vor der Umsetzung vorbereiten. Hinterfragt die Lösungsskizze gegen den aktuellen Codestand, analysiert den Umfang, prüft die Standards-Abdeckung neu eingeführter Frameworks gegen den Fragment-Katalog, zerlegt bei Bedarf in Substeps und schreibt Plan + Status-Marker PLANNED nach Freigabe in die PROGRESS.md.
 disable-model-invocation: true
 ---
 
@@ -50,6 +50,27 @@ nicht wiederholen, nichts raten.
   Bibliotheken)? Berührt es Auth-, Token- oder Consent-Pfade?
 - Grober Umfang: wie viele Zeilen Code/Config ungefähr?
 
+## 2a. Standards-Abdeckung prüfen (Fragment-Check)
+
+Nur wenn die Analyse ergibt, dass die Aufgabe **neue Frameworks/Dependencies
+einführt**, und das Projekt einen Fragment-Slot hat (`<!-- module:coding-standards -->`
+in der `CODING-STANDARDS.md`) — sonst still überspringen:
+
+1. Template auflösen (wie `/choose-stack` § 0) und das Trigger-Mapping aus
+   `modules/standards/README.md` lesen — zur Laufzeit, nichts hardcoden.
+2. **Beide Signaltypen matchen:** die neu eingeführten Frameworks/Dependencies gegen
+   die Dependency-Signale des Katalogs **und** die Aufgabenbeschreibung gegen die
+   `*characteristic:*`-Eigenschafts-Trigger (z. B. „service with user/admin
+   mutations").
+3. Treffer, aber kein `<!-- fragment:NAME -->`-Marker im Projekt → im Plan
+   vorschlagen, das Katalog-Fragment anzuhängen (Mechanik wie `/choose-stack`,
+   idempotent).
+4. Treffer-Thema ganz ohne Katalog-Fragment → vorschlagen, ein projektlokales
+   Fragment zu autoren und es via `/update-conventions` (Richtung AUFWÄRTS) in den
+   Katalog zu promoten.
+5. **Nur vorschlagen, nie still einbauen** — die Entscheidung fällt mit der
+   Plan-Freigabe (Schritte 4–6).
+
 ## 3. Größe bewerten & ggf. zerlegen
 
 - **Klein** (< 200 Zeilen, < 5 Dateien): direkt machbar, keine Zerlegung — kurzer Plan.
@@ -75,6 +96,10 @@ vorschlägst — mit Begründung; entfällt, wenn der Eintrag keine Skizze hat]
 2. …
 
 **Neue Endpunkte/Config/Dependencies:** [welche?]
+
+**Standards-Abdeckung:** [ok / Fragment `<name>` fehlt → Anhängen vorgeschlagen /
+kein Katalog-Fragment → Autoring + Promote vorgeschlagen; Zeile entfällt, wenn
+Schritt 2a übersprungen wurde]
 
 **Risiken / offene Fragen:**
 - …

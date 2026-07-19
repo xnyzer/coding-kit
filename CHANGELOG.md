@@ -4,6 +4,24 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.10.0 — 2026-07-19
+
+`prep-step` prüft die Standards-Abdeckung — „Standards wachsen mit":
+
+- Neuer Schritt „2a. Standards-Abdeckung prüfen" mit Kosten-Gate: nur wenn die
+  Aufgabe neue Frameworks/Dependencies einführt und das Projekt einen
+  `module:coding-standards`-Slot hat; sonst stilles Überspringen (kein
+  Template-Clone je Lauf).
+- Gematcht werden **beide** Signaltypen des Fragment-Katalogs
+  (`modules/standards/README.md`, zur Laufzeit gelesen): Dependency-Signale gegen
+  die neuen Dependencies und `*characteristic:*`-Eigenschafts-Trigger gegen die
+  Aufgabenbeschreibung (prep-step-Touchpoint von F-017).
+- Vorschlags-Pfade: vorhandenes Katalog-Fragment → Anhängen als Plan-Bestandteil
+  (Mechanik wie `/choose-stack`, idempotent); kein Katalog-Fragment → Autoring
+  eines projektlokalen Fragments + Promote via `/update-conventions` anbieten.
+  Nie still einbauen — Entscheidung fällt mit der Plan-Freigabe. Die Plan-Vorlage
+  hat dafür eine neue Zeile „Standards-Abdeckung".
+
 ## 0.9.0 — 2026-07-19
 
 `update-conventions` gleicht CODING-STANDARDS fragment-granular ab (Gegenstück zum
