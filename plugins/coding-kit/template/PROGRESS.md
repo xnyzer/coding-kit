@@ -25,6 +25,7 @@ decomposes, `/step-done` finishes (review, docs, commit question).
 | F-007 | Repo docs refreshed for the fragment catalog: root README structure, modules/README pointer (VERSION 0.7.1). Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-18 |
 | F-008 | Privacy lint + private blocklist shipped to projects: core script + lefthook gate (VERSION 0.8.0). Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-18 |
 | F-009 | Docs aligned with the current coding-kit skill set; sync direction made explicitly downward-only (VERSION 0.9.0). Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
+| F-010 | Per-dimension language matrix: Languages block in core/CLAUDE.md with five `{{LANG_*}}` placeholders, visibility-coupled default removed (VERSION 0.10.0). Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 
 ---
 
@@ -41,7 +42,7 @@ _Empty. Intake new ideas via `/add-feature`._
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-010
+next-feature: F-011
 F-001 Initial template build (DONE)
 F-002 Composable CODING-STANDARDS fragments (DONE)
 F-003 Web-standards fragments (DONE)
@@ -51,4 +52,5 @@ F-006 Audit / activity-logging standard (DONE)
 F-007 Refresh repo docs for the fragment catalog (DONE)
 F-008 Ship the privacy lint + private blocklist to projects (DONE)
 F-009 Align docs with the current coding-kit skill set (DONE)
+F-010 Per-dimension language matrix (DONE)
 -->

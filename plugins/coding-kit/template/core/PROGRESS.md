@@ -1,7 +1,7 @@
 # {{PROJECT_NAME}} — Progress
 
 Living task list. **Done table** at the top, **open tasks in execution order** below,
-**feature index** at the very end. Entries are written in {{LIVING_DOC_LANGUAGE}}; the
+**feature index** at the very end. Entries are written in {{LANG_LIVING_DOCS}}; the
 structure (headings, Done table, FEATURE-INDEX block) stays as-is — the workflow skills
 depend on it.
 

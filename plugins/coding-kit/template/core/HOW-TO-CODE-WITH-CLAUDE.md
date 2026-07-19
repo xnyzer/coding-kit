@@ -124,7 +124,9 @@ Large → 3–5 substeps. `/prep-step` without an argument takes the next open t
 - **Not everything at once.** Decompose large tasks via `/prep-step`.
 - **`/step-done` after each substep** — otherwise details get lost in the docs.
 - **Claude never commits automatically.** You are always asked.
-- **Language:** living docs are written in {{LIVING_DOC_LANGUAGE}}; code, comments,
-  commits, and governance docs are always English.
+- **Languages:** see the Languages block in `CLAUDE.md` — living docs in
+  {{LANG_LIVING_DOCS}}, code comments in {{LANG_COMMENTS}}, commit prose in
+  {{LANG_COMMITS}} (Conventional-Commit tokens stay English); identifiers and
+  governance docs are always English.
 - **Secrets/private info** belong in `private/` (gitignored), never in the tree.
 - **On errors:** fix diagnostics immediately — no workarounds, always the root cause.

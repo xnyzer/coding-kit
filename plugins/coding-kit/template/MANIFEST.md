@@ -20,7 +20,11 @@ lowercase and therefore never collide).
 | `{{OWNER}}` | GitHub login | `gh api user --jq .login` |
 | `{{YEAR}}` | Current year | runtime |
 | `{{GROUP_ID}}` | Graphiti group id | defaults to project name |
-| `{{LIVING_DOC_LANGUAGE}}` | Language of living docs | German (private) / English (public) |
+| `{{LANG_LIVING_DOCS}}` | Language of living docs (PROGRESS, REQUIREMENTS, decision logs) | `/new-project` language preset (default: English) |
+| `{{LANG_CLAUDE_MD}}` | Language of CLAUDE.md prose | `/new-project` language preset (default: English) |
+| `{{LANG_COMMENTS}}` | Language of code comments & docstrings | `/new-project` language preset (default: English) |
+| `{{LANG_COMMITS}}` | Language of commit-message prose (Conventional tokens stay English) | `/new-project` language preset (default: English) |
+| `{{LANG_README}}` | Language of README & public docs | `/new-project` language preset (default: English) |
 | `{{LICENSE_SPDX}}` | Chosen license SPDX id | `/choose-license` ("TBD" allowed) |
 | `{{CODEQL_LANGUAGES}}` | CodeQL language for the module | stack module (`javascript-typescript`, `python`, `go`) |
 | `{{TEMPLATE_VERSION}}` | Template `VERSION` at instantiation | `VERSION` |

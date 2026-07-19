@@ -4,7 +4,7 @@
 > been turned into an F-number in `PROGRESS.md`. Once that transfer is complete, checked,
 > and confirmed by the owner, this file is dissolved and the summary in `CLAUDE.md` is
 > updated (`/define-requirements` and `/refine-requirements` manage this lifecycle).
-> Content is written in {{LIVING_DOC_LANGUAGE}}.
+> Content is written in {{LANG_LIVING_DOCS}}.
 
 ## Goals
 

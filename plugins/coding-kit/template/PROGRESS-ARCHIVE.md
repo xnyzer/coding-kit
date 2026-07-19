@@ -5,6 +5,32 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-010 — Per-dimension language matrix (2026-07-19)
+
+**Problem:** Project language was a single dimension (`LIVING_DOC_LANGUAGE`, living
+docs only) whose default was coupled to repo visibility (German if private, English if
+public). Language follows the project's topic and audience, not its visibility — a
+private project may go public later without its language changing.
+
+**What was implemented (VERSION 0.10.0):**
+
+- `core/CLAUDE.md`: Languages block with five independently chosen dimensions —
+  `{{LANG_LIVING_DOCS}}`, `{{LANG_CLAUDE_MD}}`, `{{LANG_COMMENTS}}`,
+  `{{LANG_COMMITS}}`, `{{LANG_README}}`. Explicitly not configurable: identifiers,
+  Conventional-Commit tokens, status tokens, governance docs (always English). Git
+  bullet now reads "Conventional Commits (tokens English), prose in {{LANG_COMMITS}}".
+- `core/PROGRESS.md`, `core/REQUIREMENTS.md`, `core/HOW-TO-CODE-WITH-CLAUDE.md`:
+  switched to the new placeholders.
+- `MANIFEST.md` registry: `LIVING_DOC_LANGUAGE` replaced by the five `{{LANG_*}}`
+  rows; visibility-coupled default removed — values come from the `/new-project`
+  language preset (default: English).
+- `scripts/validate.py`: placeholder allowlist updated accordingly (old token out,
+  five new tokens in).
+- **Decision:** the registry default is neutral (English); opinionated presets
+  (e.g. working-language docs with English outward-facing content) live in the
+  coding-kit interview, not in the template. Migration of pre-0.10.0 projects is
+  `/update-conventions` work (kit side, tracked there as F-020).
+
 ## F-009 — Align docs with the current coding-kit skill set (2026-07-19)
 
 **Problem:** The coding-kit plugin (0.13.0) gained fragment-catalog capabilities in several

@@ -34,9 +34,15 @@ task. **To continue: open `PROGRESS.md`, take the first open task, run `/prep-st
 
 ## Conventions
 
-- **Code, commits, governance docs: English.** Living docs (PROGRESS, REQUIREMENTS,
-  project parts of this file): **{{LIVING_DOC_LANGUAGE}}**.
-- Git: **Conventional Commits**, English, imperative mood; body ends with
+- **Languages** (chosen at instantiation, independent of repo visibility — identifiers,
+  Conventional-Commit tokens, status tokens, and governance docs are always English):
+  - Living docs (PROGRESS, REQUIREMENTS, decision logs): **{{LANG_LIVING_DOCS}}**
+  - CLAUDE.md prose (project parts of this file): **{{LANG_CLAUDE_MD}}**
+  - Code comments & docstrings: **{{LANG_COMMENTS}}**
+  - Commit-message prose: **{{LANG_COMMITS}}**
+  - README & public docs: **{{LANG_README}}**
+- Git: **Conventional Commits** (tokens English), prose in {{LANG_COMMITS}},
+  imperative mood; body ends with
   `Co-Authored-By: Claude <noreply@anthropic.com>`. Commit email = **GitHub noreply**
   (verify `git config user.email`; fix via `gh api user`). **Never auto-commit — ask first.**
 - License: **{{LICENSE_SPDX}}**; dependencies must be permissive-licensed (no GPL/AGPL) —

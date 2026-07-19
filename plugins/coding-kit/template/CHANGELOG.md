@@ -4,6 +4,33 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.10.0] — 2026-07-19
+
+Per-dimension language matrix — project languages are chosen at instantiation and
+decoupled from repo visibility.
+
+### Changed
+- `core/CLAUDE.md`: the single living-doc language line becomes a **Languages block**
+  with five independently chosen dimensions — living docs (`{{LANG_LIVING_DOCS}}`),
+  CLAUDE.md prose (`{{LANG_CLAUDE_MD}}`), code comments & docstrings
+  (`{{LANG_COMMENTS}}`), commit-message prose (`{{LANG_COMMITS}}`), README & public
+  docs (`{{LANG_README}}`). Identifiers, Conventional-Commit tokens, status tokens,
+  and governance docs stay English regardless. The git convention bullet now reads
+  "Conventional Commits (tokens English), prose in {{LANG_COMMITS}}".
+- `core/PROGRESS.md`, `core/REQUIREMENTS.md`, `core/HOW-TO-CODE-WITH-CLAUDE.md`:
+  reference the new placeholders instead of `LIVING_DOC_LANGUAGE`.
+- `MANIFEST.md` placeholder registry: `LIVING_DOC_LANGUAGE` replaced by the five
+  `{{LANG_*}}` placeholders; the former visibility-coupled default
+  ("German (private) / English (public)") is gone — values come from the
+  `/new-project` language preset (default: English). Downstream, the coding-kit
+  interview offers presets (all-English, working-language docs with English
+  outward-facing content, all-working-language, custom per dimension).
+
+### Migration note
+- Projects instantiated before 0.10.0 carry the old single-line language convention;
+  `/update-conventions` migrates it to the Languages block (existing living-doc
+  language kept, other dimensions defaulting to English).
+
 ## [0.9.0] — 2026-07-19
 
 Docs alignment with the current coding-kit skill set; no rule text or file set changed.
