@@ -19,8 +19,10 @@ Quelle ist das project-template — zur Laufzeit auflösen, nie hardcoden:
 2. Sonst: `gh repo clone "$(gh api user --jq .login)/project-template" <tmp> -- --depth 1`
    (Override möglich via `CODING_KIT_TEMPLATE_REPO` in der Personal-Config).
 
-Dort lesen: `MANIFEST.md` (§ Module contract — der Vertrag, wie Teile angewendet werden),
-`modules/README.md` (verfügbare Module + Status) und das `MODULE.md` des Kandidaten.
+Dort lesen: `MANIFEST.md` (§ Module contract und § Standards fragments — der Vertrag,
+wie Teile und Fragmente angewendet werden), `modules/README.md` (verfügbare Module +
+Status), `modules/standards/README.md` (Fragment-Katalog) und das `MODULE.md` des
+Kandidaten.
 
 ## Modus A — Neuanlage (aus /new-project oder ohne bestehendes Projekt)
 
@@ -45,7 +47,16 @@ Dort lesen: `MANIFEST.md` (§ Module contract — der Vertrag, wie Teile angewen
    - `justfile` **ersetzt** das Core-justfile (Standard-Rezepte bleiben der Vertrag),
    - `mise.part.toml` → Merge in `[tools]` der `mise.toml`,
    - `gitignore.part` → unter dem Marker `# module:gitignore` anhängen,
-   - `CODING-STANDARDS.part.md` → in den Slot `<!-- module:coding-standards -->`,
+   - **Standards-Fragmente** → im Slot `<!-- module:coding-standards -->` **anhängen**,
+     nie ersetzen. Fragmentliste in Reihenfolge: eigenes Sprachfragment des Moduls
+     (`CODING-STANDARDS.part.md`), dann die Katalog-Fragmente
+     (`modules/standards/<name>.md`) laut `Standards fragments:`-Zeile des `MODULE.md`
+     — tolerant lesen (fett/plain; `(none)`, leer oder fehlend = keine). Die
+     Quell-Dateien tragen ihre `<!-- fragment:NAME -->`-Marker bereits: unverändert vor
+     dem schließenden `<!-- /module:coding-standards -->` einfügen. **Idempotent:** ist
+     `fragment:NAME` im Projekt schon vorhanden → überspringen — nie doppelt einbauen,
+     nie erneuern (Erneuern macht `/update-conventions`). Beim Erst-Einbau den
+     Platzhaltertext im Slot entfernen,
    - `ci.part.yml` → Jobs unter `# module:ci-jobs` anhängen,
    - `files/**` → nach Platzhalter-Substitution kopieren (Werte aus dem Projekt
      ableiten: Name aus Repo, Owner via `gh api user`, Beschreibung aus README/CLAUDE.md;
@@ -53,7 +64,10 @@ Dort lesen: `MANIFEST.md` (§ Module contract — der Vertrag, wie Teile angewen
      schon existieren).
 3. **Je Datei Diff zeigen und einzeln bestätigen lassen.** Kollisionen mit bestehenden
    Dateien: Diff + Frage statt Überschreiben. Beim **Wechsel** zusätzlich auflisten, was
-   vom Alt-Modul entfernt/zurückgebaut wird — ebenfalls bestätigen lassen.
+   vom Alt-Modul entfernt/zurückgebaut wird — ebenfalls bestätigen lassen. Das
+   Sprachfragment des Alt-Moduls wird dabei gegen das neue getauscht; vorhandene
+   Katalog-Fragmente bleiben stehen und werden nur aufgelistet („noch aktuell?") —
+   Entfernen ist eine Projektentscheidung, kein Automatismus.
 4. **Verifikation:** `mise install && just setup && just check` muss grün sein
    (Write-then-Verify). Kein Commit ohne Nachfrage; `.claude/template-version` wird hier
    **nicht** gestempelt (das macht /new-project; Projekte ohne Stempel gleicht später

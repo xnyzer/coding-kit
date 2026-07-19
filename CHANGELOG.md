@@ -4,6 +4,23 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.8.0 — 2026-07-19
+
+`choose-stack` baut Standards-Fragmente komponierbar ein (Vertrag: project-template
+MANIFEST § Standards fragments):
+
+- Statt EINEN `CODING-STANDARDS.part.md` in den §13-Slot einzufügen, hängt Modus B
+  jetzt die Fragmentliste des Moduls an: eigenes Sprachfragment plus die im
+  `MODULE.md` deklarierten Katalog-Fragmente (`Standards fragments:`-Zeile, tolerant
+  gelesen — fett/plain, `(none)`/leer/fehlend = keine). Idempotent je
+  `fragment:NAME`-Marker: Vorhandenes wird nie doppelt eingebaut und nie erneuert
+  (Erneuern bleibt `/update-conventions`); der Platzhaltertext im Slot fällt beim
+  Erst-Einbau weg.
+- Modulwechsel: das Sprachfragment wird getauscht, Katalog-Fragmente bleiben stehen
+  und werden nur zur Prüfung aufgelistet — Entfernen ist Projektentscheidung.
+- `new-project` referenziert den Modul-Einbau entsprechend (Standards-Fragmente
+  anhängen statt „Slot füllen").
+
 ## 0.7.0 — 2026-07-14
 
 `build-step` entkoppelt den step-done-Handoff vom Bauen:

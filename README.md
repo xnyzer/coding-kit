@@ -44,7 +44,7 @@ Die Skills erscheinen namespaced als `/coding-kit:<skill>`:
 | `/coding-kit:teach-step` | Lehrer-Modus: Aufgabe selbst umsetzen, der Skill leitet sokratisch an, prüft und testet — schreibt nie Code. |
 | `/coding-kit:name-it` | Namenskandidaten nach Kriterien + Verfügbarkeits-Checks (GitHub/npm/PyPI, Domain optional). |
 | `/coding-kit:choose-license` | Kurzinterview → Lizenz-Empfehlung (Default Apache-2.0, „TBD" gültig). |
-| `/coding-kit:choose-stack` | Modul-Empfehlung für Neuanlage oder Nachrüsten/Wechsel EINES Moduls im Bestand (Diff + Bestätigung). |
+| `/coding-kit:choose-stack` | Modul-Empfehlung für Neuanlage oder Nachrüsten/Wechsel EINES Moduls im Bestand (Diff + Bestätigung); baut die vom Modul deklarierten Standards-Fragmente komponierbar ein. |
 | `/coding-kit:define-requirements` | Interview → REQUIREMENTS.md (Übergangs-Artefakt) → initiale PROGRESS.md mit F-Nummern. |
 | `/coding-kit:refine-requirements` | Zurück zur Spec: Diagnose mit drei Pfaden, darf Features splitten, datiertes Decision Log. |
 | `/coding-kit:update-conventions` | Konventions-Sync Template ⇄ Projekte: abwärts verteilen (Diff + Bestätigung, Override-Schutz, Altprojekt-Migrationen), aufwärts „promoten". |

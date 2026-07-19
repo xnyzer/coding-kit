@@ -23,6 +23,7 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-009 | Repo-lokaler Pflege-Skill add-skill → **Prozedur für Anlage/Änderung von Plugin-Skills (`.claude/skills/`, kein Plugin-Inhalt): Authoring-Konvention, Begleit-Änderungs-Checkliste, Abschluss inkl. PROGRESS-Pflege.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-13 |
 | F-010 | Status-Marker-Konvention + schärfere Grenze add-feature/prep-step → **`Status:`-Zeile mit Tokens BACKLOG/PLANNED in PROGRESS-Einträgen, „Lösungsskizze" statt Vorab-Plan in add-feature, prep-step hinterfragt die Skizze gegen den Codestand; Begleitanpassungen in build-step/step-done (Plugin 0.6.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-13 |
 | F-011 | build-step vom step-done-Handoff entkoppeln → **interaktiv wird step-done nur empfohlen (Nutzer prüft/schließt selbst ab), nur im autonomen `/goal`-Lauf läuft es je Substep automatisch; Modus-Signal = aktiver /goal-Lauf mit Commit-Freigabe (Plugin 0.7.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-14 |
+| F-013 | choose-stack: Multi-Fragment-Einbau → **Modus B hängt Sprachfragment + deklarierte Katalog-Fragmente idempotent an den §13-Slot an (Vertrag: project-template MANIFEST § Standards fragments); Modulwechsel tauscht nur das Sprachfragment, Katalog-Fragmente bleiben; new-project-Referenz nachgezogen (Plugin 0.8.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 
 ---
 
@@ -70,27 +71,6 @@ Sync-Invariante jenes Repos (VERSION + CHANGELOG).
 
 **Abhängigkeiten:** keine — unabhängig von project-template F-002, kann vorgezogen
 werden.
-
-### F-013 — choose-stack: Multi-Fragment-Einbau
-
-**Status:** BACKLOG
-
-**Problem:** choose-stack installiert heute den EINEN `CODING-STANDARDS.part.md` eines
-Stack-Moduls in den §13-Slot. Nach der Umstellung auf komponierbare Fragmente
-(project-template F-002) deklariert ein Modul MEHRERE Fragmente — der bisherige
-Einbau-Mechanismus greift dann nicht mehr.
-
-**Idee:** choose-stack liest die vom Modul deklarierten Fragmente und hängt sie einzeln
-an den §13-Append-Slot an — Pro-Fragment-Marker respektierend und idempotent (bereits
-vorhandene Fragmente werden nicht doppelt eingefügt).
-
-**Lösungsskizze:**
-- Einbau-Logik in `plugins/coding-kit/skills/choose-stack/SKILL.md` von
-  „ein Part in den Slot" auf „deklarierte Fragmente anhängen" umstellen.
-- Marker-Schema und Deklarationsform aus dem F-002-Vertrag übernehmen, nicht neu
-  erfinden.
-
-**Abhängigkeiten:** project-template F-002 (Fragment-Vertrag).
 
 ### F-014 — update-conventions: Pro-Fragment-Refresh
 
@@ -202,7 +182,7 @@ F-009 Repo-lokaler Pflege-Skill add-skill (DONE)
 F-010 Status-Marker + Grenze add-feature/prep-step (DONE)
 F-011 build-step vom step-done-Handoff entkoppeln (DONE)
 F-012 add-skill: Template-HOW-TO synchron halten
-F-013 choose-stack: Multi-Fragment-Einbau
+F-013 choose-stack: Multi-Fragment-Einbau (DONE)
 F-014 update-conventions: Pro-Fragment-Refresh
 F-015 prep-step: Framework-Erkennung mit Fragment-Vorschlag
 F-016 step-done: Standards-Coverage-Backstop
