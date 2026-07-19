@@ -26,6 +26,7 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-013 | choose-stack: Multi-Fragment-Einbau → **Modus B hängt Sprachfragment + deklarierte Katalog-Fragmente idempotent an den §13-Slot an (Vertrag: project-template MANIFEST § Standards fragments); Modulwechsel tauscht nur das Sprachfragment, Katalog-Fragmente bleiben; new-project-Referenz nachgezogen (Plugin 0.8.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 | F-014 | update-conventions: Pro-Fragment-Refresh → **zwei Diff-Ebenen (Core-Datei-Diff mit injiziertem Ist-Slot + Fragment-Abgleich je `fragment:NAME`), fehlende deklarierte Fragmente werden zum Anhängen angeboten, Fragment-Promote in den Katalog (Plugin 0.9.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 | F-015 | prep-step: Framework-Erkennung mit Fragment-Vorschlag → **Schritt 2a „Standards-Abdeckung" mit Kosten-Gate; matcht Dependency-Signale UND Eigenschafts-Trigger (F-017-Touchpoint miterledigt); Vorschlags-Pfade Anhängen bzw. Autoring + Promote (Plugin 0.10.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
+| F-012 | add-skill: Template-HOW-TO synchron halten → **neuer Checklisten-Haken in Schritt 3: Dev-Loop-/Pflege-Skills pflegen die Skill-Übersicht in project-templates HOW-TO mit (Sync-Invariante jenes Repos); repo-lokal, kein Plugin-Release.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 
 ---
 
@@ -51,28 +52,6 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 > Stand: seit project-template VERSION 0.7.0 liegt der Katalog mit Mapping vor
 > (`modules/standards/README.md`, manifest-format 1); Mapping-Zeilen können auch
 > Eigenschafts-Trigger tragen → F-017.
-
-### F-012 — add-skill: Template-HOW-TO synchron halten
-
-**Status:** BACKLOG
-
-**Problem:** Die Skill-Übersicht in project-templates `core/HOW-TO-CODE-WITH-CLAUDE.md`
-fällt hinter den Skill-Bestand des coding-kit zurück — neue oder geänderte Skills werden
-dort nicht nachgezogen, weil kein Prozessschritt daran erinnert.
-
-**Idee:** Der repo-lokale Skill add-skill bekommt in Schritt 3
-(Vollständigkeits-Checkliste) einen zusätzlichen Haken: Gehört der neue/geänderte Skill
-zum Projekt-Alltag (Dev-Loop) oder zur Projekt-Pflege, wird die Skill-Übersicht in
-project-templates `core/HOW-TO-CODE-WITH-CLAUDE.md` mitgepflegt — unter Beachtung der
-Sync-Invariante jenes Repos (VERSION + CHANGELOG).
-
-**Lösungsskizze:**
-- Checklisten-Punkt in `.claude/skills/add-skill/SKILL.md` Schritt 3 ergänzen.
-- Kriterium formulieren, wann ein Skill in die Template-Übersicht gehört
-  (Dev-Loop/Pflege ja, rein kit-interne Skills nein).
-
-**Abhängigkeiten:** keine — unabhängig von project-template F-002, kann vorgezogen
-werden.
 
 ### F-016 — step-done: Standards-Coverage-Backstop
 
@@ -143,7 +122,7 @@ F-008 Workflow-Skill build-step + autonome Läufe (DONE)
 F-009 Repo-lokaler Pflege-Skill add-skill (DONE)
 F-010 Status-Marker + Grenze add-feature/prep-step (DONE)
 F-011 build-step vom step-done-Handoff entkoppeln (DONE)
-F-012 add-skill: Template-HOW-TO synchron halten
+F-012 add-skill: Template-HOW-TO synchron halten (DONE)
 F-013 choose-stack: Multi-Fragment-Einbau (DONE)
 F-014 update-conventions: Pro-Fragment-Refresh (DONE)
 F-015 prep-step: Framework-Erkennung mit Fragment-Vorschlag (DONE)

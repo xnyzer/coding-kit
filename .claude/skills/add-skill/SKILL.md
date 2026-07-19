@@ -50,6 +50,13 @@ Auftrag schon klar ist:
       Commit wie die Skill-Änderung).
 - [ ] `README.md`: Tabellenzeile für `/coding-kit:<name>` anlegen/anpassen **und**
       betroffene Prosa prüfen (z. B. der Zyklus-Satz, die Struktur-Übersicht).
+- [ ] Gehört der neue/geänderte Skill zum Projekt-Alltag (Dev-Loop) oder zur
+      Projekt-Pflege: die Skill-Übersicht in project-templates
+      `core/HOW-TO-CODE-WITH-CLAUDE.md` mitpflegen — Template zur Laufzeit auflösen
+      (wie `/coding-kit:choose-stack` § 0), die passende der beiden Tabellen treffen
+      (Dev-Loop mit „What happens"-Spalte, Pflege nur „When to use") und die
+      **Sync-Invariante jenes Repos** einhalten (VERSION-Bump + CHANGELOG-Eintrag im
+      selben Commit). Rein kit-interne Skills (wie add-skill selbst) bleiben draußen.
 - [ ] Entstand ein neues, wiederverwendbares Muster: `docs/skill-authoring.md`
       ergänzen.
 
