@@ -6,8 +6,11 @@
 ## Sprache & Stil
 
 - Antworte auf Deutsch (außer der Nutzer wechselt zu Englisch). Direkt und präzise.
-- Code, Code-Kommentare, Commits, Governance-Doku: Englisch. Die Sprache der lebenden
-  Doku (PROGRESS, REQUIREMENTS …) bestimmt die jeweilige Projekt-CLAUDE.md.
+- Haus-Default: Code, Code-Kommentare, Commits, Governance-Doku Englisch. Definiert
+  die Projekt-CLAUDE.md einen **Languages-Block**, gewinnt der je Dimension (lebende
+  Doku, CLAUDE.md-Prosa, Kommentare, Commit-Prosa, README); Alt-Projekte mit
+  einzeiliger Doku-Sprach-Angabe werden weiter so gelesen. Identifier und
+  Conventional-Commit-Tokens bleiben immer englisch.
 
 ## Git & Commits (projektübergreifend)
 

@@ -57,8 +57,10 @@ dokumentiert ist — im Zweifel neu fragen.
 jede andere Nutzung = **interaktiv**. Der Modus steuert Schritt 5.
 
 1. Substep-Ziel und Abnahmekriterien kurz nennen.
-2. Umsetzen. **Write-then-Verify:** nach jedem Edit die Datei re-lesen; nichts als
-   erledigt melden, was nicht per Tool-Ausgabe belegt ist.
+2. Umsetzen — Code-Kommentare/Docstrings in der Kommentar-Sprache des Projekts
+   (Languages-Block der CLAUDE.md; ohne Block englisch). **Write-then-Verify:** nach
+   jedem Edit die Datei re-lesen; nichts als erledigt melden, was nicht per
+   Tool-Ausgabe belegt ist.
 3. Checks stack-agnostisch über die just-Standardrezepte (`just check`, gezielt
    `just test` / `just lint`); ohne justfile die projektüblichen Checks aus
    CLAUDE.md/README. Rot → sofort fixen, nie rot weiterarbeiten.

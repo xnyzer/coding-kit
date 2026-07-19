@@ -49,7 +49,9 @@ Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf überneh
    fertig. Sonst die CHANGELOG-Einträge zwischen Stempel und aktueller VERSION zeigen
    (das ist das Update-Fenster).
 2. **Projektwerte rückauflösen** für die Platzhalter: Name (Repo), OWNER (`gh api
-   user`), Beschreibung (Repo-Beschreibung), GROUP_ID + Doku-Sprache (Projekt-CLAUDE.md),
+   user`), Beschreibung (Repo-Beschreibung), GROUP_ID + die fünf `LANG_*`-Sprachen
+   (Languages-Block der Projekt-CLAUDE.md; Alt-Projekte mit einzeiliger
+   Doku-Sprach-Angabe: deren Wert für die lebende Doku, übrige Dimensionen englisch),
    LICENSE_SPDX (LICENSE-Datei), CODEQL_LANGUAGES (eingebautes Modul), TEMPLATE_VERSION
    (neue VERSION).
 3. **Soll-Zustand erzeugen:** jede **managed** Datei der Core-Tabelle plus die
@@ -82,6 +84,8 @@ Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf überneh
 7. Abschluss pro Projekt: Stempel auf die neue VERSION setzen, `just check` muss grün
    sein (Write-then-Verify), Commit-Vorschlag (z. B.
    `chore: sync template conventions <alt> -> <neu>`) — **nur nach OK**, dann Push-Frage.
+   Fehlt der Languages-Block in der Projekt-CLAUDE.md, die Migration aus A3 Schritt 6
+   anbieten — CLAUDE.md ist `seed` und wird nie automatisch angefasst.
 
 ### A3. Altprojekte ohne Stempel: heuristischer Abgleich + Migrationen
 
@@ -104,7 +108,14 @@ Erst der Abgleich, dann jede Migration als **eigener bestätigter Schritt**:
 5. **Tooling nachrüsten:** mise.toml + justfile + lefthook.yml aus dem Template-Kern
    (bzw. Modul via `/choose-stack`) anbieten; danach `mise install && just setup &&
    just check`.
-6. Sind alle managed Dateien abgeglichen: **Stempel setzen** anbieten (macht künftige
+6. **Languages-Block nachrüsten:** Trägt die Projekt-CLAUDE.md noch die einzeilige
+   Alt-Sprachkonvention, die Migration zum Languages-Block anbieten — CLAUDE.md ist
+   `seed`, das passiert nie automatisch. Werte: bisherige Doku-Sprache behalten,
+   übrige Dimensionen englisch (bzw. Preset nach Wunsch). **Prospektiv:**
+   Bestandsinhalte werden nicht übersetzt — neue Einträge folgen ab sofort den
+   gewählten Sprachen; Struktur-Überschriften (z. B. das PROGRESS-Skelett) dürfen auf
+   Wunsch übersetzt werden, die Historie bleibt unverändert.
+7. Sind alle managed Dateien abgeglichen: **Stempel setzen** anbieten (macht künftige
    Läufe deterministisch). Commit-Frage wie A2.7.
 
 ---

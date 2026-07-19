@@ -4,6 +4,31 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.14.0 — 2026-07-19
+
+Sprach-Matrix: Projektsprachen sind granular wählbar und von der Sichtbarkeit
+entkoppelt (Gegenstück zu project-template 0.10.0, Languages-Block + fünf
+`LANG_*`-Platzhalter):
+
+- `new-project` — die Sprachfrage ist eine Preset-Frage (Arbeitssprache + Englisch
+  nach außen [Default] / alles Englisch / alles Arbeitssprache / individuell je
+  Dimension mit freier Sprachwahl); der Vorschlag leitet sich aus der Short-Info ab,
+  nicht mehr aus der Sichtbarkeit. §4b füllt die fünf `LANG_*`-Platzhalter. Immer
+  englisch bleiben Identifier, Conventional-Tokens, Status-Tokens, Governance-Doku.
+- `step-done` — liest den Languages-Block (§0), prüft die Kommentar-/
+  Docstring-Sprache im Review (§1) und schlägt Commit-Prosa in der Commit-Sprache
+  des Projekts vor (§6; ohne Block englisch, Format-Tokens immer englisch).
+- `build-step` — schreibt Kommentare/Docstrings in der Kommentar-Sprache des
+  Projekts (§2).
+- `update-conventions` — löst die fünf Sprachen bei der Platzhalter-Rückauflösung
+  auf (A2.2) und bietet die **Languages-Block-Migration** als bestätigten Schritt an
+  (neuer A3-Schritt 6 + Hinweis in A2.7; CLAUDE.md ist `seed` und wird nie
+  automatisch angefasst). Migrations-Semantik prospektiv: Bestandsinhalte werden
+  nicht übersetzt, neue Einträge folgen den gewählten Sprachen,
+  Struktur-Überschriften optional.
+- `templates/global-CLAUDE.md` — Haus-Default bleibt Englisch; ein
+  Projekt-Languages-Block gewinnt je Dimension.
+
 ## 0.13.0 — 2026-07-19
 
 Konventions-Vererbung fließt nur noch **abwärts** (Template → Projekt) — die

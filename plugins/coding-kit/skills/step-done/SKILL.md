@@ -13,7 +13,8 @@ Fasse am Ende zusammen, was du getan hast.
 
 ## 0. Projektkontext ermitteln
 
-Lies die **Projekt-CLAUDE.md**: Sprache der lebenden Doku, Graphiti-group_id (ohne
+Lies die **Projekt-CLAUDE.md**: Sprachen (Languages-Block; Alt-Projekte: einzeilige
+Doku-Sprach-Angabe), Graphiti-group_id (ohne
 Graphiti-Block/MCP → Graphiti still überspringen), Sicherheits-Postur (öffentliches Repo
 oder Security-/Auth-Charakter, z. B. `THREAT-MODEL.md` vorhanden → strengster Maßstab
 bei Secrets/Privacy). Nichts davon hardcoden.
@@ -28,6 +29,8 @@ Punkt der Checkliste weitermachen — erledigte Arbeit nicht wiederholen.
 
 - `CODING-STANDARDS.md` lesen (falls vorhanden und noch nicht im Kontext).
 - **Alle in diesem Schritt geänderten/neuen Dateien** gegen die Regeln prüfen.
+- **Kommentar-/Docstring-Sprache** gegen den Languages-Block prüfen (ohne Block:
+  englisch).
 - **Verstöße direkt beheben** — nicht als Frage an den Nutzer zurückspielen.
 - Checks stack-agnostisch über die just-Standardrezepte ausführen: **`just check`** ist
   das Vollgate; bei Bedarf gezielt `just test` / `just lint`. Gibt es kein justfile:
@@ -115,7 +118,8 @@ In der Sprache der lebenden Doku (siehe Schritt 0):
 ## 6. Commit vorbereiten
 
 - **Nie automatisch committen!** Den Nutzer fragen und eine aussagekräftige
-  Conventional-Commits-Message auf Englisch vorschlagen.
+  Conventional-Commits-Message vorschlagen — Prosa in der Commit-Sprache des Projekts
+  (Languages-Block; ohne Block englisch), Format-Tokens immer englisch.
 - **Ausnahme — autonomer Lauf:** Hat der Nutzer für den laufenden Lauf ausdrücklich
   Commits freigegeben (z. B. beim Start von `/coding-kit:build-step … autonom`; die
   Freigabe muss im Verlauf dokumentiert sein), committe nach grünen Checks und Scans

@@ -1,6 +1,6 @@
 ---
 name: new-project
-description: Neues Projekt anlegen — der Orchestrator. Erhebt die Short-Info, klärt Name/Lizenz/Stack/Sichtbarkeit/Doku-Sprache/group_id/Anforderungen (mit Defaults, Sub-Skills aufrufbar), zeigt einen Plan und baut nach Bestätigung ein Repo aus dem project-template — Platzhalter füllen, Modul einsetzen, template-version stempeln, Repo-Settings, Verifikation via just check. Trockenlauf mit Argument „dry-run". Nie ohne Bestätigung nach außen wirken.
+description: Neues Projekt anlegen — der Orchestrator. Erhebt die Short-Info, klärt Name/Lizenz/Stack/Sichtbarkeit/Sprachen-Preset/group_id/Anforderungen (mit Defaults, Sub-Skills aufrufbar), zeigt einen Plan und baut nach Bestätigung ein Repo aus dem project-template — Platzhalter füllen, Modul einsetzen, template-version stempeln, Repo-Settings, Verifikation via just check. Trockenlauf mit Argument „dry-run". Nie ohne Bestätigung nach außen wirken.
 disable-model-invocation: true
 ---
 
@@ -42,14 +42,25 @@ Template-`VERSION` merken (wird gestempelt).
 
 1. **Name?** — direkt eingeben oder `/name-it` (nutzt die Short-Info). Ergebnis:
    lowercase-kebab; `PROJECT_NAME_SNAKE` ableiten.
-2. **Sichtbarkeit?** _(Default: privat)_ — bestimmt public-only-Dateien und den
-   Sprach-Default.
+2. **Sichtbarkeit?** _(Default: privat)_ — bestimmt die public-only-Dateien; auf die
+   Sprachwahl hat sie keinen Einfluss.
 3. **Lizenz?** _(Default: Apache-2.0)_ — direkt, `/choose-license`, oder „später" (TBD;
    bei public nicht erlaubt — public braucht eine LICENSE).
 4. **Stack/Modul?** — direkt oder `/choose-stack` (Modus Neuanlage); „offen" →
    `docs-only`. Ergebnis inkl. CodeQL-Sprache aus dem `MODULE.md`.
-5. **Sprache der lebenden Doku?** _(Default: Deutsch bei privat, Englisch bei public;
-   Governance ist immer englisch)_
+5. **Sprachen?** Eine Frage mit Presets — den Vorschlag aus der Short-Info ableiten
+   (Thema/Publikum des Projekts), **nicht** aus der Sichtbarkeit:
+   - **A — Arbeitssprache + Englisch nach außen** _(Default)_: lebende Doku +
+     CLAUDE.md-Prosa in der Arbeitssprache des Nutzers; Kommentare, Commit-Prosa,
+     README englisch.
+   - **B — alles Englisch.**
+   - **C — alles Arbeitssprache** (Conventional-Tokens bleiben englisch).
+   - **D — individuell:** die fünf Dimensionen einzeln abfragen (lebende Doku,
+     CLAUDE.md-Prosa, Kommentare, Commit-Prosa, README) — freie Sprachwahl.
+
+   Ergebnis sind die Werte der fünf `LANG_*`-Platzhalter. Immer englisch (nicht
+   konfigurierbar): Identifier, Conventional-Commit-Tokens, Status-Tokens,
+   Governance-Doku.
 6. **Graphiti-group_id?** _(Default: Projektname)_ — „kein Graphiti" entfernt den
    optionalen Graphiti-Block.
 7. **Anforderungen jetzt oder später?** _(Default: jetzt via `/define-requirements`)_ —
@@ -88,8 +99,9 @@ Schlägt `create` fehl (Name belegt): zurück zu Schritt 2.1.
 Je Zeile der **Core-managed-Tabelle**: `core/<Quelle>` → `<Ziel>` instanziieren:
 
 - **Platzhalter** der Registry ersetzen (PROJECT_NAME, PROJECT_NAME_SNAKE,
-  PROJECT_DESCRIPTION, OWNER, YEAR, GROUP_ID, LIVING_DOC_LANGUAGE, LICENSE_SPDX,
-  CODEQL_LANGUAGES, TEMPLATE_VERSION) — Werte aus Schritt 2 bzw. zur Laufzeit.
+  PROJECT_DESCRIPTION, OWNER, YEAR, GROUP_ID, LANG_LIVING_DOCS, LANG_CLAUDE_MD,
+  LANG_COMMENTS, LANG_COMMITS, LANG_README, LICENSE_SPDX, CODEQL_LANGUAGES,
+  TEMPLATE_VERSION) — Werte aus Schritt 2 bzw. zur Laufzeit.
 - **`<!-- template:adapt: … -->`**-Stellen aus der Short-Info **konkretisieren** (Zweck/
   Scope in CLAUDE.md, README-Intro, Status-Zeile) und den Marker entfernen.
 - **`<!-- template:optional:NAME -->`**-Blöcke behalten oder samt Inhalt entfernen:
