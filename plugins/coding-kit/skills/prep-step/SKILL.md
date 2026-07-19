@@ -65,9 +65,12 @@ in der `CODING-STANDARDS.md`) — sonst still überspringen:
 3. Treffer, aber kein `<!-- fragment:NAME -->`-Marker im Projekt → im Plan
    vorschlagen, das Katalog-Fragment anzuhängen (Mechanik wie `/choose-stack`,
    idempotent).
-4. Treffer-Thema ganz ohne Katalog-Fragment → vorschlagen, ein projektlokales
-   Fragment zu autoren und es via `/update-conventions` (Richtung AUFWÄRTS) in den
-   Katalog zu promoten.
+4. Treffer-Thema ganz ohne Katalog-Fragment → vorschlagen, ein **projektlokales**
+   Fragment zu autoren (eigener `fragment:NAME`-Block im Slot). Direkt nach der
+   Anlage den **Übernahme-Vorschlag** fürs Template ausgeben (kopierfertiger Prompt
+   bzw. GitHub-Request — siehe `/coding-kit:update-conventions`
+   § Übernahme-Vorschlag); die Aufnahme in den Katalog stößt der Nutzer manuell an,
+   bis dahin bleibt das Fragment projektlokal.
 5. **Nur vorschlagen, nie still einbauen** — die Entscheidung fällt mit der
    Plan-Freigabe (Schritte 4–6).
 

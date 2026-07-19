@@ -4,6 +4,25 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.13.0 — 2026-07-19
+
+Konventions-Vererbung fließt nur noch **abwärts** (Template → Projekt) — die
+AUFWÄRTS-Richtung („promote") ist gestrichen:
+
+- `update-conventions` — promote-Argument, Richtungsfrage und der komplette
+  AUFWÄRTS-Abschnitt entfallen; das Entscheidungsset je Datei/Fragment ist
+  dreiteilig (übernehmen / so lassen / Override registrieren). Wer die
+  Projekt-Fassung für besser hält, ändert zuerst die Vorlage und synct dann
+  herunter. Veralteter Querverweis „wie A2.6" auf „wie A2.7" korrigiert.
+- **Neu: Übernahme-Vorschlag** (Ersatz für promote) — projektlokale Fragmente
+  bleiben erlaubt, werden aber nie ins Template geschrieben. Stattdessen gibt es
+  fertiges Material zum manuellen Anstoßen: kopierfertiger Prompt für eine
+  Template-Session (generalisieren, Katalog-Datei + README-Zeile, Sync-Invariante)
+  oder ein GitHub-Request ins Template-Repo (`gh issue create`, OWNER zur
+  Laufzeit). Ausgegeben an drei Stellen: `update-conventions` (Bestandsfälle beim
+  Sync), `prep-step` 2a Fall B (direkt nach der Anlage) und `step-done` 1a (neu
+  angelegte Fragment-Blöcke im Diff, auch ad-hoc entstandene).
+
 ## 0.12.0 — 2026-07-19
 
 Eigenschafts-Trigger des Fragment-Katalogs werden ausgewertet — Fragmente wie

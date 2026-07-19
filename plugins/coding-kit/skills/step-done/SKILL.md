@@ -54,6 +54,11 @@ sonst still überspringen:
   Anhängen vorschlagen (Mechanik wie `/coding-kit:choose-stack`, idempotent). Der
   Abschluss wird dadurch **nicht blockiert**; lehnt der Nutzer ab, die offene Lücke
   im Archiv-Eintrag (Schritt 4) vermerken, damit sie sichtbar bleibt.
+- Enthält der Diff einen **neu angelegten projektlokalen Fragment-Block**
+  (`fragment:NAME` ohne Katalog-Pendant) → den **Übernahme-Vorschlag** fürs Template
+  ausgeben (kopierfertiger Prompt bzw. GitHub-Request — siehe
+  `/coding-kit:update-conventions` § Übernahme-Vorschlag); rein informativ, der
+  Nutzer stößt die Aufnahme manuell an.
 
 ## 2. Secrets-Scan (KRITISCH)
 
