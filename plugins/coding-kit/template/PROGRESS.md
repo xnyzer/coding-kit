@@ -37,12 +37,44 @@ _No prepared tasks. Plan a backlog item via `/prep-step`._
 
 ## Feature ideas (backlog)
 
-_Empty. Intake new ideas via `/add-feature`._
+_Intake new ideas via `/add-feature` — they get the next F-number._
+
+### F-011 — Section-marker contract for updatable zones in seed files
+
+**Status:** BACKLOG
+
+**Problem:** `/update-conventions` never touches seed files (CLAUDE.md, PROGRESS.md,
+REQUIREMENTS.md, README.md, …) — by design, since they carry project-specific prose.
+But these skeletons also carry **template-owned structure** (CLAUDE.md's Graphiti/
+Languages/convention blocks, the PROGRESS skeleton head, the REQUIREMENTS head note)
+that evolves with the template and currently never reaches existing projects.
+
+**Idea:** Mark updatable zones inside the seed skeletons with explicit section
+markers (modeled on `fragment:NAME`), so the sync can diff and offer those sections
+individually while everything unmarked stays untouchable. This repo defines the
+contract and the data; the evaluation/sync logic is coding-kit work (tracked there
+as F-021).
+
+**Sketch:**
+- Define a marker scheme for seed sections (e.g. `<!-- section:NAME -->` …
+  `<!-- /section:NAME -->`), collision-free with the existing `override:`,
+  `fragment:`, and `template:` markers; register it in `MANIFEST.md` (§ Markers).
+- Wrap the template-owned zones in the seed skeletons: `core/CLAUDE.md` (Graphiti
+  block, Languages block, convention bullets), `core/PROGRESS.md` skeleton head,
+  `core/REQUIREMENTS.md` head note; decide per file whether `core/README.md` has any
+  template zone at all.
+- MANIFEST policy wording: seed files stay seed; marked sections are individually
+  offerable by `/update-conventions`, never the whole file.
+
+**Open questions:** exact zone inventory per seed file; behavior of projects
+instantiated before the markers existed (migration itself is kit-side).
+
+**Dependencies:** none here; consumed by coding-kit F-021.
 
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-011
+next-feature: F-012
 F-001 Initial template build (DONE)
 F-002 Composable CODING-STANDARDS fragments (DONE)
 F-003 Web-standards fragments (DONE)
@@ -53,4 +85,5 @@ F-007 Refresh repo docs for the fragment catalog (DONE)
 F-008 Ship the privacy lint + private blocklist to projects (DONE)
 F-009 Align docs with the current coding-kit skill set (DONE)
 F-010 Per-dimension language matrix (DONE)
+F-011 Section-marker contract for updatable zones in seed files
 -->
