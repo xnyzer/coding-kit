@@ -101,7 +101,8 @@ Je Zeile der **Core-managed-Tabelle**: `core/<Quelle>` → `<Ziel>` instanziiere
 
 Dann **Modul einsetzen** (Modul-Kontrakt, wie `/choose-stack` Modus B): justfile
 ersetzen, `mise.part.toml` in `[tools]` mergen, gitignore-/CI-Parts an ihre Marker,
-Standards-Fragmente (Sprachfragment + deklarierte Katalog-Fragmente) in den
+Standards-Fragmente (Sprachfragment + deklarierte Katalog-Fragmente + die im
+Requirements-Interview bejahten Eigenschafts-Fragmente) in den
 CODING-STANDARDS-Slot anhängen, `files/**` nach Substitution kopieren
 (`src/…{{PROJECT_NAME_SNAKE}}…`-Umbenennung beachten; Datei-Policies laut `MODULE.md`).
 

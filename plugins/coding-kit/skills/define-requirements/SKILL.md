@@ -1,6 +1,6 @@
 ---
 name: define-requirements
-description: Anforderungen erheben. M1-Interview aus der Short-Info (Ziele, Kern-Features, Nicht-Ziele, Constraints) → REQUIREMENTS.md als Übergangs-Artefakt → initiale PROGRESS.md mit einer F-Nummer je Anforderung. Verwaltet auch den Auflöse-Trigger der REQUIREMENTS.md. Einzeln nutzbar und von /new-project aufrufbar.
+description: Anforderungen erheben. M1-Interview aus der Short-Info (Ziele, Kern-Features, Nicht-Ziele, Constraints, Eigenschafts-Trigger des Fragment-Katalogs) → REQUIREMENTS.md als Übergangs-Artefakt → initiale PROGRESS.md mit einer F-Nummer je Anforderung. Verwaltet auch den Auflöse-Trigger der REQUIREMENTS.md. Einzeln nutzbar und von /new-project aufrufbar.
 disable-model-invocation: false
 ---
 
@@ -28,6 +28,13 @@ Aus der Short-Info Vorschläge ableiten und bestätigen lassen statt offen zu fr
    („kein Multi-User", „kein Hosting"). Nicht-Ziele sind so verbindlich wie Ziele.
 4. **Constraints:** technisch/rechtlich/Plattform/Budget — Kandidaten aus der Short-Info
    und dem gewählten Stack vorschlagen.
+5. **Eigenschafts-Trigger des Fragment-Katalogs** — nur wenn das project-template
+   erreichbar ist (im /new-project-Flow ist es bereits aufgelöst; standalone ohne
+   Template still überspringen): die `*characteristic:*`-Zeilen aus
+   `modules/standards/README.md` zur Laufzeit lesen und je Zeile als Ja/Nein-Frage
+   stellen (z. B. audit-logging → „Gibt es Nutzer-/Admin-Aktionen, die Daten
+   verändern?") _(Default: nein)_. Treffer als Constraint + Decision-Log-Eintrag in
+   der REQUIREMENTS.md festhalten.
 
 ## 2. REQUIREMENTS.md schreiben (M5-Struktur)
 
@@ -68,4 +75,6 @@ typischerweise von `/refine-requirements` oder `/step-done`-Läufen erreicht.
 ## Rückgabe an den Aufrufer
 
 Kurzfazit: Anzahl F-Nummern, offene Fragen, ob REQUIREMENTS.md besteht oder aufgelöst
-wurde — für `/new-project` als Bestätigung, dass die initiale Roadmap steht.
+wurde — für `/new-project` als Bestätigung, dass die initiale Roadmap steht. Zusätzlich
+die im Interview **bejahten Eigenschafts-Fragmente** (z. B. `audit-logging`), damit
+`/new-project` sie bei der Instanziierung in den CODING-STANDARDS-Slot mitkomponiert.

@@ -4,6 +4,25 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.12.0 — 2026-07-19
+
+Eigenschafts-Trigger des Fragment-Katalogs werden ausgewertet — Fragmente wie
+`audit-logging`, deren Trigger eine Projekteigenschaft statt einer Dependency ist,
+finden jetzt ihren Weg ins Projekt:
+
+- `define-requirements` — neuer Interview-Punkt 5: die `*characteristic:*`-Zeilen
+  des Katalogs werden zur Laufzeit gelesen und als Ja/Nein-Fragen gestellt
+  (Default nein; ohne erreichbares Template stilles Überspringen). Treffer landen
+  als Constraint + Decision-Log-Eintrag in der REQUIREMENTS.md und in der Rückgabe
+  an den Aufrufer.
+- `new-project` — komponiert die im Interview bejahten Eigenschafts-Fragmente bei
+  der Instanziierung in den CODING-STANDARDS-Slot mit.
+- `choose-stack` (Modus B) — Eigenschafts-Fragmente sind nachrüstbar: sie sind in
+  keinem `MODULE.md` deklariert; je Trigger wird gefragt, ob die Eigenschaft
+  zutrifft (Projektentscheidung, Default nein), angehängt wird nur nach
+  Bestätigung (gleiche idempotente Mechanik).
+- Der prep-step-Teil (Trigger-Match in der Feature-Analyse) kam bereits mit 0.10.0.
+
 ## 0.11.0 — 2026-07-19
 
 `step-done` bekommt den Standards-Abdeckungs-Backstop — Frameworks, die erst

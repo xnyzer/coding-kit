@@ -28,6 +28,7 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-015 | prep-step: Framework-Erkennung mit Fragment-Vorschlag → **Schritt 2a „Standards-Abdeckung" mit Kosten-Gate; matcht Dependency-Signale UND Eigenschafts-Trigger (F-017-Touchpoint miterledigt); Vorschlags-Pfade Anhängen bzw. Autoring + Promote (Plugin 0.10.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 | F-012 | add-skill: Template-HOW-TO synchron halten → **neuer Checklisten-Haken in Schritt 3: Dev-Loop-/Pflege-Skills pflegen die Skill-Übersicht in project-templates HOW-TO mit (Sync-Invariante jenes Repos); repo-lokal, kein Plugin-Release.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 | F-016 | step-done: Standards-Coverage-Backstop → **Schritt 1a, diff-basiert (neue Manifest-Dependencies/Signal-Dateien) mit Katalog-Match zur Laufzeit; Lücke melden + Anhängen vorschlagen, nicht blockierend (Plugin 0.11.0). Zyklus F-013/014/015/016 damit geschlossen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
+| F-017 | Eigenschafts-Trigger für Standards-Fragmente → **define-requirements fragt characteristic-Zeilen im Interview ab, new-project komponiert bejahte Fragmente mit, choose-stack rüstet sie auf Bestätigung nach (Plugin 0.12.0). Composable-Standards-Strang komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 
 ---
 
@@ -40,49 +41,8 @@ _Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
 
 ## Feature-Ideen (Backlog)
 
-_Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer._
-
-> **Kontext (Composable CODING-STANDARDS):** Der Fragment-Vertrag des
-> project-template (MANIFEST § Standards fragments, Katalog
-> `modules/standards/README.md`, manifest-format 1) ist umgesetzt und die
-> Kit-Mechanik dazu fertig — F-013 (choose-stack-Einbau), F-014
-> (update-conventions-Refresh), F-015 (prep-step-Erkennung), F-016
-> (step-done-Backstop), alle DONE. Offen ist nur noch F-017: Mapping-Zeilen können
-> Eigenschafts-Trigger (`*characteristic:*`) tragen, die nicht aus Manifesten,
-> sondern aus Projektwissen kommen.
-
-### F-017 — Eigenschafts-Trigger für Standards-Fragmente auswerten
-
-**Status:** BACKLOG
-
-**Problem:** Der Fragment-Katalog des project-template (ab dessen VERSION 0.7.0,
-`modules/standards/README.md`, manifest-format 1) kennt Mapping-Zeilen mit
-Projekteigenschafts-Triggern (*characteristic:* …; erster Fall: `audit-logging` mit
-„service with user/admin mutations"). Solche Trigger sind über Paket-Manifeste nicht
-erkennbar — sie müssen aus Projektwissen kommen. Ohne Kit-Unterstützung wird ein
-Eigenschafts-Fragment nie gezogen.
-
-**Idee:** Die Kit-Skills werten die im Katalog deklarierten Eigenschafts-Trigger zur
-Laufzeit aus — an drei Stellen im Lebenszyklus: Anforderungs-Interview,
-Feature-Planung, Nachrüstung im Bestandsprojekt. Nichts wird hardcodiert; Trigger-Daten
-kommen ausschließlich aus dem Katalog-README.
-
-**Lösungsskizze:**
-- define-requirements bzw. /new-project-Flow: deklarierte Eigenschafts-Trigger im
-  Interview abfragen (z. B. „Gibt es Nutzer-/Admin-Aktionen, die Daten verändern?");
-  Treffer → Fragment bei der Instanziierung mitkomponieren.
-- prep-step: **miterledigt in F-015** — dessen Schritt „2a. Standards-Abdeckung"
-  matcht beide Signaltypen inkl. der Eigenschafts-Trigger gegen die
-  Aufgabenbeschreibung.
-- choose-stack (Bestandsprojekt-Modus): Eigenschafts-Fragmente nachrüstbar machen —
-  sie sind in keinem MODULE.md deklariert; Auswahl als Projektentscheidung mit
-  Bestätigung wie beim Modulwechsel.
-- Mapping zur Laufzeit aus dem Katalog-README lesen (manifest-format 1) — nichts im
-  Kit hardcoden.
-
-**Abhängigkeiten:** F-013 (Fragment-Anhänge-Mechanik) — erledigt; der prep-step-Teil
-ist in F-015 miterledigt, verbleibender Umfang: define-requirements-Interview +
-choose-stack-Nachrüstpfad.
+_Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer.
+(Nichts offen.)_
 
 ---
 
@@ -104,5 +64,5 @@ F-013 choose-stack: Multi-Fragment-Einbau (DONE)
 F-014 update-conventions: Pro-Fragment-Refresh (DONE)
 F-015 prep-step: Framework-Erkennung mit Fragment-Vorschlag (DONE)
 F-016 step-done: Standards-Coverage-Backstop (DONE)
-F-017 Eigenschafts-Trigger für Standards-Fragmente auswerten
+F-017 Eigenschafts-Trigger für Standards-Fragmente auswerten (DONE)
 -->

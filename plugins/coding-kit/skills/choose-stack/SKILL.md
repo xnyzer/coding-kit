@@ -56,7 +56,10 @@ Kandidaten.
      dem schließenden `<!-- /module:coding-standards -->` einfügen. **Idempotent:** ist
      `fragment:NAME` im Projekt schon vorhanden → überspringen — nie doppelt einbauen,
      nie erneuern (Erneuern macht `/update-conventions`). Beim Erst-Einbau den
-     Platzhaltertext im Slot entfernen,
+     Platzhaltertext im Slot entfernen. **Eigenschafts-Fragmente**
+     (`*characteristic:*`-Zeilen des Katalogs) sind in keinem `MODULE.md`
+     deklariert: je Trigger fragen, ob die Eigenschaft auf das Projekt zutrifft
+     _(Default: nein)_ — Anhängen nur nach Bestätigung, gleiche Mechanik,
    - `ci.part.yml` → Jobs unter `# module:ci-jobs` anhängen,
    - `files/**` → nach Platzhalter-Substitution kopieren (Werte aus dem Projekt
      ableiten: Name aus Repo, Owner via `gh api user`, Beschreibung aus README/CLAUDE.md;
