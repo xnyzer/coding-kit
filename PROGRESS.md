@@ -27,6 +27,7 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-014 | update-conventions: Pro-Fragment-Refresh → **zwei Diff-Ebenen (Core-Datei-Diff mit injiziertem Ist-Slot + Fragment-Abgleich je `fragment:NAME`), fehlende deklarierte Fragmente werden zum Anhängen angeboten, Fragment-Promote in den Katalog (Plugin 0.9.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 | F-015 | prep-step: Framework-Erkennung mit Fragment-Vorschlag → **Schritt 2a „Standards-Abdeckung" mit Kosten-Gate; matcht Dependency-Signale UND Eigenschafts-Trigger (F-017-Touchpoint miterledigt); Vorschlags-Pfade Anhängen bzw. Autoring + Promote (Plugin 0.10.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 | F-012 | add-skill: Template-HOW-TO synchron halten → **neuer Checklisten-Haken in Schritt 3: Dev-Loop-/Pflege-Skills pflegen die Skill-Übersicht in project-templates HOW-TO mit (Sync-Invariante jenes Repos); repo-lokal, kein Plugin-Release.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
+| F-016 | step-done: Standards-Coverage-Backstop → **Schritt 1a, diff-basiert (neue Manifest-Dependencies/Signal-Dateien) mit Katalog-Match zur Laufzeit; Lücke melden + Anhängen vorschlagen, nicht blockierend (Plugin 0.11.0). Zyklus F-013/014/015/016 damit geschlossen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 
 ---
 
@@ -41,38 +42,14 @@ _Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
 
 _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer._
 
-> **Kontext F-013–F-016 (Composable CODING-STANDARDS):** project-template stellt den
-> §13-Slot (`<!-- module:coding-standards -->`) von „einmal einfügen" auf **anhängen**
-> um — mit Pro-Fragment-Markern, einem Fragment-Katalog (vorgeschlagen
-> `modules/standards/`: react, prisma, api-design, docker, nginx, …) und einem
-> Framework→Fragment-Mapping; Stack-Module **deklarieren** ihre Fragmente. Der exakte
-> Fragment-Vertrag (Marker-Schema, Katalog-Ort, Deklarationsform) entsteht in
-> **project-template F-002** (Autoring der Web-Fragmente: dortiges F-003). F-013–F-016
-> koppeln an diesen Vertrag — gegen das F-002-Ergebnis planen oder co-designen.
-> Stand: seit project-template VERSION 0.7.0 liegt der Katalog mit Mapping vor
-> (`modules/standards/README.md`, manifest-format 1); Mapping-Zeilen können auch
-> Eigenschafts-Trigger tragen → F-017.
-
-### F-016 — step-done: Standards-Coverage-Backstop
-
-**Status:** BACKLOG
-
-**Problem:** Auch mit Erkennung in prep-step (F-015) kann ein Framework ohne
-zugehöriges Standards-Fragment durchrutschen — etwa wenn es erst während der Umsetzung
-dazukommt. Es fehlt ein Backstop am Ende des Zyklus.
-
-**Idee:** step-done verifiziert beim Abschluss, dass für die im Projekt tatsächlich
-genutzten Frameworks die passenden Standards-Fragmente vorhanden sind, und meldet
-Lücken — nichts wird ohne seinen Standard abgeschlossen.
-
-**Lösungsskizze:**
-- Coverage-Check in `plugins/coding-kit/skills/step-done/SKILL.md` ergänzen
-  (genutzte Frameworks ermitteln, gegen vorhandene Fragment-Marker abgleichen).
-- Nutzt dasselbe Framework→Fragment-Mapping wie F-015; meldet Lücken, blockiert aber
-  nach Nutzerentscheid nicht zwingend.
-
-**Abhängigkeiten:** project-template F-002 (Fragment-Vertrag + Mapping); inhaltlich
-verwandt mit F-015 (gemeinsames Mapping), aber unabhängig umsetzbar.
+> **Kontext (Composable CODING-STANDARDS):** Der Fragment-Vertrag des
+> project-template (MANIFEST § Standards fragments, Katalog
+> `modules/standards/README.md`, manifest-format 1) ist umgesetzt und die
+> Kit-Mechanik dazu fertig — F-013 (choose-stack-Einbau), F-014
+> (update-conventions-Refresh), F-015 (prep-step-Erkennung), F-016
+> (step-done-Backstop), alle DONE. Offen ist nur noch F-017: Mapping-Zeilen können
+> Eigenschafts-Trigger (`*characteristic:*`) tragen, die nicht aus Manifesten,
+> sondern aus Projektwissen kommen.
 
 ### F-017 — Eigenschafts-Trigger für Standards-Fragmente auswerten
 
@@ -126,6 +103,6 @@ F-012 add-skill: Template-HOW-TO synchron halten (DONE)
 F-013 choose-stack: Multi-Fragment-Einbau (DONE)
 F-014 update-conventions: Pro-Fragment-Refresh (DONE)
 F-015 prep-step: Framework-Erkennung mit Fragment-Vorschlag (DONE)
-F-016 step-done: Standards-Coverage-Backstop
+F-016 step-done: Standards-Coverage-Backstop (DONE)
 F-017 Eigenschafts-Trigger für Standards-Fragmente auswerten
 -->

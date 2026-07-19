@@ -1,6 +1,6 @@
 ---
 name: step-done
-description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS, Checks über just, Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Pflege, Graphiti-Update und Commit-Vorbereitung.
+description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS, Checks über just, Standards-Abdeckungs-Backstop (neu eingeführte Frameworks ohne Fragment), Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Pflege, Graphiti-Update und Commit-Vorbereitung.
 disable-model-invocation: false
 ---
 
@@ -37,6 +37,23 @@ Punkt der Checkliste weitermachen — erledigte Arbeit nicht wiederholen.
   Tests trotzdem fixen oder explizit melden.
 - **Write-then-Verify:** Nach jedem Edit die Datei re-lesen; nichts als erledigt melden,
   was nicht per Tool-Ausgabe belegt ist.
+
+## 1a. Standards-Abdeckung (Backstop)
+
+Nur wenn der Diff dieses Schritts **neue Dependencies in Paket-Manifesten oder neue
+Signal-Dateien** (z. B. `Dockerfile`, `nginx.conf`) einführt und das Projekt einen
+Fragment-Slot hat (`<!-- module:coding-standards -->` in der `CODING-STANDARDS.md`) —
+sonst still überspringen:
+
+- Template auflösen (wie `/coding-kit:choose-stack` § 0) und das Trigger-Mapping aus
+  `modules/standards/README.md` lesen — zur Laufzeit, nichts hardcoden.
+- Die neu hinzugekommenen Dependencies/Dateien gegen die Dependency-Signale des
+  Katalogs matchen (`*characteristic:*`-Zeilen matchen diff-basiert naturgemäß
+  nicht — sie sind Planungsmaterie von prep-step 2a).
+- Treffer ohne `<!-- fragment:NAME -->`-Marker im Projekt → **Lücke melden** und das
+  Anhängen vorschlagen (Mechanik wie `/coding-kit:choose-stack`, idempotent). Der
+  Abschluss wird dadurch **nicht blockiert**; lehnt der Nutzer ab, die offene Lücke
+  im Archiv-Eintrag (Schritt 4) vermerken, damit sie sichtbar bleibt.
 
 ## 2. Secrets-Scan (KRITISCH)
 

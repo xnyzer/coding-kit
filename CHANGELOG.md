@@ -4,6 +4,22 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.11.0 — 2026-07-19
+
+`step-done` bekommt den Standards-Abdeckungs-Backstop — Frameworks, die erst
+während der Umsetzung dazukamen, rutschen nicht mehr ohne ihr Fragment durch:
+
+- Neuer Schritt „1a. Standards-Abdeckung (Backstop)", **diff-basiert**: läuft nur,
+  wenn der Diff des Schritts neue Dependencies in Paket-Manifesten oder neue
+  Signal-Dateien (Dockerfile, nginx.conf, …) einführt und das Projekt einen
+  `module:coding-standards`-Slot hat; sonst stilles Überspringen. Ein
+  Projekt-Vollaudit je Substep wäre unverhältnismäßig und bleibt `/audit-code`.
+- Match gegen das zur Laufzeit gelesene Katalog-Mapping (wie prep-step 2a);
+  `*characteristic:*`-Zeilen matchen diff-basiert naturgemäß nicht.
+- Lücke → melden + Anhängen vorschlagen (Mechanik wie `/choose-stack`,
+  idempotent). Der Abschluss wird nicht blockiert; eine abgelehnte Ergänzung wird
+  im Archiv-Eintrag vermerkt.
+
 ## 0.10.0 — 2026-07-19
 
 `prep-step` prüft die Standards-Abdeckung — „Standards wachsen mit":
