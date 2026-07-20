@@ -4,6 +4,14 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.11.1] — 2026-07-20
+
+### Changed
+- `core/HOW-TO-CODE-WITH-CLAUDE.md`: the `/update-conventions` row now reflects the
+  seed-section sync — updates arrive per managed file, per standards fragment and per
+  marked seed section (`section:NAME`); seed files are never replaced as a whole
+  (counterpart: coding-kit plugin 0.15.0).
+
 ## [0.11.0] — 2026-07-20
 
 ### Added
