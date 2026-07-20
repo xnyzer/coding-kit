@@ -10,6 +10,7 @@ whom, what makes it distinct. -->
 <!-- template:adapt: one line on the current state -->
 Early development — see `PROGRESS.md` for the roadmap.
 
+<!-- section:readme-getting-started -->
 ## Getting started
 
 Toolchain is pinned via [mise](https://mise.jdx.dev); everything else follows from it:
@@ -29,6 +30,7 @@ just check     # full gate: format check, lint, types, tests
 | `just format` | Auto-format the codebase |
 | `just check` | The full gate — must be green before every commit |
 | `just build` | Production build |
+<!-- /section:readme-getting-started -->
 
 ## Documentation
 

@@ -58,9 +58,9 @@ ALLOWED_EMAIL_DOMAINS = (
 # in SKIP_DIRS), so listed terms never leak through validator output in CI.
 BLOCKLIST_FILE = REPO_ROOT / "private" / "blocklist.txt"
 
-# Real standards-fragment markers use lowercase-kebab names; documentation placeholders
-# (`fragment:NAME`, `fragment:<name>`) are uppercase or bracketed and never match.
-FRAGMENT_MARKER_RE = re.compile(r"<!--\s*(/?)fragment:([a-z0-9][a-z0-9-]*)\s*-->")
+# Real fragment/section markers use lowercase-kebab names; documentation placeholders
+# (`fragment:NAME`, `section:<name>`) are uppercase or bracketed and never match.
+PAIRED_MARKER_RE = re.compile(r"<!--\s*(/?)(fragment|section):([a-z0-9][a-z0-9-]*)\s*-->")
 STANDARDS_DECL_RE = re.compile(r"Standards fragments:(.*)")
 
 
@@ -141,24 +141,32 @@ def check_blocklist(path: Path, text: str, findings: list[str], terms: list[str]
             findings.append(f"{rel}: blocklisted term leaked — {term!r}")
 
 
-def check_fragment_markers(path: Path, text: str, findings: list[str]) -> None:
-    """Every `<!-- fragment:NAME -->` must be balanced by a matching close, in order."""
+def check_paired_markers(path: Path, text: str, findings: list[str]) -> None:
+    """Every `<!-- fragment:NAME -->` / `<!-- section:NAME -->` must be balanced by a
+    matching close, in order; section names must be unique within a file."""
     rel = path.relative_to(REPO_ROOT)
-    stack: list[str] = []
-    for match in FRAGMENT_MARKER_RE.finditer(text):
-        closing, name = match.group(1), match.group(2)
+    stacks: dict[str, list[str]] = {"fragment": [], "section": []}
+    seen_sections: set[str] = set()
+    for match in PAIRED_MARKER_RE.finditer(text):
+        closing, kind, name = match.group(1), match.group(2), match.group(3)
+        stack = stacks[kind]
         if not closing:
+            if kind == "section":
+                if name in seen_sections:
+                    findings.append(f"{rel}: duplicate section marker '{name}'")
+                seen_sections.add(name)
             stack.append(name)
         elif not stack:
-            findings.append(f"{rel}: closing fragment marker for '{name}' without a matching open")
+            findings.append(f"{rel}: closing {kind} marker for '{name}' without a matching open")
         elif stack[-1] != name:
             findings.append(
-                f"{rel}: fragment marker mismatch — expected close for '{stack[-1]}', got '{name}'"
+                f"{rel}: {kind} marker mismatch — expected close for '{stack[-1]}', got '{name}'"
             )
         else:
             stack.pop()
-    for name in stack:
-        findings.append(f"{rel}: fragment '{name}' is opened but never closed")
+    for kind, stack in stacks.items():
+        for name in stack:
+            findings.append(f"{rel}: {kind} '{name}' is opened but never closed")
 
 
 def check_fragment_declarations(findings: list[str]) -> None:
@@ -194,7 +202,7 @@ def main() -> int:
         check_placeholders(path, text, findings)
         check_privacy(path, text, findings)
         check_blocklist(path, text, findings, blocklist)
-        check_fragment_markers(path, text, findings)
+        check_paired_markers(path, text, findings)
 
     check_fragment_declarations(findings)
 

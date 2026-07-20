@@ -1,6 +1,7 @@
 # {{PROJECT_NAME}} — Claude Instructions
 
 <!-- template:optional:graphiti -->
+<!-- section:claude-graphiti -->
 ## Graphiti Memory (Knowledge Graph)
 **group_id**: `{{GROUP_ID}}`
 
@@ -10,6 +11,7 @@
 - **After significant changes**, update via `add_memory` (`group_id: "{{GROUP_ID}}"`,
   `source: "text"`, descriptive `name`). Split dense content into multiple episodes.
 - Requires a running Graphiti MCP server — skip silently if none is available.
+<!-- /section:claude-graphiti -->
 <!-- /template:optional:graphiti -->
 
 ## Overview
@@ -25,13 +27,16 @@ README.md -->
 <!-- template:adapt: current state in one or two sentences; keep updated as the project
 evolves (the /step-done skill maintains this) -->
 
+<!-- section:claude-startup -->
 Read `README.md` and `REQUIREMENTS.md` (while it exists). Then `PROGRESS.md`: its open-tasks
 section and the `FEATURE-INDEX` block are the working context — read those; when the file
 has grown large, scan the Done table and backlog instead of reading every entry. Skip
 `PROGRESS-ARCHIVE.md` at startup — consult it only for the rationale of a specific finished
 task. **To continue: open `PROGRESS.md`, take the first open task, run `/prep-step` to plan,
 `/build-step` to implement, then `/step-done` to finish.** Work the open tasks top to bottom.
+<!-- /section:claude-startup -->
 
+<!-- section:claude-conventions -->
 ## Conventions
 
 - **Languages** (chosen at instantiation, independent of repo visibility — identifiers,
@@ -52,7 +57,9 @@ task. **To continue: open `PROGRESS.md`, take the first open task, run `/prep-st
 - Secrets and private material never enter the tree; operational internals go to
   `private/` (gitignored). Living docs stay free of private info (names, customers, local
   paths, IPs) — the project must remain publishable at any time.
+<!-- /section:claude-conventions -->
 
+<!-- section:claude-workflow -->
 ## Workflow & skills
 
 Tasks are F-numbers in `PROGRESS.md` (+ `FEATURE-INDEX` block); finished work is archived
@@ -62,3 +69,4 @@ in `PROGRESS-ARCHIVE.md`. Skills come from the **coding-kit plugin**: `/add-feat
 `HOW-TO-CODE-WITH-CLAUDE.md`.
 Coding rules: `CODING-STANDARDS.md`. Project-local deviations from template conventions
 are registered in `.claude/convention-overrides.md`.
+<!-- /section:claude-workflow -->

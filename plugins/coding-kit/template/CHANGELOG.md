@@ -4,6 +4,21 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.11.0] — 2026-07-20
+
+### Added
+- Section-marker contract for updatable zones in seed files: seed files stay living
+  documents, but template-owned zones are wrapped in `<!-- section:NAME -->` …
+  `<!-- /section:NAME -->` markers that `/update-conventions` may diff and offer
+  individually — never the whole file. `MANIFEST.md` registers the marker, adjusts the
+  seed policy wording, and documents the contract plus the zone inventory in a new
+  § Seed sections (CLAUDE.md Graphiti/startup/conventions/workflow zones; the PROGRESS,
+  PROGRESS-ARCHIVE and REQUIREMENTS head notes; the README getting-started block; the
+  convention-overrides head). `manifest-format` stays 1 — the change is additive and the
+  kit feature-detects by marker presence. The validator's balanced-marker check now
+  covers `section:` markers alongside `fragment:` and enforces unique section names per
+  file. All six seed skeletons carry their markers (wrappers only, no prose changed).
+
 ## [0.10.0] — 2026-07-19
 
 Per-dimension language matrix — project languages are chosen at instantiation and

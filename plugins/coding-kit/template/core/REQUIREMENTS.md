@@ -1,10 +1,12 @@
 # {{PROJECT_NAME}} — Requirements
 
+<!-- section:requirements-head -->
 > **Transitional artifact.** This document captures intent until every requirement has
 > been turned into an F-number in `PROGRESS.md`. Once that transfer is complete, checked,
 > and confirmed by the owner, this file is dissolved and the summary in `CLAUDE.md` is
 > updated (`/define-requirements` and `/refine-requirements` manage this lifecycle).
 > Content is written in {{LANG_LIVING_DOCS}}.
+<!-- /section:requirements-head -->
 
 ## Goals
 

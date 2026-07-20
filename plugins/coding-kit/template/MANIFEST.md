@@ -37,6 +37,7 @@ lowercase and therefore never collide).
 | `<!-- template:optional:NAME -->` … `<!-- /template:optional:NAME -->` | Block kept or removed at instantiation (used: `graphiti`). |
 | `<!-- module:coding-standards -->` … `<!-- /module:coding-standards -->` | Slot in `CODING-STANDARDS.md` §13 where standards fragments are **appended** (each wrapped in `fragment:NAME`), not single-inserted. |
 | `<!-- fragment:NAME -->` … `<!-- /fragment:NAME -->` | Wraps one self-contained standards fragment inside the `module:coding-standards` slot. `NAME` = a catalog fragment (`modules/standards/`) or a stack module's own language fragment. See § Standards fragments. |
+| `<!-- section:NAME -->` … `<!-- /section:NAME -->` | Marks a template-owned zone inside a **seed** file that `/update-conventions` may diff and offer individually — never the whole file. Names are lowercase-kebab, unique across the template. See § Seed sections. |
 | `# module:gitignore` / `# module:ci-jobs` | Append points for module parts in non-HTML files. |
 | `<!-- override: reason -->` | Project-local deviation. `/update-conventions` never touches a file/section carrying it. Register in `.claude/convention-overrides.md`. |
 
@@ -52,7 +53,9 @@ issue) — never as an automatic write from a project.
 
 - **managed** — owned by the template. `/update-conventions` may propose an overwrite
   (diff shown, confirmed per file; overrides are always respected).
-- **seed** — instantiated once, then a living document. Updates never touch it.
+- **seed** — instantiated once, then a living document. Updates never touch it — except
+  zones explicitly marked `section:NAME`, which `/update-conventions` may offer
+  individually (diff shown, confirmed per section); the file as a whole is never offered.
 - **public-only** — instantiated only for public repositories.
 - **module** — provided/replaced by the stack module.
 
@@ -135,6 +138,25 @@ of a project's `CODING-STANDARDS.md`.
   manually triggerable adoption proposal for the template (see § Sync direction).
 - **Assembly** — appending the fragments at instantiation / `/choose-stack` is coding-kit logic;
   this manifest defines only the contract and the data.
+
+## Seed sections
+
+Seed files are living documents and never updated as a whole — but some carry
+**template-owned zones** (structure and guidance that evolve with the template). Those
+zones are wrapped in `<!-- section:NAME -->` … `<!-- /section:NAME -->` markers so
+`/update-conventions` can diff and offer each section individually; everything unmarked
+stays untouchable. A project that deletes a marker pair permanently opts that zone out
+of updates. Evaluating the markers is coding-kit logic; this manifest defines the
+contract and the inventory:
+
+| Seed file | Sections |
+|-----------|----------|
+| `core/CLAUDE.md` | `claude-graphiti` (inside the `template:optional:graphiti` block), `claude-startup`, `claude-conventions`, `claude-workflow` |
+| `core/PROGRESS.md` | `progress-head` |
+| `core/PROGRESS-ARCHIVE.md` | `archive-head` |
+| `core/REQUIREMENTS.md` | `requirements-head` |
+| `core/README.md` | `readme-getting-started` |
+| `core/.claude/convention-overrides.md` | `overrides-head` |
 
 ## Version stamp
 

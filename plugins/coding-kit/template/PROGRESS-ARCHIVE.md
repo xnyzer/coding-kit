@@ -5,6 +5,74 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-011b — Section markers applied to the seed skeletons (2026-07-20)
+
+**Problem:** F-011a defined the `section:NAME` contract and inventory in `MANIFEST.md`;
+the markers themselves were still missing from the seed skeletons.
+
+**What was built (7 files):**
+
+Wrapped the template-owned zones exactly per the MANIFEST § Seed sections inventory —
+wrappers only, no prose changed: `core/CLAUDE.md` (`claude-graphiti` nested inside the
+`template:optional:graphiti` block, `claude-startup` around the reading guidance below
+the adapt slot, `claude-conventions` and `claude-workflow` including their headings),
+`core/PROGRESS.md` (`progress-head`), `core/PROGRESS-ARCHIVE.md` (`archive-head`),
+`core/REQUIREMENTS.md` (`requirements-head`), `core/README.md`
+(`readme-getting-started` incl. heading and recipe table),
+`core/.claude/convention-overrides.md` (`overrides-head`). `CHANGELOG.md` 0.11.0 entry
+updated to state the markers shipped.
+
+**Notable decisions / deviations:**
+
+- **Deviation from the plan (owner's call):** F-011a and F-011b were committed together,
+  so both ship as VERSION 0.11.0 — the planned separate 0.11.1 bump for b was dropped
+  (the sync invariant is per commit, one bump suffices).
+- Zones whose heading is fully template-owned (Conventions, Workflow, Getting started)
+  include the heading inside the markers; `claude-startup` excludes its heading because
+  the section also carries the project-specific status sentence and adapt slot.
+
+**Verification:** `just check` green; grep over the six files shows exactly the nine
+marker pairs of the inventory, all balanced (validator); `sed` proof that
+`claude-graphiti` sits inside the optional block.
+
+---
+
+## F-011a — Seed section-marker contract + validator (2026-07-20)
+
+**Problem:** Seed files are living documents `/update-conventions` never touches — but
+they carry template-owned zones (CLAUDE.md's Graphiti/startup/conventions/workflow blocks,
+the skeleton head notes) that evolve with the template and never reached existing projects.
+F-011 defines a section-marker contract so those zones become individually syncable;
+this substep ships the contract and validation, F-011b applies the markers.
+
+**What was built (5 files; VERSION 0.10.0 → 0.11.0):**
+
+- `MANIFEST.md`: `<!-- section:NAME -->` … `<!-- /section:NAME -->` registered in
+  § Markers (lowercase-kebab, unique across the template); seed policy reworded — marked
+  zones are individually offerable (diff shown, confirmed per section), the file as a
+  whole never; new § Seed sections with contract prose (deleting a marker pair = permanent
+  opt-out; evaluation is coding-kit logic) and the agreed zone inventory: `core/CLAUDE.md`
+  (`claude-graphiti` inside the optional block, `claude-startup`, `claude-conventions`,
+  `claude-workflow`), `progress-head`, `archive-head`, `requirements-head`,
+  `readme-getting-started`, `overrides-head`.
+- `scripts/validate.py`: `check_fragment_markers` generalized to `check_paired_markers` —
+  one regex (`PAIRED_MARKER_RE`) and per-kind stacks cover `fragment:` and `section:`
+  balanced/ordered closing; section names must additionally be unique per file.
+- `VERSION` 0.11.0, `CHANGELOG.md` entry.
+
+**Notable decisions:**
+
+- `manifest-format` stays 1: the addition is backward-compatible — older kit versions
+  ignore the markers, kit F-021 feature-detects by marker presence.
+- MANIFEST documents markers only with the uppercase `NAME` placeholder so the docs
+  themselves never trip the balanced-marker check (same convention as `fragment:`).
+
+**Verification:** `just check` green before and after; spot test with an intentionally
+broken file caught duplicate, mismatched, and unclosed `section:`/`fragment:` markers
+(5 findings), clean again after removal.
+
+---
+
 ## F-010 — Per-dimension language matrix (2026-07-19)
 
 **Problem:** Project language was a single dimension (`LIVING_DOC_LANGUAGE`, living
