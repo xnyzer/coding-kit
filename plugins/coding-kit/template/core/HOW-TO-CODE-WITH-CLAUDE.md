@@ -44,6 +44,7 @@ Guide for working with Claude Code in the {{PROJECT_NAME}} project.
 | `/choose-stack` | Add a stack module later, or switch modules. Composes the module's declared catalog fragments (append, idempotent per `fragment:NAME` marker) and can retrofit characteristic fragments after confirmation |
 | `/choose-license` | Pick or change the project license |
 | `/update-conventions` | Pull template updates into this project — per managed file, per standards fragment and per marked seed section (`section:NAME`), downward only (template → project). Respects overrides; seed files are never replaced as a whole; project-local fragments are never touched, only reported with a manually triggerable adoption proposal for the template |
+| `/go-public` | Take a private or local-only project public, guided and fail-closed: blocking preflight audit (secrets across the full git history, privacy incl. commit metadata, license, `private/` hygiene), file catch-up **before** the switch (public-only files arrive while still private), then visibility change or repo creation + initial push only after explicit per-run approval |
 | `/define-requirements` | Elicit requirements (M1 interview → `REQUIREMENTS.md`). The interview also asks the fragment catalog's characteristic triggers (e.g. audit-logging: "Are there user/admin actions that mutate data?") |
 | `/refine-requirements` | Go back to the spec when something fundamental changed |
 
