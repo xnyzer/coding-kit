@@ -47,7 +47,7 @@ Die Skills erscheinen namespaced als `/coding-kit:<skill>`:
 | `/coding-kit:choose-stack` | Modul-Empfehlung für Neuanlage oder Nachrüsten/Wechsel EINES Moduls im Bestand (Diff + Bestätigung); baut die vom Modul deklarierten Standards-Fragmente komponierbar ein, Eigenschafts-Fragmente nachrüstbar auf Bestätigung. |
 | `/coding-kit:define-requirements` | Interview → REQUIREMENTS.md (Übergangs-Artefakt) → initiale PROGRESS.md mit F-Nummern; fragt die Eigenschafts-Trigger des Fragment-Katalogs ab. |
 | `/coding-kit:refine-requirements` | Zurück zur Spec: Diagnose mit drei Pfaden, darf Features splitten, datiertes Decision Log. |
-| `/coding-kit:update-conventions` | Konventions-Sync Template → Projekte (nur abwärts): Diff + Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (`section:NAME`), Override-Schutz, Altprojekt-Migrationen; projektlokale Fragmente werden mit manuell anstoßbarem Übernahme-Vorschlag fürs Template gemeldet. |
+| `/coding-kit:update-conventions` | Konventions-Sync Template → Projekte (nur abwärts): Diff + Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (`section:NAME`), Override-Schutz, Altprojekt-Migrationen; erkennt im Template entfernte/umbenannte Dateien (Rückbau/Umzug je Datei bestätigt); projektlokale Fragmente werden mit manuell anstoßbarem Übernahme-Vorschlag fürs Template gemeldet. |
 | `/coding-kit:check-upstreams` | Watchliste externer Vorbild-Repos prüfen (`upstreams.json`), Neuerungen seit letztem Ref, Übernahme-Vorschläge. |
 | `/coding-kit:refine-prompt` | Übergebenen Prompt analysieren, Schwachstellen benennen, nach Best Practices neu formulieren und ausführen. |
 

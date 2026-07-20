@@ -1,6 +1,6 @@
 ---
 name: update-conventions
-description: Konventionen vom project-template in Projekte verteilen — ausschließlich abwärts. Deterministisch via template-version + MANIFEST, Diff + Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME), Override-Schutz, Migrationen für Altprojekte. Projektlokale Fragmente ohne Template-Pendant werden nie angefasst, aber mit einem manuell anstoßbaren Übernahme-Vorschlag fürs Template gemeldet. Nichts wird ungefragt überschrieben.
+description: Konventionen vom project-template in Projekte verteilen — ausschließlich abwärts. Deterministisch via template-version + MANIFEST, Diff + Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME), Override-Schutz, Migrationen für Altprojekte; erkennt im Template entfernte/umbenannte Dateien und bietet Rückbau/Umzug an. Projektlokale Fragmente ohne Template-Pendant werden nie angefasst, aber mit einem manuell anstoßbaren Übernahme-Vorschlag fürs Template gemeldet. Nichts wird ungefragt überschrieben.
 disable-model-invocation: true
 ---
 
@@ -100,7 +100,20 @@ Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf überneh
    Graphiti fehlt sie legitim (kein Opt-out, nichts melden). Fehlen einer Datei
    **alle** Markerpaare (Projekt vor dem Zonen-Vertrag), keine Heuristik — die
    Marker-Migration aus A3 Schritt 7 anbieten.
-8. Abschluss pro Projekt: Stempel auf die neue VERSION setzen, `just check` muss grün
+8. **Im Template entfernte/umbenannte Dateien:** die Core-Tabelle des Stempel-Stands
+   mit der aktuellen vergleichen. Den Stempel-Stand über die Git-Historie des
+   Template-Checkouts auflösen: den Commit finden, in dem `VERSION` den
+   Stempel-Wert trug (Historie von `VERSION` durchgehen, Inhalt je Commit prüfen),
+   dort das MANIFEST lesen (`git show <commit>:MANIFEST.md`). Ist das nicht
+   auflösbar (z. B. shallow clone, Stempel älter als die Historie): **Fallback**
+   auf die CHANGELOG-Einträge des Update-Fensters (Schritt 1) — nur dort
+   dokumentierte Entfernungen/Umbenennungen verwenden, nichts erraten. Je
+   verschwundenem Ziel unterscheiden: **Umbenennung** (Pendant unter neuem Ziel,
+   gleiche Quelle bzw. laut CHANGELOG) → Umzug anbieten (Inhalt an den neuen Ort,
+   Alt-Datei löschen); **Entfernung** → Rückbau anbieten. Immer je Datei
+   bestätigen; Overrides gelten (Schritt 4). **seed-Dateien nie löschen oder
+   verschieben** — nur melden, die Entscheidung liegt beim Nutzer.
+9. Abschluss pro Projekt: Stempel auf die neue VERSION setzen, `just check` muss grün
    sein (Write-then-Verify), Commit-Vorschlag (z. B.
    `chore: sync template conventions <alt> -> <neu>`) — **nur nach OK**, dann Push-Frage.
    Fehlt der Languages-Block in der Projekt-CLAUDE.md, die Migration aus A3 Schritt 6
@@ -142,7 +155,7 @@ Erst der Abgleich, dann jede Migration als **eigener bestätigter Schritt**:
    identifizieren; nicht Wiederauffindbares auslassen (die Zone wurde ggf. bewusst
    entfernt = Opt-out). Danach greift der abschnittsweise Abgleich aus A2 Schritt 7.
 8. Sind alle managed Dateien abgeglichen: **Stempel setzen** anbieten (macht künftige
-   Läufe deterministisch). Commit-Frage wie A2.8.
+   Läufe deterministisch). Commit-Frage wie A2.9.
 
 ---
 

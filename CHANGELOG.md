@@ -4,6 +4,20 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.16.0 — 2026-07-20
+
+Entfernte/umbenannte Template-Dateien im Sync behandeln (F-021b — schließt mit
+F-021a die Vollabdeckung aller Template-Dokumente ab):
+
+- `update-conventions` — neuer A2-Schritt 8: die Core-Tabelle des Stempel-Stands
+  wird über die Git-Historie des Template-Checkouts aufgelöst (Commit mit
+  passendem `VERSION`-Inhalt, dann `git show <commit>:MANIFEST.md`) und mit der
+  aktuellen verglichen; verschwundene Ziele → Rückbau anbieten, umbenannte →
+  Umzug anbieten — je Datei bestätigt, Overrides gelten. Fallback ohne
+  auflösbaren Stempel-Commit: nur im CHANGELOG des Update-Fensters dokumentierte
+  Entfernungen/Umbenennungen, nichts erraten. seed-Dateien werden nie gelöscht
+  oder verschoben, nur gemeldet.
+
 ## 0.15.0 — 2026-07-20
 
 seed-Abgleich abschnittsweise (F-021a; Gegenstück zu project-template 0.11.0,

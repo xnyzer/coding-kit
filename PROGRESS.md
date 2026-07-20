@@ -31,6 +31,7 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-017 | Eigenschafts-Trigger für Standards-Fragmente → **define-requirements fragt characteristic-Zeilen im Interview ab, new-project komponiert bejahte Fragmente mit, choose-stack rüstet sie auf Bestätigung nach (Plugin 0.12.0). Composable-Standards-Strang komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 | F-018 | Konventions-Vererbung nur noch abwärts → **AUFWÄRTS/promote aus update-conventions gestrichen; Ersatz: manuell anstoßbarer Übernahme-Vorschlag (Template-Session-Prompt oder GitHub-Request) an drei Stellen — Sync-Lauf, Fragment-Anlage, step-done-Diff (Plugin 0.13.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 | F-020 | Sprach-Matrix: granulare Sprachwahl je Projekt → **new-project-Preset-Frage (entkoppelt von Sichtbarkeit), fünf `LANG_*`-Platzhalter, Commit-/Kommentar-Sprache in step-done/build-step, Languages-Block-Migration in update-conventions (prospektiv, nichts rückwirkend übersetzen); Pairing: project-template F-010 (Plugin 0.14.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
+| F-021 | update-conventions: Vollabdeckung aller Template-Dokumente → **seed-Abgleich abschnittsweise je `section:NAME`-Zone (Opt-out, Override, Feature-Detection) + A3-Marker-Migration + Marker-Erhalt in new-project (0.15.0); entfernte/umbenannte Template-Dateien via Stempel-Commit-Auflösung, Rückbau/Umzug je Datei bestätigt (0.16.0). Pairing: project-template F-011.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-20 |
 
 ---
 
@@ -79,43 +80,6 @@ pushen.
 
 **Abhängigkeiten:** keine (nutzt bestehende update-conventions-Mechanik).
 
-### F-021 — update-conventions: Vollabdeckung aller Template-Dokumente (inkl. seed)
-
-**Status:** BACKLOG
-
-**Problem:** update-conventions prüft nur managed Dateien und Modul-Parts. Die sieben
-seed-Dateien (CLAUDE.md, PROGRESS.md, PROGRESS-ARCHIVE.md, REQUIREMENTS.md, README.md,
-LICENSE, `.claude/convention-overrides.md`) werden nie geprüft — auch ihre
-**Template-Struktur-Anteile** nicht (CLAUDE.md-Blöcke wie Graphiti/Languages/
-Konventionen, PROGRESS-Skelett, REQUIREMENTS-Kopfnotiz, README-Struktur).
-Template-Verbesserungen dort erreichen Bestandsprojekte nie, Drift bleibt unbemerkt.
-Zweiter blinder Fleck: im Template gelöschte/umbenannte Dateien behandelt der Lauf
-nicht.
-
-**Idee:** Jeder Sync-Lauf prüft sämtliche Template-Dokumente. seed-Dateien werden nie
-als Ganzes ersetzt, sondern **struktur-bewusst** abgeglichen: Template-Anteile gegen
-die aktuelle Vorlage diffen und die Übernahme je Abschnitt anbieten; projektspezifische
-Prosa bleibt unantastbar, Override-Schutz gilt. Mechanik-Kandidat: markierte
-Abschnitte im seed-Skelett (Vorbild `fragment:NAME`) — der Vertrag dafür gehört ins
-project-template (Pairing wie bei F-013/F-020).
-
-**Lösungsskizze:**
-- Abschnitts-Marker-Vertrag im project-template definieren (dort aufzunehmen):
-  updatebare Zonen in seed-Skeletten markieren (z. B. CLAUDE.md: Graphiti-,
-  Languages-, Konventions-Block; PROGRESS: Skelett-Kopf).
-- update-conventions: neuer Schritt „seed-Abgleich (abschnittsweise)" — markierte
-  Abschnitte diffen, Übernahme je Abschnitt anbieten, nie die ganze Datei ersetzen.
-- Umgang mit im Template entfernten/umbenannten Dateien: erkennen und Rückbau/
-  Umzug anbieten.
-
-**Noch zu analysieren:** Marker-Schema (Kollision mit `override:`-Markern vermeiden);
-ob README überhaupt sinnvolle Template-Zonen hat oder projektindividuell bleibt;
-Verhalten bei Alt-Projekten ohne Abschnitts-Marker (Heuristik vs. erst Migration).
-
-**Abhängigkeiten:** project-template (Abschnitts-Marker-Vertrag) — dort noch
-aufzunehmen; baut auf F-020 auf (Languages-Block als erster Kandidat einer
-updatebaren Zone).
-
 ---
 
 <!-- FEATURE-INDEX
@@ -140,5 +104,5 @@ F-017 Eigenschafts-Trigger für Standards-Fragmente auswerten (DONE)
 F-018 Konventions-Vererbung nur noch abwärts (DONE)
 F-019 Pflege-Skill go-public (Projekt nachträglich public-ready)
 F-020 Sprach-Matrix: granulare Sprachwahl je Projekt (DONE)
-F-021 update-conventions: Vollabdeckung aller Template-Dokumente (inkl. seed)
+F-021 update-conventions: Vollabdeckung aller Template-Dokumente (inkl. seed) (DONE)
 -->
