@@ -107,6 +107,9 @@ Je Zeile der **Core-managed-Tabelle**: `core/<Quelle>` → `<Ziel>` instanziiere
 - **`<!-- template:optional:NAME -->`**-Blöcke behalten oder samt Inhalt entfernen:
   `graphiti` je Schritt 2.6; `security-tool` nur behalten, wenn das Projekt ein
   Security-/Auth-Tool ist (aus der Short-Info ableiten, im Zweifel fragen).
+- **`<!-- section:NAME -->`**-Markerpaare in seed-Dateien **unverändert übernehmen**
+  (nie entfernen oder „aufräumen") — sie markieren die Zonen, die
+  `/update-conventions` später abschnittsweise aktualisieren darf.
 - **public-only**-Dateien (CODE_OF_CONDUCT, codeql.yml) nur bei public instanziieren.
 - **LICENSE:** kanonischen Text der gewählten Lizenz einsetzen; bei **TBD** keine
   LICENSE-Datei anlegen und im README „License: TBD" vermerken.

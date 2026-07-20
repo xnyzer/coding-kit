@@ -1,6 +1,6 @@
 ---
 name: update-conventions
-description: Konventionen vom project-template in Projekte verteilen — ausschließlich abwärts. Deterministisch via template-version + MANIFEST, Diff + Bestätigung je Datei bzw. je Standards-Fragment, Override-Schutz, Migrationen für Altprojekte. Projektlokale Fragmente ohne Template-Pendant werden nie angefasst, aber mit einem manuell anstoßbaren Übernahme-Vorschlag fürs Template gemeldet. Nichts wird ungefragt überschrieben.
+description: Konventionen vom project-template in Projekte verteilen — ausschließlich abwärts. Deterministisch via template-version + MANIFEST, Diff + Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME), Override-Schutz, Migrationen für Altprojekte. Projektlokale Fragmente ohne Template-Pendant werden nie angefasst, aber mit einem manuell anstoßbaren Übernahme-Vorschlag fürs Template gemeldet. Nichts wird ungefragt überschrieben.
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,9 @@ disable-model-invocation: true
 **Grundsätze:** Vererbung fließt **ausschließlich abwärts** — Konventionen werden
 immer zuerst in der Vorlage geändert und von dort verteilt; dieser Skill schreibt nie
 ins Template. Nichts ungefragt überschreiben. Overrides sind unantastbar. Nie
-automatisch committen. Seed-Dateien (lebende Doku) werden von Updates **nie** berührt.
+automatisch committen. Seed-Dateien (lebende Doku) werden von Updates **nie als
+Ganzes** ersetzt — nur explizit markierte `section:NAME`-Zonen dürfen abschnittsweise
+angeboten werden (A2 Schritt 7); alles Unmarkierte ist unantastbar.
 
 Argument (optional): Projektpfad/-name für einen gezielten Lauf. Lokale Abweichungen
 an managed Dateien werden übernommen, einmalig gelassen oder als Override registriert;
@@ -23,7 +25,10 @@ Wie `/choose-stack` § 0: Template-Checkout auflösen (lokal unter
 lesen; **`manifest-format` prüfen** (dieser Skill kann Format `1` — sonst abbrechen und
 auf ein Kit-Update verweisen). Aktuelle Template-`VERSION` und `CHANGELOG.md` merken.
 Für den Fragment-Abgleich zusätzlich MANIFEST § Standards fragments und
-`modules/standards/README.md` (Fragment-Katalog) lesen.
+`modules/standards/README.md` (Fragment-Katalog) lesen. Für den seed-Abgleich
+MANIFEST § Seed sections (Zonen-Inventar) lesen — **fehlt der Abschnitt** (älterer
+Template-Stand), entfallen seed-Abgleich (A2 Schritt 7) und Marker-Migration
+(A3 Schritt 7) still; `manifest-format` bleibt davon unberührt.
 
 ## Kontext-Recovery
 
@@ -57,7 +62,8 @@ Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf überneh
 3. **Soll-Zustand erzeugen:** jede **managed** Datei der Core-Tabelle plus die
    **module**-Parts des eingebauten Moduls (erkennbar an justfile-Kopf/mise.toml;
    im Zweifel fragen) aus dem aktuellen Template instanziieren — Platzhalter füllen,
-   Marker-Logik wie `/new-project` § 4b. **Policies beachten:** `seed` nie anfassen;
+   Marker-Logik wie `/new-project` § 4b. **Policies beachten:** `seed`-Dateien nie
+   als Ganzes instanziieren — ihre markierten Zonen behandelt Schritt 7;
    `public-only` nur bei public Repos. **Sonderfall `CODING-STANDARDS.md`:** in der
    Soll-Fassung den Slot `<!-- module:coding-standards -->` mit dem **Ist-Slot des
    Projekts** füllen — der Datei-Diff (Schritt 5) zeigt so nur Core-Änderungen; die
@@ -81,7 +87,20 @@ Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf überneh
    anstoßen muss sie der Nutzer. Deklariert das `MODULE.md` inzwischen Fragmente, die im Projekt
    fehlen → Anhängen anbieten (Mechanik wie `/choose-stack`, idempotent). Bestehende
    Fragmente in-place ersetzen, Neues ans Slot-Ende — nie umsortieren.
-7. Abschluss pro Projekt: Stempel auf die neue VERSION setzen, `just check` muss grün
+7. **seed-Abgleich (abschnittsweise, je `section:NAME`-Zone):** entfällt still, wenn
+   das Template kein § Seed sections führt (§ 0). Je seed-Datei aus dem dortigen
+   Inventar: die markierten Zonen der Template-Fassung instanziieren (Platzhalter
+   wie Schritt 3, Werte aus Schritt 2) und einzeln gegen die gleichnamige Ist-Zone
+   des Projekts diffen. Je Zone dieselben Entscheidungen wie Schritt 5; ein
+   Inline-`<!-- override: … -->` in der Zone schützt genau diese Zone. **Nie die
+   ganze Datei ersetzen oder neu anlegen** — alles außerhalb der Markerpaare bleibt
+   unangetastet. **Fehlendes Markerpaar = dauerhafter Opt-out:** nur informativ
+   auflisten, Marker nie ungefragt wiederherstellen. Sonderfall `claude-graphiti`:
+   die Zone liegt im `template:optional:graphiti`-Block — bei Projekten ohne
+   Graphiti fehlt sie legitim (kein Opt-out, nichts melden). Fehlen einer Datei
+   **alle** Markerpaare (Projekt vor dem Zonen-Vertrag), keine Heuristik — die
+   Marker-Migration aus A3 Schritt 7 anbieten.
+8. Abschluss pro Projekt: Stempel auf die neue VERSION setzen, `just check` muss grün
    sein (Write-then-Verify), Commit-Vorschlag (z. B.
    `chore: sync template conventions <alt> -> <neu>`) — **nur nach OK**, dann Push-Frage.
    Fehlt der Languages-Block in der Projekt-CLAUDE.md, die Migration aus A3 Schritt 6
@@ -115,8 +134,15 @@ Erst der Abgleich, dann jede Migration als **eigener bestätigter Schritt**:
    Bestandsinhalte werden nicht übersetzt — neue Einträge folgen ab sofort den
    gewählten Sprachen; Struktur-Überschriften (z. B. das PROGRESS-Skelett) dürfen auf
    Wunsch übersetzt werden, die Historie bleibt unverändert.
-7. Sind alle managed Dateien abgeglichen: **Stempel setzen** anbieten (macht künftige
-   Läufe deterministisch). Commit-Frage wie A2.7.
+7. **section-Marker nachrüsten:** Tragen seed-Dateien noch keine
+   `section:NAME`-Markerpaare (Projekt vor dem Zonen-Vertrag; entfällt still ohne
+   § Seed sections im Template, s. § 0), je Datei anbieten, die Markerpaare aus dem
+   MANIFEST-Inventar um die wiedererkennbaren Zonen zu setzen — reine Wrapper, der
+   Projektinhalt bleibt unverändert. Zonen anhand der Template-Fassung
+   identifizieren; nicht Wiederauffindbares auslassen (die Zone wurde ggf. bewusst
+   entfernt = Opt-out). Danach greift der abschnittsweise Abgleich aus A2 Schritt 7.
+8. Sind alle managed Dateien abgeglichen: **Stempel setzen** anbieten (macht künftige
+   Läufe deterministisch). Commit-Frage wie A2.8.
 
 ---
 

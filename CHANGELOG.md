@@ -4,6 +4,23 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.15.0 — 2026-07-20
+
+seed-Abgleich abschnittsweise (F-021a; Gegenstück zu project-template 0.11.0,
+`section:NAME`-Zonen-Vertrag in MANIFEST § Seed sections):
+
+- `update-conventions` — neuer A2-Schritt 7: die markierten Zonen der sechs
+  seed-Skelette werden instanziiert (rückaufgelöste Projektwerte) und einzeln
+  gegen die Ist-Zone gedifft — je Zone übernehmen / lassen / Override, nie die
+  ganze Datei; gelöschtes Markerpaar = dauerhafter Opt-out (nur melden);
+  `claude-graphiti` fehlt legitim bei Projekten ohne Graphiti-Block.
+  Feature-Detection in § 0: ohne § Seed sections im Template entfällt der Schritt
+  still. Neuer A3-Schritt 7: Marker-Migration für Alt-Projekte (Wrapper aus dem
+  Inventar um wiedererkennbare Zonen, je Datei bestätigt). Grundsatz präzisiert:
+  seed nie als Ganzes, markierte Zonen abschnittsweise.
+- `new-project` — Klarstellung in § 4b: `section:NAME`-Markerpaare bleiben bei
+  der Instanziierung unverändert erhalten.
+
 ## 0.14.0 — 2026-07-19
 
 Sprach-Matrix: Projektsprachen sind granular wählbar und von der Sichtbarkeit
