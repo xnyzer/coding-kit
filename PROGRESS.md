@@ -32,6 +32,7 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-018 | Konventions-Vererbung nur noch abwärts → **AUFWÄRTS/promote aus update-conventions gestrichen; Ersatz: manuell anstoßbarer Übernahme-Vorschlag (Template-Session-Prompt oder GitHub-Request) an drei Stellen — Sync-Lauf, Fragment-Anlage, step-done-Diff (Plugin 0.13.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 | F-020 | Sprach-Matrix: granulare Sprachwahl je Projekt → **new-project-Preset-Frage (entkoppelt von Sichtbarkeit), fünf `LANG_*`-Platzhalter, Commit-/Kommentar-Sprache in step-done/build-step, Languages-Block-Migration in update-conventions (prospektiv, nichts rückwirkend übersetzen); Pairing: project-template F-010 (Plugin 0.14.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 | F-021 | update-conventions: Vollabdeckung aller Template-Dokumente → **seed-Abgleich abschnittsweise je `section:NAME`-Zone (Opt-out, Override, Feature-Detection) + A3-Marker-Migration + Marker-Erhalt in new-project (0.15.0); entfernte/umbenannte Template-Dateien via Stempel-Commit-Auflösung, Rückbau/Umzug je Datei bestätigt (0.16.0). Pairing: project-template F-011.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-20 |
+| F-019 | Pflege-Skill go-public → **geführter, fail-closed Übergang private/lokal → public: vier blockierende Preflight-Gates (Historie-Secrets, Privacy inkl. Commit-Metadaten, Lizenz, private/-Hygiene), Nachzug vor Übergang via update-conventions-Sichtbarkeits-Prämisse, Push nur mit laufbezogener Freigabe (Plugin 0.17.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-20 |
 
 ---
 
@@ -45,40 +46,6 @@ _Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
 ## Feature-Ideen (Backlog)
 
 _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer._
-
-### F-019 — Pflege-Skill go-public: Projekt nachträglich public-ready machen
-
-**Status:** BACKLOG
-
-**Problem:** public-only-Dateien (CODE_OF_CONDUCT, codeql.yml, …) werden bei privaten
-Projekten bewusst nicht instanziiert. Soll ein Projekt später öffentlich werden, gibt
-es keinen geführten Weg — der reine Datei-Nachzug wäre via update-conventions möglich,
-aber das eigentliche Risiko prüft niemand systematisch: Secrets/Personendaten in der
-**gesamten Git-Historie**, TBD-Lizenz, fehlende Repo-Einstellungen.
-
-**Idee:** Neuer Pflege-Skill go-public, der den Übergang orchestriert statt Mechanik
-zu duplizieren: blockierendes Preflight-Audit, dann Übergang nach expliziter
-Bestätigung, dann Datei-Nachzug via update-conventions, dann Abschluss-Check. Zwei
-Startfälle: das GitHub-Repo existiert und ist private → Sichtbarkeit umstellen; das
-Projekt war bisher nur lokal → GitHub-Repo public anlegen und nach Freigabe initial
-pushen.
-
-**Lösungsskizze:**
-- Neuer Skill `plugins/coding-kit/skills/go-public/SKILL.md` (Pflege-Kategorie,
-  `disable-model-invocation` — nur bewusster Nutzer-Start).
-- Fallerkennung zur Laufzeit (`gh repo view`): existiert + private → Sichtbarkeit
-  umstellen; existiert nicht → Repo-Anlage; schon public → nur Nachzug/Check.
-- Preflight blockierend: gitleaks über die **volle Historie** (nicht nur Working
-  Tree), Privacy-Scan des committeten Baums, LICENSE nicht TBD, `private/`
-  gitignored; Funde → stoppen mit Optionen (bereinigen / History-Rewrite / Abbruch).
-- Übergang je Fall nur nach expliziter Bestätigung: `gh repo edit --visibility
-  public` bzw. `gh repo create` + initialer Push (ausdrückliche, laufbezogene
-  Push-Freigabe — einzige Ausnahme vom Push-Tabu).
-- Nachzug an `/update-conventions` delegieren (public-only-Dateien erscheinen dann
-  regulär als Diff); Abschluss-Check: CodeQL-Workflow, Topics/Beschreibung,
-  `just check` grün.
-
-**Abhängigkeiten:** keine (nutzt bestehende update-conventions-Mechanik).
 
 ---
 
@@ -102,7 +69,7 @@ F-015 prep-step: Framework-Erkennung mit Fragment-Vorschlag (DONE)
 F-016 step-done: Standards-Coverage-Backstop (DONE)
 F-017 Eigenschafts-Trigger für Standards-Fragmente auswerten (DONE)
 F-018 Konventions-Vererbung nur noch abwärts (DONE)
-F-019 Pflege-Skill go-public (Projekt nachträglich public-ready)
+F-019 Pflege-Skill go-public (Projekt nachträglich public-ready) (DONE)
 F-020 Sprach-Matrix: granulare Sprachwahl je Projekt (DONE)
 F-021 update-conventions: Vollabdeckung aller Template-Dokumente (inkl. seed) (DONE)
 -->

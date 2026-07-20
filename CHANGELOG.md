@@ -4,6 +4,34 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.17.0 — 2026-07-20
+
+Neuer Pflege-Skill **go-public** (F-019): Projekt nachträglich public-ready machen —
+geführter Übergang statt riskantem Handgriff:
+
+- Drei Startfälle zur Laufzeit erkannt (`gh repo view`): privates Repo →
+  Sichtbarkeit umstellen; nur lokal → Repo-Anlage + initialer Push; schon public →
+  nur Preflight/Nachzug/Check.
+- **Preflight blockierend, fail-closed** (vier Gates): Secrets-Scan über die volle
+  Git-Historie (Scanner zur Laufzeit aus lefthook/mise aufgelöst, gitleaks nur
+  Fallback; fehlt jeder Scanner, blockiert das Gate), Privacy-Scan des committeten
+  Baums inkl. Commit-Metadaten (Autor-/Committer-E-Mails), LICENSE nicht TBD,
+  private/-Hygiene über die Historie. History-Rewrite (`git filter-repo` +
+  Force-Push) nur als dokumentierte Anleitung, nie automatisch; begründete
+  False-Positive-Einstufungen werden protokolliert.
+- **Reihenfolge verbindlich: Nachzug vor Übergang** — public-only-Dateien und
+  ausstehende Template-Updates entstehen lokal via `update-conventions` und werden
+  committet, bevor das Repo öffentlich wird; nie unvollständig online.
+- Übergang je Fall nur nach expliziter Bestätigung; initialer Push nur mit
+  ausdrücklicher laufbezogener Push-Freigabe (einzige Ausnahme vom Push-Tabu).
+  Repo-Settings wie new-project § 4c; der Languages-Block bleibt unangetastet
+  (Sprache ist sichtbarkeitsentkoppelt). Abschluss-Check: CodeQL läuft an,
+  Vollständigkeit, Settings, `just check`.
+- `update-conventions` — neue **Sichtbarkeits-Prämisse**: ein Aufrufer (go-public)
+  kann „behandle als public" übergeben; die public-only-Policy folgt dann der
+  Prämisse statt der tatsächlichen Sichtbarkeit (A2.3, gilt auch für die
+  A3-Heuristik).
+
 ## 0.16.0 — 2026-07-20
 
 Entfernte/umbenannte Template-Dateien im Sync behandeln (F-021b — schließt mit

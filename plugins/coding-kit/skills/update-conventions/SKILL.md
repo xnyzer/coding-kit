@@ -13,10 +13,13 @@ automatisch committen. Seed-Dateien (lebende Doku) werden von Updates **nie als
 Ganzes** ersetzt — nur explizit markierte `section:NAME`-Zonen dürfen abschnittsweise
 angeboten werden (A2 Schritt 7); alles Unmarkierte ist unantastbar.
 
-Argument (optional): Projektpfad/-name für einen gezielten Lauf. Lokale Abweichungen
-an managed Dateien werden übernommen, einmalig gelassen oder als Override registriert;
-für Inhalte, die ins Template gehören, gibt es den **Übernahme-Vorschlag** (s. u.) —
-angestoßen wird der immer manuell vom Nutzer.
+Argument (optional): Projektpfad/-name für einen gezielten Lauf. Ein Aufrufer kann
+zusätzlich eine **Sichtbarkeits-Prämisse** übergeben (z. B. `/coding-kit:go-public`
+vor dem Übergang: „behandle als public") — sie übersteuert für die
+public-only-Policy die tatsächliche Sichtbarkeit (Details in A2.3). Lokale
+Abweichungen an managed Dateien werden übernommen, einmalig gelassen oder als
+Override registriert; für Inhalte, die ins Template gehören, gibt es den
+**Übernahme-Vorschlag** (s. u.) — angestoßen wird der immer manuell vom Nutzer.
 
 ## 0. Template & Vertrag auflösen
 
@@ -64,7 +67,10 @@ Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf überneh
    im Zweifel fragen) aus dem aktuellen Template instanziieren — Platzhalter füllen,
    Marker-Logik wie `/new-project` § 4b. **Policies beachten:** `seed`-Dateien nie
    als Ganzes instanziieren — ihre markierten Zonen behandelt Schritt 7;
-   `public-only` nur bei public Repos. **Sonderfall `CODING-STANDARDS.md`:** in der
+   `public-only` nur bei public Repos — maßgeblich ist die tatsächliche
+   Sichtbarkeit (`gh repo view`), **außer** der Aufrufer hat eine
+   Sichtbarkeits-Prämisse übergeben (dann gilt diese; gilt ebenso für die
+   A3-Heuristik). **Sonderfall `CODING-STANDARDS.md`:** in der
    Soll-Fassung den Slot `<!-- module:coding-standards -->` mit dem **Ist-Slot des
    Projekts** füllen — der Datei-Diff (Schritt 5) zeigt so nur Core-Änderungen; die
    Fragmente im Slot gleicht Schritt 6 einzeln ab.

@@ -49,6 +49,7 @@ Die Skills erscheinen namespaced als `/coding-kit:<skill>`:
 | `/coding-kit:refine-requirements` | Zurück zur Spec: Diagnose mit drei Pfaden, darf Features splitten, datiertes Decision Log. |
 | `/coding-kit:update-conventions` | Konventions-Sync Template → Projekte (nur abwärts): Diff + Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (`section:NAME`), Override-Schutz, Altprojekt-Migrationen; erkennt im Template entfernte/umbenannte Dateien (Rückbau/Umzug je Datei bestätigt); projektlokale Fragmente werden mit manuell anstoßbarem Übernahme-Vorschlag fürs Template gemeldet. |
 | `/coding-kit:check-upstreams` | Watchliste externer Vorbild-Repos prüfen (`upstreams.json`), Neuerungen seit letztem Ref, Übernahme-Vorschläge. |
+| `/coding-kit:go-public` | Projekt nachträglich public machen: blockierendes Preflight-Audit (Secrets in der vollen Historie, Privacy inkl. Commit-Metadaten, Lizenz, `private/`-Hygiene), Datei-Nachzug **vor** dem Umstellen (update-conventions mit Sichtbarkeits-Prämisse), dann Sichtbarkeitswechsel bzw. Repo-Anlage + Push nur nach laufbezogener Freigabe; Abschluss-Check (CodeQL, Settings). |
 | `/coding-kit:refine-prompt` | Übergebenen Prompt analysieren, Schwachstellen benennen, nach Best Practices neu formulieren und ausführen. |
 
 Der übliche Zyklus: `add-feature` → `prep-step` → `build-step` → `step-done` (je
