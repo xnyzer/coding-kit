@@ -37,4 +37,10 @@ language fragment; it pulls no catalog fragments from `modules/standards/`.
   by Renovate; the mise majors track the current LTS (bump deliberately on LTS change).
 - `biome ci --error-on-warnings` enforces zero-warning policy; if a Biome major changes
   flags, `/update-conventions` carries the fix.
+- `biome.json` resolves its `$schema` from `node_modules/@biomejs/biome` instead of a
+  versioned biomejs.dev URL — the schema then always matches the installed CLI and cannot
+  drift out of sync when Renovate bumps the dependency.
+- The seed sources carry no quote-style override, so they must match Biome's defaults
+  (double quotes). Any change to `files/**/*.ts` runs through `biome check --write` before
+  it lands, otherwise a fresh project starts with a red `just check`.
 - The `dev` recipe is a documented placeholder — projects wire their own entrypoint.

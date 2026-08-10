@@ -4,6 +4,21 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.11.3] — 2026-08-11
+
+### Fixed
+- `modules/ts-node`: a freshly instantiated project no longer starts with a red
+  `just check` — `files/src/index.test.ts` and `files/vitest.config.ts` used single
+  quotes while Biome (no quote-style override) formats to double quotes, so the very
+  first `biome ci` failed on two format errors.
+
+### Changed
+- `modules/ts-node/files/biome.json`: `$schema` now resolves from
+  `./node_modules/@biomejs/biome/configuration_schema.json` instead of a version-pinned
+  biomejs.dev URL, so it always matches the installed CLI and cannot drift when Renovate
+  bumps the dependency; `linter.rules.recommended` replaced by `linter.rules.preset`
+  (the former is deprecated and goes away in the next Biome major).
+
 ## [0.11.2] — 2026-07-20
 
 ### Added

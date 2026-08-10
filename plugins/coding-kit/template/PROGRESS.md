@@ -28,6 +28,7 @@ decomposes, `/step-done` finishes (review, docs, commit question).
 | F-010 | Per-dimension language matrix: Languages block in core/CLAUDE.md with five `{{LANG_*}}` placeholders, visibility-coupled default removed (VERSION 0.10.0). Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
 | F-011a | Seed section-marker contract: `section:NAME` registered in MANIFEST (§ Markers, seed policy, § Seed sections inventory), validator check generalized (VERSION 0.11.0). Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-20 |
 | F-011b | Section markers applied to all six seed skeletons per the MANIFEST inventory (wrappers only, no prose changes; shipped with VERSION 0.11.0). Detail in `PROGRESS-ARCHIVE.md`. | 2026-07-20 |
+| F-012 | ts-node seed files ship Biome-clean: quotes fixed in `index.test.ts` / `vitest.config.ts`, `$schema` resolved from node_modules, deprecated `rules.recommended` → `rules.preset` (VERSION 0.11.3). Detail in `PROGRESS-ARCHIVE.md`. | 2026-08-11 |
 
 ---
 
@@ -44,7 +45,7 @@ _Intake new ideas via `/add-feature` — they get the next F-number._
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-012
+next-feature: F-013
 F-001 Initial template build (DONE)
 F-002 Composable CODING-STANDARDS fragments (DONE)
 F-003 Web-standards fragments (DONE)
@@ -56,4 +57,5 @@ F-008 Ship the privacy lint + private blocklist to projects (DONE)
 F-009 Align docs with the current coding-kit skill set (DONE)
 F-010 Per-dimension language matrix (DONE)
 F-011 Section-marker contract for updatable zones in seed files (DONE)
+F-012 ts-node seed files ship Biome-clean (DONE)
 -->

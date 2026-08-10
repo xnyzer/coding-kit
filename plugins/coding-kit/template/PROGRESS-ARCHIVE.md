@@ -5,6 +5,47 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-012 — ts-node seed files ship Biome-clean (2026-08-11)
+
+**Problem:** reported from a fresh `/new-project` run: every new TypeScript project starts
+with a red `just check`. `files/src/index.test.ts` and `files/vitest.config.ts` used single
+quotes, while `biome.json` sets no quote-style override — so Biome formats to its default
+(double quotes) and the first `biome ci --error-on-warnings` fails with two format errors.
+Two config infos came with it: the `$schema` URL pinned 2.5.2 against a CLI resolved from
+`^2.5.2` (2.5.7 at the time), and `linter.rules.recommended` is deprecated.
+
+**What was built (5 files):**
+
+`modules/ts-node/files/src/index.test.ts` and `files/vitest.config.ts` reformatted to
+double quotes (output of `biome check --write`, no other change).
+`modules/ts-node/files/biome.json`: `$schema` →
+`./node_modules/@biomejs/biome/configuration_schema.json`;
+`linter.rules.recommended: true` → `linter.rules.preset: "recommended"` (the replacement
+Biome's own `migrate` emits). `modules/ts-node/MODULE.md`: two maintenance notes — why the
+schema is resolved locally, and that `files/**/*.ts` must go through `biome check --write`
+before it lands. Sync invariant: `VERSION` 0.11.3 + `CHANGELOG.md`; `MANIFEST.md` untouched
+(no files added/removed, no policy change).
+
+**Notable decisions:**
+
+- Fix on the source side, not via `javascript.formatter.quoteStyle: "single"` — the seed
+  code follows the formatter's default instead of the config carrying an override for the
+  sake of two sample files.
+- Local `$schema` instead of bumping the pin to 2.5.7: the URL form would silently drift
+  again on the next Biome patch (the Renovate preset has no custom manager for schema
+  URLs), the local path always tracks the installed CLI. Trade-off: in a fresh clone the
+  schema resolves only after `pnpm install`.
+
+**Verification:** the module was instantiated in a scratch dir (placeholders substituted,
+`pnpm install`, Biome 2.5.7 resolved): before the fix `biome ci --error-on-warnings`
+reported 2 format errors + 2 infos, afterwards it is clean (no errors, no infos);
+`tsc --noEmit` and `vitest run` (1/1) green. Cross-check of the sibling modules against
+their formatters: `gofmt -l` on `modules/go/files` empty, `ruff format --check` on
+`modules/python/files` clean (its only complaint is the unresolved `{{PROJECT_NAME_SNAKE}}`
+placeholder, which is valid Python only after instantiation) — the defect was ts-node-only.
+
+---
+
 ## F-011b — Section markers applied to the seed skeletons (2026-07-20)
 
 **Problem:** F-011a defined the `section:NAME` contract and inventory in `MANIFEST.md`;
