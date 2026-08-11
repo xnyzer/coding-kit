@@ -22,6 +22,7 @@ this catalog defines only the mapping.
 | Fragment | Covers | Trigger — dependency signal / project characteristic |
 |----------|--------|------------------------------------------------------|
 | `react` | React components, styling/theming, i18n, a11y, performance | `react`, `react-dom` |
+| `nextjs` | App Router boundaries, routing & caching, assets, build, configuration | `next` |
 | `prisma` | Prisma data access, schema & migrations | `prisma`, `@prisma/client` |
 | `api-design` | REST API design, request/response validation, web security boundary | `express`, `fastify`, `koa`, `hono`, `nestjs` |
 | `docker` | Container images, compose, entrypoint & startup | `Dockerfile`, `docker-compose.yml` |

@@ -4,6 +4,30 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.12.0] — 2026-08-11
+
+### Added
+- `modules/standards/nextjs.md`: new catalog fragment `nextjs` for the App Router — the
+  server/client boundary (`"use client"` as a leaf, `server-only` on credential-bearing
+  modules, `NEXT_PUBLIC_*` as a publication decision, Server Actions as public endpoints),
+  routing & caching, assets & build (standalone `HOSTNAME`, `agentRules: false`), the
+  `NODE_ENV`/`PORT` and `instrumentation.ts` configuration traps, and the extensionless-import
+  exception to the `ts-node` fragment. Catalog row in `modules/standards/README.md`
+  (trigger: `next`).
+- No module pulls the fragment by default. Like `react` and `prisma` it is retrofitted per
+  project via `/choose-stack` or `/prep-step`: `ts-node` stays framework-neutral, and its
+  `.js`-extension rule directly contradicts Next's bundler resolution — declaring `nextjs` on
+  the module would ship two contradictory import rules to every plain TypeScript project.
+
+### Fixed
+- `core/.claude/settings.json`: the tracked `.env.example` placeholder was unreadable and
+  unwritable. `permissions.deny` carried the broad `Read(**/.env.*)` / `Edit(**/.env.*)`,
+  which shadowed the explicit `Read(**/.env.example)` / `Edit(**/.env.example)` allow entries —
+  deny wins over allow, and a deny rule cannot carry allowlist exceptions. The broad pattern is
+  replaced by the secret-bearing variants (`.env.local`, `.env.*.local`, `.env.development`,
+  `.env.production`, `.env.test`, `.env.staging`), so every real env file stays blocked while
+  the placeholder that `.gitignore` includes via `!.env.example` can be created and edited.
+
 ## [0.11.3] — 2026-08-11
 
 ### Fixed

@@ -5,6 +5,106 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-014 — Fix `.env.example` shadowed by the broad env deny rule (2026-08-11)
+
+**Problem:** reported from work on a downstream project: the tracked `.env.example`
+placeholder could not be created or edited. Both settings files listed
+`Read(**/.env.example)` / `Edit(**/.env.example)` under `permissions.allow`, but also the
+broad `Read(**/.env.*)` / `Edit(**/.env.*)` under `permissions.deny`. Deny wins over allow, so
+the broad rule shadowed the intended exception — while `.gitignore` explicitly includes the
+file via `!.env.example`.
+
+**What was built (2 files):**
+
+`core/.claude/settings.json` (shipped to projects) and the template's own
+`.claude/settings.json` — both carried the identical defect and both were fixed. The broad
+`**/.env.*` is replaced, for `Read` and `Edit` alike, by the secret-bearing variants:
+`.env.local`, `.env.*.local`, `.env.development`, `.env.production`, `.env.test`,
+`.env.staging` (`**/.env` was already listed separately and stays). Sync invariant:
+`VERSION` 0.12.0 + `CHANGELOG.md` (the entry covers `core/` only — the template's own settings
+file is not template content). `MANIFEST.md` untouched: `core/.claude/settings.json` is already
+policied `managed`, and the change is content, not policy.
+
+**Notable decisions:**
+
+- **No negation-based fix**, because none exists: the permission reference states that Read and
+  Edit rules use gitignore pattern syntax and that a broad deny rule "blocks every matching
+  call, including calls that also match a narrower allow rule, so a deny rule can't carry
+  allowlist exceptions". A `!`-style exemption inside a deny pattern is therefore not an option,
+  and the explicit enumeration is the only reliable fix.
+- A gitignore character-class construction (`**/.env.[!e]*` plus one pattern per prefix of
+  `example`) would be exhaustive and fail-closed, but needs roughly sixteen cryptic patterns
+  per tool in a file that ships to every project. Rejected on readability and maintenance
+  grounds.
+- **Known residual gap, deliberately accepted:** the enumeration covers the framework-
+  conventional names, not every conceivable one. An unlisted variant such as `.env.prod` or
+  `.env.ci` is no longer denied, and since read-only tools need no approval inside the working
+  directory, it would be readable without a prompt — the old broad rule blocked it. A possible
+  follow-up is a catch-all `ask` rule (`Read(**/.env.[!e]*)`), which would restore fail-closed
+  behaviour for everything not starting with `e`; it was not shipped because the character-class
+  support is not documented explicitly and an unexplained pattern in a distributed settings file
+  is hard to justify without comments (JSON has none).
+
+**Verification:** both files re-read after the edit and diffed against each other — identical
+permission blocks, `**/.env.*` gone from both, `.env.example` allow entries intact;
+`just check` green (the validator parses both as JSON).
+
+---
+
+## F-013 — Standards fragment `nextjs` (App Router) (2026-08-11)
+
+**Problem:** the catalog had no Next.js fragment. `react` alone does not cover the App
+Router-specific traps that surfaced in a downstream project — the server/client boundary,
+Server Actions as public endpoints, and `NEXT_PUBLIC_*` as a publication decision rather than
+a convenience prefix.
+
+**What was built (2 files):**
+
+New `modules/standards/nextjs.md`, body wrapped in `<!-- fragment:nextjs -->` …
+`<!-- /fragment:nextjs -->`, in six blocks: a lead rule to read the version-matched docs
+bundled at `node_modules/next/dist/docs/` instead of writing from memory; server/client
+boundary (`"use client"` as a leaf, `server-only` on credential-bearing modules,
+`NEXT_PUBLIC_*`, Server Actions validating and authorising themselves); routing & data
+(Route Handlers deferring to the `api-design` fragment, explicit caching, file conventions,
+Metadata API, `proxy.ts` vs. the deprecated `middleware.ts`); assets & build (`next/image`,
+self-hosted `next/font`, standalone `HOSTNAME`, `agentRules: false`, Biome over `next lint`);
+configuration (the `NODE_ENV`/`PORT` overwrite, the lazy `instrumentation.ts` hook that
+swallows a rejected `register()`); and imports. `modules/standards/README.md` gets the catalog
+row (trigger `next`). Sync invariant: `VERSION` 0.12.0 + `CHANGELOG.md`.
+
+**Notable decisions:**
+
+- **Retrofit-only — no module declares the fragment.** All three stack modules declare
+  `Standards fragments: (none)`, and `react`/`prisma` are already retrofitted per project via
+  `/choose-stack` or `/prep-step`. Beyond consistency there is a hard reason: the fragment's
+  extensionless-import rule contradicts the `.js`-extension rule of `fragment:ts-node`, so
+  declaring it on the module would ship two conflicting import rules to every plain TypeScript
+  project. The fragment therefore names itself the documented exception and points at
+  `.claude/convention-overrides.md`.
+- `MANIFEST.md` untouched — adding a catalog fragment registers it in
+  `modules/standards/README.md`, not in the manifest, which names fragments only as examples.
+  Same shape as F-006.
+- Catalog row placed directly below `react` rather than appended: the two are read together,
+  and the table has no declared ordering.
+- **Version-bound wording avoided** per the repo rule against static tool-version claims in
+  template texts. The source notes named "Next.js 16" for both the docs-changed warning and the
+  `proxy.ts` rename; the fragment states the substance instead ("recent majors changed APIs,
+  conventions and file structure", "`middleware.ts` is the deprecated predecessor"), which
+  stays true across majors.
+- **Unverifiable specifics dropped:** the source notes claimed the build rejects `proxy.ts` and
+  `middleware.ts` coexisting under error code `E900`. The official message page documents the
+  rename as a deprecation and names no such code, so the fragment keeps the actionable rule
+  ("never keep both in a tree") without the code.
+
+**Verification:** claims checked against the vendor documentation rather than from memory —
+the AI-agents guide confirms the bundled docs path `node_modules/next/dist/docs/`, that a
+`next dev` run writes a managed block into `AGENTS.md`/`CLAUDE.md`, and `agentRules: false` as
+the documented opt-out; the message page confirms `proxy.ts` replacing `middleware.ts` and the
+codemod. `just check` green: fragment markers balanced, no unknown placeholders, privacy lint
+clean (`0.0.0.0` is on the validator's allowlist).
+
+---
+
 ## F-012 — ts-node seed files ship Biome-clean (2026-08-11)
 
 **Problem:** reported from a fresh `/new-project` run: every new TypeScript project starts
