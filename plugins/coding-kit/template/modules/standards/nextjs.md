@@ -34,14 +34,22 @@ Do not write App Router code from memory, and heed deprecation notices.
 - `output: "standalone"` is what a container image ships; keep it working. In the Dockerfile
   set `ENV HOSTNAME=0.0.0.0`: the standalone server reads `HOSTNAME` verbatim and container
   runtimes set it to the container id.
-- Next's agent-rules generator is left on. On a `next dev` run it writes a managed block into
-  `AGENTS.md` pointing at the version-matched bundled docs, and adds an `AGENTS.md` import to
-  `CLAUDE.md`; both are upserted, so anything outside the block markers survives. Commit the
-  generated block with the work — deleting it only re-creates the churn on the next run.
-  `AGENTS.md` is framework-owned: project instructions go outside the markers, `CLAUDE.md`
-  keeps its governance role. Turn the generator off (`agentRules: false`) only if a project
-  cannot tolerate framework-written files at all; it then carries the read-the-shipped-docs
-  rule above on its own.
+- **Create `AGENTS.md` when adopting Next, before the first `next dev`.** The agent-rules
+  generator stays on — it writes a managed block pointing at the version-matched bundled docs —
+  but *which* file receives that block depends on what already exists. With an `AGENTS.md`
+  present the block lands there and `CLAUDE.md` is skipped. With only a `CLAUDE.md` — the shape
+  every project starts in, since the template ships one and never ships an `AGENTS.md` — the
+  block lands **inside `CLAUDE.md`** and is rewritten on every run. Creating the file first is
+  what keeps the governance file out of the framework's reach. Both are upserted, so content
+  outside the block markers survives; `AGENTS.md` is framework-owned, project instructions go
+  outside the markers, and the block is committed with the work — deleting it only re-creates
+  the churn.
+- Once the block sits in `CLAUDE.md`, adding an `AGENTS.md` afterwards does **not** move it:
+  Next keeps updating whichever file already hosts it. Remove the block from `CLAUDE.md` in the
+  same step, then the next run writes `AGENTS.md`. A project that would rather not host the
+  block at all sets `agentRules: false` and carries the read-the-shipped-docs rule above on its
+  own — registered in `.claude/convention-overrides.md`. This routing is not public API; verify
+  it against the installed version in `node_modules/next/dist/server/lib/generate-agent-files.js`.
 - Biome owns linting and formatting; `next lint` is not used.
 
 **Configuration**

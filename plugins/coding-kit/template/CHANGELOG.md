@@ -4,6 +4,22 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.13.1] — 2026-08-11
+
+### Fixed
+- `modules/standards/nextjs.md`: the `agentRules` rule described the wrong branch of Next's
+  agent-file routing. It claimed the managed block always lands in `AGENTS.md` with only an
+  import added to `CLAUDE.md` — that is the greenfield path, taken only when **neither** file
+  exists. A project from this template always has a `CLAUDE.md` and never an `AGENTS.md`, so it
+  hits the branch that writes the block **into `CLAUDE.md`**, rewriting the governance file on
+  every `next dev` — the exact outcome the rule meant to prevent. The rule now states the
+  routing by file state and requires `AGENTS.md` to be created when Next is adopted, before the
+  first `next dev`, which is what makes the block land in `AGENTS.md`.
+- Same rule: added the remediation order. Once the block sits in `CLAUDE.md`, adding an
+  `AGENTS.md` afterwards does not move it — Next keeps updating whichever file hosts it, so the
+  block has to be removed from `CLAUDE.md` in the same step. A project currently holding
+  `agentRules: false` can drop that override once it creates `AGENTS.md`.
+
 ## [0.13.0] — 2026-08-11
 
 ### Changed

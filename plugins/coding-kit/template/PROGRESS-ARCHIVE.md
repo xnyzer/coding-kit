@@ -5,6 +5,56 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-016 — Correct the `agentRules` routing in the `nextjs` fragment (2026-08-11)
+
+**Problem:** reported from a downstream sync (0.11.2 → 0.13.0) and confirmed here. The
+`agentRules` rule written in F-015 described Next's agent-file routing wrongly: it claimed the
+managed block always lands in `AGENTS.md` with only an import added to `CLAUDE.md`. That is the
+greenfield path, taken only when **neither** file exists — the `create-next-app` case. Projects
+from this template always ship a `CLAUDE.md` and never an `AGENTS.md`, so they systematically
+hit the other branch, which writes the block **into `CLAUDE.md`** and rewrites it on every
+`next dev`. The rule therefore produced the exact outcome it was written to prevent.
+
+**What was built (1 file + sync):**
+
+`modules/standards/nextjs.md`: the single `agentRules` bullet becomes two. The first states the
+routing by file state and makes the actionable requirement explicit — create `AGENTS.md` when
+adopting Next, before the first `next dev`, because that is what moves the block out of the
+governance file. The second carries the remediation order and the `agentRules: false` fallback,
+and points at the installed source for verification, since the routing is not public API.
+Sync invariant: `VERSION` 0.13.1 + `CHANGELOG.md`. `MANIFEST.md` untouched — no files added,
+removed or re-policied.
+
+**Notable decisions:**
+
+- **Rescue the rule rather than reverse it.** Reverting to `agentRules: false` would have
+  discarded the version-matched docs pointer a second time — the very thing the fragment's lead
+  rule demands. Creating `AGENTS.md` satisfies the branch condition and keeps the benefit.
+- **State the branching, not just the happy path.** The reporter offered "create `AGENTS.md`" or
+  "describe the behaviour honestly and recommend `agentRules: false`" as alternatives; the rule
+  now does both jobs, because the requirement alone becomes a trap for a project that already
+  ran `next dev` once.
+- **No version numbers in the rule text**, per the repo convention: it points at
+  `node_modules/next/dist/server/lib/generate-agent-files.js` in the installed version instead of
+  naming the release the behaviour was measured on.
+- The reported side note — that the greenfield branch *overwrites* `CLAUDE.md` with `@AGENTS.md`
+  rather than appending — is technically moot and deliberately not mentioned in the fragment:
+  that branch runs only when the file does not exist, so there is nothing to overwrite.
+
+**Verification:** measured against a throwaway Next project at the version in question, three
+ways in agreement. (1) The installed `generate-agent-files.js` shows the branch order —
+`agentsMdExists && (agentsMdHostsBlock || !claudeMdHostsBlock)` → `AGENTS.md`; else
+`claudeMdExists` → `CLAUDE.md`; else scaffold both. (2) Calling `writeAgentFiles` directly on
+prepared fixtures: `CLAUDE.md` only → block into `CLAUDE.md`, no `AGENTS.md` created;
+`CLAUDE.md` + `AGENTS.md` → block into `AGENTS.md`, `CLAUDE.md` skipped; neither → both
+scaffolded; **block already in `CLAUDE.md`, `AGENTS.md` added later → still `CLAUDE.md`**, which
+is where the remediation order comes from. (3) Two real `next dev` runs with a request against
+each: with only a `CLAUDE.md` the block appeared inside it and no `AGENTS.md` was created; with
+an `AGENTS.md` present `CLAUDE.md` was byte-identical afterwards and both the block and
+`AGENTS.md`'s own content were in place. `just check` green.
+
+---
+
 ## F-015 — Fail-closed env deny set + vendor-aligned `agentRules` rule (2026-08-11)
 
 **Problem:** two follow-ups from review of F-013/F-014. (1) The enumerated env deny of F-014
