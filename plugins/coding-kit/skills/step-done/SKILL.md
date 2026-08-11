@@ -54,7 +54,9 @@ sonst still überspringen:
   Katalogs matchen (`*characteristic:*`-Zeilen matchen diff-basiert naturgemäß
   nicht — sie sind Planungsmaterie von prep-step 2a).
 - Treffer ohne `<!-- fragment:NAME -->`-Marker im Projekt → **Lücke melden** und das
-  Anhängen vorschlagen (Mechanik wie `/coding-kit:choose-stack`, idempotent). Der
+  Anhängen vorschlagen (Mechanik wie `/coding-kit:choose-stack`, idempotent) — inklusive
+  einer **Begleithandlung**, die das Fragment verlangt (`/coding-kit:choose-stack`
+  § Begleithandlungen); sie gehört in denselben Schritt. Der
   Abschluss wird dadurch **nicht blockiert**; lehnt der Nutzer ab, die offene Lücke
   im Archiv-Eintrag (Schritt 4) vermerken, damit sie sichtbar bleibt.
 - Enthält der Diff einen **neu angelegten projektlokalen Fragment-Block**

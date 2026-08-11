@@ -64,7 +64,9 @@ in der `CODING-STANDARDS.md`) — sonst still überspringen:
    mutations").
 3. Treffer, aber kein `<!-- fragment:NAME -->`-Marker im Projekt → im Plan
    vorschlagen, das Katalog-Fragment anzuhängen (Mechanik wie `/choose-stack`,
-   idempotent).
+   idempotent). Verlangt das Fragment eine **Begleithandlung** am Projekt
+   (`/choose-stack` § Begleithandlungen), im Vorschlag mitausweisen — sie gehört in
+   denselben Schritt, nicht in einen Folgeschritt.
 4. Treffer-Thema ganz ohne Katalog-Fragment → vorschlagen, ein **projektlokales**
    Fragment zu autoren (eigener `fragment:NAME`-Block im Slot). Direkt nach der
    Anlage den **Übernahme-Vorschlag** fürs Template ausgeben (kopierfertiger Prompt

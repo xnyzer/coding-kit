@@ -120,6 +120,9 @@ Standards-Fragmente (Sprachfragment + deklarierte Katalog-Fragmente + die im
 Requirements-Interview bejahten Eigenschafts-Fragmente) in den
 CODING-STANDARDS-Slot anhängen, `files/**` nach Substitution kopieren
 (`src/…{{PROJECT_NAME_SNAKE}}…`-Umbenennung beachten; Datei-Policies laut `MODULE.md`).
+Verlangt eines der Fragmente eine **Begleithandlung** beim Einbau (`/choose-stack`
+§ Begleithandlungen), gehört sie in denselben Schritt — hier ist sie am billigsten, weil
+sie greift, bevor der Stack das erste Mal läuft.
 
 **Aufräumen:** Nach der Instanziierung bleiben nur Manifest-Ziele + Modul-Dateien.
 Template-Eigenes löschen: `core/`, `modules/`, `MANIFEST.md`, `VERSION`, `CHANGELOG.md`,

@@ -4,6 +4,38 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.18.0 — 2026-08-11
+
+Begleithandlungen beim Fragment-Einbau (F-022) — Gegenstück zu **project-template
+0.13.1** (dortiges F-016), das im `nextjs`-Fragment eine Handlung fordert, die bisher
+kein Skill ausgeführt hat:
+
+- **Neuer Abschnitt `/choose-stack` § Begleithandlungen** als einzige Fundstelle der
+  Mechanik: Verlangt ein Fragment beim Einbau eine Handlung am Projekt und nicht nur
+  den Text im Slot, wird sie im selben Schritt ausgeführt, im Plan ausgewiesen und
+  einzeln bestätigt. **Generisch statt fragmentspezifisch** — was zu tun ist, liest der
+  Skill zur Laufzeit aus dem Fragment; das Kit hardcodet kein Framework-Wissen (gleiche
+  Arbeitsteilung wie beim Trigger-Mapping: Template = Daten, Kit = Logik).
+- **Die Prüfung ist von der Idempotenz-Regel entkoppelt:** liegt `fragment:NAME` schon
+  im Slot, wird der Text übersprungen, die Begleithandlung aber trotzdem geprüft. Ohne
+  das bliebe jedes Projekt ungedeckt, das ein Fragment bekam, bevor es die Anforderung
+  enthielt.
+- **Vier Aufrufstellen referenzieren den Abschnitt**, statt ihn zu duplizieren:
+  `new-project` (Fragment-Assembly bei der Instanziierung), `choose-stack` Modus B
+  (Idempotenz-Hinweis), `prep-step` § 2a und `step-done` § 1a weisen die
+  Begleithandlung im Vorschlag mit aus.
+- **`update-conventions` Schritt 6 zusätzlich:** die Begleithandlung wird je Fragment
+  im Slot auch bei **unverändertem** Fragment-Text geprüft und offene Fälle mit Diff
+  angeboten. Das ist der einzige Pfad, der Bestandsprojekte erreicht — die anderen vier
+  greifen nur beim Einbau.
+
+Konkreter Anlass, im Fragment beschrieben und hier nur benannt: Nexts
+Agent-Rules-Generator schreibt seinen Managed-Block bevorzugt in die Datei, die ihn
+schon hostet, sonst in `AGENTS.md`, falls vorhanden, sonst in `CLAUDE.md`. Projekte aus
+dem Template haben immer eine `CLAUDE.md` und nie eine `AGENTS.md` — ohne
+Begleithandlung landet der Block also in der Governance-Datei und wird dort bei jedem
+`next dev` erneuert; ein nachträglich angelegtes `AGENTS.md` holt ihn nicht mehr heraus.
+
 ## 0.17.0 — 2026-07-20
 
 Neuer Pflege-Skill **go-public** (F-019): Projekt nachträglich public-ready machen —

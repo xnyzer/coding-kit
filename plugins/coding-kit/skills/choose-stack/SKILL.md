@@ -55,7 +55,8 @@ Kandidaten.
      Quell-Dateien tragen ihre `<!-- fragment:NAME -->`-Marker bereits: unverändert vor
      dem schließenden `<!-- /module:coding-standards -->` einfügen. **Idempotent:** ist
      `fragment:NAME` im Projekt schon vorhanden → überspringen — nie doppelt einbauen,
-     nie erneuern (Erneuern macht `/update-conventions`). Beim Erst-Einbau den
+     nie erneuern (Erneuern macht `/update-conventions`); die **Begleithandlung** des
+     Fragments wird davon unabhängig geprüft (§ Begleithandlungen). Beim Erst-Einbau den
      Platzhaltertext im Slot entfernen. **Eigenschafts-Fragmente**
      (`*characteristic:*`-Zeilen des Katalogs) sind in keinem `MODULE.md`
      deklariert: je Trigger fragen, ob die Eigenschaft auf das Projekt zutrifft
@@ -75,6 +76,38 @@ Kandidaten.
    (Write-then-Verify). Kein Commit ohne Nachfrage; `.claude/template-version` wird hier
    **nicht** gestempelt (das macht /new-project; Projekte ohne Stempel gleicht später
    /update-conventions heuristisch ab).
+
+## Begleithandlungen beim Fragment-Einbau
+
+Gilt überall, wo ein Standards-Fragment in ein Projekt gelangt — Modus B, `/new-project`,
+`/update-conventions` und die Vorschläge aus `/prep-step` und `/step-done`.
+
+Manche Fragmente verlangen beim Einbau **eine Handlung am Projekt**, nicht nur den Text im
+Slot — typisch dort, wo das Framework selbst in Projektdateien schreibt und die Reihenfolge
+über das Ergebnis entscheidet. Deshalb vor dem Anhängen das Fragment lesen (und seine
+Katalog-Zeile): Formuliert es eine Anforderung, die **beim Einbau** erfüllt sein muss und
+nicht erst beim späteren Coden, im selben Schritt ausführen. Was dabei entsteht oder sich
+ändert, gehört wie jede andere Dateiänderung in den Plan und wird einzeln bestätigt.
+**Nichts hardcoden:** was zu tun ist, steht im Fragment, nicht hier.
+
+Zwei Eigenheiten, die diese Prüfung von der Fragment-Mechanik trennen:
+
+- **Unabhängig von der Idempotenz-Regel.** Liegt `fragment:NAME` schon im Slot, wird der
+  Text übersprungen — die Begleithandlung wird trotzdem geprüft und bei Bedarf nachgeholt.
+  Sonst bleiben Projekte ungedeckt, die das Fragment bekommen haben, bevor es die
+  Anforderung enthielt.
+- **Reihenfolge kann bindend sein.** Eine Begleithandlung darf vorschreiben, dass etwas
+  *vor* dem ersten Lauf des Frameworks passiert, und einen Zustand benennen, den ein
+  späteres Nachholen allein nicht mehr heilt (dann gehört das Aufräumen in denselben
+  Schritt). Fragmente mit solcher Fallhöhe sagen das selbst — die Anweisung im Fragment
+  ist maßgeblich, nicht die Zusammenfassung hier.
+
+Ist alles erfüllt → still überspringen, nichts melden.
+
+Aktuell einziger Fall im Katalog: **`nextjs`** — verlangt eine `AGENTS.md` im Projektroot,
+bevor `next dev` das erste Mal läuft, weil Nexts Agent-Rules-Generator seinen Managed-Block
+sonst in die `CLAUDE.md` schreibt und ihn dort bei jedem Lauf erneuert. Bedingungen und
+Nachbesserung stehen im Fragment.
 
 ## Rückgabe an den Aufrufer
 

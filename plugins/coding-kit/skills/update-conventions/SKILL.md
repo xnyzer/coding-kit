@@ -93,6 +93,11 @@ Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf überneh
    anstoßen muss sie der Nutzer. Deklariert das `MODULE.md` inzwischen Fragmente, die im Projekt
    fehlen → Anhängen anbieten (Mechanik wie `/choose-stack`, idempotent). Bestehende
    Fragmente in-place ersetzen, Neues ans Slot-Ende — nie umsortieren.
+   **Begleithandlungen (auch bei unverändertem Text):** je Fragment im Slot prüfen, ob
+   die dort formulierte Einbau-Anforderung im Projekt erfüllt ist (`/choose-stack`
+   § Begleithandlungen), und offene Fälle mit Diff zur Bestätigung anbieten. Dieser
+   Pfad ist der einzige, der **Bestandsprojekte** erreicht: wer ein Fragment bekam,
+   bevor es seine Anforderung enthielt, wird sonst von keinem Skill je eingeholt.
 7. **seed-Abgleich (abschnittsweise, je `section:NAME`-Zone):** entfällt still, wenn
    das Template kein § Seed sections führt (§ 0). Je seed-Datei aus dem dortigen
    Inventar: die markierten Zonen der Template-Fassung instanziieren (Platzhalter
