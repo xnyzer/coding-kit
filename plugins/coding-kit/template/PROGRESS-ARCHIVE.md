@@ -5,6 +5,55 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-017 — HOW-TO sync for fragment companion actions (2026-08-11)
+
+**Problem:** coding-kit 0.18.0 (its F-022) built the counterpart to 0.13.1 — a generic
+mechanism that reads a fragment's install-time requirement at runtime and executes it in the
+same step, formulated once in `/choose-stack § Begleithandlungen beim Fragment-Einbau` and
+referenced from `new-project`, `prep-step § 2a`, `step-done § 1a` and `update-conventions`
+step 6. `core/HOW-TO-CODE-WITH-CLAUDE.md`, which describes the skills for project users,
+mentioned none of it.
+
+**What was built (1 file + sync):**
+
+`core/HOW-TO-CODE-WITH-CLAUDE.md`, three rows, each one clause: `/choose-stack` and
+`/update-conventions` in the maintenance table, `/prep-step` in the dev-loop table. Sync
+invariant: `VERSION` 0.13.2 + `CHANGELOG.md` naming the counterpart. `MANIFEST.md` untouched
+— no files added, removed or re-policied.
+
+**Notable decisions:**
+
+- **`/prep-step` yes, `/step-done` no** — the discretionary call the task left open. Both
+  tables answer "what will this skill do to my project", and `/prep-step` produces a plan the
+  user confirms item by item; a fragment that also changes a project file makes the plan
+  contain a change the row did not lead them to expect. `/step-done`'s backstop only *reports*
+  a gap and never blocks, so nothing new reaches the user through it, and its row is one of
+  the terse ones. Adding the clause there would have cost brevity for no user-visible effect.
+- **No kit jargon in the rows.** They say "a fragment can require a change in the project
+  itself", never "companion action" — the tables are written from the user's side, and the
+  term belongs to the kit's internal vocabulary.
+- **The optional catalog marker was declined.** Rationale in the `CHANGELOG` under *Not
+  changed*: the requirement lives in the fragment prose, which is what the kit reads, and a
+  marker would be a second assertion about that prose that no check can enforce — whether a
+  text "contains a requirement" is not mechanically decidable, so the validator cannot catch
+  drift, and a fragment gaining a requirement without its marker would be skipped silently.
+  That trades a cheap read of seven fragments for a fail-open gap. Recorded together with the
+  revisit trigger (several fragments carrying requirements, or one missed in practice) and the
+  form to prefer then — a declaration line inside the fragment rather than a catalog column,
+  because co-location is what stops the two from drifting.
+- Consequently **no follow-up is requested in the kit.** The offer to exploit a marker there
+  (check only marked fragments) lapses with the marker itself.
+
+**Verification:** the counterpart was read in the coding-kit working tree at the named commit
+rather than reconstructed from the task text — the plugin cache here still holds 0.17.0, so
+the installed copy could not have answered it. That reading is what settled two points: the
+kit hardcodes nothing and takes what to do from the fragment prose itself, which is the
+argument against a second marker; and `update-conventions` checks per fragment in the slot
+even when the text is unchanged, which is what the `/update-conventions` row now states.
+`just check` green; both tables re-read after the edits, rows intact and still one line each.
+
+---
+
 ## F-016 — Correct the `agentRules` routing in the `nextjs` fragment (2026-08-11)
 
 **Problem:** reported from a downstream sync (0.11.2 → 0.13.0) and confirmed here. The

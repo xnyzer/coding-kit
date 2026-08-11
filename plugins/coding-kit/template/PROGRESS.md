@@ -33,6 +33,7 @@ decomposes, `/step-done` finishes (review, docs, commit question).
 | F-014 | Permission fix: broad `**/.env.*` deny shadowed the `.env.example` allow entries in both settings files; replaced by the secret-bearing variants (shipped with VERSION 0.12.0). Superseded by F-015. Detail in `PROGRESS-ARCHIVE.md`. | 2026-08-11 |
 | F-015 | Env deny set carves the `.env.example` exception via positive character classes — fail-closed again without renaming the placeholder; `agentRules` rule reversed to vendor-aligned (VERSION 0.13.0). Detail in `PROGRESS-ARCHIVE.md`. | 2026-08-11 |
 | F-016 | `nextjs` fragment: `agentRules` rule described the greenfield branch; corrected to the routing that actually applies to template projects, plus the `AGENTS.md` requirement and remediation order (VERSION 0.13.1). Detail in `PROGRESS-ARCHIVE.md`. | 2026-08-11 |
+| F-017 | HOW-TO rows for `/choose-stack`, `/update-conventions` and `/prep-step` cover fragment companion actions; catalog marker deliberately not introduced (VERSION 0.13.2). Detail in `PROGRESS-ARCHIVE.md`. | 2026-08-11 |
 
 ---
 
@@ -49,7 +50,7 @@ _Intake new ideas via `/add-feature` — they get the next F-number._
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-017
+next-feature: F-018
 F-001 Initial template build (DONE)
 F-002 Composable CODING-STANDARDS fragments (DONE)
 F-003 Web-standards fragments (DONE)
@@ -66,4 +67,5 @@ F-013 Standards fragment nextjs (App Router) (DONE)
 F-014 Fix .env.example shadowed by the broad env deny rule (DONE)
 F-015 Fail-closed env deny set + vendor-aligned agentRules rule (DONE)
 F-016 Correct the agentRules routing in the nextjs fragment (DONE)
+F-017 HOW-TO sync for fragment companion actions (DONE)
 -->

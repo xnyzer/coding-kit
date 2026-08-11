@@ -4,6 +4,31 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.13.2] — 2026-08-11
+
+### Changed
+- `core/HOW-TO-CODE-WITH-CLAUDE.md`: three skill rows now mention that a standards fragment
+  can require a change in the project itself, not just the text in the `§13` slot —
+  `/choose-stack` (the change is made in the same step and confirmed with it),
+  `/update-conventions` (re-checked even when the fragment text is unchanged, the only route
+  that reaches a project which adopted a fragment before it carried the requirement) and
+  `/prep-step` (the change becomes part of the plan). Counterpart: coding-kit plugin 0.18.0
+  / its F-022, which formulates the mechanism once in `/choose-stack` and references it from
+  the other skills. `/step-done` is deliberately left as it stands — its backstop only
+  reports gaps and its row is terse by design.
+
+### Not changed (recorded decision)
+- The catalog does **not** get a column or marker announcing that a fragment carries such a
+  requirement, and `MANIFEST.md` gets no field for it. The requirement lives in the fragment
+  prose, which is also what the kit reads; any marker would be a second assertion about that
+  prose which no check can enforce — "contains a requirement" is not mechanically decidable,
+  so the validator cannot catch drift. A fragment that gains a requirement without gaining
+  its marker would then be skipped silently, trading a cheap read of seven fragments for a
+  fail-open gap. Revisit when several fragments carry requirements or one is missed in
+  practice; the form to prefer then is a declaration line *inside the fragment*, next to the
+  prose it summarises, rather than a catalog column — co-location is what keeps the two from
+  drifting apart.
+
 ## [0.13.1] — 2026-08-11
 
 ### Fixed
