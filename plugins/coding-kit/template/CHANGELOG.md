@@ -4,6 +4,34 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.13.0] — 2026-08-11
+
+### Changed
+- `core/.claude/settings.json`: the env enumeration introduced in 0.12.0 is replaced by a
+  deny set that carves the `.env.example` exception out by hand, using positive character
+  classes that exclude one letter each (`**/.env.[0-9a-df-z_-]*`, `**/.env.e[0-9a-wy-z_-]*`,
+  `**/.env.ex[0-9b-z_-]*`, `**/.env.example?*`, plus `**/.env` and `**/.env[0-9a-z_-]*` for
+  the undotted forms such as `.envrc`). Six patterns per tool; `.env.example` is the only
+  spelling no deny rule matches, and its allow entries are back in force. The placeholder
+  keeps its conventional name.
+- `core/.gitignore`: `.env` + `.env.*` collapse to `.env*`, keeping `!.env.example`.
+- `core/.claude/README.md`: the F-001 caveat about `.env.example` possibly being blocked is
+  replaced by the rationale for the deny set, including the two matcher properties it depends
+  on (no negation; case-insensitive matching) and the known residual.
+- `modules/standards/nextjs.md`: the `agentRules` rule is reversed — the generator stays **on**.
+  It writes a managed block into `AGENTS.md` and an import into `CLAUDE.md`, upserting both, so
+  content outside the markers survives; the block is committed with the work rather than
+  deleted. `AGENTS.md` is framework-owned, `CLAUDE.md` keeps its governance role. Turning the
+  generator off is now the documented exception, not the rule.
+
+### Fixed
+- 0.12.0 traded the template's documented fail-safe posture for a fail-open one: with the
+  enumerated deny, unlisted variants such as `.env.bak` (a literal copy of a real `.env`),
+  `.env.prod`, `.env.ci` or `.env.keys` were readable **without a prompt**, since read-only
+  tools need no approval inside the working directory. The new deny set restores the
+  fail-closed behaviour F-001 intended *and* keeps `.env.example` writable — 0.12.0 could
+  only have one of the two.
+
 ## [0.12.0] — 2026-08-11
 
 ### Added

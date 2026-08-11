@@ -34,10 +34,14 @@ Do not write App Router code from memory, and heed deprecation notices.
 - `output: "standalone"` is what a container image ships; keep it working. In the Dockerfile
   set `ENV HOSTNAME=0.0.0.0`: the standalone server reads `HOSTNAME` verbatim and container
   runtimes set it to the container id.
-- Next's agent-rules generator writes a managed block into `AGENTS.md` / `CLAUDE.md` on a
-  `next dev` run. Disable it (`agentRules: false` in the Next config) — those files are
-  governance, not framework output, and this fragment already carries the read-the-shipped-docs
-  rule the generated block would add.
+- Next's agent-rules generator is left on. On a `next dev` run it writes a managed block into
+  `AGENTS.md` pointing at the version-matched bundled docs, and adds an `AGENTS.md` import to
+  `CLAUDE.md`; both are upserted, so anything outside the block markers survives. Commit the
+  generated block with the work — deleting it only re-creates the churn on the next run.
+  `AGENTS.md` is framework-owned: project instructions go outside the markers, `CLAUDE.md`
+  keeps its governance role. Turn the generator off (`agentRules: false`) only if a project
+  cannot tolerate framework-written files at all; it then carries the read-the-shipped-docs
+  rule above on its own.
 - Biome owns linting and formatting; `next lint` is not used.
 
 **Configuration**

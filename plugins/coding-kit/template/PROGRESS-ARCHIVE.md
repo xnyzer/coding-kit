@@ -5,6 +5,74 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-015 — Fail-closed env deny set + vendor-aligned `agentRules` rule (2026-08-11)
+
+**Problem:** two follow-ups from review of F-013/F-014. (1) The enumerated env deny of F-014
+covers the framework-conventional names only; short forms (`.env.prod`, `.env.ci`) and copy
+variants (`.env.bak`, `.env.old`) fall through, and because read-only tools need no approval
+inside the working directory they are readable **without a prompt**. That silently reversed the
+fail-safe posture F-001 had documented in `core/.claude/README.md`. (2) The `agentRules` rule in
+the new `nextjs` fragment told projects to disable Next's agent-rules generator, justified by a
+governance conflict that does not hold up.
+
+**What was built (6 files):**
+
+`core/.claude/settings.json` and the template's own `.claude/settings.json`: the fourteen
+enumerated env entries are replaced by six patterns per tool that carve the `.env.example`
+exception out by hand — `**/.env` and `**/.env[0-9a-z_-]*` for the undotted forms (`.envrc`),
+then `**/.env.[0-9a-df-z_-]*`, `**/.env.e[0-9a-wy-z_-]*`, `**/.env.ex[0-9b-z_-]*` and
+`**/.env.example?*`, each class excluding exactly the letter that spells `example`. The
+`.env.example` allow entries are back in force. `core/.gitignore`: `.env` + `.env.*` collapse
+to `.env*`, keeping `!.env.example`. `core/.claude/README.md`: the stale F-001 caveat is
+replaced by the rationale plus the two matcher properties the construction depends on.
+`modules/standards/docker.md`: unchanged in the end (see below).
+`modules/standards/nextjs.md`: the `agentRules` bullet is rewritten. Sync invariant: `VERSION`
+0.13.0 + `CHANGELOG.md`. `MANIFEST.md` untouched — no files added, removed or re-policied.
+
+**Notable decisions:**
+
+- **Owner's call: keep the conventional dotted `.env.example`.** The first implementation took
+  the opposite route — rename the placeholder to `env.example` so it falls outside the `.env*`
+  namespace, which allows a single gapless deny pair and needs no allow entry at all. That was
+  built and verified end to end, then reverted when the owner asked for the conventional
+  spelling with the leading dot. The cost of the chosen route is six cryptic patterns per
+  tool in a JSON file that admits no comments; it is paid down by the rationale block in
+  `core/.claude/README.md`.
+- **Known residual, documented rather than closed:** a suffix starting with `exa` that is not
+  `example` (`.env.exact`, `.env.examine`) and exact truncations (`.env.e`, `.env.exa`) match
+  no deny rule. Closing them costs one more pattern per prefix letter and neither shape is a
+  real env filename.
+- **`agentRules` reversed to vendor-aligned.** The claimed conflict was overstated: Next only
+  adds an `AGENTS.md` import to `CLAUDE.md`, which lands outside the `section:claude-*` markers
+  and is preserved by `/update-conventions` — so the governance file is not actually contested.
+  Disabling the generator threw away the version-matched docs pointer, which is the very thing
+  the fragment's lead rule demands and which the vendor's own evals show helps. The rule now
+  leaves it on, treats `AGENTS.md` as framework-owned, and commits the managed block; the
+  vendor documents that deleting it only re-creates the churn.
+
+**Verification:** measured against the real matcher via headless `claude -p` runs in a scratch
+project, not reasoned from the pattern syntax — which mattered twice, because the reasoning was
+wrong both times.
+
+1. **There is no negation.** With deny `Read(**/.env.[!e]*)` the result was `.env.foo`
+   *allowed* and `.env.example` *blocked* — the exact inverse of gitignore semantics. `[^e]`
+   behaved identically, so both forms are read as positive sets containing `e`. A rule written
+   on the gitignore assumption would have opened a hole and blocked the placeholder.
+2. **Matching is case-insensitive.** The first character-class draft used `[0-9A-Za-df-z_-]`,
+   reasoning that `A-Z` covers `.env.PROD`. It blocked everything including `.env.example`,
+   because the uppercase range swallowed the lowercase `e` the class was meant to exclude.
+   Dropping `A-Z` fixed it — and the lowercase ranges cover uppercase names anyway.
+
+Acceptance test of the shipped configuration: `.env.example` allowed, while `.env`,
+`.env.local`, `.env.bak`, `.env.prod`, `.env.2024`, `.envrc`, `.env.e2e`, `.env.export`,
+`.env.example.local` and `.env.keys` are all blocked. Edit verified separately under
+`--permission-mode acceptEdits` (which deny still overrides): the append to `.env.example`
+landed on disk, the same append to `.env.local` was blocked. `.gitignore` cross-checked with
+`git check-ignore` in a throwaway repo — every `.env*` ignored, `.env.example` tracked.
+`just check` green.
+
+---
+
 ## F-014 — Fix `.env.example` shadowed by the broad env deny rule (2026-08-11)
 
 **Problem:** reported from work on a downstream project: the tracked `.env.example`
@@ -39,11 +107,18 @@ policied `managed`, and the change is content, not policy.
 - **Known residual gap, deliberately accepted:** the enumeration covers the framework-
   conventional names, not every conceivable one. An unlisted variant such as `.env.prod` or
   `.env.ci` is no longer denied, and since read-only tools need no approval inside the working
-  directory, it would be readable without a prompt — the old broad rule blocked it. A possible
-  follow-up is a catch-all `ask` rule (`Read(**/.env.[!e]*)`), which would restore fail-closed
-  behaviour for everything not starting with `e`; it was not shipped because the character-class
-  support is not documented explicitly and an unexplained pattern in a distributed settings file
-  is hard to justify without comments (JSON has none).
+  directory, it would be readable without a prompt — the old broad rule blocked it.
+
+> **Superseded by F-015 (2026-08-11).** Two corrections to the entry above. First, the
+> suggested follow-up — a catch-all `ask` rule `Read(**/.env.[!e]*)` — was **wrong and would
+> have backfired**: measured against the real matcher, neither `[!e]` nor `[^e]` negates.
+> Both are read as positive sets containing `e`, so the rule would have blocked
+> `.env.example` and left every other variant open, i.e. the exact inverse of its purpose.
+> Second, the residual gap was not merely theoretical but a reversal of a documented posture:
+> F-001 accepted a possibly-blocked `.env.example` as "the intended failure direction", and
+> this entry silently traded that fail-safe stance for a fail-open one — `.env.bak`, a literal
+> copy of a real `.env`, became silently readable. F-015 restores the fail-closed behaviour
+> with a deny set that carves the `.env.example` exception out via positive character classes.
 
 **Verification:** both files re-read after the edit and diffed against each other — identical
 permission blocks, `**/.env.*` gone from both, `.env.example` allow entries intact;
