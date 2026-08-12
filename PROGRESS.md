@@ -48,10 +48,132 @@ _Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
 
 _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer._
 
+### F-023 — new-project ohne GitHub (lokaler Bootstrap-Pfad)
+
+**Status:** BACKLOG
+
+**Problem:** `/new-project` legt das Repo ausschließlich über `gh repo create --template`
+an (Schritt 4a). Auf Rechnern ohne GitHub-Konto ist das der einzige Schritt der Kette,
+der lokal nicht erfüllbar ist — alles ab 4b (Instanziierung, Verifikation, Erst-Commit)
+läuft ohnehin lokal. Der lokale Bootstrap muss derzeit jedes Mal per Hand vorbereitet
+werden; die README beschreibt ihn nur als Workaround.
+
+**Idee:** Der Skill erkennt zur Laufzeit, dass GitHub nicht verfügbar ist, und bietet den
+lokalen Bootstrap an statt an `gh` zu scheitern: Kopie des Template-Checkouts, eigenes
+`git init`, Autor-Config aus der Personal-Config. Die GitHub-Schritte entfallen
+ausgewiesen, nicht durch Fehlschlag.
+
+**Lösungsskizze:**
+- Feature-Detection statt neuem Modus-Argument: fehlendes oder nicht authentifiziertes
+  `gh` als Signal, lokaler Pfad wird bestätigt.
+- 4a lokal: Template-Checkout kopieren, `git init`, Autor-Config; 4c (Repo-Settings/
+  Topics) ausweisen und überspringen — für die Discovery trägt der
+  `.claude/template-version`-Stempel.
+- Doku-Begleitung: README-Abschnitt „Ohne GitHub" auf den Skill-Pfad umstellen, sobald
+  er existiert.
+
+**Abhängigkeiten:** keine
+
+**Noch zu analysieren:**
+- Gehört die Erkennung zentral (auch `name-it`, `update-conventions`, `check-upstreams`
+  haben GitHub-Teilschritte) oder lokal in `new-project`? Das entscheidet, ob das Kit
+  einen dokumentierten „kein-GitHub"-Betriebsmodus bekommt oder nur einen Sonderfall.
+- Firmen-Hosts mit eigener CLI (Azure DevOps, GitLab): bewusst außerhalb oder späterer
+  Erweiterungspunkt?
+
+### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
+
+**Status:** BACKLOG
+
+**Problem:** `/step-done` § Autor-Config setzt `git config user.email` unbedingt auf die
+GitHub-Noreply-Adresse und ermittelt sie über `gh api user`. Ohne GitHub schlägt die
+Ermittlung fehl — und die Regel ist dort auch inhaltlich falsch, weil die Adresse des
+eigenen Hosts in die Commits gehört. Das widerspricht der eigenen Kit-Regel, Identität
+nicht zu hardcoden.
+
+**Idee:** `CODING_KIT_GIT_NOREPLY_EMAIL` aus der Personal-Config wird zur Quelle der
+Wahrheit, `gh api user` nur noch einer von zwei Ermittlungswegen. Fehlt beides, fragt der
+Skill statt zu raten.
+
+**Lösungsskizze:**
+- Reihenfolge in step-done § Autor-Config: Personal-Config → `gh api user` → fragen; kein
+  GitHub-Format mehr erzwingen.
+- Gleiche Härte in `templates/global-CLAUDE.md` entschärfen: GitHub-Noreply als Default
+  für GitHub-Projekte, Kernaussage bleibt „keine private Adresse".
+- Weitere Fundstellen desselben Musters prüfen (u. a. `new-project` 4a) und die
+  README-Zeile zum Schlüssel an die neue Rolle anpassen.
+
+**Abhängigkeiten:** keine — unabhängig von F-023, aber sinnvoll im selben Zug umzusetzen
+
+### F-025 — install.sh: fehlender gh-Login und Plattform-Abdeckung
+
+**Status:** BACKLOG
+
+**Problem:** `install.sh` setzt GitHub und macOS voraus. Fehlt `gh` oder ist es nicht
+angemeldet, bricht er in der ersten Prüfung ab, statt den Login anzubieten oder ohne
+GitHub weiterzumachen — obwohl die README einen GitHub-freien Weg beschreibt. Die
+Toolchain-Installation kennt nur `brew`; auf Linux ohne Brew und auf Windows bleibt es
+bei einer Warnung. Plattform-Erkennung gibt es im Repo nirgends.
+
+**Idee:** Der Installer wird Bootstrap für alle drei Plattformen und auch für Rechner
+ohne GitHub: Voraussetzungen werden erkannt und benannt statt zur Abbruchbedingung
+gemacht, fehlender Login wird angeboten, und die Toolchain kommt über den Paketmanager
+der jeweiligen Plattform.
+
+**Lösungsskizze:**
+- Drei `gh`-Zustände unterscheiden (fehlt / vorhanden ohne Login / bereit) statt eines
+  harten `fail`: Login anbieten, GitHub-freien Lauf als bestätigte Alternative — dann die
+  Personal-Config ohne `gh api`-Vorbefüllung abfragen.
+- Lokalen Template-Checkout mit anlegen — `git clone` der öffentlichen URL, braucht kein
+  `gh`; für den GitHub-freien Weg der Hebel. Aktualität ist Sache von F-026.
+- Plattform bestimmen und Paketmanager wählen: brew auf macOS, apt/dnf/pacman auf Linux,
+  winget/scoop auf Windows; prüfen, ob `mise` der plattformneutrale Weg für
+  just/lefthook/gitleaks ist und nur mise selbst plattformspezifisch installiert wird.
+  Wird kein Paketmanager gefunden: Abbruch mit Hinweis auf die manuelle Installation
+  statt stiller Warnung (Toolchain ist der letzte Schritt, alles Übrige ist dann bereits
+  eingerichtet).
+- Windows: Lauf in einer Bash prüfen und benennen (der Stop-Hook verlangt sie ohnehin);
+  Abbruchmeldungen so ausgeben, dass sie beim Start per Dateizuordnung nicht mit dem
+  Fenster verschwinden.
+- Defaults plattformgerecht wählen — das Projekte-Verzeichnis nicht auf ein englisches
+  „Documents" festlegen.
+- Zeilenenden sind kein Thema: `.gitattributes` erzwingt `eol=lf` für den ganzen Baum.
+
+**Abhängigkeiten:** keine. Berührung mit F-023 (dort steht die Frage, ob „kein GitHub"
+zentral erkannt wird — die Antwort sollte für Skills und Installer dieselbe sein) und mit
+F-026 (F-025 legt den Checkout an, F-026 hält ihn aktuell).
+
+### F-026 — Template-Auflösung: Aktualität und Klontiefe
+
+**Status:** BACKLOG
+
+**Problem:** Die gemeinsame Template-Auflösung (`/choose-stack` § 0, referenziert von
+`new-project` und `update-conventions`) nimmt den lokalen Checkout unter
+`$CODING_KIT_PROJECTS_DIR/project-template`, sobald er existiert — und kein Skill
+aktualisiert ihn. `update-conventions` liest dessen `VERSION` aber als aktuellen
+Template-Stand und entscheidet daran, ob ein Projekt aktuell ist. Ein veralteter Checkout
+lässt Projekte also fälschlich als aktuell gelten oder verteilt alte Dateistände, ohne
+dass es auffällt. Zweiter Defekt: der Ersatzpfad klont mit `--depth 1`, während die
+Stempel-Auflösung die `VERSION`-Historie durchgeht — mit Shallow-Klon nicht möglich.
+
+**Idee:** Der lokale Checkout wird ausdrücklich Cache und nicht Quelle: vor Benutzung
+auffrischen, wenn erreichbar, sonst bewusst offline weiterarbeiten und den Stand
+ausweisen. Die Klontiefe richtet sich nach dem, was die Skills tatsächlich brauchen.
+
+**Lösungsskizze:**
+- § 0 um einen Refresh-Schritt erweitern; aufgelöste `VERSION` und Herkunft (live oder
+  offline mit Datum) im Lauf benennen.
+- Lokale Änderungen oder divergierte Historie im Checkout nicht still übergehen — melden
+  und bestätigen lassen.
+- Klontiefe am Bedarf ausrichten: die Stempel-Auflösung braucht `VERSION`-Historie.
+- Auflösung von `gh` entkoppeln — für ein öffentliches Template genügt `git clone` der URL.
+
+**Abhängigkeiten:** keine — sinnvoll zusammen mit F-025
+
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-023
+next-feature: F-027
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -74,4 +196,8 @@ F-019 Pflege-Skill go-public (Projekt nachträglich public-ready) (DONE)
 F-020 Sprach-Matrix: granulare Sprachwahl je Projekt (DONE)
 F-021 update-conventions: Vollabdeckung aller Template-Dokumente (inkl. seed) (DONE)
 F-022 Begleithandlungen beim Fragment-Einbau (DONE)
+F-023 new-project ohne GitHub (lokaler Bootstrap-Pfad)
+F-024 Commit-Adresse aus der Personal-Config statt hart aus gh
+F-025 install.sh: fehlender gh-Login und Plattform-Abdeckung
+F-026 Template-Auflösung: Aktualität und Klontiefe
 -->
