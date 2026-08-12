@@ -143,37 +143,86 @@ der jeweiligen Plattform.
 zentral erkannt wird — die Antwort sollte für Skills und Installer dieselbe sein) und mit
 F-026 (F-025 legt den Checkout an, F-026 hält ihn aktuell).
 
-### F-026 — Template-Auflösung: Aktualität und Klontiefe
+### F-026 — Template-Auflösung: Aktualität, Herkunft und Klontiefe
 
 **Status:** BACKLOG
 
 **Problem:** Die gemeinsame Template-Auflösung (`/choose-stack` § 0, referenziert von
-`new-project` und `update-conventions`) nimmt den lokalen Checkout unter
-`$CODING_KIT_PROJECTS_DIR/project-template`, sobald er existiert — und kein Skill
-aktualisiert ihn. `update-conventions` liest dessen `VERSION` aber als aktuellen
-Template-Stand und entscheidet daran, ob ein Projekt aktuell ist. Ein veralteter Checkout
-lässt Projekte also fälschlich als aktuell gelten oder verteilt alte Dateistände, ohne
-dass es auffällt. Zweiter Defekt: der Ersatzpfad klont mit `--depth 1`, während die
+`new-project` und `update-conventions`) hat drei Defekte. **Erstens Aktualität:** sie nimmt
+den lokalen Checkout unter `$CODING_KIT_PROJECTS_DIR/project-template`, sobald er
+existiert — und kein Skill aktualisiert ihn. `update-conventions` liest dessen `VERSION`
+aber als aktuellen Template-Stand und entscheidet daran, ob ein Projekt aktuell ist; ein
+veralteter Checkout lässt Projekte fälschlich als aktuell gelten oder verteilt alte
+Dateistände, ohne dass es auffällt. **Zweitens Herkunft:** das Template-Repo wird aus dem
+aufrufenden GitHub-Konto abgeleitet (`gh api user`). Das trägt nur beim Eigentümer der
+Vorlage — fremde Nutzer landen bei einem Repo, das ihnen nicht gehört, und Rechner ohne
+`gh` können den Owner überhaupt nicht ermitteln. `CODING_KIT_TEMPLATE_REPO` gibt es, ist
+aber ein Override, den man kennen muss. Dasselbe Muster steckt in `check-upstreams` beim
+Kit-Repo. **Drittens Klontiefe:** der Ersatzpfad klont mit `--depth 1`, während die
 Stempel-Auflösung die `VERSION`-Historie durchgeht — mit Shallow-Klon nicht möglich.
 
-**Idee:** Der lokale Checkout wird ausdrücklich Cache und nicht Quelle: vor Benutzung
-auffrischen, wenn erreichbar, sonst bewusst offline weiterarbeiten und den Stand
-ausweisen. Die Klontiefe richtet sich nach dem, was die Skills tatsächlich brauchen.
+**Idee:** Der Live-Stand ist die Regel, der lokale Checkout die Ausnahme für Offline-
+Betrieb und für die Arbeit am Template selbst. Die Herkunft steht fest, statt aus dem
+Konto des Aufrufers zu folgen, und der benutzte Stand wird im Lauf immer benannt.
 
 **Lösungsskizze:**
-- § 0 um einen Refresh-Schritt erweitern; aufgelöste `VERSION` und Herkunft (live oder
-  offline mit Datum) im Lauf benennen.
+- Live zuerst: bei erreichbarem Netz gegen den aktuellen Stand arbeiten; der lokale
+  Checkout greift, wenn offline oder wenn ausdrücklich der lokale Stand gemeint ist.
+- Herkunft ohne Account-Ableitung: Kette `CODING_KIT_TEMPLATE_REPO` → kanonische
+  Upstream-Quelle → optional eigener Fork. Die kanonische Quelle gehört deklariert (der
+  Marketplace nennt seine Quelle ebenso), nicht aus `gh api user` erraten — analog für das
+  Kit-Repo in `check-upstreams`.
+- Ohne `gh` nutzbar: für ein öffentliches Repo genügen `git clone`/`git fetch` der URL.
+- Aufgelöste `VERSION` und Herkunft (live oder offline mit Datum) im Lauf benennen.
 - Lokale Änderungen oder divergierte Historie im Checkout nicht still übergehen — melden
   und bestätigen lassen.
 - Klontiefe am Bedarf ausrichten: die Stempel-Auflösung braucht `VERSION`-Historie.
-- Auflösung von `gh` entkoppeln — für ein öffentliches Template genügt `git clone` der URL.
 
 **Abhängigkeiten:** keine — sinnvoll zusammen mit F-025
+
+**Noch zu analysieren:**
+- Wie erkennt ein Lauf „ich arbeite gerade am Template" — expliziter Schalter oder
+  Folgerung aus einem dirty bzw. abweichenden Checkout?
+- Bleibt die Personal-Config der Ort für den Override, oder gehört die kanonische Quelle
+  in eine Plugin-Datei?
+
+### F-027 — Stop-Hook plattformfähig machen (Windows greift ins WSL)
+
+**Status:** BACKLOG
+
+**Problem:** `hooks.json` startet den Stop-Hook als
+`bash "${CLAUDE_PLUGIN_ROOT}/hooks/stop-reminder.sh"`. Unter Windows wurde beobachtet,
+dass der Hook nicht funktioniert; wahrscheinliche Ursache ist das `bash.exe` in
+`System32`, das den WSL-Start auslöst — der Hook landet damit in einer Umgebung, in der
+der übergebene Windows-Pfad nicht auflösbar ist. Auf Windows fällt damit die einzige
+Erinnerung an `/step-done` aus, und ein fehlschlagender Hook erzeugt womöglich bei jedem
+Stopp Lärm, statt still zu bleiben.
+
+**Idee:** Der Einstiegspunkt darf sich nicht auf ein nacktes `bash` aus dem PATH
+verlassen. Auf Windows wird die Bash der Git-Installation gezielt aufgelöst — git ist für
+den Hook ohnehin Voraussetzung. Schlägt die Auflösung fehl, bleibt der Hook stumm statt
+zu scheitern.
+
+**Lösungsskizze:**
+- Ursache auf einem Windows-Rechner bestätigen, bevor gebaut wird (WSL-Treffer oder
+  anderer Grund).
+- Prüfen, welche Plattformweichen `hooks.json` erlaubt (Doku zur Laufzeit lesen); sonst
+  muss der Einstiegspunkt selbst die Shell bestimmen.
+- Auf Windows die Git-Bash auflösen statt `System32\bash.exe` zu treffen.
+- Das Skript bleibt inhaltlich unverändert — es ist bereits POSIX-kompatibel, das Problem
+  ist der Interpreter.
+- Stillschweigen im Fehlerfall wahren: keine Ausgabe, wenn keine passende Shell gefunden
+  wird.
+- Verifikation gehört auf einen echten Windows-Rechner; auf macOS und Linux ist nur
+  Nicht-Regression prüfbar.
+
+**Abhängigkeiten:** keine. Thematische Nähe zu F-025 (Plattform-Abdeckung), aber anderer
+Gegenstand: Plugin-Inhalt statt Installer.
 
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-027
+next-feature: F-028
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -199,5 +248,6 @@ F-022 Begleithandlungen beim Fragment-Einbau (DONE)
 F-023 new-project ohne GitHub (lokaler Bootstrap-Pfad)
 F-024 Commit-Adresse aus der Personal-Config statt hart aus gh
 F-025 install.sh: fehlender gh-Login und Plattform-Abdeckung
-F-026 Template-Auflösung: Aktualität und Klontiefe
+F-026 Template-Auflösung: Aktualität, Herkunft und Klontiefe
+F-027 Stop-Hook plattformfähig machen (Windows greift ins WSL)
 -->
