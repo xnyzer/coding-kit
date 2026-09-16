@@ -4,6 +4,36 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.19.0 — 2026-09-16
+
+Neuer Utility-Skill **handoff** (F-028): kopierfertiger Handoff-Prompt für einen
+frischen Chat, wenn eine Session ans Kontextlimit kommt — ersetzt den jedes Mal neu
+getippten Auftrag „nur Kontext übergeben, nichts bauen":
+
+- **Übergibt nur Undokumentiertes:** Maßstab je Zeile ist, ob der neue Chat ohne sie
+  etwas falsch macht, doppelt tut oder erneut fragt. Entscheidungen samt verworfener
+  Alternativen, Fallstricke, Absprachen und halbfertige Arbeit wandern in den Prompt;
+  was schon in Dateien, Git, CLAUDE.md oder Memory steht, nur als Verweis. Richtwert
+  typisch bis ~150 Zeilen ohne Untergrenze — die eigentliche Grenze ist der Maßstab.
+- **Orientierung zuerst:** die Gliederung beginnt mit Zuletzt (letzte Aktion und was
+  darauf wartet), Stand und Als Nächstes; Entscheidungen, Fallstricke und Absprachen
+  folgen als Hintergrund. Leere Abschnitte entfallen; die Schlussanweisung lässt den
+  neuen Chat den Stand bestätigen und auf die nächste Anweisung warten — der Nutzer
+  führt den nächsten Befehl selbst aus.
+- **Reihenfolge-Vorgabe der Aufgabenliste:** hat das Projekt eine ausdrückliche
+  Reihenfolge (eigene Überschrift oder Zeile, Wortlaut frei), nennt der Handoff die
+  Fundstelle als verbindlich und den nächsten Eintrag laut Vorgabe — ohne sie zu
+  kopieren, die Datei bleibt maßgeblich. Sonst gilt die Reihenfolge der offenen Einträge.
+- **Ausgabe als ein Codeblock mit vier Backticks**, damit innere Code-Schnipsel die
+  Kopiervorlage nicht zerbrechen; außerhalb höchstens eine Zeile.
+- **Kontextsparsam gebaut:** knapper Skill-Text, leeres Argument ohne Rückfrage, höchstens
+  ein Shell-Aufruf (Git-Stand plus Überschriften-Suche nach einer Reihenfolge-Vorgabe),
+  keine Datei-Lesevorgänge. Schreibverbot per `disallowed-tools` (Write, Edit,
+  NotebookEdit); auch kein Memory-Update — Dokumentationsbedarf steht im Prompt unter
+  „Offen" und wird im neuen Chat auf Anweisung erledigt.
+- Projektunabhängig: setzt weder Kit-Struktur noch Git voraus. Nur manuell aufrufbar;
+  wie `refine-prompt` nicht in der Skill-Übersicht des project-templates.
+
 ## 0.18.0 — 2026-08-11
 
 Begleithandlungen beim Fragment-Einbau (F-022) — Gegenstück zu **project-template

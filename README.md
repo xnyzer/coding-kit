@@ -191,6 +191,7 @@ Die Spalte **GitHub** sagt, was ohne GitHub bleibt: `–` = rein lokal über git
 | `/coding-kit:check-upstreams` | ja | Watchliste externer Vorbild-Repos prüfen (`upstreams.json`), Neuerungen seit letztem Ref, Übernahme-Vorschläge. |
 | `/coding-kit:go-public` | ja | Projekt nachträglich public machen: blockierendes Preflight-Audit (Secrets in der vollen Historie, Privacy inkl. Commit-Metadaten, Lizenz, `private/`-Hygiene), Datei-Nachzug **vor** dem Umstellen (update-conventions mit Sichtbarkeits-Prämisse), dann Sichtbarkeitswechsel bzw. Repo-Anlage + Push nur nach laufbezogener Freigabe; Abschluss-Check (CodeQL, Settings). |
 | `/coding-kit:refine-prompt` | – | Übergebenen Prompt analysieren, Schwachstellen benennen, nach Best Practices neu formulieren und ausführen. |
+| `/coding-kit:handoff` | – | Am Kontextlimit: kopierfertigen Handoff-Prompt für einen frischen Chat schreiben — übergibt nur, was aus der Session noch nicht dokumentiert ist, verweist sonst auf die Quelldateien; baut und ändert nichts. |
 
 Was bei `teils` konkret entfällt — der Rest des Skills läuft lokal weiter:
 
@@ -286,7 +287,7 @@ Installer an. Enthält, was nicht zur Laufzeit ermittelbar ist, plus Offline-Fal
 .claude-plugin/marketplace.json   Marketplace „xnyzer" (Quelle: dieses Repo)
 plugins/coding-kit/               Das Plugin
   .claude-plugin/plugin.json      Name, Version, Beschreibung
-  skills/<name>/SKILL.md          Die vier Core-Skills
+  skills/<name>/SKILL.md          Die Skills (ein Ordner je Skill)
   hooks/hooks.json + *.sh         Projekterkennender Stop-Hook
 default.json                      Renovate-Shareable-Preset (Root = Preset-Konvention)
 upstreams.json                    Watchliste für /check-upstreams (persistierte Refs)
