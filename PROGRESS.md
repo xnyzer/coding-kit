@@ -240,8 +240,14 @@ gespeichertem Fakt weniger LLM-Arbeit leistet. Überholtes regelt der Graph selb
 seine Zeitstempel — kein manuelles Löschen.
 
 **Lösungsskizze:**
-- Zuerst messen: welche Pipeline-Schritte des Servers den Verbrauch treiben (pro Episode
-  fix vs. pro Entität/Fakt) — davon hängt ab, ob Bündeln oder Kürzen mehr bringt.
+- Erst auswerten, dann ändern: Die Messung pro LLM-Call und Pipeline-Schritt läuft
+  serverseitig; nach ein bis zwei Wochen Daten entscheiden — bis dahin keine
+  Skill-Änderungen auf Verdacht.
+- Arbeitshypothese: Der Großteil der Kosten sind Input-Tokens aus dem Abgleich gegen
+  den bestehenden Graph der Gruppe (Entitäten- und Fakten-Dedup), nicht die
+  Episodenlänge — dann zählt die Zahl der Episoden mehr als ihre Kürze.
+- Beim Bündeln eine Obergrenze von etwa 2.000–3.000 Zeichen pro Episode einhalten
+  (sonst droht Abschneiden bei der Extraktion).
 - Ein Schreibanlass pro Feature statt mehrerer (z. B. nur beim Abschluss); andere Skills
   schreiben nur bei echten Entscheidungen.
 - Episoden in knapper, faktenorientierter Form statt Prosa; beiläufige Nennungen, die
@@ -257,18 +263,46 @@ seine Zeitstempel — kein manuelles Löschen.
   Vorlage der globalen CLAUDE.md.
 
 **Noch zu analysieren:**
-- Wie sich der Verbrauch serverseitig messen lässt (Provider-Abrechnung, Server-Logs) —
-  als Vorher/Nachher-Vergleich.
-- Ob die Parameter (`excluded_entity_types`, `custom_extraction_instructions`) in der
-  eingesetzten Server-Version wirken und welche Entitätstypen konfiguriert sind.
+- Welchen Anteil die Kit-Skills am Gesamtverbrauch haben, verglichen mit Schreibern
+  außerhalb des Kits — bestimmt, wie viel F-029 überhaupt bewirken kann.
+- Ob die Hypothese zum Gruppengraph hält und was daraus folgt (bündeln, kürzen,
+  seltener schreiben).
+- Ob `excluded_entity_types` / `custom_extraction_instructions` die Abgleich-Schritte
+  messbar verkleinern.
 - Wo die zentrale Konvention liegt, damit Plugin-Skills sie zur Laufzeit erreichen.
 
-**Abhängigkeiten:** keine.
+**Abhängigkeiten:** Auswertung der serverseitigen Kostenmessung (extern, ein bis zwei
+Wochen Daten).
+
+---
+
+### F-030 — Transkript-Aufbewahrung verlängern (Graphiti-Wiederherstellung)
+
+**Status:** BACKLOG
+
+**Problem:** Episoden, die der Graphiti-Server verliert, werden nie erneut verarbeitet;
+wiederherstellen lassen sie sich nur aus den lokalen Claude-Code-Transkripten. Die
+löscht Claude Code standardmäßig nach 30 Tagen — danach ist ein Verlust endgültig.
+
+**Idee:** Das Kit setzt die Aufbewahrungsdauer der Transkripte auf jedem Rechner
+hoch (Empfehlung: 365 Tage), damit verlorene Episoden auch Wochen später noch
+nachgetragen werden können.
+
+**Lösungsskizze:**
+- `cleanupPeriodDays` in den Nutzer-Settings von Claude Code setzen — über `install.sh`,
+  ohne bestehende Settings zu überschreiben (vorhandenen Wert respektieren oder
+  nachfragen).
+- Schlüssel und Default zur Laufzeit gegen die aktuelle Claude-Code-Doku prüfen.
+- In der globalen CLAUDE.md-Vorlage bzw. README kurz begründen, warum der Wert gesetzt
+  wird.
+- Speicherbedarf der Transkripte bei längerer Aufbewahrung im Blick behalten.
+
+**Abhängigkeiten:** keine. Thematische Nähe zu F-029 (Graphiti) und F-025 (install.sh).
 
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-030
+next-feature: F-031
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -298,4 +332,5 @@ F-026 Template-Auflösung: Aktualität, Herkunft und Klontiefe
 F-027 Stop-Hook plattformfähig machen (Windows greift ins WSL)
 F-028 Utility-Skill handoff (DONE)
 F-029 Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren
+F-030 Transkript-Aufbewahrung verlängern (Graphiti-Wiederherstellung)
 -->
