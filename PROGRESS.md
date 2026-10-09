@@ -242,19 +242,24 @@ seine Zeitstempel — kein manuelles Löschen.
 **Lösungsskizze:**
 - Erst auswerten, dann ändern: Die Messung pro LLM-Call und Pipeline-Schritt läuft
   serverseitig; nach ein bis zwei Wochen Daten entscheiden — bis dahin keine
-  Skill-Änderungen auf Verdacht.
-- Arbeitshypothese: Der Großteil der Kosten sind Input-Tokens aus dem Abgleich gegen
-  den bestehenden Graph der Gruppe (Entitäten- und Fakten-Dedup), nicht die
-  Episodenlänge — dann zählt die Zahl der Episoden mehr als ihre Kürze.
-- Beim Bündeln eine Obergrenze von etwa 2.000–3.000 Zeichen pro Episode einhalten
-  (sonst droht Abschneiden bei der Extraktion).
+  Skill-Änderungen auf Verdacht. Die Vergleichsbasis beginnt erst mit einem
+  serverseitigen Fix am 09.10.2026; ältere Werte stammen aus einer anderen
+  Kostenstruktur und sind nicht vergleichbar.
+- Arbeitshypothese: Stärkster Hebel ist die Zahl der Entitäten, die eine Episode
+  erwähnt — jede kostet einen eigenen Attribut-Call plus Abgleich gegen den Graph.
+  Die Episodenlänge wirkt nur indirekt (mehr Text → mehr Entitäten).
+- Entitäten-Rauschen senken: Dateipfade, Funktionsnamen, Test-IDs und F-Nummern, die
+  nicht Thema der Episode sind, nicht als eigene Entitäten entstehen lassen — im Text
+  dürfen sie für die Suche stehen bleiben, wenn die Extraktion sie überspringt.
+- Extraktion steuern: kurze `custom_extraction_instructions` (z. B. „einzelne
+  Dateipfade und Test-IDs nicht als eigene Entitäten, außer sie sind das Thema") und
+  `excluded_entity_types` testen; für einzelne, klar umrissene Fakten `add_triplet`
+  statt freier Extraktion. Wirkung jeweils vorher/nachher messen.
+- Episoden pro Arbeitsschritt zählen: mehrere Episoden eines Schritts zusammenfassen,
+  dabei etwa 2.000–3.000 Zeichen pro Episode nicht deutlich überschreiten (sonst
+  droht Abbruch der Extraktion).
 - Ein Schreibanlass pro Feature statt mehrerer (z. B. nur beim Abschluss); andere Skills
   schreiben nur bei echten Entscheidungen.
-- Episoden in knapper, faktenorientierter Form statt Prosa; beiläufige Nennungen, die
-  keine eigene Entität verdienen, vermeiden.
-- Extraktion steuern: `excluded_entity_types` und kurze
-  `custom_extraction_instructions` prüfen; für einzelne, klar umrissene Fakten
-  `add_triplet` statt freier Extraktion.
 - `reference_time` setzen, wo vergangene Ereignisse beschrieben werden, damit die
   zeitliche Auflösung ohne Nacharbeit stimmt; `update_communities` bleibt aus.
 - Globale CLAUDE.md-Vorlage anpassen: Löschanweisung streichen, Splitting-Regel
@@ -265,10 +270,12 @@ seine Zeitstempel — kein manuelles Löschen.
 **Noch zu analysieren:**
 - Welchen Anteil die Kit-Skills am Gesamtverbrauch haben, verglichen mit Schreibern
   außerhalb des Kits — bestimmt, wie viel F-029 überhaupt bewirken kann.
-- Ob die Hypothese zum Gruppengraph hält und was daraus folgt (bündeln, kürzen,
-  seltener schreiben).
-- Ob `excluded_entity_types` / `custom_extraction_instructions` die Abgleich-Schritte
-  messbar verkleinern.
+- Ob die Entitäten-Hypothese hält und was daraus folgt (weniger Entitäten, weniger
+  Episoden, kürzer).
+- Wie viele Entitäten die Kit-Skills heute pro Episode erzeugen und welcher Anteil
+  davon Rauschen ist.
+- Ob übersprungene Entitäten die Auffindbarkeit im Graph spürbar verschlechtern —
+  der Graph soll die Repo-Suche weiterhin ersetzen können.
 - Wo die zentrale Konvention liegt, damit Plugin-Skills sie zur Laufzeit erreichen.
 
 **Abhängigkeiten:** Auswertung der serverseitigen Kostenmessung (extern, ein bis zwei
@@ -276,19 +283,24 @@ Wochen Daten).
 
 ---
 
-### F-030 — Transkript-Aufbewahrung verlängern (Graphiti-Wiederherstellung)
+### F-030 — Graphiti-Episodenverlust erkennen und wiederherstellbar halten
 
 **Status:** BACKLOG
 
-**Problem:** Episoden, die der Graphiti-Server verliert, werden nie erneut verarbeitet;
-wiederherstellen lassen sie sich nur aus den lokalen Claude-Code-Transkripten. Die
-löscht Claude Code standardmäßig nach 30 Tagen — danach ist ein Verlust endgültig.
+**Problem:** `add_memory` meldet nur „queued" — ob eine Episode wirklich im Graph
+ankommt, sieht der Skill nicht. Episoden, die der Graphiti-Server verliert, werden nie
+erneut verarbeitet; wiederherstellen lassen sie sich nur aus den lokalen
+Claude-Code-Transkripten. Die löscht Claude Code standardmäßig nach 30 Tagen — danach
+ist ein Verlust endgültig.
 
-**Idee:** Das Kit setzt die Aufbewahrungsdauer der Transkripte auf jedem Rechner
-hoch (Empfehlung: 365 Tage), damit verlorene Episoden auch Wochen später noch
-nachgetragen werden können.
+**Idee:** Zwei Teile: Das Kit setzt die Aufbewahrungsdauer der Transkripte auf jedem
+Rechner hoch (Empfehlung: 365 Tage), und ein Skill prüft an passender Stelle, ob die
+zuletzt geschriebenen eigenen Episoden angekommen sind.
 
 **Lösungsskizze:**
+- Erfolgskontrolle: z. B. zu Sessionbeginn oder in `step-done` die letzten Episoden der
+  Gruppe abrufen und mit den zuletzt geschriebenen abgleichen; Fehlendes melden (nicht
+  automatisch nachschreiben). Leseaufrufe kosten keine Extraktion.
 - `cleanupPeriodDays` in den Nutzer-Settings von Claude Code setzen — über `install.sh`,
   ohne bestehende Settings zu überschreiben (vorhandenen Wert respektieren oder
   nachfragen).
@@ -332,5 +344,5 @@ F-026 Template-Auflösung: Aktualität, Herkunft und Klontiefe
 F-027 Stop-Hook plattformfähig machen (Windows greift ins WSL)
 F-028 Utility-Skill handoff (DONE)
 F-029 Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren
-F-030 Transkript-Aufbewahrung verlängern (Graphiti-Wiederherstellung)
+F-030 Graphiti-Episodenverlust erkennen und wiederherstellbar halten
 -->
