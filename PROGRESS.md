@@ -222,8 +222,53 @@ Gegenstand: Plugin-Inhalt statt Installer.
 
 ---
 
+### F-029 — Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren
+
+**Status:** BACKLOG
+
+**Problem:** Die Skills schreiben häufig und ohne gemeinsame Regel in Graphiti — dasselbe
+Feature landet bei Aufnahme, Abschluss und Spec-Änderung jeweils als eigene Episode, oft
+als ausführliche Prosa mit vielen beiläufigen Nennungen. Jede Episode löst auf dem
+Graphiti-Server eine Kette von Extraktions-, Dedup- und Auflösungsschritten im
+angebundenen LLM aus; der Verbrauch dort ist entsprechend hoch. Der Informationsgehalt
+im Graph soll dabei nicht sinken — er dient als schnelle Alternative zur Repo-Suche und
+spart so Entwicklungs-Tokens.
+
+**Idee:** Eine zentrale Graphiti-Konvention, auf die alle Skills verweisen: weniger, dafür
+gezielt geschnittene Episoden mit gesteuerter Extraktion, sodass der Server pro
+gespeichertem Fakt weniger LLM-Arbeit leistet. Überholtes regelt der Graph selbst über
+seine Zeitstempel — kein manuelles Löschen.
+
+**Lösungsskizze:**
+- Zuerst messen: welche Pipeline-Schritte des Servers den Verbrauch treiben (pro Episode
+  fix vs. pro Entität/Fakt) — davon hängt ab, ob Bündeln oder Kürzen mehr bringt.
+- Ein Schreibanlass pro Feature statt mehrerer (z. B. nur beim Abschluss); andere Skills
+  schreiben nur bei echten Entscheidungen.
+- Episoden in knapper, faktenorientierter Form statt Prosa; beiläufige Nennungen, die
+  keine eigene Entität verdienen, vermeiden.
+- Extraktion steuern: `excluded_entity_types` und kurze
+  `custom_extraction_instructions` prüfen; für einzelne, klar umrissene Fakten
+  `add_triplet` statt freier Extraktion.
+- `reference_time` setzen, wo vergangene Ereignisse beschrieben werden, damit die
+  zeitliche Auflösung ohne Nacharbeit stimmt; `update_communities` bleibt aus.
+- Globale CLAUDE.md-Vorlage anpassen: Löschanweisung streichen, Splitting-Regel
+  überdenken, auf die zentrale Konvention verweisen.
+- Betroffen: alle Skills mit Graphiti-Schreibzugriff, `docs/skill-authoring.md`,
+  Vorlage der globalen CLAUDE.md.
+
+**Noch zu analysieren:**
+- Wie sich der Verbrauch serverseitig messen lässt (Provider-Abrechnung, Server-Logs) —
+  als Vorher/Nachher-Vergleich.
+- Ob die Parameter (`excluded_entity_types`, `custom_extraction_instructions`) in der
+  eingesetzten Server-Version wirken und welche Entitätstypen konfiguriert sind.
+- Wo die zentrale Konvention liegt, damit Plugin-Skills sie zur Laufzeit erreichen.
+
+**Abhängigkeiten:** keine.
+
+---
+
 <!-- FEATURE-INDEX
-next-feature: F-029
+next-feature: F-030
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -252,4 +297,5 @@ F-025 install.sh: fehlender gh-Login und Plattform-Abdeckung
 F-026 Template-Auflösung: Aktualität, Herkunft und Klontiefe
 F-027 Stop-Hook plattformfähig machen (Windows greift ins WSL)
 F-028 Utility-Skill handoff (DONE)
+F-029 Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren
 -->
