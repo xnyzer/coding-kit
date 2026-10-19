@@ -311,10 +311,50 @@ zuletzt geschriebenen eigenen Episoden angekommen sind.
 
 **Abhängigkeiten:** keine. Thematische Nähe zu F-029 (Graphiti) und F-025 (install.sh).
 
+### F-031 — mise.lock mit Plattform-Einträgen erzeugen (CI im --locked-Modus)
+
+**Status:** BACKLOG
+
+**Problem:** Projekte aus `/new-project` bekommen eine `mise.lock` nur mit Versionen, ohne
+`[tools.X."platforms.*"]`-Einträge — `mise install` schreibt sie so. Sobald eine
+`mise.lock` existiert, läuft die CI (`jdx/mise-action`) `mise install --locked` und
+scheitert für jedes Tool mit „No lockfile URL found for <tool>@<version> on platform
+linux-x64 (--locked mode)". Beobachtet bei einem Projekt aus project-template 0.13.2:
+jeder CI-Lauf rot seit dem Bootstrap-Commit. Das Template-Repo selbst ist grün, weil
+seine Lock-Datei per `mise lock` entstand.
+
+**Idee:** Überall, wo ein Skill `mise install` ausführt, danach die Lock-Datei mit
+Plattform-Einträgen erzeugen und vor dem Commit prüfen, dass jedes Tool einen
+`linux-x64`-Eintrag hat. Bestandsprojekte erkennt `/update-conventions` und bietet die
+Regeneration an.
+
+**Lösungsskizze:**
+- Drei Stellen mit `mise install`: `new-project` § 4d (Verifikation), `choose-stack` § 4
+  (Modul-Einbau/-Wechsel ändert die Tools) und `update-conventions` § 5 (Tooling
+  nachrüsten) — jeweils z. B. `mise lock --platform …` anschließen.
+- Plattformliste nicht starr festschreiben: CI-Runner (`linux-x64`) plus lokale
+  Entwicklungsplattform; Windows/WSL im Blick (siehe F-027).
+- Bestandsprüfung in `/update-conventions`: `mise.lock` vorhanden, aber ohne
+  `platforms.linux-x64`-Einträge → Regeneration anbieten (betrifft Projekte aus
+  Template ≤ 0.13.2). Bewusst nicht in `/step-done` — einmalige Migration, kein
+  Dauer-Check je Substep.
+
+**Abhängigkeiten:** keine. Thematische Nähe zu F-027 (Plattform-Abdeckung).
+
+**Noch zu analysieren:**
+- Gibt es eine mise-Einstellung, mit der schon `mise install` Plattform-Einträge
+  schreibt? Wäre robuster als ein Zusatzbefehl — zur Laufzeit gegen die aktuelle
+  mise-Doku prüfen.
+- Renovate: Zieht ein Versions-Bump in `mise.toml` die `mise.lock` samt
+  Plattform-Einträgen mit? Sonst wird die CI nach jedem Tool-Update erneut rot —
+  dieselbe Fehlerklasse auf zweitem Weg.
+- Lohnt ein Guard in `just check` (Lock vollständig?), damit der Fehler vor dem Commit
+  statt erst in der CI auffällt?
+
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-031
+next-feature: F-032
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -345,4 +385,5 @@ F-027 Stop-Hook plattformfähig machen (Windows greift ins WSL)
 F-028 Utility-Skill handoff (DONE)
 F-029 Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren
 F-030 Graphiti-Episodenverlust erkennen und wiederherstellbar halten
+F-031 mise.lock mit Plattform-Einträgen erzeugen (CI im --locked-Modus)
 -->
