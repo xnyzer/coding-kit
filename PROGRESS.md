@@ -397,8 +397,42 @@ das sonst im Graph landet.
 
 ---
 
+### F-034 — Senior-Maßstab in den Bau-Skills (Lesbarkeit, keine Workarounds, Secure Coding)
+
+**Status:** BACKLOG
+
+**Problem:** Der inhaltliche Maßstab steht in der `CODING-STANDARDS.md` des Templates,
+die Bau-Skills wenden ihn aber nicht aktiv an: `build-step` liest die Datei nur
+(„falls vorhanden"). Qualität wird erst nachträglich in `step-done` geprüft, ohne
+CODING-STANDARDS gibt es gar keine Messlatte, und im autonomen `/goal`-Lauf fehlt eine
+Regel für den Fall, dass die saubere Lösung nicht im Plan liegt.
+
+**Idee:** Die Bau-Skills arbeiten durchgängig wie ein Senior-Entwickler. Sie wählen die
+einfachste tragfähige Lösung, schreiben Code, den der Nächste beim Ändern versteht
+(keine verschachtelten Schleifen oder cleveren Ketten), bauen keine Workarounds und
+sichern jeden Substep auch auf Secure Coding ab. Die Skills regeln den Prozess, den
+Inhalt regelt die `CODING-STANDARDS.md`.
+
+**Lösungsskizze:**
+- `build-step`: aktive Qualitäts-Leitplanke. Selbst-Review je Substep, bevor er als
+  fertig gemeldet wird: verständlich, einfach, sicher. Workaround-Stopp: Ist die saubere
+  Lösung im Plan nicht machbar, anhalten und melden statt Hack (autonom: Lauf stoppen).
+- Knapper Ersatz-Maßstab für Projekte ohne `CODING-STANDARDS.md` (Kernprinzipien,
+  kein Duplikat der Vorlage).
+- `teach-step`, `prep-step` (einfachstes Design planen, Security-Punkte je Substep
+  benennen) und `step-done` (Review-Kriterien Verständlichkeit und Secure Coding)
+  konsistent nachziehen.
+- Inhaltliche Lücken der Vorlage (Lesbarkeit vor Cleverness, Secure Coding über Secrets
+  hinaus) laufen als eigener Eintrag in project-template; Bestandsprojekte erhalten sie
+  über `/update-conventions`.
+
+**Abhängigkeiten:** keine. Ergänzungen in der `CODING-STANDARDS.md` von project-template
+laufen parallel als eigener Eintrag dort.
+
+---
+
 <!-- FEATURE-INDEX
-next-feature: F-034
+next-feature: F-035
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -432,4 +466,5 @@ F-030 Graphiti-Episodenverlust erkennen und wiederherstellbar halten
 F-031 mise.lock mit Plattform-Einträgen erzeugen (CI im --locked-Modus)
 F-032 Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git)
 F-033 Betrieb ohne Graphiti absichern
+F-034 Senior-Maßstab in den Bau-Skills (Lesbarkeit, keine Workarounds, Secure Coding)
 -->
