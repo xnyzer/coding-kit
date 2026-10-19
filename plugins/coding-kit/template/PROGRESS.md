@@ -210,10 +210,55 @@ Align the header comment in `core/mise.toml` and the contract in `MANIFEST.md`
 - Renovate: how its mise manager updates `mise.lock` on a version bump — URLs for all
   configured platforms, or only for the runner it executes on?
 
+### F-021 — CODING-STANDARDS: readability over cleverness + secure coding beyond secrets
+
+**Status:** BACKLOG
+
+**Problem:** `core/CODING-STANDARDS.md` sets no explicit bar for readability (simplest
+viable solution, code written for the next maintainer), and §8 covers almost only secrets —
+input validation, injection, authorization and least privilege are missing from the core.
+coding-kit's F-034 makes the build skills apply the standard actively; the content they
+apply has to come from this file (what applies lives here, when/how it is checked lives in
+the skills).
+
+**Idea:** Close both gaps by extending existing sections — no new section, so §7–§13 keep
+their numbers (skills and fragments reference them, e.g. `api-design` → "core §8"). Style
+stays terse: one bold rule plus one sentence, stack-neutral. Language-specific safe
+variants go into the language fragments; `api-design` is de-duplicated against the new core
+rules.
+
+**Solution sketch:**
+- Readability, in §1 (Mindset): "simplest viable solution wins — no over-engineering, no
+  abstraction on speculation"; "write for the next maintainer", with a checkable yardstick
+  ("would a teammate understand it without explanation?").
+- Readability, in §6 (Control flow): no nested loops, clever one-liners or long chains
+  (comprehensions, streams) that must be decoded before changing them — named intermediate
+  steps or helper functions instead. Sharpen alongside the existing nesting-depth rule.
+- Secure coding, in §8: validate input at trust boundaries (allowlist, not blocklist);
+  injection — parameterised queries, no shell/string assembly with foreign input,
+  context-appropriate output encoding; authorize on every access, not only at login;
+  least privilege for processes, tokens and file permissions. Secure defaults and "no
+  sensitive data in errors or URLs" link to §7 (fail closed, never leak internals) instead
+  of restating it; §10 negative tests stay the proof obligation.
+- `api-design` fragment (intake decision): keep only the HTTP-specific concretisations
+  (schema validation of body/query/params/headers, permission over role strings, rate
+  limits, cookies, response shape) and reference core §8 for the principles.
+- Language fragments (intake decision): one line each with the safe variant — `python`:
+  `subprocess` with an argument list, never `shell=True`; `go`: `exec.Command` with
+  separate args, `database/sql` placeholders; `ts-node`: `execFile`/`spawn` over `exec`.
+  `prisma` already covers SQL; no shell fragment exists, none needed.
+- Sync invariant: minor `VERSION` bump (new binding rules) + `CHANGELOG.md` entry in the
+  same commit, flagged so downstream projects pick it up via `/update-conventions`
+  (`CODING-STANDARDS.md` is managed, the changes sit outside the module slot); no
+  `MANIFEST.md` change (no file added, removed or re-policied). F-019 also plans a minor
+  bump — whichever lands first takes the next minor.
+
+**Dependencies:** none. Counterpart in coding-kit: F-034.
+
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-021
+next-feature: F-022
 F-001 Initial template build (DONE)
 F-002 Composable CODING-STANDARDS fragments (DONE)
 F-003 Web-standards fragments (DONE)
@@ -234,4 +279,5 @@ F-017 HOW-TO sync for fragment companion actions (DONE)
 F-018 HOW-TO: state where the workflow skills come from
 F-019 Standards fragment astro
 F-020 mise.lock carries platform URLs for CI
+F-021 CODING-STANDARDS: readability over cleverness + secure coding beyond secrets
 -->
