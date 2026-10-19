@@ -81,10 +81,91 @@ Everything else in the file stays as it is.
 - Overlap with the step-2 note "(provides the workflow skills used below)" — keep both or
   tighten one.
 
+### F-019 — Standards fragment astro
+
+**Status:** BACKLOG
+
+**Problem:** The catalog has no fragment for Astro. A project that adopts Astro gets no
+guidance on the static-first/islands model, Astro's built-in CSP, its asset pipeline or
+how `.astro` files enter the quality gate, and nothing records that Astro's bundler
+resolution contradicts the `.js`-extension rule of the `ts-node` fragment.
+
+**Idea:** Add a catalog fragment `modules/standards/astro.md` (trigger: `astro`) covering
+static-first rendering with islands, a strict CSP, build & dependencies, and imports.
+Like `nextjs`, no module declares it; projects retrofit it via `/choose-stack` or
+`/prep-step`.
+
+**Solution sketch:**
+- New fragment file wrapped in the `fragment:astro` markers, plus a catalog row in
+  `modules/standards/README.md`:
+  `| astro | Astro static-first sites: islands, strict CSP, build pipeline, images | astro |`
+- Cross-reference `nginx` for header-only directives (as `nextjs` references
+  `api-design`) and mention that React islands additionally fall under `react`.
+- Add an imports section: extensionless relative imports (bundler resolution) as the
+  documented exception to the `ts-node` `.js`-extension rule, to be recorded in
+  `.claude/convention-overrides.md` (same pattern as `nextjs`).
+- Drop the draft's "Text" section (i18n layer, brand names from configuration): not
+  Astro-specific, would force an i18n layer on single-language sites (intake decision).
+- Sync invariant: minor `VERSION` bump + `CHANGELOG.md` entry in the same commit; no
+  `MANIFEST.md` change — fragment files are not listed individually (F-013 precedent).
+- Draft body from intake (proposed in another session; not binding, markers and the
+  dropped "Text" section omitted):
+
+  ```markdown
+  ### Astro
+
+  **Static first, islands only where needed**
+  - Pages and layouts are `.astro` components; they render to HTML at build time and ship
+    no JavaScript. Content must be readable without JavaScript.
+  - Interactivity comes only as an island: a UI-framework component with a `client:*`
+    directive. Prefer `client:visible`/`client:idle` over `client:load`; every island has to
+    justify its weight against the project's load budget.
+  - Islands do not share framework context — share state through a small store library
+    (e.g. Nano Stores).
+  - Areas with personal data are client-only (`client:only`), never prerendered with user
+    data, and marked `noindex`.
+
+  **Strict Content Security Policy**
+  - Use Astro's built-in CSP (hashes for its own inline scripts and styles); never add
+    `'unsafe-inline'` or `'unsafe-eval'`.
+  - No inline event handlers, no `set:html` with untrusted content, no third-party scripts,
+    styles or fonts from CDNs.
+  - Avoid features the CSP hashes do not cover (check the Astro CSP docs, e.g. view
+    transitions via `<ClientRouter/>`, Shiki).
+  - Header-only directives (`frame-ancestors`, HSTS, …) come from the server/proxy, not from
+    the `<meta>` tag.
+
+  **Build & dependencies**
+  - `dependencies` of the site are shipped to browsers (and belong in the project's
+    third-party license list); build tools are `devDependencies`.
+  - Raster images go through `astro:assets` (`<Image>`/`<Picture>`) and are optimized at
+    build time. The default service (sharp) bundles libvips under LGPL: check it against the
+    project's license policy; with static output it runs only at build time.
+  - If the project needs a service worker, generate it in a post-build step over `dist/`
+    when no maintained Astro integration supports the current major version.
+  - Type-check `.astro` files with `astro check` in the gate; when linting with Biome, apply
+    the reduced rule set Biome documents for Astro files.
+  ```
+
+**Dependencies:** none.
+
+**Still to analyse:**
+- `dependencies` vs. `devDependencies` rule: the Astro scaffold lists `astro` itself under
+  `dependencies`, so "dependencies are shipped to browsers" is not accurate — reword.
+- Conditional wording for project-specific notions ("load budget", "third-party license
+  list") — e.g. "if the project defines one".
+- Verify version-dependent claims against the current Astro/Biome docs at prep time, not
+  from memory: built-in CSP stable or experimental and its config key; which features it
+  excludes (`<ClientRouter/>`, Shiki); `client:only` needs a framework hint; Biome's
+  Astro support and documented overrides; state of service-worker integrations.
+- Companion actions (F-017): does adopting Astro need any (e.g. the package behind
+  `astro check`, a `tsconfig` extending Astro's preset)? If so, check whether the HOW-TO
+  rows need an update.
+
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-019
+next-feature: F-020
 F-001 Initial template build (DONE)
 F-002 Composable CODING-STANDARDS fragments (DONE)
 F-003 Web-standards fragments (DONE)
@@ -103,4 +184,5 @@ F-015 Fail-closed env deny set + vendor-aligned agentRules rule (DONE)
 F-016 Correct the agentRules routing in the nextjs fragment (DONE)
 F-017 HOW-TO sync for fragment companion actions (DONE)
 F-018 HOW-TO: state where the workflow skills come from
+F-019 Standards fragment astro
 -->
