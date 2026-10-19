@@ -49,39 +49,6 @@ _Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
 
 _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer._
 
-### F-023 — new-project ohne GitHub (lokaler Bootstrap-Pfad)
-
-**Status:** BACKLOG
-
-**Problem:** `/new-project` legt das Repo ausschließlich über `gh repo create --template`
-an (Schritt 4a). Auf Rechnern ohne GitHub-Konto ist das der einzige Schritt der Kette,
-der lokal nicht erfüllbar ist — alles ab 4b (Instanziierung, Verifikation, Erst-Commit)
-läuft ohnehin lokal. Der lokale Bootstrap muss derzeit jedes Mal per Hand vorbereitet
-werden; die README beschreibt ihn nur als Workaround.
-
-**Idee:** Der Skill erkennt zur Laufzeit, dass GitHub nicht verfügbar ist, und bietet den
-lokalen Bootstrap an statt an `gh` zu scheitern: Kopie des Template-Checkouts, eigenes
-`git init`, Autor-Config aus der Personal-Config. Die GitHub-Schritte entfallen
-ausgewiesen, nicht durch Fehlschlag.
-
-**Lösungsskizze:**
-- Feature-Detection statt neuem Modus-Argument: fehlendes oder nicht authentifiziertes
-  `gh` als Signal, lokaler Pfad wird bestätigt.
-- 4a lokal: Template-Checkout kopieren, `git init`, Autor-Config; 4c (Repo-Settings/
-  Topics) ausweisen und überspringen — für die Discovery trägt der
-  `.claude/template-version`-Stempel.
-- Doku-Begleitung: README-Abschnitt „Ohne GitHub" auf den Skill-Pfad umstellen, sobald
-  er existiert.
-
-**Abhängigkeiten:** keine
-
-**Noch zu analysieren:**
-- Gehört die Erkennung zentral (auch `name-it`, `update-conventions`, `check-upstreams`
-  haben GitHub-Teilschritte) oder lokal in `new-project`? Das entscheidet, ob das Kit
-  einen dokumentierten „kein-GitHub"-Betriebsmodus bekommt oder nur einen Sonderfall.
-- Firmen-Hosts mit eigener CLI (Azure DevOps, GitLab): bewusst außerhalb oder späterer
-  Erweiterungspunkt?
-
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
 
 **Status:** BACKLOG
@@ -104,7 +71,8 @@ Skill statt zu raten.
 - Weitere Fundstellen desselben Musters prüfen (u. a. `new-project` 4a) und die
   README-Zeile zum Schlüssel an die neue Rolle anpassen.
 
-**Abhängigkeiten:** keine — unabhängig von F-023, aber sinnvoll im selben Zug umzusetzen
+**Abhängigkeiten:** F-032 (Host-Profil bestimmt, welche Noreply-Adresse gilt) — sinnvoll
+im selben Zug umzusetzen
 
 ### F-025 — install.sh: fehlender gh-Login und Plattform-Abdeckung
 
@@ -140,8 +108,8 @@ der jeweiligen Plattform.
   „Documents" festlegen.
 - Zeilenenden sind kein Thema: `.gitattributes` erzwingt `eol=lf` für den ganzen Baum.
 
-**Abhängigkeiten:** keine. Berührung mit F-023 (dort steht die Frage, ob „kein GitHub"
-zentral erkannt wird — die Antwort sollte für Skills und Installer dieselbe sein) und mit
+**Abhängigkeiten:** F-032 (zentrale Host-Erkennung — Skills und Installer nutzen
+dieselbe Antwort auf „welcher Git-Server, welche Fähigkeiten"). Berührung mit
 F-026 (F-025 legt den Checkout an, F-026 hält ihn aktuell).
 
 ### F-026 — Template-Auflösung: Aktualität, Herkunft und Klontiefe
@@ -179,7 +147,8 @@ Konto des Aufrufers zu folgen, und der benutzte Stand wird im Lauf immer benannt
   und bestätigen lassen.
 - Klontiefe am Bedarf ausrichten: die Stempel-Auflösung braucht `VERSION`-Historie.
 
-**Abhängigkeiten:** keine — sinnvoll zusammen mit F-025
+**Abhängigkeiten:** F-032 (Herkunft und Clone-Weg hängen am Host-Profil) — sinnvoll
+zusammen mit F-025
 
 **Noch zu analysieren:**
 - Wie erkennt ein Lauf „ich arbeite gerade am Template" — expliziter Schalter oder
@@ -351,10 +320,85 @@ Regeneration an.
 - Lohnt ein Guard in `just check` (Lock vollständig?), damit der Fehler vor dem Commit
   statt erst in der CI auffällt?
 
+### F-032 — Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git)
+
+**Status:** BACKLOG
+
+**Problem:** Das Kit setzt GitHub voraus: `gh` bzw. `gh api user` steckt im Installer,
+in `new-project` (Repo-Anlage, Settings, Topics, Autor-Config), `step-done`
+(Noreply-Pflicht), `update-conventions` (Topic-Discovery, Template-Issue), `go-public`,
+`name-it`, `check-upstreams` und `choose-stack`; dazu das Renovate-Preset (`github>…`)
+und die CI unter `.github/`. Ohne GitHub-Konto — oder mit GitLab, Forgejo/Gitea,
+Bitbucket, Azure DevOps, Codeberg, einem eigenen Server oder einem Bare-Repo auf
+Platte/NAS — scheitern Skills an `gh`, statt den Schritt auszuweisen. Nimmt F-023
+(new-project ohne GitHub) vollständig auf; dessen offene Frage „zentral oder lokal
+erkennen" ist hiermit entschieden: zentral.
+
+**Idee:** Ein zentrales Host-Profil beschreibt, welcher Git-Server im Spiel ist und
+welche Fähigkeiten er bietet (Repo anlegen, Repo-Settings, Topics/Discovery, Issues,
+Noreply-Adresse, Renovate, CI). Skills fragen Fähigkeiten ab statt `gh` aufzurufen;
+fehlt eine, wird der Schritt ausgewiesen übersprungen, nicht durch Fehlschlag. Die
+unterste Stufe „nur Git" (Bare-Repo oder gar kein Remote) muss immer vollständig
+tragen.
+
+**Lösungsskizze:**
+- Host-Profil in der Personal-Config (Typ, CLI, Basis-URL) mit Erkennung aus dem
+  Remote als Vorschlag; eine Stelle beschreibt die Fähigkeiten je Host, die Skills
+  referenzieren sie — keine `gh`-Aufrufe mehr verstreut in den Skills.
+- Host-Klassen nach Recherche: gehostet (GitHub, GitLab.com, Bitbucket Cloud, Azure
+  DevOps, Codeberg, SourceHut), selbst gehostet (GitLab CE/EE, Forgejo, Gitea, Gogs,
+  OneDev, Bitbucket Data Center, Gerrit), minimal/lokal (Bare-Repo via `file://`/SSH,
+  Gitolite, Soft Serve, `git daemon`), Peer-to-Peer (Radicle). CLIs je nach Host
+  (`gh`, `glab`, `tea`, `fj`/`berg`, `az repos`) — Pflegestand zur Planungszeit prüfen.
+- `new-project` lokaler Bootstrap (aus F-023): Template-Checkout kopieren, `git init`,
+  Autor-Config aus der Personal-Config; Repo-Settings/Topics nur, wo der Host sie kann
+  — Discovery trägt sonst der `.claude/template-version`-Stempel. README-Abschnitt
+  „Ohne GitHub" auf den Skill-Pfad umstellen.
+- Renovate: offiziell Azure, Bitbucket (Cloud/Server), Forgejo, Gitea, GitHub, GitLab;
+  Gerrit und `local` experimentell. Preset-Referenz je Host klären.
+- CI: GitHub Actions, Forgejo/Gitea Actions (weitgehend kompatibel), GitLab CI,
+  Woodpecker, Bitbucket Pipelines, Azure Pipelines — Template-Seite betroffen
+  (Pairing mit project-template).
+- Publishing-Hygiene: Basis-URLs und Hostnamen selbst gehosteter Server sind privat —
+  nur in der Personal-Config, nie im Repo oder in der lebenden Doku; Credentials
+  bleiben im Store der jeweiligen CLI.
+
+**Abhängigkeiten:** keine. F-024, F-025 und F-026 bauen auf der Host-Erkennung auf.
+
+**Noch zu analysieren:**
+- Welche Hosts in der ersten Ausbaustufe voll unterstützt werden (Vorschlag: GitHub,
+  Forgejo/Gitea, GitLab, „nur Git"), welche nur als „nur Git" laufen.
+- Liefert das Template mehrere CI-Varianten, oder wählt `new-project` je Host eine?
+- Lässt sich die Arbeit sinnvoll in Substeps schneiden (Profil + Erkennung → Skills je
+  Fähigkeit → Installer/Template)?
+
+### F-033 — Betrieb ohne Graphiti absichern
+
+**Status:** BACKLOG
+
+**Problem:** Graphiti ist in den Skills bereits weitgehend optional („ohne MCP still
+überspringen"), aber nie systematisch geprüft. Zudem geht Wissen, das sonst in den Graph
+gegangen wäre (Entscheidungen, gelöste Probleme, Lernprofil), ohne Graphiti ersatzlos
+verloren.
+
+**Idee:** Ein Audit stellt sicher, dass jeder Skill, der Installer und die Vorlagen ohne
+Graphiti vollständig laufen. Optional bekommt das Kit einen Ersatzweg für das Wissen,
+das sonst im Graph landet.
+
+**Lösungsskizze:**
+- Alle Graphiti-Stellen (Skills, globale Vorlage, Template-Block, README) auf harte
+  Kopplung prüfen — auch impliziten Text wie „erst den Graph fragen".
+- Ersatz prüfen: Claude-Code-Auto-Memory oder eine Datei unter `private/` — oder
+  bewusst kein Ersatz, dann dokumentiert.
+- Lernprofil von `teach-step` gesondert betrachten — es lebt heute nur im Graph.
+
+**Abhängigkeiten:** keine. Thematische Nähe zu F-029/F-030 (Graphiti) und F-032
+(gleicher Grundsatz: optionale Infrastruktur wird ausgewiesen übersprungen).
+
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-032
+next-feature: F-034
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -377,7 +421,7 @@ F-019 Pflege-Skill go-public (Projekt nachträglich public-ready) (DONE)
 F-020 Sprach-Matrix: granulare Sprachwahl je Projekt (DONE)
 F-021 update-conventions: Vollabdeckung aller Template-Dokumente (inkl. seed) (DONE)
 F-022 Begleithandlungen beim Fragment-Einbau (DONE)
-F-023 new-project ohne GitHub (lokaler Bootstrap-Pfad)
+F-023 new-project ohne GitHub (lokaler Bootstrap-Pfad) (→ aufgegangen in F-032)
 F-024 Commit-Adresse aus der Personal-Config statt hart aus gh
 F-025 install.sh: fehlender gh-Login und Plattform-Abdeckung
 F-026 Template-Auflösung: Aktualität, Herkunft und Klontiefe
@@ -386,4 +430,6 @@ F-028 Utility-Skill handoff (DONE)
 F-029 Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren
 F-030 Graphiti-Episodenverlust erkennen und wiederherstellbar halten
 F-031 mise.lock mit Plattform-Einträgen erzeugen (CI im --locked-Modus)
+F-032 Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git)
+F-033 Betrieb ohne Graphiti absichern
 -->
