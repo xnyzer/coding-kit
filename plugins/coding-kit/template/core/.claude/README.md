@@ -43,8 +43,9 @@ The registry of deliberate project-local deviations from template conventions.
 
 ## template-version
 
-Stamped by `/new-project`; records which template `VERSION` this project was instantiated
-from. `/update-conventions` uses it to compute pending updates. Do not edit by hand.
+Stamped by `/new-project`; records the coding-kit version (template and skills share it)
+this project was instantiated from or last synced to. `/update-conventions` uses it to
+compute pending updates. Do not edit by hand.
 
 ## skills/
 

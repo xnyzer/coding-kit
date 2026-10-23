@@ -62,6 +62,9 @@ hier eine Version.
 - `HOW-TO-CODE-WITH-CLAUDE.md` (managed): `/step-done` verbucht die PROGRESS erst nach
   einer Vorschau und einer Freigabe zusammen mit der Commit-Message; `/add-feature` darf
   auch Claude starten, eingetragen wird erst nach OK (Nachzug zu Plugin 0.20.0).
+- `.claude/README.md` (managed): Der Abschnitt `template-version` beschreibt den Stempel
+  jetzt als coding-kit-Version (Template und Skills teilen sie) statt als eigene
+  Template-`VERSION`.
 
 ## Eingefroren: coding-kit-Plugin bis 0.20.0
 

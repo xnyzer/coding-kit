@@ -24,7 +24,7 @@ freigegebene Text).
 
 - `docs/skill-authoring.md` vollständig lesen — immer, auch bei kleinen Änderungen
   (Frontmatter, Sprache und Publishing-Hygiene gelten auch repo-lokal).
-- Die Projekt-CLAUDE.md ist im Kontext; relevant: Sync-Invariante, Sprachgrenze,
+- Die Projekt-CLAUDE.md ist im Kontext; relevant: Versionsregel, Sprachgrenze,
   Publishing-Hygiene, Freigabe-Regel für die PROGRESS.
 - `PROGRESS.md` prüfen: Läuft die Arbeit schon als F-Nummer? Wenn nicht, **vor dem
   Bauen** über `/coding-kit:add-feature` anlegen — Entwurf zeigen, Eintrag erst nach
@@ -68,18 +68,19 @@ Auftrag schon klar ist:
 
 **Plugin-Skill:**
 
-- [ ] `plugins/coding-kit/.claude-plugin/plugin.json`: Version bumpen (semver —
-      neuer Skill: minor; reine Textkorrektur: patch) **und** die Skill-Aufzählung
-      in der `description` aktualisieren.
-- [ ] `CHANGELOG.md`: Eintrag unter der neuen Version (Sync-Invariante: gleicher
-      Commit wie die Skill-Änderung).
+- [ ] `plugins/coding-kit/.claude-plugin/plugin.json`: Version über den gepushten
+      Stand heben (semver — neuer Skill: minor; reine Textkorrektur: patch; ist sie seit
+      dem letzten Push schon angehoben, bleibt sie) **und** die Skill-Aufzählung in der
+      `description` aktualisieren.
+- [ ] `plugins/coding-kit/CHANGELOG.md`: Eintrag unter dieser Version (Versionsregel —
+      `just version-rule` prüft sie vor jedem Commit).
 - [ ] `README.md`: Tabellenzeile für `/coding-kit:<name>` anlegen/anpassen **und**
       betroffene Prosa prüfen (z. B. der Zyklus-Satz, die Struktur-Übersicht).
 - [ ] Gehört der neue/geänderte Skill zum Projekt-Alltag (Dev-Loop) oder zur
-      Projekt-Pflege: die Skill-Übersicht in project-templates
-      `core/HOW-TO-CODE-WITH-CLAUDE.md` muss nachziehen. **project-template ist bis
-      zur Zusammenlegung (F-039) eingefroren** — den Nachzug daher nicht im Template
-      ändern, sondern im F-039-Eintrag der `PROGRESS.md` vermerken (Freigabe-Gate).
+      Projekt-Pflege: die Skill-Übersicht in
+      `plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md` **im selben Commit**
+      nachziehen (Template-Inhalt, englisch) und im CHANGELOG-Eintrag unter
+      `### Template` nennen — so kommt sie per `/update-conventions` in die Projekte.
       Rein kit-interne Skills (wie add-skill selbst) bleiben draußen.
 - [ ] Entstand ein neues, wiederverwendbares Muster: `docs/skill-authoring.md`
       ergänzen.
@@ -95,11 +96,13 @@ Auftrag schon klar ist:
 ## 4. Verifizieren
 
 - `just check` muss grün sein (validiert JSON/YAML und Privacy-Regeln im ganzen Repo,
-  Frontmatter der Plugin-Skills).
-- Lokal testen — Plugin: `/reload-plugins` in einer laufenden Session bzw.
-  `claude plugin details coding-kit@xnyzer`; frisch installierte Skills sind ggf.
-  erst nach Session-Neustart sichtbar. Repo-lokal: Der Skill erscheint in der
-  laufenden Session in der Skill-Liste, sonst nach Session-Neustart.
+  Frontmatter der Plugin-Skills und den Vertrag zwischen Skills und Template).
+- Lokal testen — Plugin: Die laufende Session nutzt das installierte Plugin; den
+  Arbeitsstand testet `claude --plugin-dir plugins/coding-kit` (dort holt
+  `/reload-plugins` weitere Änderungen nach). `claude plugin details coding-kit@xnyzer`
+  zeigt das Inventar; frisch installierte Skills sind ggf. erst nach Session-Neustart
+  sichtbar. Repo-lokal: Der Skill erscheint in der laufenden Session in der
+  Skill-Liste, sonst nach Session-Neustart.
 
 ## 5. Abschließen — PROGRESS und ARCHIVE gehören dazu
 

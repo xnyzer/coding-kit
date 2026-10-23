@@ -15,8 +15,8 @@ wird.
 
 ## Projekte anbinden
 
-In der `renovate.json` des Projekts (macht `/new-project` bzw. das project-template
-automatisch):
+In der `renovate.json` des Projekts (legt `/new-project` aus dem Template automatisch
+an):
 
 ```json
 {
@@ -38,16 +38,16 @@ bleibt die `renovate.json` wirkungslos (aber harmlos).
 
 ## Dogfooding
 
-Beide Kit-Repos nutzen das Preset selbst:
-
-- `coding-kit/renovate.json` → extendet `github>xnyzer/coding-kit` (dieses Repo).
-- `project-template/renovate.json` (Repo-Root) → extendet dasselbe Preset.
-
-Damit bekommen auch die im Kit/Template gepinnten Action-SHAs und mise-Tools automatisch
-Update-PRs.
+Das Kit nutzt das Preset selbst: `renovate.json` im Repo-Root extendet
+`github>xnyzer/coding-kit` (dieses Repo). Damit bekommen die gepinnten Action-SHAs und
+mise-Tools automatisch Update-PRs — auch die im Template unter
+`plugins/coding-kit/template/`. Ein PR, der dort Pins ändert, ist Plugin-Inhalt: die CI
+(Versionsregel) bleibt rot, bis die Version angehoben und der CHANGELOG-Eintrag mit
+Abschnitt `### Template` ergänzt ist — so kommt die neue Pin-Fassung auch über
+`/update-conventions` in die Projekte.
 
 ## Preset ändern
 
 Änderungen an `default.json` wirken auf **alle** angebundenen Projekte beim nächsten
 Renovate-Lauf. Deshalb: Änderungen klein halten, in der Commit-Message begründen und im
-`CHANGELOG.md` festhalten.
+CHANGELOG (`plugins/coding-kit/CHANGELOG.md`, beim nächsten Release) festhalten.

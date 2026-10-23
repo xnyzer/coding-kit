@@ -5,18 +5,49 @@ and documented; contributions that fit them are welcome.
 
 ## What this repo is
 
-A Claude Code plugin (`plugins/coding-kit/`), the marketplace that serves it
+A Claude Code plugin (`plugins/coding-kit/`) with its skills, a stop hook and the project
+template (`plugins/coding-kit/template/`), the marketplace that serves it
 (`.claude-plugin/marketplace.json`), a shareable Renovate preset (`default.json`), and a
 new-machine installer (`install.sh`). Kit documentation and skill texts are **German** by
-design; governance docs, commit messages, and anything that acts inside downstream
-projects are English.
+design; template content, governance docs, commit messages, and anything that acts inside
+downstream projects are English.
 
-## The versioning invariant (binding)
+## The versioning rule (binding)
 
-Every content change to the plugin (skills, hooks) requires, in the same commit:
+Skills, hooks and template share one version. Every content change to any of them
+requires:
 
-1. a version bump in `plugins/coding-kit/.claude-plugin/plugin.json` (semver),
-2. a `CHANGELOG.md` entry.
+1. a version in `plugins/coding-kit/.claude-plugin/plugin.json` above the pushed state
+   (semver; several commits may share one unreleased version),
+2. an entry for that version in `plugins/coding-kit/CHANGELOG.md` — with a
+   `### Template` section when template content changed, because `/update-conventions`
+   shows exactly that section to downstream projects,
+3. a `MANIFEST.md` update in the same commit if template files were added, removed, or
+   re-policied; a target that leaves the core-managed table gets a row in
+   `## Removed and renamed targets`.
+
+`just version-rule` checks this before every commit and in CI.
+
+## Where conventions originate
+
+Conventions always originate **here in the template** and flow exclusively downward
+(template → project) via `/new-project` and `/update-conventions`. Improvements discovered
+in an instantiated project are contributed as a manually initiated adoption proposal — a
+session in this repository, or an issue — never as an automatic write from a project.
+
+## Rules for template content
+
+Read `plugins/coding-kit/template/MANIFEST.md` before changing template content — it is
+the contract with the skills, and `just check` verifies it mechanically.
+
+- English only, free of personal data: no real names (people, customers, or concrete
+  downstream projects), private emails, absolute local paths, IPs, hostnames. Identity is
+  parameterised (`{{OWNER}}`, …) or resolved at runtime.
+- Only registered placeholders (MANIFEST § Placeholders); `just check` enforces the
+  registry.
+- No static tool-version claims in prose — write "current LTS", not a number. Technical
+  pins (action SHAs, mise tools) are exact; Renovate keeps them fresh, and a pin change
+  under `template/` is a content change like any other (see the versioning rule).
 
 ## Rules for skills and hooks
 
@@ -27,6 +58,9 @@ Read `docs/skill-authoring.md` before changing anything under `plugins/`. In sho
 - No static tool-version claims in prose; technical pins are kept fresh by Renovate.
 - Skills must stay stack-agnostic (standard `just` recipes only) and must not hardcode
   any project's state.
+- Skills read the template only via `${CLAUDE_PLUGIN_ROOT}/template`. A session in this
+  repository runs the installed plugin; test changes with
+  `claude --plugin-dir plugins/coding-kit`.
 
 ## License of contributions
 
@@ -44,8 +78,8 @@ contribution you agree that it is licensed under the same terms (inbound = outbo
 ## Secrets policy
 
 Never commit secrets, tokens, private keys, private email addresses, or deployment
-internals. `lefthook` runs gitleaks plus the kit validator before every commit
-(`just setup` installs the hooks).
+internals. `lefthook` runs gitleaks, the validator and the versioning rule before every
+commit (`just setup` installs the hooks).
 
 ## Pull requests
 

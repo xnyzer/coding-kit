@@ -16,6 +16,68 @@ zusammen:
 
 ---
 
+## F-039d — Repo-Doku und Regeln (2026-10-23)
+
+Teil von F-039 (Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0;
+F-039e folgt).
+
+**Problem:** Regeln und Doku des Kits beschrieben noch zwei Repos — das Template als
+Schwester-Repo, die Sync-Invariante nur für Skills und Hooks, die Einfrier-Regel für
+project-template, die README mit Template-Klon und `CODING_KIT_TEMPLATE_REPO`.
+
+**Was entstanden ist (repo-lokal plus eine Template-Datei):**
+
+- **`CLAUDE.md`:** Überblick und Strukturregel für das Template im Plugin (Zugriff nur
+  über `${CLAUDE_PLUGIN_ROOT}/template`, MANIFEST als geprüfter Vertrag); Sprachgrenze
+  nennt `template/**` und den CHANGELOG; Publishing-Hygiene um „Downstream-Projekte nie
+  beim Namen nennen", registrierte Platzhalter und die Blocklist ergänzt; Versionsregel
+  statt Sync-Invariante (Template, `### Template`, MANIFEST-Pflege, `just version-rule`);
+  Nummern-Regel für `TPL-NNN`; Graphiti-Hinweis auf die alte group_id
+  `project-template`; Test mit `--plugin-dir`; Einfrier-Regel entfernt.
+- **`README.md`:** Einleitung (ein Scaffolding-System, Template im Plugin seit 1.0.0);
+  „Ohne GitHub" ohne Template-Klon — statt `cp -r project-template` ein leerer Ordner
+  mit `git init`; Skill-Tabelle (`new-project` befüllt ein leeres Repo,
+  `update-conventions` mit Update-Fenster, `choose-stack` braucht kein GitHub mehr);
+  Personal-Config ohne `CODING_KIT_TEMPLATE_REPO`; Repo-Baum mit `template/`, CHANGELOG,
+  `scripts/version-rule.py` und PROGRESS; Pflege-Abschnitt mit Versionsregel und
+  `--plugin-dir`.
+- **`CONTRIBUTING.md`:** Versionsregel für Skills, Hooks und Template; „Where
+  conventions originate" und „Rules for template content" aus der CONTRIBUTING des
+  Templates übernommen; Template-Zugriff und Test für Skills.
+- **`docs/skill-authoring.md`:** Muster „Template nur über
+  `${CLAUDE_PLUGIN_ROOT}/template`, die Variable wird nur im Skill-Text ersetzt";
+  Template-Inhalt englisch; Versionsregel; Test mit `--plugin-dir` und
+  `/reload-plugins`.
+- **`docs/renovate-preset.md`:** Dogfooding ohne Template-Repo; Renovate-PRs an
+  Template-Pins brauchen Versions-Bump und `### Template`; CHANGELOG-Pfad.
+- **`add-skill`:** Schritt 3 zieht die HOW-TO im selben Commit nach und nennt sie unter
+  `### Template` (statt Vermerk in F-039); CHANGELOG-Pfad und Versionsregel; Schritt 4
+  testet mit `--plugin-dir`.
+- **`marketplace.json`:** Beschreibungen nennen Template, `/new-project` und
+  `/update-conventions`.
+- **Template `core/.claude/README.md`:** Der Abschnitt `template-version` nennt den
+  Stempel jetzt coding-kit-Version (CHANGELOG 1.0.0 unter `### Template`).
+
+**Verifikation:** `just check` grün; interne Links und Anker der geänderten Doku geprüft
+(keine toten); grep: außer Historie, Archiv, eingefrorenem CHANGELOG und Plan-Einträgen
+nennt nichts project-template als Quelle; gitleaks ohne Fund.
+
+**Notable decisions:**
+- Die Template-Datei `core/.claude/README.md` in diesem Schritt korrigiert — direkte
+  Folge der Stempel-Änderung aus F-039c, deshalb kein eigener Eintrag.
+- „Downstream-Projekte nie beim Namen nennen" aus der Template-CLAUDE.md ins Kit
+  übernommen — genau das hatte der Blocklist-Fund in F-039a gezeigt.
+- In F-039c liefen die Skill-Änderungen ohne `/add-skill`; die Checkliste wurde hier
+  nachträglich geprüft, offen waren nur README-Zeilen und das Authoring-Muster —
+  beides erledigt.
+
+**Geänderte Dateien:** `CLAUDE.md`, `README.md`, `CONTRIBUTING.md`,
+`docs/skill-authoring.md`, `docs/renovate-preset.md`, `.claude/skills/add-skill/SKILL.md`,
+`.claude-plugin/marketplace.json`, `plugins/coding-kit/template/core/.claude/README.md`,
+`plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-039c — Skills und Vertrag auf das gebündelte Template (2026-10-23)
 
 Teil von F-039 (Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0;

@@ -1,14 +1,14 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "xnyzer",
-  "description": "Persönlicher Claude-Code-Marketplace von xnyzer. Enthält das coding-kit-Plugin: generische Workflow-Skills, Stop-Hook und Renovate-Preset für alle Projekte.",
+  "description": "Persönlicher Claude-Code-Marketplace von xnyzer. Enthält das coding-kit-Plugin: Projekt-Template, Workflow-Skills und Stop-Hook; das Renovate-Preset für alle Projekte liegt im selben Repo.",
   "owner": {
     "name": "xnyzer"
   },
   "plugins": [
     {
       "name": "coding-kit",
-      "description": "Generische Workflow-Skills (add-feature, prep-step, step-done, audit-code) plus projekterkennender Stop-Hook. Stack-agnostisch über just-Rezepte; Projektspezifika kommen aus der Projekt-CLAUDE.md.",
+      "description": "Projekt-Scaffolding und Workflow-Skills: /new-project baut Repos aus dem mitgelieferten Template (Core, Stack-Module, Standards-Fragmente), /update-conventions hält sie aktuell; dazu add-feature, prep-step, build-step, step-done, audit-code u. a. und ein projekterkennender Stop-Hook. Stack-agnostisch über just-Rezepte; Projektspezifika kommen aus der Projekt-CLAUDE.md.",
       "author": {
         "name": "xnyzer"
       },

@@ -18,6 +18,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-039a | Import und Grundgerüst → **project-template-Historie (37 Commits, bis 0.16.0) unter `plugins/coding-kit/template/` importiert (Template-Nummern als `TPL-NNN`), Repo-eigenes entfernt; CHANGELOG unter dem Plugin mit eingefrorenen Abschnitten; Validator prüft das Template (Registry aus dem MANIFEST, Blocklist repo-weit); Versionsregel vor jedem Commit und in der CI; Version 1.0.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 | F-039b | Dokumente zusammenführen → **ein Archiv für beide Reihen (55 Einträge, Template als `TPL-NNN`, neueste oben, Kopf erklärt das Schema); Done-Tabelle neu ab 1.0.0; offene Einträge auf ein Repo umgeschrieben, F-026 in F-039/F-032 aufgegangen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 | F-039c | Skills und Vertrag auf das gebündelte Template → **Template-Auflösung über `${CLAUDE_PLUGIN_ROOT}/template` (kein Klon, Checkout oder Override); new-project baut ein leeres Repo und stempelt die Plugin-Version; update-conventions mit Update-Fenster aus `### Template` und der MANIFEST-Tabelle für entfernte/umbenannte Ziele; Vertragsprüfungen im Validator; HOW-TO-Nachzug aus F-038a; toter `security-tool`-Verweis entfernt.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
+| F-039d | Repo-Doku und Regeln → **CLAUDE.md, README, CONTRIBUTING, Authoring- und Renovate-Doku auf ein Repo umgestellt (Template im Plugin, Versionsregel inkl. Template, Test mit `--plugin-dir`, TPL-Nummern, Einfrier-Regel entfernt); `add-skill` zieht die HOW-TO im selben Commit nach; Marketplace-Beschreibung; Stempel-Satz im Template-`.claude/README.md` korrigiert.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 
 ---
 
@@ -98,30 +99,6 @@ wird danach archiviert.
 
 **Abhängigkeiten:** F-038 (erledigt). Ersetzt F-035. Vor F-036 umsetzen. Nimmt F-026 auf
 und die Template-Teile von F-032 weitgehend vorweg.
-
-#### F-039d — Repo-Doku und Regeln
-
-**Was:** `CLAUDE.md`: `template/**` Englisch, Versionsregel inkl. Template und
-MANIFEST-Tabelle, TPL-Schema, Einfrier-Regel entfernt, Graphiti-Hinweis (Template-Wissen
-bis 0.16.0 unter group_id `project-template`). README: Repo-Baum, „Ohne GitHub" ohne
-Template-Klon (statt `cp -r project-template`: leerer Ordner + `git init`),
-Personal-Config ohne `CODING_KIT_TEMPLATE_REPO`, Skill-Tabelle. CONTRIBUTING:
-Template-Regeln aus der CONTRIBUTING des Templates. `docs/skill-authoring.md`:
-Template-Pfade nur als `${CLAUDE_PLUGIN_ROOT}/template` im Skill-Text (in Shell-Befehlen
-nicht als Variable verfügbar), Test mit `--plugin-dir`. `docs/renovate-preset.md`.
-`add-skill` Schritt 3: HOW-TO-Änderung im selben Commit. Beschreibung in
-`marketplace.json`.
-
-**Dateien:** `CLAUDE.md`, `README.md`, `CONTRIBUTING.md`, `docs/skill-authoring.md`,
-`docs/renovate-preset.md`, `.claude/skills/add-skill/SKILL.md`,
-`.claude-plugin/marketplace.json`.
-
-**Abhängigkeiten:** F-039c.
-
-**Abnahmekriterien:**
-- [ ] Außer in Historie, Archiv und eingefrorenem CHANGELOG verweist nichts mehr auf
-      project-template als Quelle (grep).
-- [ ] `just check` grün.
 
 #### F-039e — Test, Release, Gegenprobe
 

@@ -8,8 +8,16 @@ prüfen, dann bauen.
 - Ein Skill = ein Ordner: `plugins/coding-kit/skills/<skill-name>/SKILL.md`.
 - `<skill-name>` ist lowercase-kebab und identisch mit dem `name:`-Frontmatter-Feld.
 - Plugin-Skills sind immer namespaced sichtbar: `/coding-kit:<skill-name>`.
-- Hilfsdateien (Templates, Scripts) liegen im Skill-Ordner; Scripts referenzieren nur
+- Hilfsdateien (Vorlagen, Scripts) liegen im Skill-Ordner; Scripts referenzieren nur
   relative Pfade bzw. `${CLAUDE_PLUGIN_ROOT}`.
+- **Das Projekt-Template** liegt im Plugin unter `template/` (`MANIFEST.md`, `core/`,
+  `modules/`). Skills nennen es immer als `${CLAUDE_PLUGIN_ROOT}/template/…` — nie einen
+  Checkout, Klon oder absoluten Pfad. Claude Code ersetzt `${CLAUDE_PLUGIN_ROOT}` beim
+  Laden **im Skill-Text**; als Umgebungsvariable in Shell-Befehlen gibt es sie nicht,
+  dort den aufgelösten Pfad verwenden. Gemeinsame Auflösung: `/choose-stack` § 0, andere
+  Skills verweisen darauf. `just check` prüft, dass jeder genannte
+  `${CLAUDE_PLUGIN_ROOT}/…`-Pfad existiert und Formatangaben, Marker und Optional-Blöcke
+  zum MANIFEST passen.
 
 ## Frontmatter
 
@@ -33,10 +41,11 @@ formulieren, Trigger-Situationen nennen.
 ## Sprache
 
 - **Skill-Texte, Doku, README: Deutsch** (das Kit ist primär für den Eigenbedarf).
-- **Englisch ist ausschließlich, was in Projekte gelangt oder dort wirkt:** Commit-
-  Messages, die der Skill vorschlägt; Texte, die der Stop-Hook in beliebigen Projekten
-  ausgibt; Inhalte, die in Projektdateien geschrieben werden (dort gilt die Sprache der
-  lebenden Doku des Projekts).
+- **Englisch ist ausschließlich, was in Projekte gelangt oder dort wirkt:** der
+  Template-Inhalt (`template/**`, inkl. MANIFEST); Commit-Messages, die der Skill
+  vorschlägt; Texte, die der Stop-Hook in beliebigen Projekten ausgibt; Inhalte, die in
+  Projektdateien geschrieben werden (dort gilt die Sprache der lebenden Doku des
+  Projekts).
 
 ## Harte Verbote (Publishing-Hygiene — das Repo ist public)
 
@@ -91,11 +100,18 @@ formulieren, Trigger-Situationen nennen.
 
 ## Versionierung & Test
 
-- Jede inhaltliche Änderung am Plugin (Skills, Hooks): **Version in
-  `plugins/coding-kit/.claude-plugin/plugin.json` bumpen** (semver) und einen Eintrag in
-  `CHANGELOG.md` schreiben — im selben Commit.
-- Lokal testen: `/reload-plugins` in einer laufenden Session bzw.
-  `claude plugin details coding-kit@xnyzer` für das Komponenten-Inventar; frisch
-  installierte Skills sind ggf. erst nach Session-Neustart sichtbar.
-- `just check` validiert JSON/YAML-Syntax, Frontmatter-Pflichtfelder und Privacy-Regeln —
-  muss vor jedem Commit grün sein.
+- Jede inhaltliche Änderung am Plugin (Skills, Hooks, Template): **Version in
+  `plugins/coding-kit/.claude-plugin/plugin.json` über den gepushten Stand heben**
+  (semver) und einen Eintrag in `plugins/coding-kit/CHANGELOG.md` schreiben; mehrere
+  Commits dürfen sich eine unveröffentlichte Version teilen. Ändert sich Template-Inhalt,
+  gehört er in den Abschnitt `### Template` des Eintrags. `just version-rule` prüft das
+  vor jedem Commit und in der CI.
+- Lokal testen: Eine Session im Kit-Repo läuft mit dem **installierten** Plugin. Neue
+  Skill-Texte und Template-Inhalte testet man mit `claude --plugin-dir plugins/coding-kit`
+  — die Kopie ersetzt das installierte Plugin für diese Session, und Skills wie Template
+  kommen aus dem Arbeitsstand; weitere Änderungen holt `/reload-plugins` in die laufende
+  Session. `claude plugin details coding-kit@xnyzer` zeigt das
+  Komponenten-Inventar; frisch installierte Skills sind ggf. erst nach Session-Neustart
+  sichtbar.
+- `just check` validiert JSON/YAML-Syntax, Frontmatter-Pflichtfelder, Privacy-Regeln und
+  den Vertrag zwischen Skills und Template — muss vor jedem Commit grün sein.
