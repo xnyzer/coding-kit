@@ -57,6 +57,12 @@ hier eine Version.
   CHANGELOG-Eintrag dafür zu — vor jedem Commit und in der CI. Verlässt ein Ziel die
   Core-Tabelle, verlangt sie eine Zeile in `## Removed and renamed targets`.
 
+- **Nach dem Release:** project-template ist archiviert (nur lesbar, die README verweist
+  hierher); die Template-Einstellung bleibt, damit die „generated from"-Labels bestehender
+  Projekte gültig bleiben. Plugins unter 1.0.0 lesen es weiter; ob GitHub aus dem
+  archivierten Repo noch neue Repos erzeugt, ist nicht ausprobiert — das hätte ein Repo
+  angelegt.
+
 ### Template
 
 - `HOW-TO-CODE-WITH-CLAUDE.md` (managed): `/step-done` verbucht die PROGRESS erst nach

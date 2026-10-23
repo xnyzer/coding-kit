@@ -16,6 +16,66 @@ zusammen:
 
 ---
 
+## F-039e — Test, Release, Gegenprobe (2026-10-24)
+
+Schließt F-039 ab (Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0;
+F-039a–d siehe darunter).
+
+**Problem:** Die Umstellung war gebaut, aber weder im echten Betrieb getestet noch
+veröffentlicht; project-template lief parallel weiter.
+
+**Was entstanden ist (Release 1.0.0):**
+
+- **Lokaler Test:** `update-conventions` ohne Schreibrechte (`claude -p --plugin-dir …
+  --permission-mode plan`) an der Kopie eines docs-only-Projekts mit Stempel 0.13.2:
+  Template aus dem Plugin, Version 1.0.0, Update-Fenster 0.13.3–0.16.0 aus dem
+  eingefrorenen Abschnitt plus 1.0.0 `### Template`, Schritt 8 leer, Ziel-Stempel 1.0.0;
+  keine Freigabe-Abfrage blockierte das Lesen des Templates außerhalb des Projekts. Der
+  `new-project`-Trockenlauf aus F-039c galt weiter.
+- **Funde aus dem Test:** kein Zusammenführen von Projektzusätzen in managed Dateien, nie
+  eingetragene Abweichungen — als F-041 aufgenommen und nach einem unabhängigen
+  Design-Review auf einen Drei-Wege-Merge mit Basis-Snapshot umgeplant (nach 1.0.0, als
+  1.1.0); dazu: `update-conventions` ohne Argument nur für das aktuelle Projekt.
+- **Release:** CHANGELOG datiert (`b09549f`), Push von 45 Commits nach Personendaten-,
+  gitleaks- und Versionsregel-Prüfung; CI grün (Validator und Versionsregel); Plugin beim
+  Nutzer auf 1.0.0 aktualisiert, der Cache enthält alle 78 Template-Dateien identisch zum
+  Repo.
+- **Gegenprobe:** `/update-conventions` am echten docs-only-Projekt: CODING-STANDARDS,
+  HOW-TO und `.claude/README.md` übernommen, drei Projektdateien einmalig gelassen (bis
+  F-041), Stempel 1.0.0, `just check` grün. Im Projekt zusätzlich die Override-Zeile ohne
+  `private/README.md` (die Datei ist identisch mit dem Template, die Ausnahme steht in der
+  Projekt-CLAUDE.md).
+- **project-template:** README-Hinweis auf coding-kit gepusht, Repo archiviert
+  (Template-Einstellung bleibt, die „generated from"-Labels bestehender Projekte bleiben
+  gültig), lokaler Checkout entfernt; im CHANGELOG vermerkt.
+
+**F-039 im Ganzen (a–e):** Template-Historie importiert (`TPL-NNN`), Dokumente
+zusammengeführt, Skills lesen das Template aus `${CLAUDE_PLUGIN_ROOT}/template`, der
+Vertrag zwischen Skills und Template wird mechanisch geprüft, die Versionsregel läuft vor
+jedem Commit und in der CI, eine Version für alles ab 1.0.0. Entscheidungen der Planung:
+Repo bleibt `coding-kit` (Marketplace und Renovate-Preset hängen am Namen); kein Override
+für die Template-Arbeit, sondern `claude --plugin-dir`; Stempel-Auflösung über die
+MANIFEST-Tabelle statt Git-Historie; `template/VERSION` entfällt; CHANGELOG ab 1.0.0
+deutsch mit `### Template`, darunter beide alten Reihen eingefroren.
+
+**Verifikation:** CI-Lauf auf `b09549f` grün; Cache-Ordner 1.0.0 mit `template/`
+(78 Dateien) identisch zum Repo; Gegenprobe-Projekt auf 1.0.0 mit grünem `just check`;
+GitHub-API: project-template `archived: true`, `is_template: true`.
+
+**Notable decisions:**
+- 1.0.0 vor F-041 freigegeben — F-041 wurde groß (Merge-Skript, Renderer,
+  `manifest-format: 2`, Migration) und hätte 45 ungepushte Commits tagelang lokal
+  gehalten (Entscheidung des Nutzers).
+- Kein echter `--template`-Versuch am archivierten Repo, weil er ein Repo angelegt hätte;
+  betrifft nur Plugins unter 1.0.0.
+- project-template nur archiviert, nicht gelöscht.
+
+**Geänderte Dateien:** `plugins/coding-kit/CHANGELOG.md` (Release-Datum, Archiv-Vermerk),
+`PROGRESS.md`, `PROGRESS-ARCHIVE.md`; außerhalb des Repos: README im project-template-Repo,
+Override-Zeile im Gegenprobe-Projekt.
+
+---
+
 ## F-039d — Repo-Doku und Regeln (2026-10-23)
 
 Teil von F-039 (Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0;
