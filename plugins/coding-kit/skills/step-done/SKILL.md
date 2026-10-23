@@ -1,6 +1,6 @@
 ---
 name: step-done
-description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS, Checks über just, Standards-Abdeckungs-Backstop (neu eingeführte Frameworks ohne Fragment), Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Pflege, Graphiti-Update und Commit-Vorbereitung.
+description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS, Checks über just, Standards-Abdeckungs-Backstop (neu eingeführte Frameworks ohne Fragment), Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Verbuchung und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), Graphiti-Update.
 disable-model-invocation: false
 ---
 
@@ -94,9 +94,15 @@ GitHub-noreply-Adressen). Befunde **vor** dem Commit-Vorschlag beheben: Inhalt n
 `private/` verschieben **oder** neutral umformulieren (generische Platzhalter) — im
 Zweifel den Nutzer fragen, welche Variante er will.
 
-## 4. PROGRESS.md + PROGRESS-ARCHIVE.md
+## 4. PROGRESS-Verbuchung vorbereiten (Vorschau)
 
-In der Sprache der lebenden Doku (siehe Schritt 0):
+**Freigabe-Gate:** Jeder neue oder geänderte Eintrag in `PROGRESS.md`,
+`PROGRESS-ARCHIVE.md` oder im FEATURE-INDEX wird zuerst als Vorschau gezeigt und erst
+nach ausdrücklichem OK des Nutzers geschrieben (ausgenommen: genau der zuvor
+freigegebene Text). In diesem Schritt also **nur vorbereiten, noch nicht schreiben** —
+die Vorschau geht in Schritt 5 zusammen mit der Commit-Message an den Nutzer.
+
+Vorzubereiten, in der Sprache der lebenden Doku (siehe Schritt 0):
 
 - **PROGRESS-ARCHIVE.md:** Den kompletten Abschnitt der fertigen Aufgabe aus der
   `PROGRESS.md` übernehmen und ergänzen: welche Dateien tatsächlich entstanden/geändert,
@@ -104,34 +110,33 @@ In der Sprache der lebenden Doku (siehe Schritt 0):
 - **PROGRESS.md:** Detailabschnitt **entfernen** und eine Zeile in die Done-Tabelle:
   `| F-004a | Kurzbeschreibung | JJJJ-MM-TT |`
 - Bei komplett fertiger F-Nummer: Eintrag im `<!-- FEATURE-INDEX … -->` als `(DONE)`
-  markieren — ein `(PLANNED)`-Suffix wird ersetzt. **Direkt tun, ohne zu fragen.**
+  markieren — ein `(PLANNED)`-Suffix wird ersetzt.
 - Eine `**Status:**`-Zeile (BACKLOG/PLANNED) wandert nicht mit ins Archiv — beim
   Übernehmen entfernen; den Zustand „fertig" tragen Done-Tabelle und `(DONE)`-Marker.
 - **F-Nummern-Toleranz:** Alt-Formate lesen, aber alles Neue als F-NNN schreiben; fehlt
   der FEATURE-INDEX-Block, anlegen und bestehende Nummern unverändert übernehmen.
 
-## 5. Graphiti-Wissensgraph
+## 5. Freigabe, Verbuchung und Commit
 
-- `add_memory` mit der group_id aus der Projekt-CLAUDE.md aufrufen (falls verfügbar,
-  sonst still überspringen).
-- Beschreiben: was fertig wurde, welche Dateien/Komponenten, welche Config/Endpunkte/
-  Dependencies, welche Architektur-/Sicherheitsentscheidungen.
-
-## 6. Commit vorbereiten
-
-- **Nie automatisch committen!** Den Nutzer fragen und eine aussagekräftige
-  Conventional-Commits-Message vorschlagen — Prosa in der Commit-Sprache des Projekts
-  (Languages-Block; ohne Block englisch), Format-Tokens immer englisch.
+- **Eine Frage für beides:** die Vorschau aus Schritt 4 (Done-Zeile, Archiv-Eintrag,
+  Index-Marker) und eine aussagekräftige Conventional-Commits-Message zeigen — Prosa in
+  der Commit-Sprache des Projekts (Languages-Block; ohne Block englisch),
+  Format-Tokens immer englisch. Antwortmöglichkeiten: verbuchen und committen / nur
+  verbuchen / Änderungen am Text.
+- **Nach OK:** PROGRESS-Dateien schreiben, re-lesen, `just check` erneut, dann (falls
+  freigegeben) committen. **Nie automatisch committen** und nie ohne OK verbuchen.
 - **Ausnahme — autonomer Lauf:** Hat der Nutzer für den laufenden Lauf ausdrücklich
-  Commits freigegeben (z. B. beim Start von `/coding-kit:build-step … autonom`; die
-  Freigabe muss im Verlauf dokumentiert sein), committe nach grünen Checks und Scans
-  ohne erneute Nachfrage — **nie pushen, nie ältere Historie ändern.** Läuft ein
-  autonomer Lauf **ohne** solche Freigabe: Commit-Message als Vorschlag festhalten
-  und weiterarbeiten, nicht auf eine Antwort warten.
+  Verbuchen und Commits freigegeben (beim Start von `/coding-kit:build-step … autonom`;
+  die Freigabe muss im Verlauf dokumentiert sein), verbuche die geplanten Substeps und
+  committe nach grünen Checks und Scans ohne erneute Nachfrage — **nie pushen, nie
+  ältere Historie ändern.** Neue Einträge (z. B. eine unterwegs entdeckte Idee) fallen
+  nicht darunter: sie werden nur gesammelt und am Ende des Laufs vorgeschlagen. Läuft
+  ein autonomer Lauf **ohne** solche Freigabe: Verbuchung und Commit-Message als
+  Vorschlag festhalten und weiterarbeiten, nicht auf eine Antwort warten.
 - Im Body Designentscheidungen kurz begründen (`Decision: X over Y because …`); hat der
   Nutzer abgewogen: „User chose X over Y because …".
 
-### 6a. Commit-E-Mail prüfen (KRITISCH)
+### 5a. Commit-E-Mail prüfen (KRITISCH)
 
 Vor jedem `git commit` prüfen, dass die E-Mail eine **GitHub-noreply-Adresse** ist:
 
@@ -152,10 +157,20 @@ Erst dann committen. Nie `--author="…"` mit einer echten E-Mail verwenden. **W
 einem öffentlichen Repo darf keine private E-Mail in Commits landen — das wäre ein
 permanentes Datenleck; Aufräumen hieße `git filter-repo` + Force-Push.
 
-### 6b. Co-Authored-By
+### 5b. Co-Authored-By
 
 Der Commit-Body endet mit:
 
 ```
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
+
+## 6. Graphiti-Wissensgraph
+
+Erst nach der Verbuchung aus Schritt 5 — der Graph soll nur festhalten, was der Nutzer
+freigegeben hat.
+
+- `add_memory` mit der group_id aus der Projekt-CLAUDE.md aufrufen (falls verfügbar,
+  sonst still überspringen).
+- Beschreiben: was fertig wurde, welche Dateien/Komponenten, welche Config/Endpunkte/
+  Dependencies, welche Architektur-/Sicherheitsentscheidungen.

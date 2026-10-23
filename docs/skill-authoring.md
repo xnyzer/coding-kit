@@ -22,6 +22,11 @@ Pflicht: `name`, `description`. Relevant außerdem:
 | `disallowed-tools` | Wenn ein Skill bestimmte Tools nie braucht/nutzen darf. |
 | `default-enabled` | Nur setzen, wenn ein Skill opt-in sein soll. |
 
+Ohne `disable-model-invocation: true` darf Claude den Skill selbst starten. Der Skill-Text
+darf dem nicht widersprechen: nicht „der Nutzer hat …" oder „vorschlagen, den Skill
+aufzurufen" formulieren, wenn Claude ihn direkt starten soll — sonst hält das Modell ihn
+für nur manuell startbar.
+
 Die `description` entscheidet, wann das Modell den Skill von sich aus zieht — präzise
 formulieren, Trigger-Situationen nennen.
 
@@ -68,6 +73,19 @@ formulieren, Trigger-Situationen nennen.
   FEATURE-INDEX) → fertig = Done-Tabelle + `(DONE)` im Index (setzt step-done).
   Alt-Einträge ohne Status-Zeile tolerant lesen (Substeps vorhanden ≈ geplant) und
   die Zeile bei der nächsten Berührung nachziehen.
+- **Freigabe-Gate (jeder Skill, der in die PROGRESS schreibt):** an der Schreibstelle den
+  Standardsatz tragen — sinngemäß gleich in jedem Skill:
+
+  > **Freigabe-Gate:** Jeder neue oder geänderte Eintrag in `PROGRESS.md`,
+  > `PROGRESS-ARCHIVE.md` oder im FEATURE-INDEX wird zuerst als Vorschau gezeigt und erst
+  > nach ausdrücklichem OK des Nutzers geschrieben (ausgenommen: genau der zuvor
+  > freigegebene Text).
+
+  Der Satz steht im Skill selbst, nicht nur hier: diese Doku liegt nicht im Plugin-Cache,
+  Skills können sie zur Laufzeit nicht lesen. Fragen bündeln, wo es geht (step-done: eine
+  Frage für Verbuchung und Commit). Im autonomen `/goal`-Lauf deckt die beim Start
+  erteilte Lauf-Freigabe nur die Verbuchung der geplanten Substeps; neue Einträge werden
+  gesammelt und am Ende vorgeschlagen.
 - **Nie automatisch committen** — Commits werden vorbereitet und vorgeschlagen, der
   Nutzer entscheidet.
 

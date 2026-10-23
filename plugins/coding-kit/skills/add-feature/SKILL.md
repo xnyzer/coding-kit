@@ -1,13 +1,23 @@
 ---
 name: add-feature
-description: Neue Aufgabe auf die Roadmap setzen. Analysiert die Idee, prüft Überschneidungen mit der PROGRESS.md, formuliert sie aus und trägt sie nach Freigabe mit Status-Marker BACKLOG ein.
+description: Neue Aufgabe auf die Roadmap setzen. Analysiert die Idee, prüft Überschneidungen mit der PROGRESS.md, formuliert sie aus und trägt sie nach Freigabe mit Status-Marker BACKLOG ein. Startet der Nutzer per Slash-Command oder Claude selbst, wenn im Gespräch oder beim Bauen eine neue Aufgabe entsteht — eingetragen wird immer erst nach ausdrücklichem OK.
 disable-model-invocation: false
 ---
 
 # Aufgabe aufnehmen
 
-Der Nutzer hat eine Idee für eine neue Aufgabe: Feature, Refactoring, Audit, Doku — es wird
+Eine neue Aufgabe soll auf die Roadmap: Feature, Refactoring, Audit, Doku — es wird
 nicht unterschieden. Alles bekommt eine F-Nummer und landet im Backlog der `PROGRESS.md`.
+
+**Wer startet:** der Nutzer per `/coding-kit:add-feature` — oder Claude selbst, wenn im
+Gespräch oder beim Bauen (z. B. aus `/coding-kit:build-step` heraus) eine neue Aufgabe
+entsteht. Claude muss dafür nicht den Nutzer bitten, den Skill aufzurufen.
+
+**Freigabe-Gate:** Jeder neue oder geänderte Eintrag in `PROGRESS.md`,
+`PROGRESS-ARCHIVE.md` oder im FEATURE-INDEX wird zuerst als Vorschau gezeigt und erst nach
+ausdrücklichem OK des Nutzers geschrieben (ausgenommen: genau der zuvor freigegebene Text).
+Im autonomen Lauf ohne erreichbaren Nutzer wird nichts eingetragen — die Idee wird nur
+gesammelt und am Ende vorgeschlagen.
 
 Argument: Kurzbeschreibung der Aufgabe (z. B. „Rate-Limit-Middleware", „Export als CSV").
 

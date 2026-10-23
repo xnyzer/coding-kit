@@ -1,6 +1,6 @@
 ---
 name: build-step
-description: Vorbereitete Aufgabe (F-Nummer) diszipliniert umsetzen — liest den prep-step-Plan, arbeitet Substeps mit Verifikation je Schritt ab. Interaktiv endet jeder Substep mit einer step-done-Empfehlung (du prüfst und schließt selbst ab); nur im autonomen /goal-Lauf läuft step-done je Substep automatisch. Mit Argument „autonom" wird nicht gebaut, sondern ein /goal-Lauf vorbereitet (Regeln laden, Commit-Freigabe einholen, fertige Goal-Zeile ausgeben). Nur manuell per /coding-kit:build-step aufrufbar.
+description: Vorbereitete Aufgabe (F-Nummer) diszipliniert umsetzen — liest den prep-step-Plan, arbeitet Substeps mit Verifikation je Schritt ab. Interaktiv endet jeder Substep mit einer step-done-Empfehlung (du prüfst und schließt selbst ab); nur im autonomen /goal-Lauf läuft step-done je Substep automatisch. Mit Argument „autonom" wird nicht gebaut, sondern ein /goal-Lauf vorbereitet (Regeln laden, Freigabe für Verbuchen und Commits einholen, fertige Goal-Zeile ausgeben). Nur manuell per /coding-kit:build-step aufrufbar.
 disable-model-invocation: true
 ---
 
@@ -21,7 +21,13 @@ die oberste offene Aufgabe vorschlagen und bestätigen lassen.
 - **Plan-Treue:** Substeps und Abnahmekriterien aus der `PROGRESS.md` sind die
   verbindliche Checkliste; Häkchen erst, wenn das Kriterium per Tool-Ausgabe belegt ist.
 - **Scope-Schutz:** Entdeckungen unterwegs („das sollte man auch noch …") nicht still
-  mitbauen — notieren und via `/coding-kit:add-feature` als neue F-Nummer vorschlagen.
+  mitbauen. Interaktiv startest du `/coding-kit:add-feature` dafür selbst — der Skill
+  zeigt den Entwurf, eingetragen wird erst nach Freigabe des Nutzers. Im autonomen Lauf
+  nur sammeln (niemand kann den Eintrag freigeben) und im Abschluss vorschlagen.
+- **Freigabe-Gate:** Jeder neue oder geänderte Eintrag in `PROGRESS.md`,
+  `PROGRESS-ARCHIVE.md` oder im FEATURE-INDEX wird zuerst als Vorschau gezeigt und erst
+  nach ausdrücklichem OK des Nutzers geschrieben (ausgenommen: genau der zuvor
+  freigegebene Text).
 - **Nie pushen, nie ältere Historie ändern** (kein Amend/Rebase über den Lauf hinaus).
   Commits laufen ausschließlich über `/coding-kit:step-done` und dessen Regeln.
 - PROGRESS-Pflege ebenfalls nur via step-done — dieser Skill setzt um, er verbucht nicht.
@@ -38,8 +44,8 @@ Nach Kompaktierung oder Session-Neustart: (1) Projekt-CLAUDE.md und PROGRESS.md 
 lesen, (2) `git status` + `git diff` für den tatsächlichen Arbeitsstand — welche
 Substeps sind schon committet, was liegt im Working Tree?, (3) beim ersten
 unerledigten Substep weitermachen; erledigte Arbeit nicht wiederholen. Eine in diesem
-Lauf erteilte Commit-Freigabe gilt nach Recovery weiter, sofern sie im Verlauf
-dokumentiert ist — im Zweifel neu fragen.
+Lauf erteilte Freigabe für Verbuchen und Commits gilt nach Recovery weiter, sofern sie
+im Verlauf dokumentiert ist — im Zweifel neu fragen.
 
 ## 1. Plan laden
 
@@ -53,7 +59,7 @@ dokumentiert ist — im Zweifel neu fragen.
 
 ## 2. Umsetzung — je Substep
 
-**Modus erkennen:** Ein aktiver `/goal`-Lauf mit erteilter Commit-Freigabe = **autonom**;
+**Modus erkennen:** Ein aktiver `/goal`-Lauf mit erteilter Lauf-Freigabe = **autonom**;
 jede andere Nutzung = **interaktiv**. Der Modus steuert Schritt 5.
 
 1. Substep-Ziel und Abnahmekriterien kurz nennen.
@@ -79,9 +85,11 @@ erst, nachdem du den aktuellen Substep abgeschlossen hast.
 
 ## 3. Abschluss
 
-Kurzes Fazit: was gebaut wurde, Abweichungen vom Plan (mit Begründung), was als neue
-F-Nummer notiert wurde. Im autonomen Lauf markiert der letzte step-done-Lauf die
-Eltern-F-Nummer als DONE; interaktiv erledigst du das mit deinem abschließenden step-done.
+Kurzes Fazit: was gebaut wurde, Abweichungen vom Plan (mit Begründung), welche neuen
+Ideen aufgetaucht sind. Im autonomen Lauf hier die gesammelten Ideen als Vorschläge für
+`/coding-kit:add-feature` auflisten (eingetragen wird erst nach Freigabe) — der letzte
+step-done-Lauf hat die Eltern-F-Nummer bereits als DONE verbucht; interaktiv erledigst
+du das mit deinem abschließenden step-done.
 
 ## Autonomer Lauf (Argument „autonom")
 
@@ -95,10 +103,12 @@ Abschlussbedingung als erfüllt bewertet.
    mit bestätigtem Trust-Dialog und aktiven Hooks; für unbeaufsichtigte Läufe
    zusätzlich Auto-Modus bzw. ausreichende Tool-Permissions, sonst hält der Lauf am
    ersten Permission-Prompt an.
-3. **Commit-Freigabe einholen (M1, eine Frage):** „Darf ich in diesem Lauf nach jedem
-   grünen Substep committen? (Empfohlen: ja — Commits sind die Checkpoints des
-   Laufs.)" Antwort ausdrücklich festhalten. Die Freigabe gilt nur für diesen Lauf,
-   nur nach grünen Checks und Scans; Push und History-Rewrites bleiben immer tabu.
+3. **Freigabe für Verbuchen und Commits einholen (M1, eine Frage):** „Darf ich in diesem
+   Lauf nach jedem grünen Substep die PROGRESS verbuchen und committen? (Empfohlen: ja —
+   Commits sind die Checkpoints des Laufs.)" Antwort ausdrücklich festhalten. Die
+   Freigabe gilt nur für diesen Lauf, nur für die geplanten Substeps und nur nach
+   grünen Checks und Scans; neue PROGRESS-Einträge deckt sie nicht ab (die werden
+   gesammelt), Push und History-Rewrites bleiben immer tabu.
 4. **Goal-Zeile ausgeben** (kopierbar, Werte eingesetzt), Muster mit Freigabe:
 
    ```
@@ -107,10 +117,10 @@ Abschlussbedingung als erfüllt bewertet.
    nach N Turns.
    ```
 
-   Ohne Commit-Freigabe stattdessen: „… einzeln per step-done abgeschlossen,
-   Commit-Vorschläge liegen gesammelt vor, `just check` ist grün, nichts wurde
-   committet oder gepusht — oder stopp nach N Turns." Startwert für N: etwa fünf
-   Turns je Substep.
+   Ohne Freigabe stattdessen: „… einzeln per step-done abgeschlossen,
+   Verbuchungs- und Commit-Vorschläge liegen gesammelt vor, `just check` ist grün,
+   nichts wurde verbucht, committet oder gepusht — oder stopp nach N Turns."
+   Startwert für N: etwa fünf Turns je Substep.
 5. Dem Nutzer die Bedienung nennen: Goal-Zeile absenden startet den Lauf sofort;
    `/goal` ohne Argument zeigt Status (Turns, Tokens, letzte Evaluator-Begründung);
    `/goal clear` bricht ab. Hinweis: der Stop-Reminder-Hook des Kits meldet sich
@@ -121,5 +131,5 @@ Abschlussbedingung als erfüllt bewertet.
    Skills.
 
 Für Läufe ganz ohne offene Session (`claude -p`): Auftrag und Freigabe gehören in den
-Prompt, z. B. `claude -p "/coding-kit:build-step F-NNN autonom — Commit-Freigabe für
-diesen Lauf erteilt. Danach: /goal <Bedingung wie oben>"`.
+Prompt, z. B. `claude -p "/coding-kit:build-step F-NNN autonom — Freigabe für Verbuchen
+und Commits in diesem Lauf erteilt. Danach: /goal <Bedingung wie oben>"`.

@@ -36,6 +36,7 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-022 | Begleithandlungen beim Fragment-Einbau → **`/choose-stack` § Begleithandlungen als einzige Fundstelle (generisch, Fragment-Wissen bleibt im Template), von new-project/prep-step/step-done referenziert; entkoppelt von der Idempotenz-Regel; `update-conventions` prüft zusätzlich bei unverändertem Fragment-Text und erreicht damit als einziger Pfad Bestandsprojekte. Anlass/Pairing: project-template 0.13.1 (F-016), `nextjs`-Fragment (Plugin 0.18.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-08-11 |
 | F-028 | Utility-Skill handoff → **kopierfertiger Handoff-Prompt am Kontextlimit: Orientierung zuerst (zuletzt, Stand, als Nächstes inkl. Reihenfolge-Vorgabe der Aufgabenliste), sonst nur Undokumentiertes (Maßstab je Zeile) mit Verweisen auf Quellen; kontextsparsam (keine Rückfrage, max. ein Shell-Aufruf), Schreibverbot inkl. Memory, Ausgabe als ein Codeblock (Plugin 0.19.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-09-16 |
 | F-031 | mise.lock mit Plattform-Einträgen erzeugen → **`/choose-stack` § Lock-Datei erzeugen und prüfen als gemeinsame Mechanik: `mise lock` nach `mise install`, ohne `--platform` (Liste allein aus `lockfile_platforms`), Lücke auf der CI-Runner-Plattform blockiert den Commit; new-project/choose-stack erzeugen und prüfen, `update-conventions` gleicht auch bei aktuellem Stempel ab. Pairing: project-template 0.13.3 (F-020) (Plugin 0.19.1).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
+| F-038a | Freigabe-Gate im Plugin → **step-done verbucht erst nach Vorschau + Freigabe (eine Frage zusammen mit dem Commit, „nur verbuchen" möglich), build-step startet add-feature selbst und sammelt im autonomen Lauf nur, add-feature ausdrücklich von Claude aufrufbar, Pflicht-Baustein „Freigabe-Gate" in der Authoring-Doku (Plugin 0.20.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 
 ---
 
@@ -82,23 +83,6 @@ einer Stelle definiert (Authoring-Doku); die Skills tragen sie als einheitlichen
 
 **Abhängigkeiten:** keine. Vor F-039 und F-036 umsetzen (beide laufen dann schon nach der
 Regel; F-036 und F-034 bauen auf denselben Skills auf).
-
-#### F-038a — Plugin: Freigabe-Gate und add-feature-Aufruf
-
-**Was:** step-done § 4/§ 6 (Vorschau + Freigabe, gebündelt mit der Commit-Frage),
-build-step (add-feature selbst starten, autonom sammeln, Start-Freigabe „verbuchen und
-committen"), add-feature (Aufruf durch Claude), `docs/skill-authoring.md`
-(Pflicht-Baustein), README (Satz zum Zyklus), plugin.json 0.20.0, CHANGELOG.
-
-**Dateien:** `plugins/coding-kit/skills/{step-done,build-step,add-feature}/SKILL.md`,
-`docs/skill-authoring.md`, `README.md`, `plugins/coding-kit/.claude-plugin/plugin.json`,
-`CHANGELOG.md`.
-
-**Abnahmekriterien:**
-- [ ] `just check` grün.
-- [ ] Kein PROGRESS-schreibender Skill schreibt ohne Vorschau (grep über alle
-      Schreibstellen belegt).
-- [ ] Version-Bump und CHANGELOG im selben Commit.
 
 #### F-038b — Repo-lokal: CLAUDE.md und add-skill
 

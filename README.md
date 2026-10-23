@@ -176,10 +176,10 @@ Die Spalte **GitHub** sagt, was ohne GitHub bleibt: `–` = rein lokal über git
 | Skill | GitHub | Zweck |
 |-------|:------:|-------|
 | `/coding-kit:new-project` | teils | **Der Orchestrator:** Short-Info → Abfragen (Name/Lizenz/Stack/…, Sub-Skills aufrufbar) → Plan → Repo aus dem project-template bauen, verifizieren, Erst-Commit nach OK. Trockenlauf: Argument `dry-run`. |
-| `/coding-kit:add-feature` | – | Neue Aufgabe analysieren und mit F-Nummer ins PROGRESS-Backlog aufnehmen (Status `BACKLOG`); Umsetzungsideen nur als grobe Lösungsskizze. |
+| `/coding-kit:add-feature` | – | Neue Aufgabe analysieren und mit F-Nummer ins PROGRESS-Backlog aufnehmen (Status `BACKLOG`); Umsetzungsideen nur als grobe Lösungsskizze. Startest du oder Claude selbst, eingetragen wird nach deinem OK. |
 | `/coding-kit:prep-step` | – | Aufgabe vor der Umsetzung analysieren: Lösungsskizze gegen den aktuellen Codestand hinterfragen, Standards-Abdeckung neuer Frameworks prüfen (Fragment-Vorschlag), ggf. in Substeps zerlegen, Plan festhalten (Status `PLANNED`). |
 | `/coding-kit:build-step` | – | Aufgabe plan-treu umsetzen: Substep für Substep mit Verifikation. Interaktiv endet jeder Substep mit einer step-done-Empfehlung (du prüfst und schließt selbst ab); nur im autonomen `/goal`-Lauf läuft step-done je Substep automatisch. Mit `autonom` bereitet er stattdessen einen `/goal`-Lauf vor. |
-| `/coding-kit:step-done` | teils | Abschluss-Checkliste: Review, `just check`, Standards-Abdeckungs-Backstop (neue Frameworks ohne Fragment), Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Pflege, Commit-Frage. |
+| `/coding-kit:step-done` | teils | Abschluss-Checkliste: Review, `just check`, Standards-Abdeckungs-Backstop (neue Frameworks ohne Fragment), Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Verbuchung und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben). |
 | `/coding-kit:audit-code` | – | Vollaudit (Code, Security, Deps, Deployment) → `AUDIT-RESULTS.md`, fixt nichts. |
 | `/coding-kit:teach-step` | – | Lehrer-Modus: Aufgabe selbst umsetzen, der Skill leitet sokratisch an, prüft und testet — schreibt nie Code. |
 | `/coding-kit:name-it` | teils | Namenskandidaten nach Kriterien + Verfügbarkeits-Checks (GitHub/npm/PyPI, Domain optional). |
@@ -220,6 +220,12 @@ nur aufgenommen (→ prep-step), `PLANNED` = geplant (→ build-step), fertig =
 Done-Tabelle + `(DONE)` im FEATURE-INDEX. Für die Implementierungsphase gibt es drei
 Wege: `build-step` baut diszipliniert, `teach-step` leitet dich durch die eigene
 Umsetzung, oder du implementierst frei und schließt mit `step-done` ab.
+
+**Freigabe für die PROGRESS:** Kein Skill schreibt ungefragt in `PROGRESS.md`,
+`PROGRESS-ARCHIVE.md` oder den FEATURE-INDEX — du siehst den Eintrag vorher und gibst
+ihn frei. `step-done` bündelt das mit der Commit-Frage; im autonomen `/goal`-Lauf gilt
+die Freigabe beim Start für die geplanten Substeps, neue Ideen werden gesammelt und am
+Ende vorgeschlagen.
 
 ### Autonomer Lauf (build-step + /goal)
 

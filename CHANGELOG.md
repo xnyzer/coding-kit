@@ -4,6 +4,29 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.20.0 — 2026-10-23
+
+Freigabe-Gate für PROGRESS-Einträge (F-038a): Claude darf Skills wie `add-feature` selbst
+starten, aber jeder neue oder geänderte Eintrag in `PROGRESS.md`, `PROGRESS-ARCHIVE.md`
+oder im FEATURE-INDEX wird zuerst als Vorschau gezeigt und erst nach ausdrücklichem OK
+geschrieben.
+
+- **`step-done`:** § 4 bereitet Done-Zeile, Archiv-Eintrag und `(DONE)`-Marker nur noch
+  vor; § 5 zeigt sie zusammen mit der Commit-Message in **einer** Frage (verbuchen und
+  committen / nur verbuchen / Text ändern), erst danach wird geschrieben und committet.
+  „Direkt tun, ohne zu fragen" entfällt. Graphiti (jetzt § 6) läuft erst nach der
+  Verbuchung; Commit-E-Mail und Co-Authored-By heißen jetzt § 5a/5b.
+- **`build-step`:** Claude startet `add-feature` für unterwegs entdeckte Ideen selbst
+  (statt den Nutzer darum zu bitten); im autonomen Lauf werden sie nur gesammelt und im
+  Abschluss vorgeschlagen. Die Start-Freigabe des Laufs gilt für Verbuchen **und**
+  Commits der geplanten Substeps, nicht für neue Einträge.
+- **`add-feature`:** Beschreibung und Einleitung sagen ausdrücklich, dass Claude den
+  Skill selbst starten darf — der Skill war immer modellaufrufbar, der Text legte das
+  Gegenteil nahe.
+- **Authoring-Konvention** (`docs/skill-authoring.md`): neuer Pflicht-Baustein
+  „Freigabe-Gate" mit Standardsatz, plus Hinweis, dass Skill-Texte einem modellaufrufbaren
+  Skill nicht widersprechen dürfen.
+
 ## 0.19.1 — 2026-10-23
 
 Fix (F-031): Projekte aus `/new-project` bekamen eine `mise.lock` ohne Plattform-Einträge,

@@ -4,6 +4,59 @@ Abgeschlossene Aufgaben mit Detail und Begründung. Neueste oben.
 
 ---
 
+## F-038a — Plugin: Freigabe-Gate und add-feature-Aufruf (2026-10-23)
+
+Teil von F-038 (Freigabe-Regel für PROGRESS-Einträge kit-weit; F-038b — Kit-CLAUDE.md
+und add-skill — folgt).
+
+**Problem:** step-done schrieb Done-Zeile, Archiv-Eintrag und `(DONE)`-Marker ohne
+Vorschau („Direkt tun, ohne zu fragen"). Zugleich hielt Claude add-feature für nur vom
+Nutzer startbar, obwohl der Skill seit jeher `disable-model-invocation: false` trägt —
+build-step („via add-feature … vorschlagen") und add-feature („Der Nutzer hat eine
+Idee …") legten das nahe.
+
+**Was entstanden ist (Plugin 0.20.0):**
+
+- **`step-done`:** § 4 bereitet nur noch vor (mit Standardsatz Freigabe-Gate); neuer § 5
+  „Freigabe, Verbuchung und Commit" — eine Frage mit Vorschau und Commit-Message,
+  Antworten verbuchen und committen / nur verbuchen / Text ändern; nach OK schreiben,
+  re-lesen, `just check`, committen. Autonome Ausnahme deckt Verbuchung und Commits der
+  geplanten Substeps, neue Einträge werden nur gesammelt. Graphiti jetzt § 6, erst nach
+  der Verbuchung; Commit-E-Mail und Co-Authored-By jetzt § 5a/5b.
+- **`build-step`:** Scope-Schutz — add-feature selbst starten, autonom nur sammeln;
+  Leitplanke Freigabe-Gate; Abschluss listet gesammelte Ideen; Start-Freigabe heißt
+  „verbuchen und committen" (Frage, Goal-Zeile ohne Freigabe, `claude -p`-Beispiel,
+  Modus-Erkennung, Recovery, description).
+- **`add-feature`:** description und Einleitung „Wer startet" (Nutzer oder Claude),
+  Freigabe-Gate inkl. autonomem Fall.
+- **`docs/skill-authoring.md`:** Hinweis, dass der Text eines modellaufrufbaren Skills
+  dem nicht widersprechen darf; neuer Pflicht-Baustein „Freigabe-Gate" mit Standardsatz.
+- **Begleit-Änderungen:** `plugin.json` 0.20.0, `CHANGELOG.md`, `README.md`
+  (Tabellenzeilen add-feature und step-done, Absatz „Freigabe für die PROGRESS").
+
+**Verifikation:** `just check` grün, `claude plugin validate` grün (einzige Warnung:
+fehlendes Icon, ohne Belang). grep über alle PROGRESS-schreibenden Skills: add-feature,
+step-done, build-step tragen den Standardsatz; prep-step, define-requirements,
+refine-requirements waren bereits mit eigener Formulierung gegated; teach-step und
+check-upstreams schreiben nur über diese. Das Laufzeitverhalten ist noch ungetestet,
+installiert ist 0.19.1 — Test per `claude --plugin-dir plugins/coding-kit` möglich.
+
+**Notable decisions:**
+- Standardsatz in jedem schreibenden Skill statt einer zentral referenzierten Regel —
+  `docs/` liegt nicht im Plugin-Cache, Skills können es zur Laufzeit nicht lesen.
+- Verbuchung und Commit in einer Frage, damit der Abschluss nicht zweimal fragt.
+- prep-step, define-requirements, refine-requirements unverändert gelassen (bereits
+  gegated, „sinngemäß gleich" laut Authoring-Doku); update-conventions ohne Standardsatz,
+  weil es die PROGRESS nur innerhalb einer einzeln bestätigten Migration berührt.
+- Nur § 3 von step-done wird von außen referenziert (new-project) — die Umnummerierung
+  ab § 4 bricht nichts.
+
+**Geänderte Dateien:** `plugins/coding-kit/skills/{step-done,build-step,add-feature}/SKILL.md`,
+`docs/skill-authoring.md`, `README.md`, `plugins/coding-kit/.claude-plugin/plugin.json`,
+`CHANGELOG.md`, `PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-031 — mise.lock mit Plattform-Einträgen erzeugen (CI im --locked-Modus) (2026-10-23)
 
 **Problem:** Projekte aus `/new-project` bekamen eine `mise.lock` nur mit Versionen, ohne
