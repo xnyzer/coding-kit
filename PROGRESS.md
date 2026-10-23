@@ -43,8 +43,208 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
-`/coding-kit:prep-step` vorbereiten._
+### F-039 — Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0
+
+**Status:** PLANNED
+
+**Problem:** Kit-Skills und Template hängen über einen textuellen Vertrag zusammen
+(MANIFEST-Abschnitte, Marker, Platzhalter, Pfade), leben aber in zwei Repos mit eigener
+PROGRESS, eigener Version und eigenem CHANGELOG. Gepaarte Änderungen brauchen zwei Commits,
+Einträge vermischten sich, und der Vertrag driftete unbemerkt (der Kit-Validator führt noch
+`LIVING_DOC_LANGUAGE`, das das Template in 0.10.0 gestrichen hat, und kennt die
+`LANG_*`-Platzhalter nicht). Zudem legt `new-project` Repos aus dem GitHub-Stand des
+Templates an, liest MANIFEST aber aus dem lokalen Checkout.
+
+**Idee:** Das Template wird Teil des Plugins (`plugins/coding-kit/template/`), kommt mit
+`claude plugin update` zum Nutzer und wird über `${CLAUDE_PLUGIN_ROOT}/template` gelesen.
+Ein Repo, eine PROGRESS, ein Archiv, ein CHANGELOG, eine Version, ein Commit je Änderung;
+ein Validator prüft den Vertrag zwischen Skills und Template mechanisch. project-template
+wird danach archiviert.
+
+**Entschieden (2026-10-23):**
+- Unabhängige Architektur-Prüfung (Status quo, Übergabe, Kit führt, Monorepo) → Monorepo
+  mit Template im Plugin-Ordner; ersetzt F-035.
+- Cache-Test bestanden: Plugin-Cache byte-identisch zur Quelle inkl. Punkt-Dateien
+  (`core/.github`, `core/.claude`, `.gitignore`, `.editorconfig` …) und Ausführungsrechten;
+  Template-Dateien werden nicht als Plugin-Komponenten geladen; ein Update legt je Version
+  einen frischen Ordner an.
+- Repo bleibt `coding-kit` mit Historie (Marketplace `coding-kit@xnyzer` und Renovate-Preset
+  `github>xnyzer/coding-kit` hängen am Namen). Template-Historie wird mit Pfad-Umschreibung
+  importiert (Nachvollziehbarkeit; zur Laufzeit braucht sie kein Skill mehr, s. u.).
+- Eine Version für alles, Start bei 1.0.0 (über Plugin 0.20.0 und Template 0.16.0).
+  Stempel unter 1.0.0 gehören zur alten Template-Reihe. Bestehende Projekte brauchen keine
+  Migration. Ohne Template-Änderung seit dem Stempel setzt `update-conventions` nur den
+  Stempel neu.
+- Dokumente zusammenführen, kein Archivordner:
+  - eine `PROGRESS.md`: Done-Tabelle leer (jede alte Done-Zeile hat einen Archiv-Eintrag),
+    offene Einträge behalten ihre Nummer und werden auf das neue Modell umgeschrieben,
+    `next-feature` läuft weiter.
+  - ein `PROGRESS-ARCHIVE.md`: beide Archive chronologisch gemischt; Kit-Einträge ohne
+    Kennzeichen, Template-Einträge als `TPL-NNN` (kein „F-", damit Suchen eindeutig
+    bleiben); Kopf erklärt das Schema. Verweise umschreiben (Template-Archiv ~90,
+    Kit-Archiv 4, Kit-PROGRESS 7), ebenso in den importierten Template-Commit-Messages.
+    TPL-Einträge nicht in den FEATURE-INDEX.
+  - ein `CHANGELOG.md` unter `plugins/coding-kit/` (muss im Cache liegen): ab 1.0.0
+    deutsch, darunter eingefroren „coding-kit-Plugin bis 0.20.0" und „project-template bis
+    0.16.0"; alte Stempel lesen nur den Template-Abschnitt.
+- `new-project` legt ein leeres Repo an und schreibt nur die MANIFEST-Ziele hinein
+  (kein `--template`, kein Aufräumen); Erst-Commit
+  `feat: bootstrap from coding-kit <Version> (<Modul> module)`.
+- project-template: seit 2026-10-23 eingefroren (letzter Stand 0.16.0 auf GitHub); nach
+  Release 1.0.0 und Gegenprüfung mit README-Hinweis archivieren — nicht löschen,
+  Template-Einstellung bleibt (das „generated from"-Label bestehender Projekte zeigt
+  weiter auf das Repo); lokaler Checkout bleibt bis dahin.
+
+**Lösungsskizze** (Stand Planung 2026-10-23):
+- Kein Override für die Arbeit am Template: `claude --plugin-dir plugins/coding-kit` ersetzt
+  das installierte Plugin für die Session und lädt Skills und Template aus demselben
+  Arbeitsstand (Doku geprüft). Eine Env-Variable würde installierte Skill-Texte mit dem
+  Template-Arbeitsstand mischen.
+- Stempel-Auflösung ohne Git zur Laufzeit: deklarierte Tabelle
+  `## Removed and renamed targets` im MANIFEST; startet leer (kein Core-Ziel wurde in
+  0.1.0–0.16.0 entfernt oder umbenannt). Marketplace-Klon verworfen (Klontiefe
+  undokumentiert, kein dokumentierter Pfad für Skills).
+- `template/VERSION` entfällt; die Version steht nur in `plugin.json` (Stempel,
+  `TEMPLATE_VERSION`). CHANGELOG-Einträge ab 1.0.0 tragen einen Abschnitt `### Template`,
+  wenn sich Template-Inhalt ändert; ohne ihn im Update-Fenster setzt `update-conventions`
+  nur den Stempel neu.
+- `--template` mit archiviertem Repo betrifft nur Plugins unter 1.0.0 — beim Archivieren
+  einmal prüfen, Ergebnis im CHANGELOG vermerken.
+- Renovate (bisher in keinem der Repos aktiv): kein `ignorePaths`; die Prüfung der
+  Versionsregel läuft auch in der CI über die Commits eines PR — ein Renovate-PR an
+  Template-Pins bleibt rot bis zum Versions-Bump.
+- F-026 geht in F-039 auf; der Rest (Kit-Repo-Herkunft in `check-upstreams`) steckt
+  bereits in F-032. Die offenen Einträge schreibt F-039b um.
+
+**Abhängigkeiten:** F-038 (erledigt). Ersetzt F-035. Vor F-036 umsetzen. Nimmt F-026 auf
+und die Template-Teile von F-032 weitgehend vorweg.
+
+#### F-039a — Import und Grundgerüst
+
+**Was:** Template-Historie auf einem Scratch-Klon mit `git filter-repo
+--to-subdirectory-filter plugins/coding-kit/template` umschreiben; in den Commit-Messages
+eigene F-Nummern → `TPL-NNN`, Verweise auf Kit-Nummern bleiben. Vor dem Merge: gitleaks
+über die Historie, Blocklist über `git log -p`, Autor-Adressen. `git merge
+--allow-unrelated-histories` (eigener Merge-Commit, Freigabe an der Stelle), danach
+Repo-eigene Template-Dateien entfernen (Governance-Doku, Tooling, `.github/`, `.claude/`,
+`scripts/`, `private/`, README, CLAUDE.md, VERSION; PROGRESS und Archiv bleiben für F-039b
+aus der Historie lesbar). CHANGELOG nach `plugins/coding-kit/CHANGELOG.md` mit 1.0.0
+(unveröffentlicht) und den beiden eingefrorenen Abschnitten; `plugin.json` 1.0.0.
+Validator: Template-Checks übernehmen (auf `template/` beschränkt), Platzhalter-Registry
+aus dem MANIFEST, Blocklist (Datei nach `private/`), Versionsregel als Pre-Commit- und
+CI-Prüfung (Änderungen an Skills, Hooks oder Template verlangen eine Version über dem
+gepushten Stand und einen CHANGELOG-Eintrag dafür).
+
+**Dateien:** `plugins/coding-kit/template/**` (Import), `plugins/coding-kit/CHANGELOG.md`
+(aus `CHANGELOG.md`), `plugins/coding-kit/.claude-plugin/plugin.json`, `scripts/validate.py`,
+`lefthook.yml`, `.github/workflows/ci.yml`.
+
+**Abnahmekriterien:**
+- [ ] `git log -- plugins/coding-kit/template/VERSION` zeigt die 25 alten Versionsstände;
+      `git show <alter Commit>:plugins/coding-kit/template/MANIFEST.md` funktioniert.
+- [ ] Historien-Scan vor dem Merge ohne Befund.
+- [ ] `just check` und `claude plugin validate plugins/coding-kit` grün.
+- [ ] Eingebaute Fehler werden erkannt: unbekannter Platzhalter, offener Marker,
+      Plugin-Änderung ohne Versions-Bump.
+
+#### F-039b — Dokumente zusammenführen
+
+**Was:** PROGRESS: Done-Tabelle leeren, offene Einträge auf das Ein-Repo-Modell umschreiben
+(F-026 aufgegangen; „Übergabe nach F-035" in F-024, F-032, F-033, F-034, F-037 → „im
+selben Commit"), Verweise auf Template-Nummern als `TPL-NNN`, Reihenfolge-Block. Archiv:
+beide Archive chronologisch gemischt (gleiches Datum nach Commit-Zeit), Template-Einträge
+als `TPL-NNN`, Kopf erklärt das Schema, Verweise nach derselben Regel wie die
+Commit-Messages. FEATURE-INDEX: F-026 markiert, keine TPL-Einträge. Jede Änderung erst
+als Vorschau.
+
+**Dateien:** `PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
+
+**Abhängigkeiten:** F-039a.
+
+**Abnahmekriterien:**
+- [ ] Jede alte Done-Zeile beider Repos hat einen Archiv-Eintrag.
+- [ ] grep findet keine Template-F-Nummer ohne Umbenennung.
+- [ ] `just check` grün.
+
+#### F-039c — Skills und Vertrag auf das gebündelte Template
+
+**Was:** `choose-stack` § 0 → `${CLAUDE_PLUGIN_ROOT}/template` (kein Klon, kein Override).
+`new-project`: leeres Repo (`gh repo create … --clone` ohne `--template`), „Aufräumen" in
+§ 4b entfällt, Stempel und Erst-Commit aus `plugin.json`. `update-conventions`: § 0,
+Update-Fenster (eingefrorener Template-Abschnitt unter 1.0.0, `### Template` ab 1.0.0,
+sonst nur Stempel neu), A2.8 über die MANIFEST-Tabelle, Übernahme-Vorschlag an eine
+coding-kit-Session bzw. ein Issue im coding-kit-Repo, `CODING_KIT_TEMPLATE_REPO` entfällt.
+Wortlaut in `define-requirements`, `choose-license`, `go-public`, `check-upstreams`,
+`prep-step`, `step-done`. MANIFEST: Tabelle `## Removed and renamed targets`,
+§ Version stamp, Quelle von `TEMPLATE_VERSION`, § Sync direction. HOW-TO-Nachzug aus
+F-038a (`/step-done` verbucht erst nach Vorschau und Freigabe, gebündelt mit der
+Commit-Frage; `/add-feature` startet auch Claude selbst, eingetragen wird nach OK).
+Vertragsprüfungen im Validator: `manifest-format` = von den Skills genanntes Format;
+Core-Tabelle ↔ Dateien unter `template/core/` in beide Richtungen; Seed-Sections-Inventar
+↔ Marker in den Dateien; in Skills genannte Template-Pfade existieren; entfernte
+Core-Zeile ohne Tabellen-Eintrag. CHANGELOG 1.0.0, `plugin.json`-Description.
+
+**Dateien:** `plugins/coding-kit/skills/{choose-stack,new-project,update-conventions,
+define-requirements,choose-license,go-public,check-upstreams,prep-step,step-done}/SKILL.md`,
+`plugins/coding-kit/template/MANIFEST.md`,
+`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`, `scripts/validate.py`,
+`plugins/coding-kit/CHANGELOG.md`, `plugins/coding-kit/.claude-plugin/plugin.json`.
+
+**Abhängigkeiten:** F-039a.
+
+**Abnahmekriterien:**
+- [ ] `just check` grün; eingebaute Vertragsfehler werden erkannt.
+- [ ] Kein Skill nennt mehr den lokalen project-template-Checkout, `gh repo clone` des
+      Templates oder `CODING_KIT_TEMPLATE_REPO` (grep).
+- [ ] Unter `claude --plugin-dir plugins/coding-kit` listet `/coding-kit:new-project
+      dry-run` die Ziele aus dem gebündelten Template.
+
+#### F-039d — Repo-Doku und Regeln
+
+**Was:** `CLAUDE.md`: `template/**` Englisch, Versionsregel inkl. Template und
+MANIFEST-Tabelle, TPL-Schema, Einfrier-Regel entfernt, Graphiti-Hinweis (Template-Wissen
+bis 0.16.0 unter group_id `project-template`). README: Repo-Baum, „Ohne GitHub" ohne
+Template-Klon (statt `cp -r project-template`: leerer Ordner + `git init`),
+Personal-Config ohne `CODING_KIT_TEMPLATE_REPO`, Skill-Tabelle. CONTRIBUTING:
+Template-Regeln aus der CONTRIBUTING des Templates. `docs/skill-authoring.md`:
+Template-Pfade nur als `${CLAUDE_PLUGIN_ROOT}/template` im Skill-Text (in Shell-Befehlen
+nicht als Variable verfügbar), Test mit `--plugin-dir`. `docs/renovate-preset.md`.
+`add-skill` Schritt 3: HOW-TO-Änderung im selben Commit. Beschreibung in
+`marketplace.json`.
+
+**Dateien:** `CLAUDE.md`, `README.md`, `CONTRIBUTING.md`, `docs/skill-authoring.md`,
+`docs/renovate-preset.md`, `.claude/skills/add-skill/SKILL.md`,
+`.claude-plugin/marketplace.json`.
+
+**Abhängigkeiten:** F-039c.
+
+**Abnahmekriterien:**
+- [ ] Außer in Historie, Archiv und eingefrorenem CHANGELOG verweist nichts mehr auf
+      project-template als Quelle (grep).
+- [ ] `just check` grün.
+
+#### F-039e — Test, Release, Gegenprobe
+
+**Was:** Lokaler Test mit `claude --plugin-dir plugins/coding-kit`: `new-project dry-run`
+und `update-conventions` auf einer Kopie eines Projekts mit Stempel 0.13.2 (erwartet:
+Fenster 0.13.3–0.16.0 plus 1.0.0, Stempel neu, keine falschen Entfernungen; prüfen, ob das
+Lesen des Templates außerhalb des Projekts Freigabe-Abfragen auslöst). Release: CHANGELOG
+datieren; Push nur auf ausdrückliche Bitte, vorher Personendaten-grep über Diff,
+Commit-Metadaten und importierte Historie; `claude plugin marketplace update xnyzer`,
+`claude plugin update coding-kit@xnyzer`, Cache-Ordner der 1.0.0 prüfen. Gegenprobe mit
+`/update-conventions` an einem echten Projekt. project-template: README-Hinweis als
+letzter Commit, `--template` am archivierten Repo prüfen, archivieren (nicht löschen,
+Template-Einstellung bleibt). Lokalen Checkout entfernen oder behalten — Entscheidung des
+Nutzers.
+
+**Dateien:** `plugins/coding-kit/CHANGELOG.md`; im project-template-Repo `README.md`.
+
+**Abhängigkeiten:** F-039b, F-039d.
+
+**Abnahmekriterien:**
+- [ ] 1.0.0 installiert und aktiv; der Cache enthält `template/` vollständig.
+- [ ] Gegenprobe-Projekt steht auf 1.0.0, `just check` grün.
+- [ ] project-template archiviert, README verweist auf coding-kit.
 
 ---
 
@@ -56,16 +256,18 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 sortiert):
 
 1. **F-039** — ein Repo: Template ins Plugin, Version 1.0.0; vor F-036, damit dessen Umbau
-   Skills und Vorlage in einem Commit trifft.
+   Skills und Vorlage in einem Commit trifft (in Arbeit, siehe „Offene Aufgaben").
 2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
 3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
-4. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-5. **F-032 → F-024 → F-026 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil
+4. **F-040** — vor den Strängen Graphiti und Host, deren Änderungen an der globalen
+   Vorlage sonst bestehende Rechner nicht erreichen.
+5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+6. **F-032 → F-024 → F-026 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil
    von F-030 mit. F-039 nimmt die Template-Teile von F-026/F-032 weitgehend vorweg.
-6. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
 
-Strang 4 und 5 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
@@ -534,96 +736,53 @@ ergänzen — Übergabe nach F-035.
 
 ---
 
-### F-039 — Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0
+### F-040 — Globale CLAUDE.md mit dem Plugin ausliefern und abgleichen
 
 **Status:** BACKLOG
 
-**Problem:** Kit-Skills und Template hängen über einen textuellen Vertrag zusammen
-(MANIFEST-Abschnitte, Marker, Platzhalter, Pfade), leben aber in zwei Repos mit eigener
-PROGRESS, eigener Version und eigenem CHANGELOG. Gepaarte Änderungen brauchen zwei Commits,
-Einträge vermischten sich, und der Vertrag driftete unbemerkt (der Kit-Validator führt noch
-`LIVING_DOC_LANGUAGE`, das das Template in 0.10.0 gestrichen hat, und kennt die
-`LANG_*`-Platzhalter nicht). Zudem legt `new-project` Repos aus dem GitHub-Stand des
-Templates an, liest MANIFEST aber aus dem lokalen Checkout.
+**Problem:** Die Vorlage `templates/global-CLAUDE.md` erreicht einen Rechner nur einmal:
+`install.sh` kopiert sie, wenn noch keine `~/.claude/CLAUDE.md` existiert, und meldet sonst
+nur „wird nicht überschrieben". Danach driften Vorlage und installierte Fassung unbemerkt
+auseinander — beobachtet in beide Richtungen: der Languages-Block-Absatz aus F-020 fehlt in
+der installierten Fassung, eine dort ergänzte generische Regel (Artifacts nur mit
+ausdrücklicher Erlaubnis veröffentlichen) fehlt in der Vorlage. F-024, F-029 und F-030
+planen weitere Änderungen an der Vorlage, die bestehende Rechner ohne Abgleich nie
+erreichen.
 
-**Idee:** Das Template wird Teil des Plugins (`plugins/coding-kit/template/`), kommt mit
-`claude plugin update` zum Nutzer und wird über `${CLAUDE_PLUGIN_ROOT}/template` gelesen.
-Ein Repo, eine PROGRESS, ein Archiv, ein CHANGELOG, eine Version, ein Commit je Änderung;
-ein Validator prüft den Vertrag zwischen Skills und Template mechanisch. project-template
-wird danach archiviert.
-
-**Entschieden (2026-10-23):**
-- Unabhängige Architektur-Prüfung (Status quo, Übergabe, Kit führt, Monorepo) → Monorepo
-  mit Template im Plugin-Ordner; ersetzt F-035.
-- Cache-Test bestanden: Plugin-Cache byte-identisch zur Quelle inkl. Punkt-Dateien
-  (`core/.github`, `core/.claude`, `.gitignore`, `.editorconfig` …) und Ausführungsrechten;
-  Template-Dateien werden nicht als Plugin-Komponenten geladen; ein Update legt je Version
-  einen frischen Ordner an.
-- Repo bleibt `coding-kit` mit Historie (Marketplace `coding-kit@xnyzer` und Renovate-Preset
-  `github>xnyzer/coding-kit` hängen am Namen). Template-Historie wird mit Pfad-Umschreibung
-  importiert, damit `update-conventions` alte Stempel weiter auflöst.
-- Eine Version für alles, Start bei 1.0.0 (über Plugin 0.19.1 und Template 0.16.0).
-  Stempel unter 1.0.0 gehören zur alten Template-Reihe. Bestehende Projekte brauchen keine
-  Migration. Ohne Template-Änderung seit dem Stempel setzt `update-conventions` nur den
-  Stempel neu.
-- Dokumente zusammenführen, kein Archivordner:
-  - eine `PROGRESS.md`: Done-Tabelle leer (jede alte Done-Zeile hat einen Archiv-Eintrag),
-    offene Einträge behalten ihre Nummer und werden auf das neue Modell umgeschrieben,
-    `next-feature` läuft weiter.
-  - ein `PROGRESS-ARCHIVE.md`: beide Archive chronologisch gemischt; Kit-Einträge ohne
-    Kennzeichen, Template-Einträge als `TPL-NNN` (kein „F-", damit Suchen eindeutig
-    bleiben); Kopf erklärt das Schema. Verweise umschreiben (Template-Archiv ~90,
-    Kit-Archiv 4, Kit-PROGRESS 7), ebenso in den importierten Template-Commit-Messages.
-    TPL-Einträge nicht in den FEATURE-INDEX.
-  - ein `CHANGELOG.md` unter `plugins/coding-kit/` (muss im Cache liegen): ab 1.0.0,
-    darunter eingefroren „coding-kit-Plugin bis 0.19.1" und „project-template bis 0.16.0";
-    alte Stempel lesen nur den Template-Abschnitt.
-- `new-project` legt ein leeres Repo an und schreibt nur die MANIFEST-Ziele hinein
-  (kein `--template`, kein Aufräumen).
-- project-template: letzter Push vor dem Kit-Push (Kit 0.19.1 braucht Template 0.13.3 auf
-  GitHub), danach eingefroren; Archivierung erst nach Release 1.0.0 und Gegenprüfung, mit
-  README-Hinweis; lokaler Checkout bleibt bis dahin.
+**Idee:** Die Vorlage wird mit dem Plugin ausgeliefert und kommt so mit jedem Update auf
+den Rechner. Ein Abgleich zeigt die Unterschiede zur installierten Fassung abschnittsweise
+und übernimmt nur Bestätigtes; persönliche Ergänzungen bleiben unangetastet. Generische
+Regeln, die nur in der installierten Fassung stehen, werden als Übernahme-Vorschlag fürs
+Kit gemeldet — die Vererbung bleibt abwärts wie bei den Konventionen (F-018).
 
 **Lösungsskizze:**
-- Template-Inhalt (`core/`, `modules/`, `MANIFEST.md`, `VERSION`) nach
-  `plugins/coding-kit/template/`; Repo-eigene Template-Dateien entfallen bzw. gehen im
-  Kit auf.
-- `choose-stack` § 0: Template = `${CLAUDE_PLUGIN_ROOT}/template` plus Override für die
-  Arbeit am Template; Template-Klon über `gh` entfällt. Folgen in allen Skills, die § 0
-  referenzieren; `new-project`, `update-conventions` (Stempel-Auflösung, Update-Fenster,
-  Übernahme-Vorschlag an eine Kit-Session), `check-upstreams`, `go-public` prüfen.
-- Validatoren zusammenführen: Template-Checks plus Vertrags-Checks (Platzhalter-Registry
-  aus MANIFEST, in Skills genannte Marker/Abschnitte/Pfade existieren, `manifest-format`
-  stimmt); Sync-Invariante als Pre-Commit-Check.
-- CLAUDE.md, README, CONTRIBUTING, `docs/` auf ein Repo umstellen (`template/**` Englisch);
-  `add-skill` Schritt 3 (HOW-TO-Pflege) wird zur Änderung im selben Commit; Renovate darf
-  Template-Pins nicht ohne Versions-Bump ändern.
-- Template-Nachzüge aus der Einfrier-Zeit beim Import mitziehen: HOW-TO
-  (`core/HOW-TO-CODE-WITH-CLAUDE.md`) — `/step-done` verbucht erst nach Vorschau und
-  Freigabe (gebündelt mit der Commit-Frage), `/add-feature` startet auch Claude selbst,
-  eingetragen wird nach OK (aus F-038a).
-- Einfrier-Regel „project-template ist bis F-039 eingefroren" aus der Kit-CLAUDE.md
-  entfernen (eingeführt mit F-038b) und `add-skill` Schritt 3 vom Vermerk in F-039 auf
-  „Änderung im selben Commit" umstellen.
-- Vor dem Release lokal mit `claude --plugin-dir plugins/coding-kit` testen.
-- Abschluss: Release 1.0.0, ein Projekt per `/update-conventions` gegenprüfen,
-  project-template archivieren (README-Hinweis), lokalen Checkout danach entfernen.
+- Vorlage in den Plugin-Ordner, aber nicht nach `template/`: dort liegt nur MANIFEST-Inhalt
+  für Projekte, die globale Datei geht auf den Rechner und ist deutsch.
+- Kit-eigene Abschnitte markieren, ähnlich den `section:NAME`-Zonen der seed-Dateien;
+  alles Unmarkierte gilt als persönlich und wird nie angefasst.
+- Abgleich mit Diff und Bestätigung je Abschnitt; `install.sh` richtet aus derselben
+  Quelle ein.
+- Bestehende Abweichung als erster Lauf auflösen (Languages-Absatz, Artifact-Regel).
+- Pfad-Folgen: README lädt die Vorlage im manuellen Weg per `curl` über
+  `…/main/templates/global-CLAUDE.md`, `install.sh` liest sie aus dem Checkout, der Kopf
+  der Vorlage nennt ihren Pfad.
+- Plugin-Änderung: Versions-Bump und CHANGELOG.
 
 **Noch zu analysieren:**
-- Form des Overrides für die Arbeit am Template (Env-Variable oder `--plugin-dir`).
-- Stempel-Auflösung ohne Git-Historie im Plugin-Cache: Marketplace-Klon nutzen oder eine
-  deklarierte Tabelle entfernter/umbenannter Dateien im MANIFEST.
-- Funktioniert `gh repo create --template` mit einem archivierten Repo noch (Plugins bis
-  0.19.1)? Zum Zeitpunkt prüfen.
-- Schnitt in Substeps.
+- Welcher Skill den Abgleich trägt (`update-conventions`, ein eigener kleiner Skill oder
+  ein Hinweis des Stop-Hooks bei Abweichung).
+- Wie installierte Fassungen ohne Marker erkannt werden (einmalige Marker-Migration wie
+  bei den seed-Dateien).
+- Ob die alte `curl`-URL weiter funktionieren soll.
 
-**Abhängigkeiten:** F-038 (klein, vorher). Ersetzt F-035. Vor F-036 umsetzen. Berührt F-026
-und F-032 — deren Template-Teile entfallen weitgehend, bei der Planung abgleichen.
+**Abhängigkeiten:** F-039 (Plugin-Struktur und Versionsregel stehen dann). Sinnvoll vor
+F-024, F-029 und F-030 — deren Änderungen an der Vorlage erreichen bestehende Rechner erst
+über den Abgleich.
 
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-040
+next-feature: F-041
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -662,5 +821,6 @@ F-035 Repo-übergreifende Übergabe statt Parallelarbeit (coding-kit ↔ project
 F-036 Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt
 F-037 Unabhängiges Review in step-done (Reviewer mit frischem Kontext)
 F-038 Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature von Claude aufrufbar (DONE)
-F-039 Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0
+F-039 Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0 (PLANNED)
+F-040 Globale CLAUDE.md mit dem Plugin ausliefern und abgleichen
 -->
