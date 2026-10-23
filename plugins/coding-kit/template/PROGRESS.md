@@ -36,6 +36,7 @@ decomposes, `/step-done` finishes (review, docs, commit question).
 | F-017 | HOW-TO rows for `/choose-stack`, `/update-conventions` and `/prep-step` cover fragment companion actions; catalog marker deliberately not introduced (VERSION 0.13.2). Detail in `PROGRESS-ARCHIVE.md`. | 2026-08-11 |
 | F-020 | `mise.lock` covers every platform: `lockfile_platforms` pins the seven common mise platforms in `core/mise.toml`, `mise lock` named as generator; CI already enforces `--locked` via `jdx/mise-action` (VERSION 0.13.3). Detail in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 | F-021 | CODING-STANDARDS: readability rules in §1/§6, secure coding beyond secrets in §8 (renamed "Secure coding & secrets"), `api-design` de-duplicated against core §8, *Safe calls* lines in the `python`/`go`/`ts-node` fragments (VERSION 0.14.0). Detail in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
+| F-018 | HOW-TO states where the workflow skills come from: coding-kit plugin, namespaced vs. short call form (short only without a name clash), manual fallback via PROGRESS.md + `just` (VERSION 0.14.1). Detail in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 
 ---
 
@@ -51,43 +52,7 @@ _Intake new ideas via `/add-feature` — they get the next F-number._
 
 **Recommended order:**
 
-1. F-018 — small; land it before coding-kit's planned document-model rework reaches the
-   HOW-TO.
-2. F-019 — independent, any time.
-
-### F-018 — HOW-TO: state where the workflow skills come from
-
-**Status:** BACKLOG
-
-**Problem:** The skill overview in `core/HOW-TO-CODE-WITH-CLAUDE.md` lists the workflow
-skills without saying where they live. Only setup step 2 hints at it in passing, so a
-reader can look for them in the repository, does not learn the namespaced call form, and
-does not see that the workflow also works without the plugin.
-
-**Idea:** Add one short paragraph directly below `## Overview: skills` that states the
-origin (coding-kit plugin, set up in the contributor setup), both call forms (short name
-and plugin namespace) and the manual fallback (PROGRESS.md workflow + `just` recipes).
-Everything else in the file stays as it is.
-
-**Solution sketch:**
-- Starting point for the wording (from intake, not binding — `/prep-step` may propose
-  better wording after analysis): "None of these skills live in this repository — they
-  come from the coding-kit plugin for Claude Code (setup step 2). They can be called by
-  their short name (`/add-feature`) or with the plugin's namespace
-  (`/coding-kit:add-feature`). Without the plugin, the workflow in PROGRESS.md and the
-  `just` recipes still work by hand."
-- Sync invariant: patch `VERSION` bump + `CHANGELOG.md` entry in the same commit; no
-  `MANIFEST.md` change (no file added, removed or re-policied).
-
-**Dependencies:** none.
-
-**Still to analyse:**
-- Verify against the current Claude Code docs when a plugin skill's short name resolves
-  (e.g. only without a name collision) — qualify the sentence if needed.
-- Numeric reference "setup step 2" vs. a reference to the *Contributor setup* section,
-  which survives renumbering.
-- Overlap with the step-2 note "(provides the workflow skills used below)" — keep both or
-  tighten one.
+1. F-019 — independent, any time.
 
 ### F-019 — Standards fragment astro
 
@@ -191,7 +156,7 @@ F-014 Fix .env.example shadowed by the broad env deny rule (DONE)
 F-015 Fail-closed env deny set + vendor-aligned agentRules rule (DONE)
 F-016 Correct the agentRules routing in the nextjs fragment (DONE)
 F-017 HOW-TO sync for fragment companion actions (DONE)
-F-018 HOW-TO: state where the workflow skills come from
+F-018 HOW-TO: state where the workflow skills come from (DONE)
 F-019 Standards fragment astro
 F-020 mise.lock carries platform URLs for CI (DONE)
 F-021 CODING-STANDARDS: readability over cleverness + secure coding beyond secrets (DONE)

@@ -4,6 +4,15 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.14.1] — 2026-10-23
+
+### Changed
+- `core/HOW-TO-CODE-WITH-CLAUDE.md`: a short paragraph below *Overview: skills* states
+  where the workflow skills come from (the coding-kit plugin, see *Contributor setup*),
+  both call forms — the namespaced `/coding-kit:<skill>` and the short form, which works
+  only while no other command or skill has the same name — and that the workflow also
+  works by hand without the plugin (PROGRESS.md + `just` recipes).
+
 ## [0.14.0] — 2026-10-23
 
 ### Added

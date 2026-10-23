@@ -26,6 +26,13 @@ Guide for working with Claude Code in the {{PROJECT_NAME}} project.
 
 ## Overview: skills
 
+None of these skills live in this repository — they come from the coding-kit plugin for
+Claude Code (see *Contributor setup*). Each can be called with the plugin's namespace,
+e.g. `/coding-kit:add-feature`; the short form `/add-feature` used below works as long as
+no other command or skill has the same name. The skills automate a workflow you can also
+follow by hand: PROGRESS.md and the `just` recipes (`just check` above all) work without
+the plugin.
+
 **Daily development loop** — a task moves `BACKLOG → PLANNED → implemented → done`:
 
 | Skill | When to use | What happens |

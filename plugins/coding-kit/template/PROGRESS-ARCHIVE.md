@@ -5,6 +5,41 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-018 — HOW-TO: state where the workflow skills come from (2026-10-23)
+
+**Problem:** The skill overview in `core/HOW-TO-CODE-WITH-CLAUDE.md` listed the workflow
+skills without saying where they live. Only setup step 2 hinted at it in passing, so a
+reader could look for them in the repository, did not learn the namespaced call form, and
+did not see that the workflow also works without the plugin.
+
+**Implemented:**
+
+- `core/HOW-TO-CODE-WITH-CLAUDE.md`: one paragraph directly below `## Overview: skills` —
+  the skills come from the coding-kit plugin (see *Contributor setup*); they can be called
+  as `/coding-kit:<skill>`; the short form used throughout the file works as long as no
+  other command or skill has the same name; without the plugin the workflow still works
+  by hand (PROGRESS.md + `just` recipes, `just check` above all). Nothing else in the
+  file changed.
+- Sync invariant: `VERSION` 0.14.0 → 0.14.1 (patch) + `CHANGELOG.md` entry (Changed). No
+  `MANIFEST.md` change.
+
+**Verification:** edited sections re-read; `just check` green; diff scanned for secrets
+and private data (clean).
+
+**Notable decisions:**
+
+- **Short form qualified** (deviation from the intake sketch, which presented both call
+  forms as equal): the Claude Code docs name `/plugin-name:skill-name` as the plugin
+  skill form and say the bare name works only "unless another command already uses that
+  name" — relevant because downstream projects may add their own `.claude/skills/`.
+- **Section reference instead of "setup step 2"** — survives renumbering of the setup
+  steps.
+- **Existing plugin mentions kept** (setup step 2, `.claude/skills/` row): both are short
+  and sit where a reader needs them; no tightening.
+- The HOW-TO has no copy in coding-kit, so no cross-repo counterpart was needed.
+
+---
+
 ## F-021 — CODING-STANDARDS: readability over cleverness + secure coding beyond secrets (2026-10-23)
 
 **Problem:** `core/CODING-STANDARDS.md` set no explicit bar for readability (simplest
