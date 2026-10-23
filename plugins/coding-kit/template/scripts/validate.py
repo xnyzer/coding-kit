@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Template validation: JSON/YAML syntax, placeholder registry, privacy lint.
+"""Template validation: JSON/YAML syntax, placeholder registry, privacy lint, paired
+fragment/section markers, and the standards-fragment catalog (file contract, catalog
+table, module declarations).
 
 Run via `just check` (uv provides PyYAML). Exits non-zero on any finding.
 """
@@ -62,6 +64,8 @@ BLOCKLIST_FILE = REPO_ROOT / "private" / "blocklist.txt"
 # (`fragment:NAME`, `section:<name>`) are uppercase or bracketed and never match.
 PAIRED_MARKER_RE = re.compile(r"<!--\s*(/?)(fragment|section):([a-z0-9][a-z0-9-]*)\s*-->")
 STANDARDS_DECL_RE = re.compile(r"Standards fragments:(.*)")
+CATALOG_SECTION_RE = re.compile(r"^## Catalog[ \t]*$(.*?)(?=^## |\Z)", re.MULTILINE | re.DOTALL)
+CATALOG_ROW_RE = re.compile(r"^\|\s*`([a-z0-9][a-z0-9-]*)`\s*\|", re.MULTILINE)
 
 
 def iter_files() -> list[Path]:
@@ -190,6 +194,62 @@ def check_fragment_declarations(findings: list[str]) -> None:
                 )
 
 
+def display_path(path: Path) -> Path:
+    """Repo-relative path for findings; absolute for paths outside the repo."""
+    try:
+        return path.relative_to(REPO_ROOT)
+    except ValueError:
+        return path
+
+
+def check_fragment_files(files: dict[str, Path], findings: list[str]) -> None:
+    """Each catalog file wraps its whole content in one `fragment:<file stem>` block —
+    skills append the file verbatim, so text outside the wrapper would reach projects
+    unmarked and could never be refreshed."""
+    for name, path in files.items():
+        rel = display_path(path)
+        text = path.read_text(encoding="utf-8").strip()
+        markers = [m for m in PAIRED_MARKER_RE.finditer(text) if m.group(2) == "fragment"]
+        if not markers:
+            findings.append(f"{rel}: not wrapped in a 'fragment:{name}' block")
+            continue
+        first, last = markers[0], markers[-1]
+        if first.group(1) or first.start() != 0 or last.group(1) != "/" or last.end() != len(text):
+            findings.append(f"{rel}: content outside the fragment wrapper")
+        wrong = next((m.group(3) for m in (first, last) if m.group(3) != name), None)
+        if wrong:
+            findings.append(f"{rel}: wrapper is named '{wrong}', expected '{name}' (the file name)")
+        if len(markers) > 2:
+            findings.append(f"{rel}: nested fragment marker inside the wrapper")
+
+
+def check_catalog_table(catalog_dir: Path, files: dict[str, Path], findings: list[str]) -> None:
+    """The catalog table in README.md and the fragment files match in both directions."""
+    readme = catalog_dir / "README.md"
+    rel_readme = display_path(readme)
+    if not readme.is_file():
+        findings.append(f"{rel_readme}: catalog README is missing")
+        return
+    section = CATALOG_SECTION_RE.search(readme.read_text(encoding="utf-8"))
+    if not section:
+        findings.append(f"{rel_readme}: no '## Catalog' section")
+        return
+    rows = set(CATALOG_ROW_RE.findall(section.group(1)))
+    for name in sorted(rows - files.keys()):
+        findings.append(f"{rel_readme}: catalog row '{name}' has no file {name}.md")
+    for name in sorted(files.keys() - rows):
+        findings.append(f"{display_path(files[name])}: fragment has no row in the catalog table")
+
+
+def check_catalog(catalog_dir: Path, findings: list[str]) -> None:
+    """Standards-fragment catalog: file contract plus catalog/file consistency."""
+    if not catalog_dir.is_dir():
+        return
+    files = {p.stem: p for p in sorted(catalog_dir.glob("*.md")) if p.name != "README.md"}
+    check_fragment_files(files, findings)
+    check_catalog_table(catalog_dir, files, findings)
+
+
 def main() -> int:
     findings: list[str] = []
     blocklist = load_blocklist()
@@ -205,6 +265,7 @@ def main() -> int:
         check_paired_markers(path, text, findings)
 
     check_fragment_declarations(findings)
+    check_catalog(REPO_ROOT / "modules" / "standards", findings)
 
     if findings:
         print(f"validate: {len(findings)} finding(s):")

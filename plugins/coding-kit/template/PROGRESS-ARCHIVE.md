@@ -5,6 +5,59 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-023 — Validator: catalog fragment contract + catalog/file consistency (2026-10-23)
+
+**Problem:** `scripts/validate.py` checked that fragment markers are balanced (in every
+file) and that fragments a `MODULE.md` declares exist, but not that each
+`modules/standards/<name>.md` wraps its whole body in `fragment:<name>`, nor that the
+catalog table in `modules/standards/README.md` and the fragment files match. A misnamed
+marker breaks `/update-conventions` (it refreshes by marker name); a missing catalog row
+means no skill ever proposes the fragment — both passed the gate.
+
+**Implemented (1 file — repo tooling, no VERSION bump, as F-002c):**
+
+- `scripts/validate.py`: `check_catalog(catalog_dir, findings)`, called from `main()` for
+  `modules/standards/`, with two parts:
+  - `check_fragment_files` — the file content (stripped) starts with
+    `<!-- fragment:<stem> -->` and ends with the matching close; findings for a missing
+    wrapper, content outside it, a wrapper named differently from the file (opening or
+    closing marker), and a nested `fragment:` marker inside.
+  - `check_catalog_table` — backticked names in the first column of the table inside
+    `## Catalog` (up to the next `##` heading) vs. the `*.md` files, both directions.
+  - Helper `display_path` (repo-relative, absolute outside the repo) so the checks also run
+    against directories outside the repo. Module docstring lists all checks.
+
+**Verification:** `just check` green on the real catalog (all eight fragments already
+complied). Negative cases run against scratch fixtures (copies of the catalog, not in the
+repo), each yielding exactly one finding:
+
+| Case | Finding |
+|------|---------|
+| opening marker misnamed | `wrapper is named 'reakt', expected 'react' (the file name)` |
+| closing marker misnamed | same finding |
+| text after the wrapper | `content outside the fragment wrapper` |
+| nested marker | `nested fragment marker inside the wrapper` |
+| catalog row without file | `catalog row 'nginx' has no file nginx.md` |
+| file without catalog row | `fragment has no row in the catalog table` |
+
+Diff scanned for secrets and private data (clean).
+
+**Notable decisions:**
+
+- **Strict contract** (nothing but surrounding whitespace outside the wrapper): skills
+  append the file verbatim, so anything outside would reach projects unmarked and could
+  never be refreshed. Matches `MANIFEST.md` ("self-contained file whose body is wrapped").
+- **No test suite:** the check takes the catalog directory as a parameter and was proven
+  against fixtures at build time; a pytest setup for two functions was not worth new
+  infrastructure (F-002c precedent).
+- **Extra fixture case** (closing marker misnamed, beyond the plan) exposed a misleading
+  message — it named the correct opener instead of the wrong closer; fixed to report the
+  offending name.
+- Pre-existing, left as is: ruff's `EXE001` (shebang on a non-executable file) — ruff is
+  not part of the gate.
+
+---
+
 ## F-022 — nextjs fragment: register managed-file deviations as overrides (2026-10-23)
 
 **Problem:** On the `ts-node` module, a Next.js project has to deviate from managed files,

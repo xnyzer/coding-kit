@@ -39,6 +39,7 @@ decomposes, `/step-done` finishes (review, docs, commit question).
 | F-018 | HOW-TO states where the workflow skills come from: coding-kit plugin, namespaced vs. short call form (short only without a name clash), manual fallback via PROGRESS.md + `just` (VERSION 0.14.1). Detail in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 | F-019 | Catalog fragment `astro`: islands, built-in CSP (`security.csp`), build & quality gate, extensionless imports; adoption-time requirement to register the managed tsconfig/Biome/justfile deviations as overrides; retrofit-only (VERSION 0.15.0). Detail in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 | F-022 | `nextjs` fragment: adoption-time requirement to register the managed-file deviations as overrides — `tsconfig.json` shaped for Next (Next rewrites it in place), `justfile` via `next` with `next typegen` in the gate, `tsconfig.build.json` removed, `.next/` + `next-env.d.ts` ignored; `biome.json` unchanged (VERSION 0.16.0). Detail in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
+| F-023 | Validator checks the standards-fragment catalog: each `modules/standards/<name>.md` wraps its whole content in `fragment:<name>` (no text outside, no nested marker), and catalog table and files match both ways; proven against scratch fixtures (repo tooling, no VERSION bump). Detail in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 
 ---
 
@@ -55,7 +56,7 @@ _Intake new ideas via `/add-feature` — they get the next F-number._
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-023
+next-feature: F-024
 F-001 Initial template build (DONE)
 F-002 Composable CODING-STANDARDS fragments (DONE)
 F-003 Web-standards fragments (DONE)
@@ -78,4 +79,5 @@ F-019 Standards fragment astro (DONE)
 F-020 mise.lock carries platform URLs for CI (DONE)
 F-021 CODING-STANDARDS: readability over cleverness + secure coding beyond secrets (DONE)
 F-022 nextjs fragment: register managed-file deviations as overrides (DONE)
+F-023 Validator: catalog fragment contract + catalog/file consistency (DONE)
 -->
