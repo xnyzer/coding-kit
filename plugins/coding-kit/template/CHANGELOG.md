@@ -4,6 +4,24 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.15.0] — 2026-10-23
+
+### Added
+- `modules/standards/astro.md`: new catalog fragment `astro` for static-first sites —
+  islands only where needed (`client:only` names its framework, personal data never
+  prerendered), Astro's built-in CSP via `security.csp` (not active under `astro dev`,
+  `<ClientRouter />` and Shiki not covered, header-only directives from the proxy), build &
+  quality gate (client-side imports as the shipped set, sharp/libvips licensing, self-hosted
+  fonts, `astro check`, Biome's documented `.astro` override), and the extensionless-import
+  exception to the `ts-node` fragment. Catalog row in `modules/standards/README.md`
+  (trigger: `astro`).
+- The fragment states an adoption-time requirement: on the `ts-node` module an Astro project
+  changes the managed `tsconfig.json`, `biome.json` and `justfile`, registers each deviation
+  in `.claude/convention-overrides.md` in the same step, and ignores `.astro/`.
+- No module pulls the fragment by default. Like `nextjs` it is retrofitted per project via
+  `/choose-stack` or `/prep-step`, because its import rule contradicts the `ts-node`
+  fragment's `.js`-extension rule.
+
 ## [0.14.1] — 2026-10-23
 
 ### Changed

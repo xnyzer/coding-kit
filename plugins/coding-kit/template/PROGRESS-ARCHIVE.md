@@ -5,6 +5,62 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-019 — Standards fragment astro (2026-10-23)
+
+**Problem:** The catalog had no fragment for Astro. A project that adopted Astro got no
+guidance on the static-first/islands model, Astro's built-in CSP, its asset pipeline or how
+`.astro` files enter the quality gate, and nothing recorded that Astro's bundler resolution
+contradicts the `.js`-extension rule of the `ts-node` fragment.
+
+**Implemented:**
+
+- `modules/standards/astro.md` (new, wrapped in `fragment:astro`): an adoption-time
+  requirement up front, then four sections — *Static first, islands only where needed*
+  (`client:*` preference, `client:only` names its framework, state via a store library,
+  React islands also under `react`, personal data never prerendered), *Strict Content
+  Security Policy* (`security.csp`, no `'unsafe-inline'`/`'unsafe-eval'`, verify with
+  `build` + `preview`, `<ClientRouter />` and Shiki not covered, `set:html` vs `set:text`,
+  header-only directives from the proxy → `nginx`), *Build & quality gate* (client-side
+  imports as the shipped set, sharp/libvips licensing, self-hosted fonts, conditional
+  service-worker rule, `astro check`, Biome's documented `.astro` override) and *Imports*
+  (extensionless, recorded as an override against `ts-node`).
+- `modules/standards/README.md`: catalog row
+  `| astro | Static-first sites: islands, strict CSP, build & quality gate, images | astro |`.
+- Sync invariant: `VERSION` 0.14.1 → 0.15.0 (minor, new catalog content) + `CHANGELOG.md`
+  entry (Added). No `MANIFEST.md` change — fragment files are not listed individually
+  (F-013 precedent). No module declares the fragment; projects retrofit it via
+  `/choose-stack` or `/prep-step`.
+
+**Verification:** version-dependent claims checked at prep time against the current Astro
+docs (configuration and directives reference, fonts guide), Biome's language-support page
+and the npm registry, not from memory. Fragment markers and line widths checked by hand —
+the validator only resolves catalog fragments a `MODULE.md` declares, and none declares
+`astro`. `just check` green; diff scanned for secrets and private data (clean).
+
+**Notable decisions:**
+
+- **Companion action in the fragment** (beyond the intake sketch): on the `ts-node` module
+  an Astro project deviates from three *managed* files — `tsconfig.json` (extends
+  `astro/tsconfigs/strict`), `biome.json` (`.astro` override) and the `justfile` gate
+  (`astro check`, devDependencies `@astrojs/check` + `typescript`). The fragment requires
+  registering each in `.claude/convention-overrides.md` in the adoption step, otherwise
+  `/update-conventions` reverts them and `.astro` files drop out of the gate; plus
+  `.astro/` in `.gitignore`. No binding order (unlike `nextjs`' `AGENTS.md`). The HOW-TO
+  needed no change — since F-017 its rows describe companion actions generically.
+- **Draft corrections:** "dependencies are shipped to browsers" reworded (the scaffold lists
+  `astro` itself under `dependencies`); "personal data always `client:only`" widened to
+  client-side *or* on-demand rendering; project-specific notions (load budget, third-party
+  notice list) made conditional; the intake's "Text" (i18n) section dropped as not
+  Astro-specific.
+- **No version numbers in the text:** CSP named by its config key `security.csp`, Biome's
+  rule list marked "currently" with a pointer to its docs, no service-worker integration
+  named (`@vite-pwa/astro` peers stop at Astro 5).
+- **Follow-up candidate (not built):** the `nextjs` fragment has the same gap — its managed
+  tsconfig/Biome/gate deviations are not registered as overrides; to be proposed via
+  `/add-feature`.
+
+---
+
 ## F-018 — HOW-TO: state where the workflow skills come from (2026-10-23)
 
 **Problem:** The skill overview in `core/HOW-TO-CODE-WITH-CLAUDE.md` listed the workflow

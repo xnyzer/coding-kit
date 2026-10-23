@@ -23,6 +23,7 @@ this catalog defines only the mapping.
 |----------|--------|------------------------------------------------------|
 | `react` | React components, styling/theming, i18n, a11y, performance | `react`, `react-dom` |
 | `nextjs` | App Router boundaries, routing & caching, assets, build, configuration | `next` |
+| `astro` | Static-first sites: islands, strict CSP, build & quality gate, images | `astro` |
 | `prisma` | Prisma data access, schema & migrations | `prisma`, `@prisma/client` |
 | `api-design` | REST API design, request/response validation, web security boundary | `express`, `fastify`, `koa`, `hono`, `nestjs` |
 | `docker` | Container images, compose, entrypoint & startup | `Dockerfile`, `docker-compose.yml` |
