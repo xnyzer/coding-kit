@@ -56,7 +56,7 @@ _Intake new ideas via `/add-feature` — they get the next F-number._
 
 ### F-019 — Standards fragment astro
 
-**Status:** BACKLOG
+**Status:** PLANNED
 
 **Problem:** The catalog has no fragment for Astro. A project that adopts Astro gets no
 guidance on the static-first/islands model, Astro's built-in CSP, its asset pipeline or
@@ -81,8 +81,9 @@ Like `nextjs`, no module declares it; projects retrofit it via `/choose-stack` o
   Astro-specific, would force an i18n layer on single-language sites (intake decision).
 - Sync invariant: minor `VERSION` bump + `CHANGELOG.md` entry in the same commit; no
   `MANIFEST.md` change — fragment files are not listed individually (F-013 precedent).
-- Draft body from intake (proposed in another session; not binding, markers and the
-  dropped "Text" section omitted):
+- Draft body from intake (proposed in another session; markers and the dropped "Text"
+  section omitted). It is the starting point for the build; the corrections and additions
+  under **Prep decisions** below take precedence over it:
 
   ```markdown
   ### Astro
@@ -122,18 +123,42 @@ Like `nextjs`, no module declares it; projects retrofit it via `/choose-stack` o
 
 **Dependencies:** none.
 
-**Still to analyse:**
-- `dependencies` vs. `devDependencies` rule: the Astro scaffold lists `astro` itself under
-  `dependencies`, so "dependencies are shipped to browsers" is not accurate — reword.
-- Conditional wording for project-specific notions ("load budget", "third-party license
-  list") — e.g. "if the project defines one".
-- Verify version-dependent claims against the current Astro/Biome docs at prep time, not
-  from memory: built-in CSP stable or experimental and its config key; which features it
-  excludes (`<ClientRouter/>`, Shiki); `client:only` needs a framework hint; Biome's
-  Astro support and documented overrides; state of service-worker integrations.
-- Companion actions (F-017): does adopting Astro need any (e.g. the package behind
-  `astro check`, a `tsconfig` extending Astro's preset)? If so, check whether the HOW-TO
-  rows need an update.
+**Prep decisions (2026-10-23, verified against current Astro/Biome docs and the npm
+registry):**
+- **CSP:** built-in CSP is stable under `security.csp` — name the key, no version number.
+  Delivered as a `<meta>` tag, so header-only directives (`frame-ancestors`, reporting,
+  HSTS) come from the server/proxy → cross-reference `nginx`. Not active in `dev`: verify
+  with `build` + `preview`. `'unsafe-inline'` in a directive stops Astro's hash emission.
+  Not covered: `<ClientRouter />` (use the native View Transition API) and Shiki (use
+  `<Prism />`); external scripts/styles need their own hashes.
+- **Islands:** `client:only` requires the framework value (e.g. `client:only="react"`).
+  `set:html` is not escaped — trusted content only; `set:text` for anything else.
+- **Personal data** is never prerendered: rendered client-side (`client:only`) or on demand
+  (`export const prerender = false`); such pages are `noindex` (replaces the draft's
+  "always `client:only`").
+- **Dependencies:** reword — what ships to visitors is what islands and `<script>` tags
+  import, not the `dependencies` list (the scaffold lists `astro` itself there).
+  Project-specific notions conditional ("if the project defines a load budget / keeps a
+  third-party notice list").
+- **Images & fonts:** sharp is Apache-2.0, its prebuilt libvips binaries LGPL-3.0-or-later;
+  static output → build time only, on-demand rendering with a Node adapter → libvips ships
+  in the deployed image. Fonts self-hosted via Astro's `fonts` config or local files.
+- **Service worker:** no maintained integration supports the current Astro major
+  (`@vite-pwa/astro` peers stop at Astro 5) — keep the draft's conditional wording, name no
+  integration.
+- **Biome:** Astro support is experimental; with full HTML support disabled, Biome documents
+  an override for `**/*.astro` turning off `useConst`, `useImportType`,
+  `noUnusedVariables`, `noUnusedImports` — state it as "the override Biome documents".
+- **Companion action (stated in the fragment, due at adoption, no binding order):** an
+  Astro project on the `ts-node` module changes three *managed* files — `tsconfig.json`
+  (extends `astro/tsconfigs/strict`), `biome.json` (the `.astro` override) and `justfile`
+  (`astro check` in the gate, devDependencies `@astrojs/check` + `typescript`) — and
+  registers each in `.claude/convention-overrides.md`, otherwise `/update-conventions`
+  reverts them. Plus `.astro/` (generated types) in `.gitignore`.
+- **HOW-TO:** no change — since F-017 its rows describe companion actions generically.
+- **Out of scope, follow-up candidate:** the `nextjs` fragment has the same gap (managed
+  tsconfig/Biome/gate deviations not registered as overrides) — propose via `/add-feature`
+  after F-019.
 
 ---
 
@@ -157,7 +182,7 @@ F-015 Fail-closed env deny set + vendor-aligned agentRules rule (DONE)
 F-016 Correct the agentRules routing in the nextjs fragment (DONE)
 F-017 HOW-TO sync for fragment companion actions (DONE)
 F-018 HOW-TO: state where the workflow skills come from (DONE)
-F-019 Standards fragment astro
+F-019 Standards fragment astro (PLANNED)
 F-020 mise.lock carries platform URLs for CI (DONE)
 F-021 CODING-STANDARDS: readability over cleverness + secure coding beyond secrets (DONE)
 -->
