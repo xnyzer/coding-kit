@@ -20,7 +20,7 @@ werden.
 
 Projekt-CLAUDE.md lesen: Zweck/Scope, Sprache der lebenden Doku, Graphiti-group_id
 (ohne Graphiti-Block/MCP still überspringen), Sicherheits-Postur (THREAT-MODEL.md
-→ strengster Maßstab im Preflight). Template-Checkout und MANIFEST auflösen wie
+→ strengster Maßstab im Preflight). Template und MANIFEST auflösen wie
 `/coding-kit:update-conventions` § 0 (wird für Nachzug und private/-Regeln
 gebraucht). Prüf-Infrastruktur des Projekts ermitteln: justfile
 (`just check` als Gate), `scripts/privacy-lint.sh`, konfigurierter Secrets-Scanner

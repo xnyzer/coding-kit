@@ -28,17 +28,16 @@ Aus der Short-Info Vorschläge ableiten und bestätigen lassen statt offen zu fr
    („kein Multi-User", „kein Hosting"). Nicht-Ziele sind so verbindlich wie Ziele.
 4. **Constraints:** technisch/rechtlich/Plattform/Budget — Kandidaten aus der Short-Info
    und dem gewählten Stack vorschlagen.
-5. **Eigenschafts-Trigger des Fragment-Katalogs** — nur wenn das project-template
-   erreichbar ist (im /new-project-Flow ist es bereits aufgelöst; standalone ohne
-   Template still überspringen): die `*characteristic:*`-Zeilen aus
-   `modules/standards/README.md` zur Laufzeit lesen und je Zeile als Ja/Nein-Frage
+5. **Eigenschafts-Trigger des Fragment-Katalogs:** die `*characteristic:*`-Zeilen aus
+   `${CLAUDE_PLUGIN_ROOT}/template/modules/standards/README.md` zur Laufzeit lesen (das
+   Template kommt mit dem Plugin, siehe `/choose-stack` § 0) und je Zeile als Ja/Nein-Frage
    stellen (z. B. audit-logging → „Gibt es Nutzer-/Admin-Aktionen, die Daten
    verändern?") _(Default: nein)_. Treffer als Constraint + Decision-Log-Eintrag in
    der REQUIREMENTS.md festhalten.
 
 ## 2. REQUIREMENTS.md schreiben (M5-Struktur)
 
-Struktur = Template-Skelett (`core/REQUIREMENTS.md` im project-template): Kopfnotiz
+Struktur = Template-Skelett (`${CLAUDE_PLUGIN_ROOT}/template/core/REQUIREMENTS.md`): Kopfnotiz
 „Transitional artifact" mit Auflöse-Regel, **Goals**, **Core features** (nummeriert —
 jedes wird eine F-Nummer), **Out of scope**, **Constraints**, **Decision log** (datiert,
 Product/Technical getrennt; Historie nie umschreiben — neue Einträge ergänzen),

@@ -37,10 +37,10 @@ the plugin.
 
 | Skill | When to use | What happens |
 |-------|-------------|--------------|
-| `/add-feature` | Put a new task on the roadmap | Analysis → write-up → entry in PROGRESS.md (status **BACKLOG**) |
+| `/add-feature` | Put a new task on the roadmap — you start it, or Claude does when a new task comes up while building | Analysis → write-up → your OK → entry in PROGRESS.md (status **BACKLOG**) |
 | `/prep-step` | Plan a task before building it | Questions the sketch against the code, sizes it, decomposes into substeps → plan in PROGRESS.md (status **PLANNED**). If the task introduces a new framework/dependency, checks standards coverage against the fragment catalog — matching dependency signals **and** characteristic triggers — and proposes appending missing catalog fragments, or authoring a project-local fragment (with a manual adoption proposal for the template). A fragment that also requires a change in the project itself brings that change into the plan |
 | `/build-step` | Implement a planned task | Works the plan substep by substep, verifying each; ends every substep with a `/step-done` recommendation |
-| `/step-done` | After finishing a task/substep | Code review → `just check` → secrets & privacy scan → standards-coverage backstop → docs → commit question |
+| `/step-done` | After finishing a task/substep | Code review → `just check` → secrets & privacy scan → standards-coverage backstop → preview of the PROGRESS booking with the commit message → one approval → booking + commit |
 | `/teach-step` | Implement it yourself, guided | Socratic guidance — you write all the code; Claude reads it, gives graded hints, runs tests, writes nothing itself |
 | `/audit-code` | One-off audit of existing code | Check (optionally scoped to an area or path) → results in AUDIT-RESULTS.md (gitignored) |
 
@@ -69,6 +69,8 @@ Claude: Records the F-number in PROGRESS.md, updates the feature index
 ```
 
 **Important:** Everything gets an F-number. No distinction between "feature" and "task".
+Claude may also start `/add-feature` itself — for an idea that comes up during
+`/build-step`, say — but the entry is still written only after your OK.
 
 ---
 
@@ -82,9 +84,9 @@ Claude: Records the plan in PROGRESS.md (status PLANNED)
 You:    /build-step F-002
 Claude: Implements F-002a, verifies it, recommends /step-done
 You:    /step-done
-Claude: Review, checks, PROGRESS-ARCHIVE, commit question
-You:    yes, commit
-Claude: Committed. Continue with F-002b?
+Claude: Review, checks, scans — then the PROGRESS booking and commit message as a preview
+You:    book and commit
+Claude: Booked and committed. Continue with F-002b?
 ```
 
 Three skills, one per phase: `/prep-step` plans (→ `PLANNED`), `/build-step` implements the
@@ -106,10 +108,13 @@ Large → 3–5 substeps. `/prep-step` without an argument takes the next open t
 3. **Standards-coverage backstop** — diff-based: new manifest dependencies or signal files
    without a matching standards fragment are reported as a gap, with a proposal to append
    the fragment. Non-blocking — it never stops the finish.
-4. **PROGRESS.md / PROGRESS-ARCHIVE.md** — Done table updated, detail section archived.
-5. **Graphiti** — knowledge-graph update (if configured).
-6. **Commit** — asks whether to commit; proposes a Conventional Commits message and
-   verifies the commit email is a GitHub noreply address.
+4. **PROGRESS booking, as a preview** — done row, archive entry and `(DONE)` marker are
+   prepared, not yet written.
+5. **One approval for booking and commit** — the preview comes with a proposed
+   Conventional Commits message; you choose *book and commit*, *book only*, or *change
+   the text*. Only then are `PROGRESS.md` / `PROGRESS-ARCHIVE.md` written, `just check`
+   re-run and the commit made (commit email verified as a GitHub noreply address).
+6. **Graphiti** — knowledge-graph update after the booking (if configured).
 
 ---
 
@@ -131,7 +136,8 @@ Large → 3–5 substeps. `/prep-step` without an argument takes the next open t
 
 - **Not everything at once.** Decompose large tasks via `/prep-step`.
 - **`/step-done` after each substep** — otherwise details get lost in the docs.
-- **Claude never commits automatically.** You are always asked.
+- **Claude never commits automatically.** You are always asked — and no PROGRESS entry is
+  written without your OK either.
 - **Languages:** see the Languages block in `CLAUDE.md` — living docs in
   {{LANG_LIVING_DOCS}}, code comments in {{LANG_COMMENTS}}, commit prose in
   {{LANG_COMMITS}} (Conventional-Commit tokens stay English); identifiers and

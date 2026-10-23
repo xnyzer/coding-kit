@@ -4,7 +4,9 @@
 Plugin content is everything under plugins/coding-kit/{skills,hooks,template}/. When a
 change touches it, plugin.json must carry a version above the comparison base, and
 the CHANGELOG must have a `## <version>` entry for it. Several commits may share one
-unreleased version: the base is the pushed state, not the previous commit.
+unreleased version: the base is the pushed state, not the previous commit. A target that
+leaves the MANIFEST core-managed table also needs a row for that version in
+`## Removed and renamed targets`.
 
   --staged        pre-commit: staged changes, base = upstream branch (fallback: HEAD)
   --since <rev>   CI: changes from <rev> to HEAD; an all-zero <rev> (new branch) skips
@@ -24,7 +26,13 @@ PLUGIN = "plugins/coding-kit"
 CONTENT_PREFIXES = tuple(f"{PLUGIN}/{part}/" for part in ("skills", "hooks", "template"))
 PLUGIN_JSON = f"{PLUGIN}/.claude-plugin/plugin.json"
 CHANGELOG = f"{PLUGIN}/CHANGELOG.md"
+MANIFEST = f"{PLUGIN}/template/MANIFEST.md"
 NULL_REV = re.compile(r"^0+$")
+# Table rows as parsed by scripts/validate.py — keep both in sync.
+CORE_ROW_RE = re.compile(r"^\|\s*`(core/[^`]+)`\s*\|\s*(`[^`]+`|same path)\s*\|", re.MULTILINE)
+REMOVED_ROW_RE = re.compile(
+    r"^\|\s*(\d+(?:\.\d+)*)\s*\|\s*`([^`]+)`\s*\|\s*(`[^`]+`|removed)\s*\|", re.MULTILINE
+)
 
 
 def git(*args: str) -> str | None:
@@ -59,6 +67,39 @@ def has_changelog_entry(spec: str, version: str) -> bool:
     return re.search(rf"^## {re.escape(version)}(\s|$)", text, re.MULTILINE) is not None
 
 
+def manifest_section(text: str, title: str) -> str:
+    match = re.search(rf"^## {re.escape(title)}[ \t]*$(.*?)(?=^## |\Z)", text, re.M | re.S)
+    return match.group(1) if match else ""
+
+
+def core_targets(manifest: str) -> set[str]:
+    rows = CORE_ROW_RE.findall(manifest_section(manifest, "Core-managed files"))
+    return {
+        source.removeprefix("core/") if target == "same path" else target.strip("`")
+        for source, target in rows
+    }
+
+
+def check_removed_targets(base: str, current: str, version: str) -> list[str]:
+    """A target that leaves the core-managed table needs a row for this version in
+    MANIFEST § Removed and renamed targets — /update-conventions reads only that table."""
+    old, new = file_at(base, MANIFEST), file_at(current, MANIFEST)
+    if old is None or new is None:
+        return []
+    declared = {
+        target
+        for row_version, target, _ in REMOVED_ROW_RE.findall(
+            manifest_section(new, "Removed and renamed targets")
+        )
+        if row_version == version
+    }
+    return [
+        f"{MANIFEST}: core target '{target}' left the core-managed table — add a {version} "
+        "row to '## Removed and renamed targets'"
+        for target in sorted(core_targets(old) - core_targets(new) - declared)
+    ]
+
+
 def check(changed: list[str], base: str, current: str) -> list[str]:
     """Findings for the change set; `current` is "" (index) or "HEAD"."""
     touched = sorted(p for p in changed if p.startswith(CONTENT_PREFIXES))
@@ -78,6 +119,8 @@ def check(changed: list[str], base: str, current: str) -> list[str]:
         )
     if not has_changelog_entry(current, new_raw):
         findings.append(f"{CHANGELOG}: no '## {new_raw}' entry for the bumped version")
+    if MANIFEST in changed:
+        findings.extend(check_removed_targets(base, current, new_raw))
     return findings
 
 

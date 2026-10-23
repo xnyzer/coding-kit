@@ -17,6 +17,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 |------|--------------|--------|
 | F-039a | Import und Grundgerüst → **project-template-Historie (37 Commits, bis 0.16.0) unter `plugins/coding-kit/template/` importiert (Template-Nummern als `TPL-NNN`), Repo-eigenes entfernt; CHANGELOG unter dem Plugin mit eingefrorenen Abschnitten; Validator prüft das Template (Registry aus dem MANIFEST, Blocklist repo-weit); Versionsregel vor jedem Commit und in der CI; Version 1.0.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 | F-039b | Dokumente zusammenführen → **ein Archiv für beide Reihen (55 Einträge, Template als `TPL-NNN`, neueste oben, Kopf erklärt das Schema); Done-Tabelle neu ab 1.0.0; offene Einträge auf ein Repo umgeschrieben, F-026 in F-039/F-032 aufgegangen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
+| F-039c | Skills und Vertrag auf das gebündelte Template → **Template-Auflösung über `${CLAUDE_PLUGIN_ROOT}/template` (kein Klon, Checkout oder Override); new-project baut ein leeres Repo und stempelt die Plugin-Version; update-conventions mit Update-Fenster aus `### Template` und der MANIFEST-Tabelle für entfernte/umbenannte Ziele; Vertragsprüfungen im Validator; HOW-TO-Nachzug aus F-038a; toter `security-tool`-Verweis entfernt.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 
 ---
 
@@ -97,39 +98,6 @@ wird danach archiviert.
 
 **Abhängigkeiten:** F-038 (erledigt). Ersetzt F-035. Vor F-036 umsetzen. Nimmt F-026 auf
 und die Template-Teile von F-032 weitgehend vorweg.
-
-#### F-039c — Skills und Vertrag auf das gebündelte Template
-
-**Was:** `choose-stack` § 0 → `${CLAUDE_PLUGIN_ROOT}/template` (kein Klon, kein Override).
-`new-project`: leeres Repo (`gh repo create … --clone` ohne `--template`), „Aufräumen" in
-§ 4b entfällt, Stempel und Erst-Commit aus `plugin.json`. `update-conventions`: § 0,
-Update-Fenster (eingefrorener Template-Abschnitt unter 1.0.0, `### Template` ab 1.0.0,
-sonst nur Stempel neu), A2.8 über die MANIFEST-Tabelle, Übernahme-Vorschlag an eine
-coding-kit-Session bzw. ein Issue im coding-kit-Repo, `CODING_KIT_TEMPLATE_REPO` entfällt.
-Wortlaut in `define-requirements`, `choose-license`, `go-public`, `check-upstreams`,
-`prep-step`, `step-done`. MANIFEST: Tabelle `## Removed and renamed targets`,
-§ Version stamp, Quelle von `TEMPLATE_VERSION`, § Sync direction. HOW-TO-Nachzug aus
-F-038a (`/step-done` verbucht erst nach Vorschau und Freigabe, gebündelt mit der
-Commit-Frage; `/add-feature` startet auch Claude selbst, eingetragen wird nach OK).
-Vertragsprüfungen im Validator: `manifest-format` = von den Skills genanntes Format;
-Core-Tabelle ↔ Dateien unter `template/core/` in beide Richtungen; Seed-Sections-Inventar
-↔ Marker in den Dateien; in Skills genannte Template-Pfade existieren; entfernte
-Core-Zeile ohne Tabellen-Eintrag. CHANGELOG 1.0.0, `plugin.json`-Description.
-
-**Dateien:** `plugins/coding-kit/skills/{choose-stack,new-project,update-conventions,
-define-requirements,choose-license,go-public,check-upstreams,prep-step,step-done}/SKILL.md`,
-`plugins/coding-kit/template/MANIFEST.md`,
-`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`, `scripts/validate.py`,
-`plugins/coding-kit/CHANGELOG.md`, `plugins/coding-kit/.claude-plugin/plugin.json`.
-
-**Abhängigkeiten:** F-039a.
-
-**Abnahmekriterien:**
-- [ ] `just check` grün; eingebaute Vertragsfehler werden erkannt.
-- [ ] Kein Skill nennt mehr den lokalen project-template-Checkout, `gh repo clone` des
-      Templates oder `CODING_KIT_TEMPLATE_REPO` (grep).
-- [ ] Unter `claude --plugin-dir plugins/coding-kit` listet `/coding-kit:new-project
-      dry-run` die Ziele aus dem gebündelten Template.
 
 #### F-039d — Repo-Doku und Regeln
 

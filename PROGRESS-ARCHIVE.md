@@ -16,6 +16,87 @@ zusammen:
 
 ---
 
+## F-039c — Skills und Vertrag auf das gebündelte Template (2026-10-23)
+
+Teil von F-039 (Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0;
+F-039d–e folgen).
+
+**Problem:** Die Skills suchten das Template in einem lokalen Checkout oder klonten es von
+GitHub, `new-project` legte Repos per `gh repo create --template` an, und
+`update-conventions` löste alte Stempel über die Git-Historie eines Checkouts auf — alles
+Annahmen aus der Zeit zweier Repos.
+
+**Was entstanden ist (Plugin 1.0.0, unveröffentlicht):**
+
+- **`choose-stack` § 0:** Template = `${CLAUDE_PLUGIN_ROOT}/template`, Version aus
+  `plugin.json`; kein Klon, kein Checkout, kein Override. Hinweis, dass die Variable nur
+  im Skill-Text ersetzt wird; Arbeit am Template per `claude --plugin-dir`.
+  Known-limitation-Abgleich gegen das Plugin-CHANGELOG.
+- **`new-project`:** leeres Repo per `gh repo create … --clone` (Branch-Prüfung auf
+  `main`), Quellen relativ zu `${CLAUDE_PLUGIN_ROOT}/template`, „Aufräumen" ersetzt
+  durch „nur Manifest-Ziele", Stempel und `TEMPLATE_VERSION` aus `plugin.json`,
+  Erst-Commit `feat: bootstrap from coding-kit <Version> (<Modul> module)`. Den toten
+  Verweis auf den Optional-Block `security-tool` gestrichen (im Template seit 0.2.0
+  entfernt, TPL-Commit `380aaa1`).
+- **`update-conventions`:** § 0 auf das gebündelte Template; Update-Fenster aus den
+  `### Template`-Abschnitten, Stempel unter 1.0.0 zusätzlich aus dem eingefrorenen
+  Template-Abschnitt, leeres Fenster → nur neu stempeln; A2.8 über MANIFEST § Removed
+  and renamed targets statt Git-Historie; Übernahme-Vorschlag an eine
+  coding-kit-Session bzw. als Issue an das Repo aus der `homepage` in `plugin.json`;
+  Ausweichpfad für ein MANIFEST ohne § Seed sections entfernt.
+- **Übrige Skills:** `define-requirements` (Katalog und REQUIREMENTS-Skelett aus dem
+  Plugin), `choose-license` (mitgelieferte LICENSE), `go-public` (kein
+  Template-Checkout mehr).
+- **MANIFEST:** Einleitung (eine Version mit dem Plugin), `TEMPLATE_VERSION` aus
+  `plugin.json`, Sync direction an das coding-kit-Repo, neue Tabelle
+  `## Removed and renamed targets` (leer), § Version stamp auf Plugin-Version und
+  CHANGELOG-Fenster.
+- **HOW-TO (Template, managed):** Nachzug aus F-038a — `/step-done` verbucht nach
+  Vorschau und einer Freigabe mit der Commit-Message, `/add-feature` startet auch
+  Claude, eingetragen wird nach OK.
+- **Validator:** Vertragsprüfungen als eigene kleine Funktionen — `manifest-format`
+  gegen die Formatangaben der Skills, Core-Tabelle ↔ Dateien unter `template/core/`,
+  Seed-Inventar ↔ Section-Marker, Plausibilität der Tabelle für entfernte/umbenannte
+  Ziele, Optional-Blöcke (MANIFEST „used" ↔ Template ↔ Skills),
+  `${CLAUDE_PLUGIN_ROOT}/…`-Pfade in Skills.
+- **Versionsregel:** Verlässt ein Ziel die Core-Tabelle, verlangt sie eine Zeile für die
+  aktuelle Version in `## Removed and renamed targets`.
+- **CHANGELOG 1.0.0** mit Abschnitt `### Template` (HOW-TO); `plugin.json`-Description
+  nennt das Template.
+
+**Verifikation:** `just check` grün. Fehlerinjektion in Scratch-Kopien: 9
+Vertragsfälle und 3 Optional-Block-Fälle werden gemeldet, die echte Fassung ist grün.
+grep: kein Skill nennt mehr den lokalen project-template-Checkout, `gh repo clone` des
+Templates oder `CODING_KIT_TEMPLATE_REPO`. Headless-Trockenlauf (`claude -p
+--plugin-dir plugins/coding-kit --permission-mode plan`, `/coding-kit:new-project
+dry-run`): Template `plugins/coding-kit/template`, Version 1.0.0, `manifest-format: 1`,
+`gh repo create … --clone` ohne `--template`, 31 Core-Ziele (privat, ohne public-only)
+plus python-Modul, Erst-Commit `bootstrap from coding-kit 1.0.0`; der Lauf fand dabei
+den `security-tool`-Verweis. `claude plugin validate` grün (einzige Warnung: fehlendes
+Icon, schon bei 0.20.0).
+
+**Notable decisions:**
+- `prep-step`, `step-done` und `check-upstreams` unverändert: Sie verweisen auf
+  `/choose-stack` § 0 bzw. auf das Kit-Repo, das bleibt richtig.
+- Issue-Ziel aus der `homepage` in `plugin.json` statt aus `gh api user` — deklarierte
+  Quelle statt Ableitung aus dem eigenen Konto.
+- Prüfung „entferntes Core-Ziel ohne Tabellenzeile" in der Versionsregel statt im
+  Validator, weil sie einen Diff braucht.
+- Den `security-tool`-Fund in diesem Schritt behoben, samt Prüfung, statt ins Backlog
+  (Entscheidung des Nutzers) — eine Abweichung zwischen Skill und Template ist genau
+  das, was F-039 abstellen soll.
+- Ein leerer Klon übernimmt den Default-Branch des Remotes (lokal geprüft); die
+  Anleitung prüft trotzdem auf `main`, weil die CI-Vorlage darauf triggert.
+
+**Geänderte Dateien:**
+`plugins/coding-kit/skills/{choose-stack,new-project,update-conventions,define-requirements,choose-license,go-public}/SKILL.md`,
+`plugins/coding-kit/template/MANIFEST.md`,
+`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`, `scripts/validate.py`,
+`scripts/version-rule.py`, `plugins/coding-kit/CHANGELOG.md`,
+`plugins/coding-kit/.claude-plugin/plugin.json`, `PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-039b — Dokumente zusammenführen (2026-10-23)
 
 Teil von F-039 (Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0;

@@ -3,8 +3,9 @@
 `manifest-format: 1`
 
 The contract between this template and the coding-kit skills (`/new-project`,
-`/update-conventions`, `/choose-stack`). Skills couple to the **manifest format version**
-above, not to the template `VERSION`.
+`/update-conventions`, `/choose-stack`). Template and skills ship together in the
+coding-kit plugin and share its version (`version` in the plugin's
+`.claude-plugin/plugin.json`); the skills check the **manifest format version** above.
 
 ## Placeholders
 
@@ -27,7 +28,7 @@ lowercase and therefore never collide).
 | `{{LANG_README}}` | Language of README & public docs | `/new-project` language preset (default: English) |
 | `{{LICENSE_SPDX}}` | Chosen license SPDX id | `/choose-license` ("TBD" allowed) |
 | `{{CODEQL_LANGUAGES}}` | CodeQL language for the module | stack module (`javascript-typescript`, `python`, `go`) |
-| `{{TEMPLATE_VERSION}}` | Template `VERSION` at instantiation | `VERSION` |
+| `{{TEMPLATE_VERSION}}` | Plugin version at instantiation | `version` in the plugin's `.claude-plugin/plugin.json` |
 
 ## Markers
 
@@ -46,8 +47,8 @@ lowercase and therefore never collide).
 Convention flow is **exclusively downward**: template → project, via `/new-project` and
 `/update-conventions`. There is no automated upstream path. Conventions always originate
 in this template; an improvement discovered in a project reaches the template as a
-**manually initiated adoption proposal** (a session in this repository, or a GitHub
-issue) — never as an automatic write from a project.
+**manually initiated adoption proposal** (a session in the coding-kit repository, or an
+issue there) — never as an automatic write from a project.
 
 ## Policies
 
@@ -96,6 +97,20 @@ issue) — never as an automatic write from a project.
 | `core/scripts/privacy-lint.sh` | `scripts/privacy-lint.sh` | managed |
 | `core/docs/adr/README.md` | same path | managed |
 | `core/docs/adr/0000-template.md` | same path | managed |
+
+## Removed and renamed targets
+
+Declared history of targets that left the core-managed table, so `/update-conventions`
+can offer moving or removing them in projects without reading git history. One row per
+target: `Version` is the release that removed or renamed it, `New target` is the new path
+or `removed`, `Policy` is the target's policy before the change. A change that drops a
+target from the core-managed table adds its row in the same commit (`just version-rule`
+enforces it).
+
+| Version | Old target | New target | Policy |
+|---------|------------|------------|--------|
+
+No target has been removed or renamed so far (checked back to template 0.1.0).
 
 ## Module contract
 
@@ -160,8 +175,11 @@ contract and the inventory:
 
 ## Version stamp
 
-`/new-project` writes the template `VERSION` into `.claude/template-version`.
-`/update-conventions` diffs stamp → current `VERSION` using this manifest; projects without
-a stamp get a heuristic comparison with per-file confirmation. `mise.lock` is generated
+`/new-project` writes the plugin version into `.claude/template-version`.
+`/update-conventions` takes the update window from the plugin `CHANGELOG.md` — the
+`### Template` sections of the releases above the stamp; stamps below 1.0.0 belong to the
+former project-template series and also read its frozen section — and diffs using this
+manifest; projects without a stamp get a heuristic comparison with per-file
+confirmation. `mise.lock` is generated
 per project at instantiation with `mise lock` — the platform set comes from
 `lockfile_platforms` in `core/mise.toml` — and never shipped by the template.

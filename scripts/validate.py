@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Repo validation: file syntax, plugin/marketplace/skill contracts, privacy lint, and
 the bundled template (placeholder registry, paired fragment/section markers, the
-standards-fragment catalog).
+standards-fragment catalog, and the contract between skills and MANIFEST).
 
 Run via `just check` (uv provides PyYAML). Exits non-zero on any finding.
 """
@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -70,6 +71,23 @@ PAIRED_MARKER_RE = re.compile(r"<!--\s*(/?)(fragment|section):([a-z0-9][a-z0-9-]
 STANDARDS_DECL_RE = re.compile(r"Standards fragments:(.*)")
 CATALOG_SECTION_RE = re.compile(r"^## Catalog[ \t]*$(.*?)(?=^## |\Z)", re.MULTILINE | re.DOTALL)
 CATALOG_ROW_RE = re.compile(r"^\|\s*`([a-z0-9][a-z0-9-]*)`\s*\|", re.MULTILINE)
+
+# Contract between the skills and the bundled template (MANIFEST.md).
+MANIFEST_FORMAT_RE = re.compile(r"^`manifest-format: (\d+)`", re.MULTILINE)
+SKILL_FORMAT_CLAIM_RE = re.compile(r"kann\s+Format\s+`(\d+)`")
+CORE_ROW_RE = re.compile(r"^\|\s*`(core/[^`]+)`\s*\|\s*(`[^`]+`|same path)\s*\|", re.MULTILINE)
+SEED_ROW_RE = re.compile(r"^\|\s*`(core/[^`]+)`\s*\|(.*)\|[ \t]*$", re.MULTILINE)
+SECTION_NAME_RE = re.compile(r"`([a-z0-9][a-z0-9-]*)`")
+OPTIONAL_USED_RE = re.compile(r"template:optional:NAME[^\n]*?\(used:([^)]*)\)")
+OPTIONAL_BLOCK_RE = re.compile(r"<!--\s*template:optional:([a-z0-9][a-z0-9-]*)\s*-->")
+OPTIONAL_NAMED_RE = re.compile(r"template:optional:([a-z0-9][a-z0-9-]*)")
+REMOVED_ROW_RE = re.compile(
+    r"^\|\s*(\d+(?:\.\d+)*)\s*\|\s*`([^`]+)`\s*\|\s*(`[^`]+`|removed)\s*\|\s*([^|]*?)\s*\|",
+    re.MULTILINE,
+)
+# `${CLAUDE_PLUGIN_ROOT}/<path>` as written in skill text (substituted at load time).
+PLUGIN_ROOT_VAR = "${CLAUDE_PLUGIN_ROOT}"
+PLUGIN_PATH_RE = re.compile(re.escape(PLUGIN_ROOT_VAR) + r"/([^\s`'\"),;]+)")
 
 MUST_BE_EXECUTABLE = ("install.sh",)
 
@@ -281,6 +299,163 @@ def check_catalog(catalog_dir: Path, findings: list[str]) -> None:
     check_catalog_table(catalog_dir, files, findings)
 
 
+def manifest_section(text: str, title: str) -> str | None:
+    match = re.search(rf"^## {re.escape(title)}[ \t]*$(.*?)(?=^## |\Z)", text, re.M | re.S)
+    return match.group(1) if match else None
+
+
+def core_target(source: str, target: str) -> str:
+    """Project path of a core-managed row (`same path` = source without `core/`)."""
+    return source.removeprefix("core/") if target == "same path" else target.strip("`")
+
+
+def template_files(subdir: str) -> list[Path]:
+    """Files under the template subdir that git tracks or would track (respects the
+    template's own .gitignore files); plain directory walk outside a git checkout."""
+    root = TEMPLATE_ROOT / subdir
+    result = subprocess.run(
+        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", str(root)],
+        cwd=REPO_ROOT, capture_output=True, text=True,
+    )
+    if result.returncode == 0:
+        paths = [REPO_ROOT / p for p in result.stdout.split("\0") if p]
+    else:
+        paths = [p for p in root.rglob("*") if p.name != ".DS_Store"]
+    return sorted(p for p in paths if p.is_file())
+
+
+def check_manifest_format(text: str, skills: list[Path], findings: list[str]) -> None:
+    """The format MANIFEST declares is the one the skills say they support."""
+    fmt = MANIFEST_FORMAT_RE.search(text)
+    claims = [
+        (skill, claim.group(1))
+        for skill in skills
+        for claim in SKILL_FORMAT_CLAIM_RE.finditer(skill.read_text(encoding="utf-8"))
+    ]
+    if not fmt:
+        findings.append(f"{display_path(MANIFEST_PATH)}: no '`manifest-format: N`' line")
+        return
+    if not claims:
+        findings.append("skills: none states the manifest format it supports ('kann Format `N`')")
+    for skill, claim in claims:
+        if claim != fmt.group(1):
+            findings.append(
+                f"{display_path(skill)}: supports manifest-format {claim}, "
+                f"MANIFEST has {fmt.group(1)}"
+            )
+
+
+def check_core_table(rows: list[tuple[str, str]], findings: list[str]) -> None:
+    """Core-managed table and files under template/core/ match in both directions."""
+    sources = {source for source, _ in rows}
+    if not rows:
+        findings.append(f"{display_path(MANIFEST_PATH)}: no rows in '## Core-managed files'")
+    for source in sorted(sources):
+        if not (TEMPLATE_ROOT / source).is_file():
+            findings.append(
+                f"{display_path(MANIFEST_PATH)}: core-managed table lists {source}, "
+                "but the file is missing"
+            )
+    for path in template_files("core"):
+        if path.relative_to(TEMPLATE_ROOT).as_posix() not in sources:
+            findings.append(f"{display_path(path)}: not in the MANIFEST core-managed table")
+
+
+def check_seed_inventory(text: str, sources: set[str], findings: list[str]) -> None:
+    """MANIFEST § Seed sections lists exactly the section markers in each core file."""
+    inventory = {
+        source: set(SECTION_NAME_RE.findall(names))
+        for source, names in SEED_ROW_RE.findall(manifest_section(text, "Seed sections") or "")
+    }
+    for path in template_files("core"):
+        content = path.read_text(encoding="utf-8", errors="replace")
+        markers = {
+            m.group(3)
+            for m in PAIRED_MARKER_RE.finditer(content)
+            if m.group(2) == "section" and not m.group(1)
+        }
+        listed = inventory.get(path.relative_to(TEMPLATE_ROOT).as_posix(), set())
+        rel = display_path(path)
+        for name in sorted(listed - markers):
+            findings.append(f"{rel}: seed section '{name}' listed in MANIFEST but not marked")
+        for name in sorted(markers - listed):
+            findings.append(f"{rel}: section '{name}' is not in MANIFEST § Seed sections")
+    for source in sorted(inventory.keys() - sources):
+        findings.append(
+            f"{display_path(MANIFEST_PATH)}: seed inventory lists {source}, "
+            "which is not a core-managed source"
+        )
+
+
+def check_removed_table(text: str, targets: set[str], findings: list[str]) -> None:
+    """Rows of § Removed and renamed targets agree with the current core targets."""
+    rel = display_path(MANIFEST_PATH)
+    section = manifest_section(text, "Removed and renamed targets") or ""
+    for version, old, new, policy in REMOVED_ROW_RE.findall(section):
+        if old in targets:
+            findings.append(f"{rel}: '{old}' is listed as removed/renamed in {version} "
+                            "but is still a core target")
+        if new != "removed" and new.strip("`") not in targets:
+            findings.append(f"{rel}: '{old}' renamed to {new} in {version}, "
+                            "which is not a core target")
+        if not policy:
+            findings.append(f"{rel}: removed/renamed row for '{old}' has no policy")
+
+
+def check_optional_blocks(text: str, skills: list[Path], findings: list[str]) -> None:
+    """Optional blocks: MANIFEST § Markers ('used: …'), template content and the
+    `template:optional:<name>` references in skills all name the same blocks."""
+    rel = display_path(MANIFEST_PATH)
+    used = OPTIONAL_USED_RE.search(text)
+    if not used:
+        findings.append(f"{rel}: § Markers does not list the optional blocks ('(used: …)')")
+    declared = set(SECTION_NAME_RE.findall(used.group(1))) if used else set()
+    present = {
+        name
+        for path in template_files("")
+        for name in OPTIONAL_BLOCK_RE.findall(path.read_text(encoding="utf-8", errors="replace"))
+    }
+    for name in sorted(declared - present):
+        findings.append(f"{rel}: optional block '{name}' is listed as used but not in the template")
+    for name in sorted(present - declared):
+        findings.append(f"{rel}: optional block '{name}' is in the template but not in § Markers")
+    for skill in skills:
+        for name in sorted(set(OPTIONAL_NAMED_RE.findall(skill.read_text(encoding="utf-8")))):
+            if name not in present:
+                findings.append(
+                    f"{display_path(skill)}: names template:optional:{name}, "
+                    "which the template does not have"
+                )
+
+
+def check_plugin_paths(skills: list[Path], findings: list[str]) -> None:
+    """Every `${CLAUDE_PLUGIN_ROOT}/<path>` a skill names exists in the plugin."""
+    for skill in skills:
+        for match in PLUGIN_PATH_RE.finditer(skill.read_text(encoding="utf-8")):
+            path = match.group(1).rstrip(".:")
+            if any(ch in path for ch in "<*{"):
+                continue
+            if not (PLUGIN_ROOT / path).exists():
+                findings.append(
+                    f"{display_path(skill)}: names {PLUGIN_ROOT_VAR}/{path}, which does not exist"
+                )
+
+
+def check_template_contract(findings: list[str]) -> None:
+    """Skills and template agree on the MANIFEST contract."""
+    if not MANIFEST_PATH.is_file():
+        return  # reported by load_placeholder_registry
+    text = MANIFEST_PATH.read_text(encoding="utf-8")
+    skills = sorted((PLUGIN_ROOT / "skills").glob("*/SKILL.md"))
+    rows = CORE_ROW_RE.findall(manifest_section(text, "Core-managed files") or "")
+    check_manifest_format(text, skills, findings)
+    check_core_table(rows, findings)
+    check_seed_inventory(text, {source for source, _ in rows}, findings)
+    check_removed_table(text, {core_target(s, t) for s, t in rows}, findings)
+    check_optional_blocks(text, skills, findings)
+    check_plugin_paths(skills, findings)
+
+
 def parse_frontmatter(path: Path, findings: list[str]) -> dict | None:
     text = path.read_text(encoding="utf-8")
     rel = display_path(path)
@@ -393,6 +568,7 @@ def main() -> int:
         if in_template(path):
             check_paired_markers(path, text, findings)
     check_plugin_contracts(findings)
+    check_template_contract(findings)
     check_fragment_declarations(findings)
     check_catalog(CATALOG_DIR, findings)
 

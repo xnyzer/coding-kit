@@ -41,7 +41,8 @@ Im /new-project-Flow schreibt der Orchestrator die Dateien. Standalone in einem
 bestehenden Projekt nach Bestätigung:
 
 - `LICENSE` mit dem kanonischen Lizenztext anlegen/ersetzen (aktuellen Text von der
-  offiziellen Quelle bzw. aus dem project-template übernehmen, nicht aus dem Gedächtnis).
+  offiziellen Quelle bzw. für Apache-2.0 aus `${CLAUDE_PLUGIN_ROOT}/template/core/LICENSE`
+  übernehmen, nicht aus dem Gedächtnis).
 - Paket-Metadaten angleichen, falls vorhanden (`license`-Feld in `pyproject.toml` /
   `package.json` — gültiger SPDX-Ausdruck; bei „TBD" das Feld weglassen statt einen
   ungültigen Wert zu schreiben).

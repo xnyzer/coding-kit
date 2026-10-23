@@ -1,6 +1,6 @@
 ---
 name: update-conventions
-description: Konventionen vom project-template in Projekte verteilen — ausschließlich abwärts. Deterministisch via template-version + MANIFEST, Diff + Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME), Override-Schutz, Migrationen für Altprojekte; erkennt im Template entfernte/umbenannte Dateien und bietet Rückbau/Umzug an. Projektlokale Fragmente ohne Template-Pendant werden nie angefasst, aber mit einem manuell anstoßbaren Übernahme-Vorschlag fürs Template gemeldet. Nichts wird ungefragt überschrieben.
+description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Deterministisch via template-version + MANIFEST, Diff + Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME), Override-Schutz, Migrationen für Altprojekte; erkennt im Template entfernte/umbenannte Dateien und bietet Rückbau/Umzug an. Projektlokale Fragmente ohne Template-Pendant werden nie angefasst, aber mit einem manuell anstoßbaren Übernahme-Vorschlag fürs Template gemeldet. Nichts wird ungefragt überschrieben.
 disable-model-invocation: true
 ---
 
@@ -23,20 +23,19 @@ Override registriert; für Inhalte, die ins Template gehören, gibt es den
 
 ## 0. Template & Vertrag auflösen
 
-Wie `/choose-stack` § 0: Template-Checkout auflösen (lokal unter
-`$CODING_KIT_PROJECTS_DIR/project-template`, sonst `gh repo clone`). `MANIFEST.md`
-lesen; **`manifest-format` prüfen** (dieser Skill kann Format `1` — sonst abbrechen und
-auf ein Kit-Update verweisen). Aktuelle Template-`VERSION` und `CHANGELOG.md` merken.
+Wie `/choose-stack` § 0: das Template unter `${CLAUDE_PLUGIN_ROOT}/template`.
+`MANIFEST.md` lesen; **`manifest-format` prüfen** (dieser Skill kann Format `1` — sonst
+abbrechen und auf ein Kit-Update verweisen). Die aktuelle Version
+(`${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`) und das CHANGELOG
+(`${CLAUDE_PLUGIN_ROOT}/CHANGELOG.md`) merken.
 Für den Fragment-Abgleich zusätzlich MANIFEST § Standards fragments und
 `modules/standards/README.md` (Fragment-Katalog) lesen. Für den seed-Abgleich
-MANIFEST § Seed sections (Zonen-Inventar) lesen — **fehlt der Abschnitt** (älterer
-Template-Stand), entfallen seed-Abgleich (A2 Schritt 7) und Marker-Migration
-(A3 Schritt 7) still; `manifest-format` bleibt davon unberührt.
+MANIFEST § Seed sections (Zonen-Inventar) lesen.
 
 ## Kontext-Recovery
 
 Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf übernehmen,
-`git status` in Projekt und Template prüfen, beim nächsten offenen Punkt weitermachen.
+`git status` im Projekt prüfen, beim nächsten offenen Punkt weitermachen.
 
 ---
 
@@ -53,17 +52,23 @@ Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf überneh
 
 ### A2. Je Projekt mit Stempel: deterministischer Abgleich
 
-1. Stempel lesen (`.claude/template-version`). Stempel == aktuelle VERSION → nur noch
+1. Stempel lesen (`.claude/template-version`). Stempel == aktuelle Version → nur noch
    den Lock-Abgleich aus Schritt 9 (ohne Stempel-Änderung), dann „aktuell", fertig —
    auch Projekte mit aktuellem Stempel können eine `mise.lock` ohne Plattform-Einträge
-   tragen, wenn ein älterer Kit-Stand sie angelegt hat. Sonst die CHANGELOG-Einträge
-   zwischen Stempel und aktueller VERSION zeigen (das ist das Update-Fenster).
+   tragen, wenn ein älterer Kit-Stand sie angelegt hat. Sonst das **Update-Fenster** aus
+   dem CHANGELOG bestimmen und zeigen: von jedem Release über dem Stempel bis zur
+   aktuellen Version nur den Abschnitt `### Template`; Stempel unter 1.0.0 gehören zur
+   alten Template-Reihe und nehmen zusätzlich die Einträge über dem Stempel aus dem
+   eingefrorenen Abschnitt „project-template bis 0.16.0" — den Abschnitt
+   „coding-kit-Plugin bis 0.20.0" nie lesen, seine Nummern gehören zu einer anderen
+   Reihe. **Fenster leer** (seit dem Stempel kein Template-Inhalt geändert): kein
+   Datei-Abgleich, nur Lock-Abgleich und Stempel neu setzen, Commit-Frage wie Schritt 9.
 2. **Projektwerte rückauflösen** für die Platzhalter: Name (Repo), OWNER (`gh api
    user`), Beschreibung (Repo-Beschreibung), GROUP_ID + die fünf `LANG_*`-Sprachen
    (Languages-Block der Projekt-CLAUDE.md; Alt-Projekte mit einzeiliger
    Doku-Sprach-Angabe: deren Wert für die lebende Doku, übrige Dimensionen englisch),
    LICENSE_SPDX (LICENSE-Datei), CODEQL_LANGUAGES (eingebautes Modul), TEMPLATE_VERSION
-   (neue VERSION).
+   (aktuelle Version).
 3. **Soll-Zustand erzeugen:** jede **managed** Datei der Core-Tabelle plus die
    **module**-Parts des eingebauten Moduls (erkennbar an justfile-Kopf/mise.toml;
    im Zweifel fragen) aus dem aktuellen Template instanziieren — Platzhalter füllen,
@@ -100,37 +105,32 @@ Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf überneh
    § Begleithandlungen), und offene Fälle mit Diff zur Bestätigung anbieten. Dieser
    Pfad ist der einzige, der **Bestandsprojekte** erreicht: wer ein Fragment bekam,
    bevor es seine Anforderung enthielt, wird sonst von keinem Skill je eingeholt.
-7. **seed-Abgleich (abschnittsweise, je `section:NAME`-Zone):** entfällt still, wenn
-   das Template kein § Seed sections führt (§ 0). Je seed-Datei aus dem dortigen
-   Inventar: die markierten Zonen der Template-Fassung instanziieren (Platzhalter
-   wie Schritt 3, Werte aus Schritt 2) und einzeln gegen die gleichnamige Ist-Zone
-   des Projekts diffen. Je Zone dieselben Entscheidungen wie Schritt 5; ein
-   Inline-`<!-- override: … -->` in der Zone schützt genau diese Zone. **Nie die
-   ganze Datei ersetzen oder neu anlegen** — alles außerhalb der Markerpaare bleibt
-   unangetastet. **Fehlendes Markerpaar = dauerhafter Opt-out:** nur informativ
+7. **seed-Abgleich (abschnittsweise, je `section:NAME`-Zone):** Je seed-Datei aus dem
+   Inventar in MANIFEST § Seed sections: die markierten Zonen der Template-Fassung
+   instanziieren (Platzhalter wie Schritt 3, Werte aus Schritt 2) und einzeln gegen
+   die gleichnamige Ist-Zone des Projekts diffen. Je Zone dieselben Entscheidungen wie
+   Schritt 5; ein Inline-`<!-- override: … -->` in der Zone schützt genau diese Zone.
+   **Nie die ganze Datei ersetzen oder neu anlegen** — alles außerhalb der Markerpaare
+   bleibt unangetastet. **Fehlendes Markerpaar = dauerhafter Opt-out:** nur informativ
    auflisten, Marker nie ungefragt wiederherstellen. Sonderfall `claude-graphiti`:
    die Zone liegt im `template:optional:graphiti`-Block — bei Projekten ohne
    Graphiti fehlt sie legitim (kein Opt-out, nichts melden). Fehlen einer Datei
    **alle** Markerpaare (Projekt vor dem Zonen-Vertrag), keine Heuristik — die
    Marker-Migration aus A3 Schritt 7 anbieten.
-8. **Im Template entfernte/umbenannte Dateien:** die Core-Tabelle des Stempel-Stands
-   mit der aktuellen vergleichen. Den Stempel-Stand über die Git-Historie des
-   Template-Checkouts auflösen: den Commit finden, in dem `VERSION` den
-   Stempel-Wert trug (Historie von `VERSION` durchgehen, Inhalt je Commit prüfen),
-   dort das MANIFEST lesen (`git show <commit>:MANIFEST.md`). Ist das nicht
-   auflösbar (z. B. shallow clone, Stempel älter als die Historie): **Fallback**
-   auf die CHANGELOG-Einträge des Update-Fensters (Schritt 1) — nur dort
-   dokumentierte Entfernungen/Umbenennungen verwenden, nichts erraten. Je
-   verschwundenem Ziel unterscheiden: **Umbenennung** (Pendant unter neuem Ziel,
-   gleiche Quelle bzw. laut CHANGELOG) → Umzug anbieten (Inhalt an den neuen Ort,
-   Alt-Datei löschen); **Entfernung** → Rückbau anbieten. Immer je Datei
-   bestätigen; Overrides gelten (Schritt 4). **seed-Dateien nie löschen oder
+8. **Im Template entfernte/umbenannte Dateien:** aus MANIFEST § Removed and renamed
+   targets die Zeilen mit einer Version über dem Stempel (bis zur aktuellen) nehmen —
+   die Tabelle deklariert je Ziel Version, altes Ziel, neues Ziel bzw. `removed` und
+   die frühere Policy; Git-Historie braucht es dafür nicht, nichts erraten. Liegt das
+   alte Ziel im Projekt nicht (mehr), still überspringen. Sonst je Zeile:
+   **Umbenennung** → Umzug anbieten (Inhalt an den neuen Ort, Alt-Datei löschen);
+   **Entfernung** → Rückbau anbieten. Immer je Datei bestätigen; Overrides gelten
+   (Schritt 4). **seed-Dateien** (laut Spalte Policy) **nie löschen oder
    verschieben** — nur melden, die Entscheidung liegt beim Nutzer.
 9. Abschluss pro Projekt: **Lock-Abgleich** — die Prüfung aus `/choose-stack`
    § Lock-Datei erzeugen und prüfen. Hat sich die `mise.toml` in diesem Lauf
    geändert, die Prüfung Lücken gezeigt oder fehlt die Lock-Datei: `mise install &&
    mise lock` anbieten (Ergebnis zusammenfassen, bestätigen lassen), danach erneut
-   prüfen. Dann Stempel auf die neue VERSION setzen, `just check` muss grün sein
+   prüfen. Dann Stempel auf die aktuelle Version setzen, `just check` muss grün sein
    (Write-then-Verify), Commit-Vorschlag (z. B.
    `chore: sync template conventions <alt> -> <neu>`) — **nur nach OK**, dann Push-Frage.
    Fehlt der Languages-Block in der Projekt-CLAUDE.md, die Migration aus A3 Schritt 6
@@ -166,10 +166,9 @@ Erst der Abgleich, dann jede Migration als **eigener bestätigter Schritt**:
    gewählten Sprachen; Struktur-Überschriften (z. B. das PROGRESS-Skelett) dürfen auf
    Wunsch übersetzt werden, die Historie bleibt unverändert.
 7. **section-Marker nachrüsten:** Tragen seed-Dateien noch keine
-   `section:NAME`-Markerpaare (Projekt vor dem Zonen-Vertrag; entfällt still ohne
-   § Seed sections im Template, s. § 0), je Datei anbieten, die Markerpaare aus dem
-   MANIFEST-Inventar um die wiedererkennbaren Zonen zu setzen — reine Wrapper, der
-   Projektinhalt bleibt unverändert. Zonen anhand der Template-Fassung
+   `section:NAME`-Markerpaare (Projekt vor dem Zonen-Vertrag), je Datei anbieten, die
+   Markerpaare aus dem MANIFEST-Inventar um die wiedererkennbaren Zonen zu setzen —
+   reine Wrapper, der Projektinhalt bleibt unverändert. Zonen anhand der Template-Fassung
    identifizieren; nicht Wiederauffindbares auslassen (die Zone wurde ggf. bewusst
    entfernt = Opt-out). Danach greift der abschnittsweise Abgleich aus A2 Schritt 7.
 8. Sind alle managed Dateien abgeglichen: **Stempel setzen** anbieten (macht künftige
@@ -184,15 +183,16 @@ Template-Pendant (oder gehört eine lokale Verbesserung in die Vorlage), wird
 stattdessen **fertiges Material** ausgegeben — ausführen bzw. absenden tut es der
 Nutzer:
 
-- **Kopierfertiger Beispiel-Prompt** für eine project-template-Session: das Fragment
+- **Kopierfertiger Beispiel-Prompt** für eine Session im coding-kit-Repo: das Fragment
   generalisieren (Projektwerte zu Platzhaltern, Englisch, personendatenfrei), als
-  `modules/standards/<name>.md` anlegen, Katalog-Zeile mit Trigger im dortigen README
-  ergänzen, Sync-Invariante des Templates beachten (VERSION-Bump + CHANGELOG im
-  selben Commit) — den generalisierten Fragment-Inhalt in den Prompt beilegen.
-- **Alternativ ein GitHub-Request** ins Template-Repo mit demselben Inhalt, z. B.
-  `gh issue create -R "$(gh api user --jq .login)/project-template" --title
-  "standards: add <name> fragment" --body <Vorschlag>` (Repo-Override via
-  `CODING_KIT_TEMPLATE_REPO` aus der Personal-Config).
+  `plugins/coding-kit/template/modules/standards/<name>.md` anlegen, Katalog-Zeile mit
+  Trigger im dortigen README ergänzen, die Versionsregel des Kits beachten
+  (Versions-Bump in `plugin.json` und CHANGELOG-Eintrag mit Abschnitt `### Template`
+  im selben Commit) — den generalisierten Fragment-Inhalt in den Prompt beilegen.
+- **Alternativ ein Issue** im coding-kit-Repo mit demselben Inhalt. Das Repo steht als
+  `homepage` in `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` (nicht aus dem
+  eigenen Konto ableiten), z. B. `gh issue create -R <owner>/<repo> --title
+  "standards: add <name> fragment" --body <Vorschlag>`.
 
-Nach der Aufnahme ins Template bringt ein regulärer Abwärts-Lauf das neue
-Katalog-Fragment in alle Projekte.
+Nach einem Release mit dem neuen Fragment bringt ein regulärer Abwärts-Lauf es in alle
+Projekte.

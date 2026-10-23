@@ -1,6 +1,6 @@
 ---
 name: choose-stack
-description: Stack-Modul wählen oder nachrüsten. Modus Neuanlage empfiehlt ein project-template-Modul aus der Short-Info (aktuelle Framework-Lage per Websuche verifiziert); Modus Bestandsprojekt rüstet EIN Modul nach bzw. wechselt es — mit Diff und Bestätigung je Datei. Laufende Modul-Updates macht /update-conventions, nicht dieser Skill.
+description: Stack-Modul wählen oder nachrüsten. Modus Neuanlage empfiehlt ein Modul des mitgelieferten Templates aus der Short-Info (aktuelle Framework-Lage per Websuche verifiziert); Modus Bestandsprojekt rüstet EIN Modul nach bzw. wechselt es — mit Diff und Bestätigung je Datei. Laufende Modul-Updates macht /update-conventions, nicht dieser Skill.
 disable-model-invocation: false
 ---
 
@@ -12,12 +12,14 @@ Moduls**. Laufende Updates bereits eingebauter Module laufen über `/update-conv
 
 ## 0. Template auflösen
 
-Quelle ist das project-template — zur Laufzeit auflösen, nie hardcoden:
-
-1. Lokaler Checkout: `$CODING_KIT_PROJECTS_DIR/project-template` (Personal-Config
-   `~/.claude/coding-kit.env`), falls vorhanden.
-2. Sonst: `gh repo clone "$(gh api user --jq .login)/project-template" <tmp> -- --depth 1`
-   (Override möglich via `CODING_KIT_TEMPLATE_REPO` in der Personal-Config).
+Das Template liegt im Plugin: **`${CLAUDE_PLUGIN_ROOT}/template`**. Es kommt mit jedem
+Plugin-Update und gehört immer zur Version dieser Skills (`version` in
+`${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`) — kein Klon, kein lokaler Checkout,
+kein Override. Der Pfad steht hier bereits aufgelöst; in Shell-Befehlen genau ihn
+verwenden, als Umgebungsvariable gibt es `CLAUDE_PLUGIN_ROOT` nicht. Pfad und Version im
+Lauf nennen. Wer am Template selbst arbeitet, startet die Session mit
+`claude --plugin-dir <coding-kit-Checkout>/plugins/coding-kit` — dann kommen Skills und
+Template aus dem Arbeitsstand.
 
 Dort lesen: `MANIFEST.md` (§ Module contract und § Standards fragments — der Vertrag,
 wie Teile und Fragmente angewendet werden), `modules/README.md` (verfügbare Module +
@@ -130,8 +132,8 @@ Download-URL für die Plattform des Runners. `mise install` schreibt diese Eintr
     z. B. `ubuntu-*` → `linux-x64`) → blockiert den Commit; die CI wäre rot. Ursache
     klären (Netz, Tool-Version ohne Release für die Plattform), nicht übergehen.
   - **Übrige Lücken** → melden und gegen die „Known limitation"-Einträge im
-    Template-`CHANGELOG.md` abgleichen; dort dokumentierte Upstream-Lücken sind
-    bekannt und blockieren nicht.
+    `${CLAUDE_PLUGIN_ROOT}/CHANGELOG.md` abgleichen; dort dokumentierte Upstream-Lücken
+    sind bekannt und blockieren nicht.
 - Die `mise.lock` wird mitcommittet — sie ist Projektdatei, nie Template-Inhalt.
 
 ## Rückgabe an den Aufrufer

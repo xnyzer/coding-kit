@@ -1,13 +1,14 @@
 ---
 name: new-project
-description: Neues Projekt anlegen — der Orchestrator. Erhebt die Short-Info, klärt Name/Lizenz/Stack/Sichtbarkeit/Sprachen-Preset/group_id/Anforderungen (mit Defaults, Sub-Skills aufrufbar), zeigt einen Plan und baut nach Bestätigung ein Repo aus dem project-template — Platzhalter füllen, Modul einsetzen, template-version stempeln, Repo-Settings, Verifikation via just check. Trockenlauf mit Argument „dry-run". Nie ohne Bestätigung nach außen wirken.
+description: Neues Projekt anlegen — der Orchestrator. Erhebt die Short-Info, klärt Name/Lizenz/Stack/Sichtbarkeit/Sprachen-Preset/group_id/Anforderungen (mit Defaults, Sub-Skills aufrufbar), zeigt einen Plan und baut nach Bestätigung ein Repo aus dem mitgelieferten Template — Platzhalter füllen, Modul einsetzen, template-version stempeln, Repo-Settings, Verifikation via just check. Trockenlauf mit Argument „dry-run". Nie ohne Bestätigung nach außen wirken.
 disable-model-invocation: true
 ---
 
 # Neues Projekt anlegen
 
-Orchestrator über dem [project-template]-Repo. **Jeder außenwirksame Schritt (Repo
-anlegen, Settings, Commit, Push) wird einzeln bestätigt. Nie automatisch committen.**
+Orchestrator über dem Template, das im Plugin mitkommt (`${CLAUDE_PLUGIN_ROOT}/template`).
+**Jeder außenwirksame Schritt (Repo anlegen, Settings, Commit, Push) wird einzeln
+bestätigt. Nie automatisch committen.**
 
 Argument (optional): Short-Info — und/oder `dry-run` (Trockenlauf: alles zeigen — Fragen,
 Plan, anzulegende Dateien — aber nichts ausführen).
@@ -31,12 +32,11 @@ zuerst lesen und die Short-Info daraus vorschlagen statt offen zu fragen.
 
 ## Schritt 1 — Template auflösen
 
-Wie in `/choose-stack` § 0: lokaler Checkout unter `$CODING_KIT_PROJECTS_DIR/
-project-template`, sonst `gh repo clone "$(gh api user --jq .login)/project-template"
-<tmp> -- --depth 1` (Override: `CODING_KIT_TEMPLATE_REPO`). Dann `MANIFEST.md` lesen —
-sie ist der Vertrag für alles Folgende. **`manifest-format` prüfen:** dieser Skill kann
-Format `1`; bei einer anderen Formatversion abbrechen und auf ein Kit-Update verweisen.
-Template-`VERSION` merken (wird gestempelt).
+Wie in `/choose-stack` § 0: das Template unter `${CLAUDE_PLUGIN_ROOT}/template`. Dann
+`MANIFEST.md` lesen — sie ist der Vertrag für alles Folgende. **`manifest-format`
+prüfen:** dieser Skill kann Format `1`; bei einer anderen Formatversion abbrechen und auf
+ein Kit-Update verweisen. Die Version aus `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`
+merken — sie wird gestempelt und füllt `TEMPLATE_VERSION`.
 
 ## Schritt 2 — Abfragen (eine Frage pro Antwort, je mit Default; Aufschieben erlaubt)
 
@@ -81,11 +81,14 @@ zeigen (core-managed + Modul-Parts), nichts ausführen.
 
 ```bash
 cd "$CODING_KIT_PROJECTS_DIR"
-gh repo create "$(gh api user --jq .login)/<name>" --private|--public \
-  --template <owner>/project-template --clone
+gh repo create "$(gh api user --jq .login)/<name>" --private|--public --clone
 ```
 
-**Kein separates `git init`.** Danach lokale Autor-Config (nie hardcoden):
+Das Repo entsteht **leer**; die Dateien schreibt erst 4b. **Kein separates `git init`** —
+der Klon des leeren Repos übernimmt den Default-Branch des Remotes; `git branch
+--show-current` muss `main` zeigen (die CI-Vorlage triggert auf `main`), sonst vor dem
+ersten Commit `git symbolic-ref HEAD refs/heads/main`. Danach lokale Autor-Config (nie
+hardcoden):
 
 ```bash
 git config user.name  "$(gh api user --jq '.name // .login')"
@@ -96,7 +99,8 @@ Schlägt `create` fehl (Name belegt): zurück zu Schritt 2.1.
 
 ### 4b. Instanziieren (MANIFEST ist die Quelle — nichts roh kopieren)
 
-Je Zeile der **Core-managed-Tabelle**: `core/<Quelle>` → `<Ziel>` instanziieren:
+Je Zeile der **Core-managed-Tabelle**: Quelle `core/<…>` (relativ zu
+`${CLAUDE_PLUGIN_ROOT}/template`) → `<Ziel>` im Projekt instanziieren:
 
 - **Platzhalter** der Registry ersetzen (PROJECT_NAME, PROJECT_NAME_SNAKE,
   PROJECT_DESCRIPTION, OWNER, YEAR, GROUP_ID, LANG_LIVING_DOCS, LANG_CLAUDE_MD,
@@ -104,9 +108,9 @@ Je Zeile der **Core-managed-Tabelle**: `core/<Quelle>` → `<Ziel>` instanziiere
   TEMPLATE_VERSION) — Werte aus Schritt 2 bzw. zur Laufzeit.
 - **`<!-- template:adapt: … -->`**-Stellen aus der Short-Info **konkretisieren** (Zweck/
   Scope in CLAUDE.md, README-Intro, Status-Zeile) und den Marker entfernen.
-- **`<!-- template:optional:NAME -->`**-Blöcke behalten oder samt Inhalt entfernen:
-  `graphiti` je Schritt 2.6; `security-tool` nur behalten, wenn das Projekt ein
-  Security-/Auth-Tool ist (aus der Short-Info ableiten, im Zweifel fragen).
+- **`<!-- template:optional:NAME -->`**-Blöcke behalten oder samt Inhalt entfernen —
+  welche es gibt, nennt MANIFEST § Markers („used"): `template:optional:graphiti` je
+  Schritt 2.6.
 - **`<!-- section:NAME -->`**-Markerpaare in seed-Dateien **unverändert übernehmen**
   (nie entfernen oder „aufräumen") — sie markieren die Zonen, die
   `/update-conventions` später abschnittsweise aktualisieren darf.
@@ -124,14 +128,11 @@ Verlangt eines der Fragmente eine **Begleithandlung** beim Einbau (`/choose-stac
 § Begleithandlungen), gehört sie in denselben Schritt — hier ist sie am billigsten, weil
 sie greift, bevor der Stack das erste Mal läuft.
 
-**Aufräumen:** Nach der Instanziierung bleiben nur Manifest-Ziele + Modul-Dateien.
-Template-Eigenes löschen: `core/`, `modules/`, `MANIFEST.md`, `VERSION`, `CHANGELOG.md`,
-`scripts/` sowie alle Template-Root-Dateien, die kein Manifest-Ziel sind (Template-eigene
-CLAUDE.md/PROGRESS*/README/justfile/mise*/lefthook/renovate/.github wurden durch die
-instanziierten Core-Fassungen ersetzt). Mit `git status` gegenprüfen, dass nichts
-Template-Eigenes übrig ist.
+**Nur Manifest-Ziele:** Ins Repo kommen ausschließlich die Ziele der Core-Tabelle und die
+Modul-Dateien — nie Template-Interna wie `MANIFEST.md`, `modules/` oder `MODULE.md`. Mit
+`git status` gegenprüfen, dass nichts anderes im Projekt liegt.
 
-**Stempeln:** Template-`VERSION` nach `.claude/template-version`.
+**Stempeln:** die Version aus Schritt 1 nach `.claude/template-version`.
 
 ### 4c. Repo-Settings (bestätigt)
 
@@ -164,7 +165,7 @@ REQUIREMENTS.md + initiale F-Nummern in PROGRESS.md) — oder Skelett belassen.
   private IPs/Hostnames, Klarnamen (Muster wie `/step-done` § 3). Quell-Dokumente mit
   Privatbezug (z. B. die STARTPROMPT-Datei) nach `private/` des Projekts verschieben.
 - Erst-Commit **erst nach explizitem OK** — Vorschlag:
-  `feat: bootstrap from project-template <TEMPLATE_VERSION> (<modul> module)`,
+  `feat: bootstrap from coding-kit <TEMPLATE_VERSION> (<modul> module)`,
   Body mit den Kernentscheidungen (Lizenz, Sichtbarkeit, Modul), Abschluss
   `Co-Authored-By: Claude <noreply@anthropic.com>`. Danach Push (bestätigt).
 

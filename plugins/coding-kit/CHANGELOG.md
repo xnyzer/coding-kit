@@ -22,13 +22,46 @@ hier eine Version.
 - **Template-Import:** Historie des project-template bis 0.16.0 mit umgeschriebenen
   Pfaden übernommen; seine Aufgaben-Nummern heißen in den Commit-Messages und hier
   `TPL-NNN`. Repo-eigene Dateien des Templates (Governance-Doku, Tooling, eigene
-  `VERSION`) sind entfallen, der Template-Inhalt selbst ist unverändert.
+  `VERSION`) sind entfallen.
+- **Skills lesen das Template aus dem Plugin:** `choose-stack` § 0 löst es als
+  `${CLAUDE_PLUGIN_ROOT}/template` auf — kein Klon, kein lokaler Checkout, kein
+  `CODING_KIT_TEMPLATE_REPO` mehr; wer am Template arbeitet, testet mit
+  `claude --plugin-dir`. Die übrigen Skills verweisen weiter auf § 0; `define-requirements`
+  liest den Fragment-Katalog jetzt immer, `choose-license` nennt die mitgelieferte
+  LICENSE, `go-public` spricht nicht mehr von einem Template-Checkout.
+- **`new-project`:** legt ein leeres Repo an (`gh repo create … --clone` ohne
+  `--template`), schreibt nur die MANIFEST-Ziele hinein (das Aufräumen entfällt) und
+  stempelt die Plugin-Version; der Erst-Commit heißt
+  `feat: bootstrap from coding-kit <Version> (<Modul> module)`. Der Optional-Block
+  `security-tool`, den das Template längst nicht mehr hat, ist aus der Anleitung
+  gestrichen.
+- **`update-conventions`:** Update-Fenster aus den `### Template`-Abschnitten dieses
+  CHANGELOG — Stempel unter 1.0.0 zusätzlich aus dem eingefrorenen Template-Abschnitt;
+  ohne Template-Änderung seit dem Stempel nur neu stempeln. Entfernte und umbenannte
+  Dateien kommen aus der neuen MANIFEST-Tabelle statt aus der Git-Historie eines
+  Checkouts. Der Übernahme-Vorschlag geht an eine coding-kit-Session bzw. als Issue an
+  das Repo aus der `homepage` in `plugin.json`. Der Ausweichpfad für ein Template ohne
+  § Seed sections entfällt.
+- **MANIFEST:** neue Tabelle `## Removed and renamed targets` (leer — seit 0.1.0 wurde
+  kein Ziel entfernt oder umbenannt); Stempel und `TEMPLATE_VERSION` kommen aus der
+  Plugin-Version; Übernahme-Vorschläge gehen an das coding-kit-Repo.
 - **Validator:** prüft jetzt auch das Template — Platzhalter gegen die Registry im
   MANIFEST (statt einer festen Liste im Skript), Fragment- und Section-Marker, den
-  Fragment-Katalog und eine private Blocklist.
+  Fragment-Katalog und eine private Blocklist. Dazu der Vertrag zwischen Skills und
+  Template: dasselbe `manifest-format`, Core-Tabelle und `core/`-Dateien decken sich in
+  beide Richtungen, Seed-Inventar und Marker passen, die Optional-Blöcke im MANIFEST,
+  im Template und in den Skills stimmen überein, jeder in einem Skill genannte
+  `${CLAUDE_PLUGIN_ROOT}/…`-Pfad existiert.
 - **Versionsregel geprüft:** `scripts/version-rule.py` lässt Änderungen an Skills, Hooks
   oder Template nur mit einer Version über dem gepushten Stand und einem
-  CHANGELOG-Eintrag dafür zu — vor jedem Commit und in der CI.
+  CHANGELOG-Eintrag dafür zu — vor jedem Commit und in der CI. Verlässt ein Ziel die
+  Core-Tabelle, verlangt sie eine Zeile in `## Removed and renamed targets`.
+
+### Template
+
+- `HOW-TO-CODE-WITH-CLAUDE.md` (managed): `/step-done` verbucht die PROGRESS erst nach
+  einer Vorschau und einer Freigabe zusammen mit der Commit-Message; `/add-feature` darf
+  auch Claude starten, eingetragen wird erst nach OK (Nachzug zu Plugin 0.20.0).
 
 ## Eingefroren: coding-kit-Plugin bis 0.20.0
 
