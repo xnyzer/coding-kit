@@ -13,7 +13,7 @@ Skills, Hooks oder Template bumpt die Version und bekommt hier einen Eintrag;
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 1.0.0 — unveröffentlicht
+## 1.0.0 — 2026-10-24
 
 Ein Repo für Plugin und Template (F-039): Das project-template liegt jetzt unter
 `plugins/coding-kit/template/` und kommt mit dem Plugin; Plugin und Template teilen ab
