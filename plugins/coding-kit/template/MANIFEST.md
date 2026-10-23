@@ -163,4 +163,5 @@ contract and the inventory:
 `/new-project` writes the template `VERSION` into `.claude/template-version`.
 `/update-conventions` diffs stamp → current `VERSION` using this manifest; projects without
 a stamp get a heuristic comparison with per-file confirmation. `mise.lock` is generated
-per project at instantiation (`mise install`), never shipped by the template.
+per project at instantiation with `mise lock` — the platform set comes from
+`lockfile_platforms` in `core/mise.toml` — and never shipped by the template.

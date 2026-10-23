@@ -4,6 +4,42 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.13.3] — 2026-10-23
+
+### Fixed
+- `core/mise.toml`: `[settings]` now pins `lockfile_platforms` to the seven common mise
+  platforms (`linux-x64`, `linux-x64-musl`, `linux-arm64`, `linux-arm64-musl`,
+  `macos-x64`, `macos-arm64`, `windows-x64`), and the header names `mise lock` as the
+  generator. Before, the header named `mise install`, which writes versions without
+  download URLs for tools already installed on the machine; and a lockfile holding only
+  some platforms kept exactly that set through every later `mise install` or plain
+  `mise lock`. CI then failed with "No lockfile URL found … on platform linux-x64
+  (--locked mode)" (reported from a downstream project). With the setting, plain
+  `mise lock` always covers the full set — on first generation, when repairing an
+  incomplete lockfile, and on Renovate updates (Renovate runs `mise lock` without a
+  platform flag). The setting is the single source of the set; no `--platform` flag is
+  used anywhere.
+- `MANIFEST.md` § Version stamp: `mise.lock` is generated with `mise lock`, platform set
+  from `lockfile_platforms`. Counterpart: coding-kit F-031 (`/new-project`,
+  `/choose-stack` and `/update-conventions` run the lock command).
+
+### Migration note
+- Existing projects regenerate `mise.lock` once with `mise lock` after taking over the
+  new `core/mise.toml`, then commit it. `/update-conventions` performs this step; until
+  it does, run the command by hand.
+
+### Not changed (recorded decision)
+- The template CI (`core/.github/workflows/ci.yml`, `modules/go/ci.part.yml`) gets no
+  explicit `--locked`: `jdx/mise-action` adds it on its own whenever the repository holds
+  a `mise.lock`, so the lock is already enforced. An explicit `install_args` would only
+  add diff to every downstream workflow.
+
+### Known limitation
+- pnpm stopped publishing a `macos-x64` binary during the 11.x line, and the most recent
+  releases also lack `linux-arm64-musl`. Projects on the `ts-node` module therefore
+  cannot lock (or install) pnpm on those platforms. This is an upstream gap that the
+  lockfile cannot close.
+
 ## [0.13.2] — 2026-08-11
 
 ### Changed

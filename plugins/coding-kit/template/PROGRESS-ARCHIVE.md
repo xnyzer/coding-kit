@@ -5,6 +5,65 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-020 — mise.lock carries platform URLs for CI (2026-10-23)
+
+**Problem:** `core/mise.toml` named `mise install` as the generator of `mise.lock`. That
+is not reliable: for tools already installed on the machine it writes versions without
+any download URLs, and a lockfile holding only some platforms keeps exactly that set
+through every later `mise install` or plain `mise lock`. A downstream project created
+from template 0.13.2 then failed in CI with
+`No lockfile URL found for <tool>@<version> on platform linux-x64 (--locked mode)`.
+
+**What was built (2 template files + sync):**
+
+- `core/mise.toml`: header names `mise lock` as the generator and states that CI installs
+  with `--locked` and needs a URL for every platform in `lockfile_platforms`;
+  `[settings]` pins `lockfile_platforms` to the seven common mise platforms —
+  `linux-x64`, `linux-x64-musl`, `linux-arm64`, `linux-arm64-musl`, `macos-x64`,
+  `macos-arm64`, `windows-x64`.
+- `MANIFEST.md` § Version stamp: `mise.lock` is generated with `mise lock`, the platform
+  set comes from `lockfile_platforms`.
+- Sync invariant: `VERSION` 0.13.3 (patch) + `CHANGELOG.md` entry (Fixed, Migration note,
+  Not changed, Known limitation). No `MANIFEST.md` file-list change.
+
+**Verification:** `core/mise.toml` combined with each module part (`go`, `python`,
+`ts-node`) — plain `mise lock` wrote URLs for every tool on all seven platforms, except
+pnpm on `macos-x64`. A lockfile holding only `macos-arm64` was repaired to the full set
+by plain `mise lock`. `just check` green.
+
+**Findings at prep (verified 2026-10-23 against mise 2026.10.6, Renovate 44.181.0,
+`jdx/mise-action` v4.2.0):**
+
+- `lockfile_platforms` exists since mise 2026.4.8. With it, `mise lock` covers the set
+  plus the current platform; without it, plain `mise lock` keeps the platforms already in
+  the lockfile (the common set only for a new one).
+- Renovate's mise manager runs `mise lock <tools>` without `--platform`, so the setting
+  governs its updates as well.
+- `jdx/mise-action` adds `--locked` itself whenever the repository holds a `mise.lock`.
+  The intake assumption that the template CI does not enforce the lock was wrong.
+
+**Notable decisions:**
+
+- **All seven platforms over a minimal set** (user decision): every OS, Intel Mac and
+  Windows included, so no contributor's `mise lock` ever changes the platform set. The
+  intake proposal had pinned only `linux-x64` + `macos-arm64`; a minimal set would have
+  meant lockfile churn for every contributor outside it.
+- **The setting is the single source of the set** — no `mise lock --platform …` in the
+  header or the MANIFEST, unlike the intake sketch. A flag next to the setting would
+  state the set twice and could drift.
+- **No CI change.** An explicit `install_args: --locked` would duplicate what the action
+  already does and add diff to every downstream workflow; recorded in the CHANGELOG under
+  *Not changed*.
+- **Migration stated once, in the CHANGELOG:** existing projects regenerate `mise.lock`
+  with `mise lock`; coding-kit's `/update-conventions` (its F-031) executes that step,
+  the command is the fallback until then.
+- **Known limitation, not fixed here:** pnpm stopped publishing a `macos-x64` binary
+  during the 11.x line, and the most recent releases also lack `linux-arm64-musl`.
+  Projects on the `ts-node` module cannot lock or install pnpm there — an upstream gap.
+  Installing pnpm another way (e.g. via the npm backend) would be a separate backlog item.
+
+---
+
 ## F-017 — HOW-TO sync for fragment companion actions (2026-08-11)
 
 **Problem:** coding-kit 0.18.0 (its F-022) built the counterpart to 0.13.1 — a generic
