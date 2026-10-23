@@ -5,6 +5,56 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-022 — nextjs fragment: register managed-file deviations as overrides (2026-10-23)
+
+**Problem:** On the `ts-node` module, a Next.js project has to deviate from managed files,
+but the `nextjs` fragment only mentioned overrides for `agentRules` and imports.
+`/update-conventions` would revert the unregistered deviations — the gap F-019 closed for
+`astro`.
+
+**Implemented:**
+
+- `modules/standards/nextjs.md`: a new opening paragraph *Adopting Next changes managed
+  files — do it in the adoption step*, mirroring `astro`. Each deviation is registered in
+  `.claude/convention-overrides.md` in the same step:
+  - `tsconfig.json` shaped for Next (bundler resolution, DOM libs, `next-env.d.ts` and the
+    `.next` types in `include`, `next` plugin, `rootDir`/`include` matching `src/app` or
+    `app/`), with the reason: Next rewrites it in place on every `next dev` / `next build` /
+    `next typegen` unless it uses `extends` or `references`, yet leaves the non-fitting
+    `lib` and `nodenext` resolution alone. Pointer to the installed
+    `writeConfigurationDefaults.js` (not public API).
+  - `justfile`: `dev` → `next dev`, `build` → `next build`, `next typegen` before
+    `tsc --noEmit` in the gate.
+  - `tsconfig.build.json` removed; `.next/` and `next-env.d.ts` in `.gitignore`.
+  - `biome.json` explicitly unchanged.
+  The `AGENTS.md` rule (with its binding order) and the *Imports* section are unchanged.
+- Sync invariant: `VERSION` 0.15.0 → 0.16.0 (minor — a new rule, like F-019/F-021) +
+  `CHANGELOG.md` entry (Added + Migration note for projects that adopted `nextjs` earlier).
+  No `MANIFEST.md` change.
+
+**Verification:** claims checked at prep time against the Next TypeScript docs, the source
+of the published `next` package (`dist/lib/typescript/writeConfigurationDefaults.js`, read
+for the current release) and the Biome domains docs. Edited section re-read; `just check`
+green; diff scanned for secrets and private data (clean).
+
+**Notable decisions:**
+
+- **`biome.json` dropped from the list** (the intake sketch named it as a candidate):
+  Biome's `next` domain activates automatically from the dependency, and generated files
+  stay out through `useIgnoreFile`.
+- **Order not binding**, unlike `AGENTS.md`: if Next rewrites the file first, its edits land
+  in the managed file but the fix is the same — the fragment says "ideally before the first
+  `next dev`".
+- **`next typegen` in the gate** (beyond the sketch): the route helper types (`PageProps`,
+  …) only exist after `next dev` / `next build` / `next typegen`, so `tsc --noEmit` alone
+  fails in a fresh checkout and in CI.
+- **Minor instead of patch** (deviation from the sketch): the change adds a rule, it does
+  not correct one.
+- **Migration note added** to the CHANGELOG entry (not in the plan): projects that adopted
+  `nextjs` before 0.16.0 learn what to register and what to add.
+
+---
+
 ## F-019 — Standards fragment astro (2026-10-23)
 
 **Problem:** The catalog had no fragment for Astro. A project that adopted Astro got no

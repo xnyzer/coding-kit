@@ -4,6 +4,24 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.16.0] — 2026-10-23
+
+### Added
+- `modules/standards/nextjs.md`: an adoption-time requirement up front, mirroring `astro`.
+  On the `ts-node` module a Next project deviates from managed files and registers each in
+  `.claude/convention-overrides.md` in the same step: `tsconfig.json` shaped for Next
+  (bundler resolution, DOM libs, `include`, `next` plugin) — Next rewrites it in place on
+  every `next dev` / `next build` / `next typegen` unless it uses `extends` or `references`,
+  but leaves the non-fitting `lib` and `nodenext` resolution untouched; `justfile` recipes
+  via `next dev` / `next build` and `next typegen` before `tsc --noEmit` in the gate;
+  `tsconfig.build.json` removed; `.next/` and `next-env.d.ts` in `.gitignore`. `biome.json`
+  needs no change (Biome's `next` domain activates from the dependency).
+
+### Migration note
+- A project that adopted `nextjs` earlier: `/update-conventions` re-checks the requirement.
+  Register the deviations the project already made; make the missing ones (most likely
+  `next typegen` in the gate and `next-env.d.ts` in `.gitignore`).
+
 ## [0.15.0] — 2026-10-23
 
 ### Added

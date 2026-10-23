@@ -1,6 +1,26 @@
 <!-- fragment:nextjs -->
 ### Next.js (App Router)
 
+**Adopting Next changes managed files — do it in the adoption step.** On the `ts-node`
+module, a Next project deviates from managed files; register each deviation in
+`.claude/convention-overrides.md` in the same step, otherwise `/update-conventions` reverts it:
+- `tsconfig.json` — Next rewrites it in place on every `next dev` / `next build` /
+  `next typegen` unless it uses `extends` or `references`: it forces its mandatory compiler
+  options (e.g. `jsx`, `esModuleInterop`, `resolveJsonModule`) and adds `include`, `exclude`
+  and the `next` plugin, but keeps a `lib` without DOM and `nodenext` resolution. Shape the
+  file for Next yourself — bundler resolution, DOM libs, `next-env.d.ts` and the `.next`
+  types in `include`, the `next` plugin, `rootDir`/`include` matching `src/app` or `app/` —
+  so Next finds nothing left to change. Ideally before the first `next dev`; if Next ran
+  first, the fix is the same. This rewrite is not public API; verify it against the installed
+  `node_modules/next/dist/lib/typescript/writeConfigurationDefaults.js`.
+- `justfile` — `dev` runs `next dev`, `build` runs `next build`; the gate runs `next typegen`
+  before `tsc --noEmit`, so the route helper types (`PageProps`, …) exist in a fresh checkout
+  and in CI.
+- `tsconfig.build.json` — obsolete, since `next build` builds and type-checks; remove it.
+- `.gitignore` — add `.next/` and `next-env.d.ts` (generated; never edited by hand).
+- `biome.json` needs no change: Biome's `next` domain activates from the dependency, and the
+  generated files stay out through the ignore file.
+
 **Check the shipped docs before writing App Router code.** Recent majors changed APIs,
 conventions and file structure against what most training data contains; the authoritative
 reference for the installed version ships inside the package, at `node_modules/next/dist/docs/`
