@@ -34,7 +34,16 @@ prozedurale Hälfte des Scaffolding-Systems (die projektbezogene Hälfte ist
   bekommt einen `CHANGELOG.md`-Eintrag.
 - Neue Skills folgen `docs/skill-authoring.md` — erst lesen, dann bauen. Anlage und
   Änderung laufen über den repo-lokalen Skill `/add-skill` (`.claude/skills/`): er
-  führt durch Konvention, Begleit-Änderungen und Abschluss inkl. PROGRESS-Pflege.
+  führt durch Konvention, Begleit-Änderungen und Abschluss inkl. PROGRESS-Pflege —
+  für Plugin-Skills wie für repo-lokale. Claude darf ihn selbst starten.
+- **PROGRESS nur mit Freigabe:** Jeder neue oder geänderte Eintrag in `PROGRESS.md`,
+  `PROGRESS-ARCHIVE.md` oder im FEATURE-INDEX wird zuerst als Vorschau gezeigt und erst
+  nach ausdrücklichem OK des Nutzers geschrieben — auch wenn ein Skill ihn anlegt.
+  Claude darf add-feature und add-skill selbst starten; die Freigabe gilt dem Eintrag.
+  Die Plugin-Skills tragen die Regel als Freigabe-Gate (`docs/skill-authoring.md`).
+- **project-template ist bis F-039 eingefroren:** keine Änderungen dort. Braucht eine
+  Änderung ein Gegenstück im Template, den Nachzug im F-039-Eintrag der `PROGRESS.md`
+  vermerken (Freigabe-Gate). Die Regel entfällt mit F-039.
 
 ## Konventionen
 

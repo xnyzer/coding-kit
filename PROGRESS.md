@@ -37,69 +37,14 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-028 | Utility-Skill handoff → **kopierfertiger Handoff-Prompt am Kontextlimit: Orientierung zuerst (zuletzt, Stand, als Nächstes inkl. Reihenfolge-Vorgabe der Aufgabenliste), sonst nur Undokumentiertes (Maßstab je Zeile) mit Verweisen auf Quellen; kontextsparsam (keine Rückfrage, max. ein Shell-Aufruf), Schreibverbot inkl. Memory, Ausgabe als ein Codeblock (Plugin 0.19.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-09-16 |
 | F-031 | mise.lock mit Plattform-Einträgen erzeugen → **`/choose-stack` § Lock-Datei erzeugen und prüfen als gemeinsame Mechanik: `mise lock` nach `mise install`, ohne `--platform` (Liste allein aus `lockfile_platforms`), Lücke auf der CI-Runner-Plattform blockiert den Commit; new-project/choose-stack erzeugen und prüfen, `update-conventions` gleicht auch bei aktuellem Stempel ab. Pairing: project-template 0.13.3 (F-020) (Plugin 0.19.1).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 | F-038a | Freigabe-Gate im Plugin → **step-done verbucht erst nach Vorschau + Freigabe (eine Frage zusammen mit dem Commit, „nur verbuchen" möglich), build-step startet add-feature selbst und sammelt im autonomen Lauf nur, add-feature ausdrücklich von Claude aufrufbar, Pflicht-Baustein „Freigabe-Gate" in der Authoring-Doku (Plugin 0.20.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
+| F-038b | Freigabe-Regel repo-lokal → **Kit-CLAUDE.md: „PROGRESS nur mit Freigabe" und Einfrier-Regel für project-template bis F-039; `add-skill` ausdrücklich von Claude aufrufbar, deckt repo-lokale Skills ab (Checkliste ohne Bump), F-Nummer vor dem Bauen über add-feature, HOW-TO-Nachzug als Vermerk in F-039. F-038 damit komplett (repo-lokal, kein Release).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 
 ---
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-### F-038 — Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature als von Claude aufrufbar klarstellen
-
-**Status:** PLANNED
-
-**Problem:** Ob Claude PROGRESS-Einträge ohne ausdrückliche Freigabe schreiben darf, regelt
-jeder Skill für sich: add-feature und prep-step warten auf OK, andere Pfade (add-skill
-„spätestens beim Abschluss", step-done) sagen dazu nichts. Gleichzeitig hält Claude
-add-feature für nur vom Nutzer startbar, obwohl der Skill seit jeher
-`disable-model-invocation: false` trägt — die Texte legen das nahe (build-step: „via
-add-feature … vorschlagen", add-feature: „Der Nutzer hat eine Idee …").
-
-**Idee:** Eine kit-weite Regel, die für alle gilt: Claude darf add-feature (und andere
-PROGRESS-schreibende Skills) selbst starten, aber jeder neue oder geänderte PROGRESS-Eintrag
-wird erst als Vorschau gezeigt und nach ausdrücklichem OK geschrieben. Die Regel ist an
-einer Stelle definiert (Authoring-Doku); die Skills tragen sie als einheitlichen Standardsatz.
-
-**Lösungsskizze** (Stand Planung 2026-10-23):
-- Konvention in `docs/skill-authoring.md` als Pflicht-Baustein „Freigabe-Gate" mit
-  Standardsatz; jeder PROGRESS-schreibende Skill trägt den Satz an seiner Schreibstelle
-  (die Doku liegt nicht im Plugin-Cache, Skills können sie zur Laufzeit nicht lesen).
-- Geltung: alles, was in `PROGRESS.md`, `PROGRESS-ARCHIVE.md` oder den FEATURE-INDEX
-  geschrieben wird — ausgenommen das Schreiben genau des zuvor freigegebenen Texts.
-- Bereits gegated (bleiben, wie sie sind): add-feature, prep-step, define-requirements,
-  refine-requirements; teach-step, check-upstreams, new-project gehen über diese.
-- `step-done`: § 4 zeigt Done-Zeile, Archiv-Eintrag und `(DONE)`-Marker als Vorschau,
-  gebündelt mit der Commit-Frage (ein OK für beides, „nur verbuchen" möglich); „Direkt
-  tun, ohne zu fragen" entfällt. Reihenfolge: Vorschau → OK → schreiben → Checks → Commit.
-- `build-step`: Claude startet add-feature selbst (Entwurf, Freigabe); im autonomen Lauf
-  werden neue Ideen nur gesammelt und am Ende vorgeschlagen. Start-Freigabe des Laufs =
-  „verbuchen und committen"; ohne sie bleiben PROGRESS- und Commit-Änderungen Vorschläge.
-- `add-feature`: Beschreibung und Einleitung sagen, dass Claude ihn selbst starten darf.
-- prep-step/build-step bleiben nur manuell startbar (gewollt).
-- `templates/global-CLAUDE.md` bleibt unverändert (gilt auch für Projekte ohne Kit).
-- Repo-lokaler Teil: Freigabe-Regel in die Kit-CLAUDE.md; `add-skill` ausdrücklich von
-  Claude aufrufbar, deckt repo-lokale Skills ab, Freigabe-Pflicht vor PROGRESS-Einträgen;
-  Schritt 3 (HOW-TO im Template) vermerkt den Nachzug in F-039, solange project-template
-  eingefroren ist.
-- Plugin 0.20.0 (Verhaltensänderung), CHANGELOG.
-
-**Abhängigkeiten:** keine. Vor F-039 und F-036 umsetzen (beide laufen dann schon nach der
-Regel; F-036 und F-034 bauen auf denselben Skills auf).
-
-#### F-038b — Repo-lokal: CLAUDE.md und add-skill
-
-**Was:** Freigabe-Regel in die Kit-CLAUDE.md (Verweis auf die Skills); `add-skill`
-ausdrücklich von Claude aufrufbar, repo-lokale Skills mit eigener kurzer Checkliste,
-Freigabe-Pflicht in Schritt 0 und 5, Schritt 3 vermerkt HOW-TO-Nachzug in F-039.
-
-**Dateien:** `CLAUDE.md`, `.claude/skills/add-skill/SKILL.md`, `PROGRESS.md` (Vermerk in
-F-039).
-
-**Abhängigkeiten:** F-038a.
-
-**Abnahmekriterien:**
-- [ ] `just check` grün.
-- [ ] `add-skill` erscheint weiter in der Skill-Liste.
-- [ ] F-039 trägt den Template-Nachzug (HOW-TO § step-done: Vorschau + Freigabe) —
-      nach Freigabe.
+_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
+`/coding-kit:prep-step` vorbereiten._
 
 ---
 
@@ -110,19 +55,17 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 **Empfohlene Reihenfolge** (Stand 2026-10-23; die Einträge darunter bleiben nach Nummer
 sortiert):
 
-1. **F-038** — klein; Freigabe-Regel kit-weit (inkl. `add-skill` und Kit-CLAUDE.md), damit
-   die folgenden Sessions schon danach laufen (in Arbeit, siehe „Offene Aufgaben").
-2. **F-039** — ein Repo: Template ins Plugin, Version 1.0.0; vor F-036, damit dessen Umbau
+1. **F-039** — ein Repo: Template ins Plugin, Version 1.0.0; vor F-036, damit dessen Umbau
    Skills und Vorlage in einem Commit trifft.
-3. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
+2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
-4. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
-5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-6. **F-032 → F-024 → F-026 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil
+3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
+4. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+5. **F-032 → F-024 → F-026 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil
    von F-030 mit. F-039 nimmt die Template-Teile von F-026/F-032 weitgehend vorweg.
-7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+6. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
 
-Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 4 und 5 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
@@ -655,6 +598,13 @@ wird danach archiviert.
 - CLAUDE.md, README, CONTRIBUTING, `docs/` auf ein Repo umstellen (`template/**` Englisch);
   `add-skill` Schritt 3 (HOW-TO-Pflege) wird zur Änderung im selben Commit; Renovate darf
   Template-Pins nicht ohne Versions-Bump ändern.
+- Template-Nachzüge aus der Einfrier-Zeit beim Import mitziehen: HOW-TO
+  (`core/HOW-TO-CODE-WITH-CLAUDE.md`) — `/step-done` verbucht erst nach Vorschau und
+  Freigabe (gebündelt mit der Commit-Frage), `/add-feature` startet auch Claude selbst,
+  eingetragen wird nach OK (aus F-038a).
+- Einfrier-Regel „project-template ist bis F-039 eingefroren" aus der Kit-CLAUDE.md
+  entfernen (eingeführt mit F-038b) und `add-skill` Schritt 3 vom Vermerk in F-039 auf
+  „Änderung im selben Commit" umstellen.
 - Vor dem Release lokal mit `claude --plugin-dir plugins/coding-kit` testen.
 - Abschluss: Release 1.0.0, ein Projekt per `/update-conventions` gegenprüfen,
   project-template archivieren (README-Hinweis), lokalen Checkout danach entfernen.
@@ -711,6 +661,6 @@ F-034 Senior-Maßstab in den Bau-Skills (Lesbarkeit, keine Workarounds, Secure C
 F-035 Repo-übergreifende Übergabe statt Parallelarbeit (coding-kit ↔ project-template) (→ aufgegangen in F-039)
 F-036 Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt
 F-037 Unabhängiges Review in step-done (Reviewer mit frischem Kontext)
-F-038 Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature von Claude aufrufbar (PLANNED)
+F-038 Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature von Claude aufrufbar (DONE)
 F-039 Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0
 -->

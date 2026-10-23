@@ -4,6 +4,46 @@ Abgeschlossene Aufgaben mit Detail und Begründung. Neueste oben.
 
 ---
 
+## F-038b — Repo-lokal: CLAUDE.md und add-skill (2026-10-23)
+
+Schließt F-038 (Freigabe-Regel für PROGRESS-Einträge kit-weit) ab; der Plugin-Teil ist
+F-038a (Plugin 0.20.0).
+
+**Was entstanden ist (repo-lokal, kein Release):**
+
+- **`CLAUDE.md`:** neue Strukturregel „PROGRESS nur mit Freigabe" — Vorschau und
+  ausdrückliches OK für jeden neuen oder geänderten Eintrag in PROGRESS, Archiv und
+  Index, auch wenn ein Skill ihn anlegt; Claude darf add-feature und add-skill selbst
+  starten. Der Absatz zu `/add-skill` nennt jetzt Plugin- und repo-lokale Skills.
+  Zusätzlich die Regel „project-template ist bis F-039 eingefroren" — Nachzüge werden in
+  F-039 vermerkt; sie entfällt mit F-039.
+- **`.claude/skills/add-skill/SKILL.md`:** `disable-model-invocation: false` explizit,
+  Beschreibung und Einleitung sagen, dass Claude den Skill selbst starten darf;
+  Freigabe-Gate mit Standardsatz; Interview fragt „Plugin oder repo-lokal?"; Schritt 2
+  und 3 mit getrennten Wegen (repo-lokal: kein Bump, kein CHANGELOG, keine
+  README-Skill-Zeile); fehlende F-Nummer wird **vor** dem Bauen über add-feature angelegt
+  statt „spätestens beim Abschluss vergeben"; Schritt 3 (HOW-TO im Template) vermerkt
+  den Nachzug in F-039, solange project-template eingefroren ist; Kontext-Recovery
+  ergänzt.
+- **`PROGRESS.md`, F-039:** zwei Punkte in der Lösungsskizze — HOW-TO-Nachzug aus F-038a
+  (step-done mit Vorschau und Freigabe, add-feature auch von Claude gestartet) und
+  Rückbau der Einfrier-Regel samt add-skill Schritt 3.
+
+**Verifikation:** `just check` grün; `add-skill` erscheint mit neuer Beschreibung in der
+Skill-Liste der laufenden Session.
+
+**Notable decisions:**
+- Einfrier-Regel in die CLAUDE.md statt nur in add-skill: jede Session liest sie, auch
+  eine, die das Template ohne add-skill anfassen würde (Nutzerentscheidung, über den
+  Plan hinaus).
+- Die Frage „Plugin oder repo-lokal?" betrifft nur Sessions im Kit-Repo — add-skill
+  liegt nicht im Plugin, Nutzer des Plugins sehen ihn nie.
+
+**Geänderte Dateien:** `CLAUDE.md`, `.claude/skills/add-skill/SKILL.md`, `PROGRESS.md`,
+`PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-038a — Plugin: Freigabe-Gate und add-feature-Aufruf (2026-10-23)
 
 Teil von F-038 (Freigabe-Regel für PROGRESS-Einträge kit-weit; F-038b — Kit-CLAUDE.md
