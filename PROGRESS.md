@@ -38,6 +38,7 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-031 | mise.lock mit Plattform-Einträgen erzeugen → **`/choose-stack` § Lock-Datei erzeugen und prüfen als gemeinsame Mechanik: `mise lock` nach `mise install`, ohne `--platform` (Liste allein aus `lockfile_platforms`), Lücke auf der CI-Runner-Plattform blockiert den Commit; new-project/choose-stack erzeugen und prüfen, `update-conventions` gleicht auch bei aktuellem Stempel ab. Pairing: project-template 0.13.3 (F-020) (Plugin 0.19.1).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 | F-038a | Freigabe-Gate im Plugin → **step-done verbucht erst nach Vorschau + Freigabe (eine Frage zusammen mit dem Commit, „nur verbuchen" möglich), build-step startet add-feature selbst und sammelt im autonomen Lauf nur, add-feature ausdrücklich von Claude aufrufbar, Pflicht-Baustein „Freigabe-Gate" in der Authoring-Doku (Plugin 0.20.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 | F-038b | Freigabe-Regel repo-lokal → **Kit-CLAUDE.md: „PROGRESS nur mit Freigabe" und Einfrier-Regel für project-template bis F-039; `add-skill` ausdrücklich von Claude aufrufbar, deckt repo-lokale Skills ab (Checkliste ohne Bump), F-Nummer vor dem Bauen über add-feature, HOW-TO-Nachzug als Vermerk in F-039. F-038 damit komplett (repo-lokal, kein Release).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
+| F-039a | Import und Grundgerüst → **project-template-Historie (37 Commits, bis 0.16.0) unter `plugins/coding-kit/template/` importiert (Template-Nummern als `TPL-NNN`), Repo-eigenes entfernt; CHANGELOG unter dem Plugin mit eingefrorenen Abschnitten; Validator prüft das Template (Registry aus dem MANIFEST, Blocklist repo-weit); Versionsregel vor jedem Commit und in der CI; Version 1.0.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 
 ---
 
@@ -118,34 +119,6 @@ wird danach archiviert.
 
 **Abhängigkeiten:** F-038 (erledigt). Ersetzt F-035. Vor F-036 umsetzen. Nimmt F-026 auf
 und die Template-Teile von F-032 weitgehend vorweg.
-
-#### F-039a — Import und Grundgerüst
-
-**Was:** Template-Historie auf einem Scratch-Klon mit `git filter-repo
---to-subdirectory-filter plugins/coding-kit/template` umschreiben; in den Commit-Messages
-eigene F-Nummern → `TPL-NNN`, Verweise auf Kit-Nummern bleiben. Vor dem Merge: gitleaks
-über die Historie, Blocklist über `git log -p`, Autor-Adressen. `git merge
---allow-unrelated-histories` (eigener Merge-Commit, Freigabe an der Stelle), danach
-Repo-eigene Template-Dateien entfernen (Governance-Doku, Tooling, `.github/`, `.claude/`,
-`scripts/`, `private/`, README, CLAUDE.md, VERSION; PROGRESS und Archiv bleiben für F-039b
-aus der Historie lesbar). CHANGELOG nach `plugins/coding-kit/CHANGELOG.md` mit 1.0.0
-(unveröffentlicht) und den beiden eingefrorenen Abschnitten; `plugin.json` 1.0.0.
-Validator: Template-Checks übernehmen (auf `template/` beschränkt), Platzhalter-Registry
-aus dem MANIFEST, Blocklist (Datei nach `private/`), Versionsregel als Pre-Commit- und
-CI-Prüfung (Änderungen an Skills, Hooks oder Template verlangen eine Version über dem
-gepushten Stand und einen CHANGELOG-Eintrag dafür).
-
-**Dateien:** `plugins/coding-kit/template/**` (Import), `plugins/coding-kit/CHANGELOG.md`
-(aus `CHANGELOG.md`), `plugins/coding-kit/.claude-plugin/plugin.json`, `scripts/validate.py`,
-`lefthook.yml`, `.github/workflows/ci.yml`.
-
-**Abnahmekriterien:**
-- [ ] `git log -- plugins/coding-kit/template/VERSION` zeigt die 25 alten Versionsstände;
-      `git show <alter Commit>:plugins/coding-kit/template/MANIFEST.md` funktioniert.
-- [ ] Historien-Scan vor dem Merge ohne Befund.
-- [ ] `just check` und `claude plugin validate plugins/coding-kit` grün.
-- [ ] Eingebaute Fehler werden erkannt: unbekannter Platzhalter, offener Marker,
-      Plugin-Änderung ohne Versions-Bump.
 
 #### F-039b — Dokumente zusammenführen
 

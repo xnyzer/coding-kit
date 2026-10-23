@@ -4,6 +4,77 @@ Abgeschlossene Aufgaben mit Detail und Begründung. Neueste oben.
 
 ---
 
+## F-039a — Import und Grundgerüst (2026-10-23)
+
+Teil von F-039 (Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0;
+F-039b–e folgen).
+
+**Problem:** Bevor Skills und Doku auf ein Repo umgestellt werden können, müssen
+Historie, Inhalt und Prüfwerkzeug des Templates im Kit liegen — mit grünen Checks.
+
+**Was entstanden ist (1.0.0, unveröffentlicht):**
+
+- **Historien-Import:** project-template (37 Commits, bis 0.16.0) auf einem Scratch-Klon
+  per `git filter-repo --to-subdirectory-filter plugins/coding-kit/template`
+  umgeschrieben und per `git merge --allow-unrelated-histories` übernommen
+  (Merge-Commit `b7b9fcd`). In den Commit-Messages heißen die Template-Nummern
+  `TPL-NNN`; die drei Verweise auf Kit-Nummern blieben (kein Umbenennen nach „kit ",
+  „kit's ", „its ", „there as "). Vor dem Merge: gitleaks über die Historie, Blocklist
+  über Patches und Messages, Adressen, Pfade, IPs — ohne Befund.
+- **Bereinigung:** Repo-eigene Template-Dateien entfernt (Governance-Doku, Tooling,
+  `.github/`, `.claude/`, `scripts/`, `private/`, README, CLAUDE.md, CHANGELOG, PROGRESS,
+  Archiv, VERSION). Übrig: `MANIFEST.md`, `core/`, `modules/` (78 Dateien). PROGRESS und
+  Archiv des Templates bleiben für F-039b über `b7b9fcd` lesbar.
+- **CHANGELOG:** nach `plugins/coding-kit/CHANGELOG.md` (liegt damit im Plugin-Cache).
+  Der Kopf erklärt die eine Version, den Abschnitt `### Template` und die eingefrorenen
+  Abschnitte; Eintrag 1.0.0 (unveröffentlicht); darunter „Eingefroren:
+  coding-kit-Plugin bis 0.20.0" (21 Einträge) und „Eingefroren: project-template bis
+  0.16.0" (25 Einträge), Überschriften je eine Ebene tiefer; TPL-Regel auch hier.
+- **Validator (`scripts/validate.py`):** Template-Checks übernommen und auf
+  `plugins/coding-kit/template/` beschränkt (Marker-Paare, Fragment-Deklarationen,
+  Katalog). Platzhalter-Registry aus MANIFEST § Placeholders statt fester Liste (behebt
+  die `LIVING_DOC_LANGUAGE`/`LANG_*`-Drift); Registry-Platzhalter in Template-Inhalt und
+  allen Markdown-Dateien erlaubt, sonst keine. Blocklist-Check repo-weit
+  (`private/blocklist.txt`, gitignoriert, in der CI still übersprungen).
+- **Versionsregel (`scripts/version-rule.py`, `just version-rule`):** Änderungen unter
+  `plugins/coding-kit/{skills,hooks,template}/` verlangen eine Version über dem
+  Vergleichsstand und einen `## <Version>`-Eintrag im CHANGELOG. Pre-Commit
+  (`--staged`, Basis = Upstream, sonst HEAD) als lefthook-Job; CI (`--since` mit der
+  Basis von PR bzw. Push, `fetch-depth: 0`).
+- **Version:** `plugin.json` 1.0.0.
+- **Nebenbei:** Der jetzt repo-weite Blocklist-Check fand im Archiv-Eintrag F-011 den
+  Namen eines Downstream-Projekts (öffentlich seit Plugin 0.7.0) — neutral
+  umformuliert; die Historie bleibt (Entscheidung des Nutzers).
+
+**Verifikation:** `git log -- plugins/coding-kit/template/VERSION` zeigt 25 Stände,
+`git show <ältester Commit>:plugins/coding-kit/template/MANIFEST.md` liest das erste
+MANIFEST. `just check` grün; `claude plugin validate plugins/coding-kit` grün (einzige
+Warnung: fehlendes Icon, schon bei 0.20.0). Fehlerinjektion in einer Scratch-Kopie:
+unbekannter und verirrter Platzhalter, offener Section-Marker, fehlendes MANIFEST und
+Katalogdatei ohne Tabellenzeile werden gemeldet, ein Registry-Token in einem Skill
+nicht. Versionsregel in acht Szenarien: fehlender Bump, fehlender CHANGELOG-Eintrag und
+unbekannte Basis werden gemeldet; ungepushte Folge-Commits auf derselben Version,
+reine Doku-Änderungen und neue Branches gehen durch.
+
+**Notable decisions:**
+- Versionsregel als eigenes Skript statt in `validate.py`: arbeitet auf `git diff` statt
+  auf Dateien, braucht kein PyYAML und läuft getrennt im Pre-Commit und in der CI.
+- Vergleichsbasis ist der gepushte Stand, nicht der vorige Commit — ein Release darf aus
+  mehreren Commits bestehen (F-039 selbst).
+- Merge-Commit ohne zusätzliche Änderungen; er besteht `just check` allein nicht, der
+  Folge-Commit macht den Stand grün, dazwischen wird nicht gepusht.
+- Kit-Verweise beim Umbenennen über eine Ausschlussregel statt einer Liste — an
+  Messages, Archiv und CHANGELOG geprüft: genau die zehn bekannten Kit-Verweise bleiben
+  `F-`.
+
+**Geänderte Dateien:** `plugins/coding-kit/template/**` (Import, Bereinigung),
+`plugins/coding-kit/CHANGELOG.md` (aus `CHANGELOG.md`),
+`plugins/coding-kit/.claude-plugin/plugin.json`, `scripts/validate.py`,
+`scripts/version-rule.py` (neu), `justfile`, `lefthook.yml`, `.github/workflows/ci.yml`,
+`PROGRESS-ARCHIVE.md` (F-011 neutral), `PROGRESS.md`.
+
+---
+
 ## F-038b — Repo-lokal: CLAUDE.md und add-skill (2026-10-23)
 
 Schließt F-038 (Freigabe-Regel für PROGRESS-Einträge kit-weit) ab; der Plugin-Teil ist
@@ -661,7 +732,7 @@ ein Modul deklariert MEHRERE Fragmente, der Ein-Part-Einbau griff nicht mehr.
 
 **Was entstanden ist (Plugin 0.7.0):**
 
-- **Anlass (Nutzer-Beobachtung, aus einem update-conventions-Lauf in webstack):**
+- **Anlass (Nutzer-Beobachtung, aus einem update-conventions-Lauf in einem Downstream-Projekt):**
   build-step ließ je Substep *immer* step-done laufen. Unerwünscht bei interaktiver
   Einzelarbeit — der Nutzer will vor dem Abschluss selbst prüfen und ggf. anpassen; das
   automatische Durchlaufen soll nur im autonomen `/goal`-Lauf über mehrere Subfeatures
@@ -679,7 +750,7 @@ ein Modul deklariert MEHRERE Fragmente, der Ein-Part-Einbau griff nicht mehr.
   laufbezogene Commit-Freigabe, nicht ein neues Argument — kein Bruch am `/goal`-Flow,
   dessen Abschlussbedingung step-done ohnehin explizit nennt.
 - **Nicht hierher (in project-template notiert):** MANIFEST listet `core/private/README.md`
-  ohne existierende Datei (Template-Bug); webstacks reichere AI-DISCLOSURE ist noch nicht
+  ohne existierende Datei (Template-Bug); dessen reichere AI-DISCLOSURE ist noch nicht
   als promote/override entschieden.
 
 ## F-010 — Status-Marker-Konvention + Grenze add-feature/prep-step (2026-07-13)

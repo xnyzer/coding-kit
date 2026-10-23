@@ -7,6 +7,11 @@ default:
 setup:
     lefthook install
 
-# Full kit validation: JSON/YAML/TOML syntax, plugin/marketplace/skill contracts, privacy lint
+# Full repo validation: JSON/YAML/TOML syntax, plugin/marketplace/skill contracts,
+# privacy lint + blocklist, bundled template (placeholders, markers, fragment catalog)
 check:
     uv run --with pyyaml python3 scripts/validate.py
+
+# Version rule for plugin content: --staged (pre-commit) or --since <rev> (CI)
+version-rule *args:
+    uv run python3 scripts/version-rule.py {{args}}

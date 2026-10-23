@@ -1,7 +1,0 @@
-pre-commit:
-  parallel: true
-  jobs:
-    - name: secrets-scan
-      run: gitleaks git --pre-commit --staged --redact
-    - name: validate
-      run: just check
