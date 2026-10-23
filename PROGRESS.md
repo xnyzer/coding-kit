@@ -41,141 +41,8 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-### F-035 — Repo-übergreifende Übergabe statt Parallelarbeit (coding-kit ↔ project-template)
-
-**Status:** PLANNED
-
-**Problem:** Template-Gegenstücke wurden bisher im selben Lauf „direkt miterledigt"
-(z. B. F-020, F-021), teils aus einem übergeordneten Ordner. Weil beide Repos eine
-eigene PROGRESS.md führen, war unklar, was wohin gehört; Einträge, Versionen und
-CHANGELOGs vermischten sich. Ob beide Hälften am Ende zusammenpassen, prüft niemand
-unabhängig.
-
-**Idee:** Eine Session arbeitet nur in ihrem eigenen Repo. Braucht eine Änderung ein
-Gegenstück im anderen Repo, erzeugt sie eine Übergabe-Datei im Eingangsordner des
-Ziel-Repos (`private/inbox/`, gitignoriert) — das ist der einzige erlaubte
-Schreibzugriff auf das andere Repo. Die Ziel-Session nimmt sie als eigene F-Nummer auf.
-Sind beide Seiten fertig, prüft ein Agent mit frischem Kontext und ohne Schreibrechte
-beide Repos gegen die Vertragspunkte der Übergabe.
-
-**Lösungsskizze** (Stand Planung 2026-10-23):
-- Strukturregel in die CLAUDE.md: keine Änderungen am anderen Repo aus dieser Session,
-  stattdessen Übergabe; jeder neue oder geänderte PROGRESS-Eintrag nur nach
-  ausdrücklicher Freigabe des Nutzers (kit-weit folgt das mit F-038).
-- Ein repo-lokaler Skill `.claude/skills/cross-repo/` mit drei Modi — `send`
-  (Übergabe erzeugen), `receive` (aufnehmen), `check` (Paarungsprüfung). Nicht
-  `handoff`: der Name gehört dem Plugin-Skill aus F-028.
-- Repo-lokal statt Plugin: sofort nutzbar ohne Release, und Projekte bekommen keinen
-  Skill, der nur für das Repo-Paar Sinn ergibt. Preis: der Skill existiert in beiden
-  Repos (Kit deutsch, Template englisch); jede Änderung an einer Fassung erzeugt eine
-  Übergabe, die Paarungsprüfung findet Abweichungen.
-- Übergabe-Format: Quell-Repo und -F-Nummer, Was und Warum, nummerierte Vertragspunkte
-  V1…Vn (Dateien, Marker, Platzhalter, Abschnitte), Abnahme — in der Sprache der
-  lebenden Doku des Ziel-Repos (project-template: Englisch). Die Vertragspunkte stehen
-  zusätzlich im Quell-Eintrag unter `**Übergabe:**`; sie sind der Maßstab, weicht die
-  Kopie im Ziel ab, ist das ein Befund.
-- Ziel ist der lokale Arbeits-Checkout `$CODING_KIT_PROJECTS_DIR/<repo>` (wie
-  `check-upstreams`); fehlt er, hält `send` an und fragt — kein Klon, nicht die
-  Template-Auflösung aus `/choose-stack` § 0.
-- `receive` geht über `/coding-kit:add-feature` (Entwurf zeigen, Eintrag erst nach
-  Freigabe); der Ziel-Eintrag bekommt `**Herkunft:** <repo> F-NNN`, Vertragspunkte
-  wörtlich, danach wird die Inbox-Datei gelöscht. Kein Rückmelde-Dokument: `check`
-  findet das Gegenstück über die Herkunft-Zeile.
-- Inbox-Hinweis: SessionStart-Hook in einer neuen `.claude/settings.json` ruft ein
-  Skript unter `scripts/` auf, das `private/inbox/*.md` auflistet — still bei leerem
-  oder fehlendem Ordner.
-- Paarungsprüfung: eigene Agent-Definition `.claude/agents/pair-checker.md` nur mit
-  lesenden Werkzeugen (keine Shell) — Schreibverbot technisch erzwungen. Bewertet je
-  Vertragspunkt erfüllt / fehlt / weicht ab. Muster für F-037.
-- Done-Regel: kein neues Status-Token (die Plugin-Skills kennen nur BACKLOG/PLANNED).
-  Der letzte `step-done` committet die eigene Hälfte, verschiebt den Eintrag aber nicht
-  nach Done; er bleibt `PLANNED` mit Vermerk `**Übergabe:** eigene Hälfte fertig
-  (Datum), wartet auf <repo> F-NNN — nicht nach Done verschieben, bis
-  `cross-repo check` grün ist`. Der Vermerk steht genau dort, wo `step-done` die
-  PROGRESS pflegt; die CLAUDE.md-Regel sichert zusätzlich ab. Nach grüner Prüfung
-  bietet `check` die Verbuchung an (Done-Zeile, Archiv, Index) — erst nach Freigabe.
-  Dauerhaft lernt `step-done` Übergaben mit F-036. Nur die Quellseite wartet; die
-  Zielseite schließt normal ab.
-- `add-skill` passt nicht mehr zur Regel (Schritt 3 lässt die HOW-TO in
-  project-template direkt bearbeiten) und deckt repo-lokale Skills nicht ab — beides
-  wird umgestellt.
-- Anleitung für repo-lokale Werkzeuge in `docs/repo-tooling.md` (neben
-  `docs/skill-authoring.md`).
-- Rückrichtung (Template → Kit) symmetrisch: die Template-Hälfte dieses Mechanismus
-  ist selbst die erste Übergabe.
-- Nicht in F-035: Umstellung des Übernahme-Vorschlags (`update-conventions`) auf das
-  Inbox-Format — Plugin-Skill, und es geht dort um Projekte, nicht um das Repo-Paar;
-  bleibt bei F-032.
-
-**Abhängigkeiten:** keine. Repo-lokal, kein Plugin-Release. Voraussetzung für F-036 —
-F-036 kann nach F-035c starten (braucht nur die Kit-Seite zum Senden, nicht die fertige
-Template-Hälfte). Berührung mit F-026 (Auflösung des Arbeits-Checkouts; für Übergaben
-hier entschieden). Vor F-035 erfasste Paare (F-031 ↔ project-template F-020, F-034 ↔
-project-template F-021) nachträglich prüfen bzw. vermerken (F-035b).
-
-**Risiken:**
-- Ob der nur lesende Agent Dateien im Nachbar-Repo ohne Rückfrage lesen darf, und das
-  aktuelle Format der SessionStart-Hooks, zur Umsetzungszeit gegen die Claude-Code-Doku
-  prüfen. Fallback: Lese-Freigabe für den Nachbar-Pfad in `.claude/settings.local.json`.
-- Die Done-Regel übersteuert den Plugin-Text von `step-done` nur per Anweisung; greift
-  sie nicht, ist das sichtbar (Done-Zeile ohne grüne Prüfung).
-
-#### F-035a — Übergabe senden und aufnehmen (Kit-Seite)
-
-**Was:** Strukturregel und Freigabe-Regel in die CLAUDE.md; Skill `cross-repo` mit den
-Modi `send` und `receive` inkl. Übergabe-Format; SessionStart-Hook mit Skript;
-`add-skill`: deckt repo-lokale Skills ab (eigene Checkliste ohne Bump/CHANGELOG), sagt
-ausdrücklich, dass Claude ihn selbst starten darf, Schritt 3 erzeugt eine Übergabe statt
-die HOW-TO in project-template direkt zu bearbeiten, Schritt 5 zeigt jeden
-PROGRESS-Eintrag als Vorschau und schreibt erst nach Freigabe; `docs/repo-tooling.md`
-(Entscheidungsregel Plugin vs. repo-lokal, Bestand, Anlegen/Ändern über `/add-skill`,
-Doppel-Regel) mit Verweisen aus CLAUDE.md, README („Repo-Struktur", „Pflege") und
-CONTRIBUTING.md.
-
-**Dateien:** `CLAUDE.md`, `.claude/skills/cross-repo/SKILL.md`,
-`.claude/skills/add-skill/SKILL.md`, `.claude/settings.json`, `scripts/` (Inbox-Skript),
-`docs/repo-tooling.md`, `README.md`, `CONTRIBUTING.md`.
-
-**Abnahmekriterien:**
-- [ ] `just check` grün.
-- [ ] Test-Übergabe in einen Scratch-Ordner ist vollständig (alle Pflichtteile des
-      Formats, Vertragspunkte nummeriert, Sprache des Ziel-Repos).
-- [ ] Der Hook meldet eine gefüllte Inbox und bleibt still bei leerer bzw. fehlender.
-- [ ] `add-skill` und `cross-repo receive` schreiben keinen PROGRESS-Eintrag ohne
-      vorherige Vorschau und Freigabe.
-
-#### F-035b — Paarungsprüfung
-
-**Was:** `.claude/agents/pair-checker.md` (nur lesende Werkzeuge) und Modus `check` in
-`cross-repo`: liest Quell-Eintrag und Gegenstück (über `**Herkunft:**`), bewertet jeden
-Vertragspunkt, meldet Abweichungen der Vertragskopie; bei Grün Verbuchung anbieten.
-
-**Dateien:** `.claude/agents/pair-checker.md`, `.claude/skills/cross-repo/SKILL.md`,
-`docs/repo-tooling.md`.
-
-**Abhängigkeiten:** F-035a.
-
-**Abnahmekriterien:**
-- [ ] Der Prüfer hat technisch keine Schreib- oder Shell-Werkzeuge.
-- [ ] Nachträgliche Prüfung F-031 ↔ project-template F-020 durchgeführt, Ergebnis
-      berichtet.
-- [ ] F-034 trägt den `**Übergabe:**`-Vermerk (Gegenstück project-template F-021
-      erledigt, Prüfung nach F-034 ausstehend) — nach Freigabe.
-
-#### F-035c — Template-Hälfte als erste Übergabe
-
-**Was:** Englische Übergabe nach `project-template/private/inbox/`: CLAUDE.md-Regel,
-Skill-Gegenstück, Prüfer, Hook, `docs/`-Anleitung und die Umstellung der dortigen
-HOW-TO-Pflege auf Übergaben. Danach F-035 auf „eigene Hälfte fertig, wartet".
-
-**Dateien:** Übergabe-Datei im Template-Inbox (nicht versioniert), `PROGRESS.md`.
-
-**Abhängigkeiten:** F-035b.
-
-**Abnahmekriterien:**
-- [ ] Übergabe liegt im Template-Inbox; sonst ist im Template nichts geändert
-      (`git status` dort unverändert).
-- [ ] `**Übergabe:**`-Vermerk im F-035-Eintrag gesetzt — nach Freigabe.
+_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
+`/coding-kit:prep-step` vorbereiten._
 
 ---
 
@@ -186,15 +53,16 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 **Empfohlene Reihenfolge** (Stand 2026-10-23; die Einträge darunter bleiben nach Nummer
 sortiert):
 
-1. **F-035** — Prozess-Grundlage: ab hier laufen Template-Gegenstücke als Übergabe
-   (in Arbeit, siehe „Offene Aufgaben").
-2. **F-038** — klein; Freigabe-Regel kit-weit, bevor F-036 dieselben Skills umbaut.
+1. **F-038** — klein; Freigabe-Regel kit-weit (inkl. `add-skill` und Kit-CLAUDE.md), damit
+   die folgenden Sessions schon danach laufen.
+2. **F-039** — ein Repo: Template ins Plugin, Version 1.0.0; vor F-036, damit dessen Umbau
+   Skills und Vorlage in einem Commit trifft.
 3. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
 4. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
 5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
 6. **F-032 → F-024 → F-026 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil
-   von F-030 mit.
+   von F-030 mit. F-039 nimmt die Template-Teile von F-026/F-032 weitgehend vorweg.
 7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
 
 Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
@@ -689,6 +557,10 @@ einer Stelle und wird von den Skills referenziert, nicht in jedem Skill neu form
   check-upstreams, update-conventions.
 - add-feature und build-step: ausdrücklich, dass Claude add-feature selbst starten darf
   (z. B. für eine beim Bauen entdeckte Idee) — mit Entwurf und Freigabe.
+- Repo-lokaler Teil im Kit: Freigabe-Regel in die Kit-CLAUDE.md; `add-skill` sagt
+  ausdrücklich, dass Claude ihn selbst starten darf, deckt auch repo-lokale Skills
+  (`.claude/skills/`) ab und zeigt jeden PROGRESS-Eintrag vorher als Vorschau (bisher:
+  F-Nummer „spätestens beim Abschluss vergeben").
 - Prüfen, ob die Regel zusätzlich in `templates/global-CLAUDE.md` gehört.
 - Plugin-Änderung: Version-Bump und CHANGELOG (Sync-Invariante).
 
@@ -697,13 +569,94 @@ einer Stelle und wird von den Skills referenziert, nicht in jedem Skill neu form
 - Ab welcher Änderung gilt ein Eintrag als „geändert" (Status-Marker, Checkbox abhaken,
   Done-Zeile) — alles freigabepflichtig oder nur inhaltliche Änderungen?
 
-**Abhängigkeiten:** keine. Vor F-036 umsetzen (F-036 und F-034 bauen auf denselben Skills
-auf). Repo-lokales Gegenstück in F-035a (CLAUDE.md, add-skill, cross-repo).
+**Abhängigkeiten:** keine. Vor F-039 und F-036 umsetzen (beide laufen dann schon nach der
+Regel; F-036 und F-034 bauen auf denselben Skills auf).
+
+---
+
+### F-039 — Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0
+
+**Status:** BACKLOG
+
+**Problem:** Kit-Skills und Template hängen über einen textuellen Vertrag zusammen
+(MANIFEST-Abschnitte, Marker, Platzhalter, Pfade), leben aber in zwei Repos mit eigener
+PROGRESS, eigener Version und eigenem CHANGELOG. Gepaarte Änderungen brauchen zwei Commits,
+Einträge vermischten sich, und der Vertrag driftete unbemerkt (der Kit-Validator führt noch
+`LIVING_DOC_LANGUAGE`, das das Template in 0.10.0 gestrichen hat, und kennt die
+`LANG_*`-Platzhalter nicht). Zudem legt `new-project` Repos aus dem GitHub-Stand des
+Templates an, liest MANIFEST aber aus dem lokalen Checkout.
+
+**Idee:** Das Template wird Teil des Plugins (`plugins/coding-kit/template/`), kommt mit
+`claude plugin update` zum Nutzer und wird über `${CLAUDE_PLUGIN_ROOT}/template` gelesen.
+Ein Repo, eine PROGRESS, ein Archiv, ein CHANGELOG, eine Version, ein Commit je Änderung;
+ein Validator prüft den Vertrag zwischen Skills und Template mechanisch. project-template
+wird danach archiviert.
+
+**Entschieden (2026-10-23):**
+- Unabhängige Architektur-Prüfung (Status quo, Übergabe, Kit führt, Monorepo) → Monorepo
+  mit Template im Plugin-Ordner; ersetzt F-035.
+- Cache-Test bestanden: Plugin-Cache byte-identisch zur Quelle inkl. Punkt-Dateien
+  (`core/.github`, `core/.claude`, `.gitignore`, `.editorconfig` …) und Ausführungsrechten;
+  Template-Dateien werden nicht als Plugin-Komponenten geladen; ein Update legt je Version
+  einen frischen Ordner an.
+- Repo bleibt `coding-kit` mit Historie (Marketplace `coding-kit@xnyzer` und Renovate-Preset
+  `github>xnyzer/coding-kit` hängen am Namen). Template-Historie wird mit Pfad-Umschreibung
+  importiert, damit `update-conventions` alte Stempel weiter auflöst.
+- Eine Version für alles, Start bei 1.0.0 (über Plugin 0.19.1 und Template 0.16.0).
+  Stempel unter 1.0.0 gehören zur alten Template-Reihe. Bestehende Projekte brauchen keine
+  Migration. Ohne Template-Änderung seit dem Stempel setzt `update-conventions` nur den
+  Stempel neu.
+- Dokumente zusammenführen, kein Archivordner:
+  - eine `PROGRESS.md`: Done-Tabelle leer (jede alte Done-Zeile hat einen Archiv-Eintrag),
+    offene Einträge behalten ihre Nummer und werden auf das neue Modell umgeschrieben,
+    `next-feature` läuft weiter.
+  - ein `PROGRESS-ARCHIVE.md`: beide Archive chronologisch gemischt; Kit-Einträge ohne
+    Kennzeichen, Template-Einträge als `TPL-NNN` (kein „F-", damit Suchen eindeutig
+    bleiben); Kopf erklärt das Schema. Verweise umschreiben (Template-Archiv ~90,
+    Kit-Archiv 4, Kit-PROGRESS 7), ebenso in den importierten Template-Commit-Messages.
+    TPL-Einträge nicht in den FEATURE-INDEX.
+  - ein `CHANGELOG.md` unter `plugins/coding-kit/` (muss im Cache liegen): ab 1.0.0,
+    darunter eingefroren „coding-kit-Plugin bis 0.19.1" und „project-template bis 0.16.0";
+    alte Stempel lesen nur den Template-Abschnitt.
+- `new-project` legt ein leeres Repo an und schreibt nur die MANIFEST-Ziele hinein
+  (kein `--template`, kein Aufräumen).
+- project-template: letzter Push vor dem Kit-Push (Kit 0.19.1 braucht Template 0.13.3 auf
+  GitHub), danach eingefroren; Archivierung erst nach Release 1.0.0 und Gegenprüfung, mit
+  README-Hinweis; lokaler Checkout bleibt bis dahin.
+
+**Lösungsskizze:**
+- Template-Inhalt (`core/`, `modules/`, `MANIFEST.md`, `VERSION`) nach
+  `plugins/coding-kit/template/`; Repo-eigene Template-Dateien entfallen bzw. gehen im
+  Kit auf.
+- `choose-stack` § 0: Template = `${CLAUDE_PLUGIN_ROOT}/template` plus Override für die
+  Arbeit am Template; Template-Klon über `gh` entfällt. Folgen in allen Skills, die § 0
+  referenzieren; `new-project`, `update-conventions` (Stempel-Auflösung, Update-Fenster,
+  Übernahme-Vorschlag an eine Kit-Session), `check-upstreams`, `go-public` prüfen.
+- Validatoren zusammenführen: Template-Checks plus Vertrags-Checks (Platzhalter-Registry
+  aus MANIFEST, in Skills genannte Marker/Abschnitte/Pfade existieren, `manifest-format`
+  stimmt); Sync-Invariante als Pre-Commit-Check.
+- CLAUDE.md, README, CONTRIBUTING, `docs/` auf ein Repo umstellen (`template/**` Englisch);
+  `add-skill` Schritt 3 (HOW-TO-Pflege) wird zur Änderung im selben Commit; Renovate darf
+  Template-Pins nicht ohne Versions-Bump ändern.
+- Vor dem Release lokal mit `claude --plugin-dir plugins/coding-kit` testen.
+- Abschluss: Release 1.0.0, ein Projekt per `/update-conventions` gegenprüfen,
+  project-template archivieren (README-Hinweis), lokalen Checkout danach entfernen.
+
+**Noch zu analysieren:**
+- Form des Overrides für die Arbeit am Template (Env-Variable oder `--plugin-dir`).
+- Stempel-Auflösung ohne Git-Historie im Plugin-Cache: Marketplace-Klon nutzen oder eine
+  deklarierte Tabelle entfernter/umbenannter Dateien im MANIFEST.
+- Funktioniert `gh repo create --template` mit einem archivierten Repo noch (Plugins bis
+  0.19.1)? Zum Zeitpunkt prüfen.
+- Schnitt in Substeps.
+
+**Abhängigkeiten:** F-038 (klein, vorher). Ersetzt F-035. Vor F-036 umsetzen. Berührt F-026
+und F-032 — deren Template-Teile entfallen weitgehend, bei der Planung abgleichen.
 
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-039
+next-feature: F-040
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -738,8 +691,9 @@ F-031 mise.lock mit Plattform-Einträgen erzeugen (CI im --locked-Modus) (DONE)
 F-032 Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git)
 F-033 Betrieb ohne Graphiti absichern
 F-034 Senior-Maßstab in den Bau-Skills (Lesbarkeit, keine Workarounds, Secure Coding)
-F-035 Repo-übergreifende Übergabe statt Parallelarbeit (coding-kit ↔ project-template) (PLANNED)
+F-035 Repo-übergreifende Übergabe statt Parallelarbeit (coding-kit ↔ project-template) (→ aufgegangen in F-039)
 F-036 Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt
 F-037 Unabhängiges Review in step-done (Reviewer mit frischem Kontext)
 F-038 Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature von Claude aufrufbar
+F-039 Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0
 -->
