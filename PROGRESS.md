@@ -577,6 +577,10 @@ Out of Scope mit Verweisen, Entscheidungsprotokoll, offene Fragen als Checkboxen
 - Bestandsprojekte: `update-conventions` bietet eine einmalige Migration an
   (REQUIREMENTS.md und offene PROGRESS-Einträge auf die Zielorte verteilen, Diff und
   Bestätigung je Datei); bestehende `PROGRESS-ARCHIVE.md` bleibt eingefroren.
+- Eigene PROGRESS beider Repos (coding-kit, project-template) erst in der Release-Phase
+  umstellen — nach Push und Plugin-Update, mit der neuen Migration (zugleich erster
+  Praxistest). Vorher arbeiten alle Sessions mit dem installierten alten Plugin, das die
+  neue Struktur nicht kennt (entschieden 2026-10-23).
 
 **Noch zu analysieren:**
 - Name und Ort der Übersicht (`PROGRESS.md` behalten spart Migration) und ob der
@@ -584,7 +588,6 @@ Out of Scope mit Verweisen, Entscheidungsprotokoll, offene Fragen als Checkboxen
 - Projektweite Inhalte in CLAUDE.md oder eigener Produktdatei — Schwelle, ab der
   ausgelagert wird.
 - Status an einer Stelle oder an zweien (Datei-Kopf + Übersicht).
-- Dogfooding: Migration dieses Repos selbst als letzter Substep.
 
 **Abhängigkeiten:** F-035 — das Template-Gegenstück (Vorlage der Feature-Datei,
 Vorlagen PROGRESS/REQUIREMENTS/CLAUDE/HOW-TO/README, ADR-README, MANIFEST inkl.
