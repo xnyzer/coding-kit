@@ -134,18 +134,20 @@ sortiert):
 
 1. **F-039** — ein Repo: Template ins Plugin, Version 1.0.0; vor F-036, damit dessen Umbau
    Skills und Vorlage in einem Commit trifft (in Arbeit, siehe „Offene Aufgaben").
-2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
+2. **F-041** — nach dem Release 1.0.0 als 1.1.0; vor F-036, weil dessen Migration über
+   `update-conventions` läuft.
+3. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
-3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
-4. **F-040** — vor den Strängen Graphiti und Host, deren Änderungen an der globalen
+4. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
+5. **F-040** — vor den Strängen Graphiti und Host, deren Änderungen an der globalen
    Vorlage sonst bestehende Rechner nicht erreichen.
-5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-6. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
+6. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+7. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
    mit. F-026 ist in F-039 aufgegangen, sein Rest (Kit-Repo-Herkunft in `check-upstreams`)
    in F-032.
-7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+8. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
 
-Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 6 und 7 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
@@ -613,10 +615,73 @@ Kit gemeldet — die Vererbung bleibt abwärts wie bei den Konventionen (F-018).
 F-024, F-029 und F-030 — deren Änderungen an der Vorlage erreichen bestehende Rechner erst
 über den Abgleich.
 
+### F-041 — Projektzusätze in managed Dateien erhalten und Abweichungen früh erkennen
+
+**Status:** BACKLOG
+
+**Problem:** Ein Override sperrt eine managed Datei für alle künftigen Template-Änderungen;
+zeilenweise Overrides gibt es nur in Markdown. Ein Projekt, das in `mise.toml` ein Tool
+ergänzt, muss deshalb wählen zwischen „Zeile verlieren" und „nie wieder Template-Updates
+für die Datei". Eine Abweichung fällt zudem erst beim nächsten `update-conventions`-Lauf
+auf — `step-done` bemerkt nicht, dass ein Schritt eine managed Datei ändert; der Testlauf
+in F-039e fand so in einem docs-only-Projekt drei nie eingetragene Abweichungen
+(`justfile`, `mise.toml`, `.gitignore`). Und ein eingetragener Override bleibt auch dann
+stehen, wenn das Template die Abweichung längst selbst enthält.
+
+**Idee:** Drei-Wege-Merge wie bei copier/cruft: Jedes Projekt trägt unter
+`.claude/template-base/` die reine Template-Fassung jeder managed Datei zum Stempel-Stand
+(committet, als generiert markiert). `update-conventions` führt je Datei `git merge-file`
+aus (alte Template-Fassung, Projekt, neue Template-Fassung) — Projektzusätze bleiben,
+Template-Änderungen kommen an, nur echte Kollisionen werden zu Konflikten. Die Abweichung
+ist berechenbar (Diff gegen die Basis): `step-done` erkennt sie per Hash-Vergleich, und
+die Override-Revision ergibt sich aus dem Merge (Projekt = neue Template-Fassung → Eintrag
+überflüssig).
+
+**Entschieden (2026-10-24):**
+- Unabhängiges Design-Review → Drei-Wege-Merge mit Basis-Snapshot im Projekt. Verworfen:
+  Marker in den Dateien (JSON kann sie nicht tragen, Tools schreiben Dateien neu, sie
+  beschreiben einen berechenbaren Diff), Basis nur aus der Git-Historie (taugt nur als
+  Quelle für die Erst-Migration), Versionsarchiv im Plugin, Umbau auf die nativen
+  Include-Mechanismen der Tools (nur als Konvention für neue Projektzusätze).
+- Deterministisch über ein mitgeliefertes POSIX-sh-Skript auf git-Basis: Merge,
+  Erkennung, Revision **und** das Erzeugen der Soll-Fassung (Renderer). Kein Python-Zwang
+  — macOS bringt ohne Homebrew nur Python 3.9.6 mit. Das Sprachmodell führt den Dialog und
+  berät bei Konflikten.
+- Der Snapshot-Ordner `.claude/template-base/` im Projekt (rund 26 Dateien) ist akzeptiert.
+- Nach dem Release 1.0.0 als 1.1.0, vor F-036 (dessen Migration läuft über
+  `update-conventions`).
+
+**Lösungsskizze:**
+- MANIFEST `manifest-format: 2` mit den Abschnitten Base snapshot und Deviation registry;
+  `convention-overrides.md` mit maschinenlesbarer Tabelle (Arten `skip`, `keep`, `adapt`;
+  ohne Art = normal mergen, Grund dokumentiert) und freier Regel-Tabelle.
+- Skript unter `${CLAUDE_PLUGIN_ROOT}/scripts/` mit Unterbefehlen wie render, status,
+  changed, merge, snapshot; Ausgabe als Tabelle für den Skill.
+- `update-conventions`: Soll rendern → mergen → je Datei Ergebnis oder Konflikt zeigen →
+  Snapshot setzen; Modi `status` und `revise`; Erst-Migration der Bestandsprojekte (Basis
+  aus dem Bootstrap-Commit anbieten, sonst einmal zweiwegig).
+- `new-project` legt den Snapshot im Erst-Commit an; `choose-stack` und `go-public`
+  ziehen ihn nach.
+- `step-done`: nicht blockierender Backstop (Schritt 1b) — meldet unregistrierte
+  Änderungen an managed Dateien und Handänderungen am Snapshot.
+- Inline-Marker bleiben nur in Markdown (seed-Zonen, Fragmente).
+
+**Noch zu analysieren:**
+- Snapshot bei `optional`-Blöcken und public-only-Dateien.
+- Managed Moduldateien (`files/**`) maschinenlesbar auflisten.
+- Robustes Lesen der Registry (Globs, Backticks); Schritt-Range in `step-done` bei nicht
+  committeter Arbeit.
+- `git merge-file` und Shell-Portabilität auf allen Plattformen (CRLF, fehlende Endzeile;
+  Bezug F-027).
+- `template:adapt`-Stellen im Renderer und im Snapshot.
+- Schnitt in Substeps.
+
+**Abhängigkeiten:** F-039 (Release 1.0.0). Vor F-036.
+
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-041
+next-feature: F-042
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -657,4 +722,5 @@ F-037 Unabhängiges Review in step-done (Reviewer mit frischem Kontext)
 F-038 Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature von Claude aufrufbar (DONE)
 F-039 Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0 (PLANNED)
 F-040 Globale CLAUDE.md mit dem Plugin ausliefern und abgleichen
+F-041 Projektzusätze in managed Dateien erhalten, Abweichungen früh erkennen
 -->
