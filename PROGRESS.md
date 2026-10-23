@@ -10,35 +10,13 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 
 ## Done
 
+Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
+(`TPL-NNN`) — stehen mit Detail in `PROGRESS-ARCHIVE.md`.
+
 | Step | Beschreibung | Fertig |
 |------|--------------|--------|
-| F-001 | Kit-Grundgerüst → **Plugin (4 Core-Skills, projekterkennender Stop-Hook), Marketplace „xnyzer", Renovate-Preset, Installer, Doku, Validator + CI.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
-| F-002 | Begleit-Skills → **name-it, choose-license, choose-stack, define-requirements, refine-requirements (Plugin 0.2.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
-| F-003 | /new-project-Orchestrator → **Short-Info → Abfragen → Plan → Instanziierung nach MANIFEST, Trockenlauf-Modus (Plugin 0.3.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
-| F-004 | Globale CLAUDE.md-Vorlage → **templates/global-CLAUDE.md (aktiviert den Installer-Schritt), Legacy-Migration abgeschlossen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
-| F-005 | Pflege-Skills → **update-conventions (bidirektional, Override-Schutz, Migrationen) + check-upstreams mit upstreams.json (Plugin 0.4.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-07 |
-| F-006 | Utility-Skill refine-prompt → **Prompt analysieren, Schwachstellen benennen, neu formulieren, ausführen (Plugin 0.5.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-13 |
-| F-007 | Workflow-Skill teach-step → **Lehrer-Modus: sokratisch angeleitete Eigenumsetzung, hartes Schreibverbot, Lern-Interview + Graphiti-Lernprofil (Plugin 0.5.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-13 |
-| F-008 | Workflow-Skill build-step + autonome Läufe → **Implementierungsphase als Skill (plan-treu, Verifikation je Substep, step-done je Substep); Modus `autonom` bereitet /goal-Läufe vor; laufbezogene Commit-Freigabe in step-done + globaler Vorlage (Plugin 0.5.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-13 |
-| F-009 | Repo-lokaler Pflege-Skill add-skill → **Prozedur für Anlage/Änderung von Plugin-Skills (`.claude/skills/`, kein Plugin-Inhalt): Authoring-Konvention, Begleit-Änderungs-Checkliste, Abschluss inkl. PROGRESS-Pflege.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-13 |
-| F-010 | Status-Marker-Konvention + schärfere Grenze add-feature/prep-step → **`Status:`-Zeile mit Tokens BACKLOG/PLANNED in PROGRESS-Einträgen, „Lösungsskizze" statt Vorab-Plan in add-feature, prep-step hinterfragt die Skizze gegen den Codestand; Begleitanpassungen in build-step/step-done (Plugin 0.6.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-13 |
-| F-011 | build-step vom step-done-Handoff entkoppeln → **interaktiv wird step-done nur empfohlen (Nutzer prüft/schließt selbst ab), nur im autonomen `/goal`-Lauf läuft es je Substep automatisch; Modus-Signal = aktiver /goal-Lauf mit Commit-Freigabe (Plugin 0.7.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-14 |
-| F-013 | choose-stack: Multi-Fragment-Einbau → **Modus B hängt Sprachfragment + deklarierte Katalog-Fragmente idempotent an den §13-Slot an (Vertrag: project-template MANIFEST § Standards fragments); Modulwechsel tauscht nur das Sprachfragment, Katalog-Fragmente bleiben; new-project-Referenz nachgezogen (Plugin 0.8.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
-| F-014 | update-conventions: Pro-Fragment-Refresh → **zwei Diff-Ebenen (Core-Datei-Diff mit injiziertem Ist-Slot + Fragment-Abgleich je `fragment:NAME`), fehlende deklarierte Fragmente werden zum Anhängen angeboten, Fragment-Promote in den Katalog (Plugin 0.9.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
-| F-015 | prep-step: Framework-Erkennung mit Fragment-Vorschlag → **Schritt 2a „Standards-Abdeckung" mit Kosten-Gate; matcht Dependency-Signale UND Eigenschafts-Trigger (F-017-Touchpoint miterledigt); Vorschlags-Pfade Anhängen bzw. Autoring + Promote (Plugin 0.10.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
-| F-012 | add-skill: Template-HOW-TO synchron halten → **neuer Checklisten-Haken in Schritt 3: Dev-Loop-/Pflege-Skills pflegen die Skill-Übersicht in project-templates HOW-TO mit (Sync-Invariante jenes Repos); repo-lokal, kein Plugin-Release.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
-| F-016 | step-done: Standards-Coverage-Backstop → **Schritt 1a, diff-basiert (neue Manifest-Dependencies/Signal-Dateien) mit Katalog-Match zur Laufzeit; Lücke melden + Anhängen vorschlagen, nicht blockierend (Plugin 0.11.0). Zyklus F-013/014/015/016 damit geschlossen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
-| F-017 | Eigenschafts-Trigger für Standards-Fragmente → **define-requirements fragt characteristic-Zeilen im Interview ab, new-project komponiert bejahte Fragmente mit, choose-stack rüstet sie auf Bestätigung nach (Plugin 0.12.0). Composable-Standards-Strang komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
-| F-018 | Konventions-Vererbung nur noch abwärts → **AUFWÄRTS/promote aus update-conventions gestrichen; Ersatz: manuell anstoßbarer Übernahme-Vorschlag (Template-Session-Prompt oder GitHub-Request) an drei Stellen — Sync-Lauf, Fragment-Anlage, step-done-Diff (Plugin 0.13.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
-| F-020 | Sprach-Matrix: granulare Sprachwahl je Projekt → **new-project-Preset-Frage (entkoppelt von Sichtbarkeit), fünf `LANG_*`-Platzhalter, Commit-/Kommentar-Sprache in step-done/build-step, Languages-Block-Migration in update-conventions (prospektiv, nichts rückwirkend übersetzen); Pairing: project-template F-010 (Plugin 0.14.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-19 |
-| F-021 | update-conventions: Vollabdeckung aller Template-Dokumente → **seed-Abgleich abschnittsweise je `section:NAME`-Zone (Opt-out, Override, Feature-Detection) + A3-Marker-Migration + Marker-Erhalt in new-project (0.15.0); entfernte/umbenannte Template-Dateien via Stempel-Commit-Auflösung, Rückbau/Umzug je Datei bestätigt (0.16.0). Pairing: project-template F-011.** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-20 |
-| F-019 | Pflege-Skill go-public → **geführter, fail-closed Übergang private/lokal → public: vier blockierende Preflight-Gates (Historie-Secrets, Privacy inkl. Commit-Metadaten, Lizenz, private/-Hygiene), Nachzug vor Übergang via update-conventions-Sichtbarkeits-Prämisse, Push nur mit laufbezogener Freigabe (Plugin 0.17.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-20 |
-| F-022 | Begleithandlungen beim Fragment-Einbau → **`/choose-stack` § Begleithandlungen als einzige Fundstelle (generisch, Fragment-Wissen bleibt im Template), von new-project/prep-step/step-done referenziert; entkoppelt von der Idempotenz-Regel; `update-conventions` prüft zusätzlich bei unverändertem Fragment-Text und erreicht damit als einziger Pfad Bestandsprojekte. Anlass/Pairing: project-template 0.13.1 (F-016), `nextjs`-Fragment (Plugin 0.18.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-08-11 |
-| F-028 | Utility-Skill handoff → **kopierfertiger Handoff-Prompt am Kontextlimit: Orientierung zuerst (zuletzt, Stand, als Nächstes inkl. Reihenfolge-Vorgabe der Aufgabenliste), sonst nur Undokumentiertes (Maßstab je Zeile) mit Verweisen auf Quellen; kontextsparsam (keine Rückfrage, max. ein Shell-Aufruf), Schreibverbot inkl. Memory, Ausgabe als ein Codeblock (Plugin 0.19.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-09-16 |
-| F-031 | mise.lock mit Plattform-Einträgen erzeugen → **`/choose-stack` § Lock-Datei erzeugen und prüfen als gemeinsame Mechanik: `mise lock` nach `mise install`, ohne `--platform` (Liste allein aus `lockfile_platforms`), Lücke auf der CI-Runner-Plattform blockiert den Commit; new-project/choose-stack erzeugen und prüfen, `update-conventions` gleicht auch bei aktuellem Stempel ab. Pairing: project-template 0.13.3 (F-020) (Plugin 0.19.1).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
-| F-038a | Freigabe-Gate im Plugin → **step-done verbucht erst nach Vorschau + Freigabe (eine Frage zusammen mit dem Commit, „nur verbuchen" möglich), build-step startet add-feature selbst und sammelt im autonomen Lauf nur, add-feature ausdrücklich von Claude aufrufbar, Pflicht-Baustein „Freigabe-Gate" in der Authoring-Doku (Plugin 0.20.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
-| F-038b | Freigabe-Regel repo-lokal → **Kit-CLAUDE.md: „PROGRESS nur mit Freigabe" und Einfrier-Regel für project-template bis F-039; `add-skill` ausdrücklich von Claude aufrufbar, deckt repo-lokale Skills ab (Checkliste ohne Bump), F-Nummer vor dem Bauen über add-feature, HOW-TO-Nachzug als Vermerk in F-039. F-038 damit komplett (repo-lokal, kein Release).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 | F-039a | Import und Grundgerüst → **project-template-Historie (37 Commits, bis 0.16.0) unter `plugins/coding-kit/template/` importiert (Template-Nummern als `TPL-NNN`), Repo-eigenes entfernt; CHANGELOG unter dem Plugin mit eingefrorenen Abschnitten; Validator prüft das Template (Registry aus dem MANIFEST, Blocklist repo-weit); Versionsregel vor jedem Commit und in der CI; Version 1.0.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
+| F-039b | Dokumente zusammenführen → **ein Archiv für beide Reihen (55 Einträge, Template als `TPL-NNN`, neueste oben, Kopf erklärt das Schema); Done-Tabelle neu ab 1.0.0; offene Einträge auf ein Repo umgeschrieben, F-026 in F-039/F-032 aufgegangen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 
 ---
 
@@ -119,25 +97,6 @@ wird danach archiviert.
 
 **Abhängigkeiten:** F-038 (erledigt). Ersetzt F-035. Vor F-036 umsetzen. Nimmt F-026 auf
 und die Template-Teile von F-032 weitgehend vorweg.
-
-#### F-039b — Dokumente zusammenführen
-
-**Was:** PROGRESS: Done-Tabelle leeren, offene Einträge auf das Ein-Repo-Modell umschreiben
-(F-026 aufgegangen; „Übergabe nach F-035" in F-024, F-032, F-033, F-034, F-037 → „im
-selben Commit"), Verweise auf Template-Nummern als `TPL-NNN`, Reihenfolge-Block. Archiv:
-beide Archive chronologisch gemischt (gleiches Datum nach Commit-Zeit), Template-Einträge
-als `TPL-NNN`, Kopf erklärt das Schema, Verweise nach derselben Regel wie die
-Commit-Messages. FEATURE-INDEX: F-026 markiert, keine TPL-Einträge. Jede Änderung erst
-als Vorschau.
-
-**Dateien:** `PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
-
-**Abhängigkeiten:** F-039a.
-
-**Abnahmekriterien:**
-- [ ] Jede alte Done-Zeile beider Repos hat einen Archiv-Eintrag.
-- [ ] grep findet keine Template-F-Nummer ohne Umbenennung.
-- [ ] `just check` grün.
 
 #### F-039c — Skills und Vertrag auf das gebündelte Template
 
@@ -236,8 +195,9 @@ sortiert):
 4. **F-040** — vor den Strängen Graphiti und Host, deren Änderungen an der globalen
    Vorlage sonst bestehende Rechner nicht erreichen.
 5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-6. **F-032 → F-024 → F-026 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil
-   von F-030 mit. F-039 nimmt die Template-Teile von F-026/F-032 weitgehend vorweg.
+6. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
+   mit. F-026 ist in F-039 aufgegangen, sein Rest (Kit-Repo-Herkunft in `check-upstreams`)
+   in F-032.
 7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
 
 Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
@@ -264,9 +224,9 @@ Skill statt zu raten.
   für GitHub-Projekte, Kernaussage bleibt „keine private Adresse".
 - Weitere Fundstellen desselben Musters prüfen (u. a. `new-project` 4a) und die
   README-Zeile zum Schlüssel an die neue Rolle anpassen.
-- Template-Seite: Die Noreply-Regel steht auch in project-template (`core/CLAUDE.md`,
-  `CODING-STANDARDS.md`, `CONTRIBUTING.md`, HOW-TO, `scripts/privacy-lint.sh`) —
-  Übergabe nach F-035, gemeinsam mit F-032.
+- Template-Seite: Die Noreply-Regel steht auch im Template (`template/core/CLAUDE.md`,
+  `CODING-STANDARDS.md`, `CONTRIBUTING.md`, HOW-TO, `scripts/privacy-lint.sh`) — im
+  selben Commit anpassen, gemeinsam mit F-032.
 
 **Abhängigkeiten:** F-032 (Host-Profil bestimmt, welche Noreply-Adresse gilt) — sinnvoll
 im selben Zug umzusetzen
@@ -290,8 +250,8 @@ der jeweiligen Plattform.
 - Drei `gh`-Zustände unterscheiden (fehlt / vorhanden ohne Login / bereit) statt eines
   harten `fail`: Login anbieten, GitHub-freien Lauf als bestätigte Alternative — dann die
   Personal-Config ohne `gh api`-Vorbefüllung abfragen.
-- Lokalen Template-Checkout mit anlegen — `git clone` der öffentlichen URL, braucht kein
-  `gh`; für den GitHub-freien Weg der Hebel. Aktualität ist Sache von F-026.
+- Kein Template-Checkout mehr nötig — das Template kommt seit F-039 mit dem Plugin,
+  auch auf dem GitHub-freien Weg.
 - Plattform bestimmen und Paketmanager wählen: brew auf macOS, apt/dnf/pacman auf Linux,
   winget/scoop auf Windows; prüfen, ob `mise` der plattformneutrale Weg für
   just/lefthook/gitleaks ist und nur mise selbst plattformspezifisch installiert wird.
@@ -306,54 +266,7 @@ der jeweiligen Plattform.
 - Zeilenenden sind kein Thema: `.gitattributes` erzwingt `eol=lf` für den ganzen Baum.
 
 **Abhängigkeiten:** F-032 (zentrale Host-Erkennung — Skills und Installer nutzen
-dieselbe Antwort auf „welcher Git-Server, welche Fähigkeiten"). Berührung mit
-F-026 (F-025 legt den Checkout an, F-026 hält ihn aktuell).
-
-### F-026 — Template-Auflösung: Aktualität, Herkunft und Klontiefe
-
-**Status:** BACKLOG
-
-**Problem:** Die gemeinsame Template-Auflösung (`/choose-stack` § 0, referenziert von
-`new-project` und `update-conventions`) hat drei Defekte. **Erstens Aktualität:** sie nimmt
-den lokalen Checkout unter `$CODING_KIT_PROJECTS_DIR/project-template`, sobald er
-existiert — und kein Skill aktualisiert ihn. `update-conventions` liest dessen `VERSION`
-aber als aktuellen Template-Stand und entscheidet daran, ob ein Projekt aktuell ist; ein
-veralteter Checkout lässt Projekte fälschlich als aktuell gelten oder verteilt alte
-Dateistände, ohne dass es auffällt. **Zweitens Herkunft:** das Template-Repo wird aus dem
-aufrufenden GitHub-Konto abgeleitet (`gh api user`). Das trägt nur beim Eigentümer der
-Vorlage — fremde Nutzer landen bei einem Repo, das ihnen nicht gehört, und Rechner ohne
-`gh` können den Owner überhaupt nicht ermitteln. `CODING_KIT_TEMPLATE_REPO` gibt es, ist
-aber ein Override, den man kennen muss. Dasselbe Muster steckt in `check-upstreams` beim
-Kit-Repo. **Drittens Klontiefe:** der Ersatzpfad klont mit `--depth 1`, während die
-Stempel-Auflösung die `VERSION`-Historie durchgeht — mit Shallow-Klon nicht möglich.
-
-**Idee:** Der Live-Stand ist die Regel, der lokale Checkout die Ausnahme für Offline-
-Betrieb und für die Arbeit am Template selbst. Die Herkunft steht fest, statt aus dem
-Konto des Aufrufers zu folgen, und der benutzte Stand wird im Lauf immer benannt.
-
-**Lösungsskizze:**
-- Live zuerst: bei erreichbarem Netz gegen den aktuellen Stand arbeiten; der lokale
-  Checkout greift, wenn offline oder wenn ausdrücklich der lokale Stand gemeint ist.
-- Herkunft ohne Account-Ableitung: Kette `CODING_KIT_TEMPLATE_REPO` → kanonische
-  Upstream-Quelle → optional eigener Fork. Die kanonische Quelle gehört deklariert (der
-  Marketplace nennt seine Quelle ebenso), nicht aus `gh api user` erraten — analog für das
-  Kit-Repo in `check-upstreams`.
-- Ohne `gh` nutzbar: für ein öffentliches Repo genügen `git clone`/`git fetch` der URL.
-- Aufgelöste `VERSION` und Herkunft (live oder offline mit Datum) im Lauf benennen.
-- Lokale Änderungen oder divergierte Historie im Checkout nicht still übergehen — melden
-  und bestätigen lassen.
-- Klontiefe am Bedarf ausrichten: die Stempel-Auflösung braucht `VERSION`-Historie.
-
-**Abhängigkeiten:** F-032 (Herkunft und Clone-Weg hängen am Host-Profil) — sinnvoll
-zusammen mit F-025. Berührung mit F-035 (Übergaben gehen in den lokalen
-Arbeits-Checkout, nicht an den Live-Stand).
-
-**Noch zu analysieren:**
-- Wie erkennt ein Lauf „ich arbeite gerade am Template" — expliziter Schalter oder
-  Folgerung aus einem dirty bzw. abweichenden Checkout? F-035 braucht genau diesen
-  Fall — Lösung abstimmen.
-- Bleibt die Personal-Config der Ort für den Override, oder gehört die kanonische Quelle
-  in eine Plugin-Datei?
+dieselbe Antwort auf „welcher Git-Server, welche Fähigkeiten").
 
 ### F-027 — Stop-Hook plattformfähig machen (Windows greift ins WSL)
 
@@ -513,25 +426,30 @@ tragen.
   OneDev, Bitbucket Data Center, Gerrit), minimal/lokal (Bare-Repo via `file://`/SSH,
   Gitolite, Soft Serve, `git daemon`), Peer-to-Peer (Radicle). CLIs je nach Host
   (`gh`, `glab`, `tea`, `fj`/`berg`, `az repos`) — Pflegestand zur Planungszeit prüfen.
-- `new-project` lokaler Bootstrap (aus F-023): Template-Checkout kopieren, `git init`,
-  Autor-Config aus der Personal-Config; Repo-Settings/Topics nur, wo der Host sie kann
-  — Discovery trägt sonst der `.claude/template-version`-Stempel. README-Abschnitt
+- `new-project` lokaler Bootstrap (aus F-023): `git init` statt `gh repo create` — das
+  Template kommt seit F-039 aus dem Plugin, ein Checkout ist nicht nötig; Autor-Config
+  aus der Personal-Config; Repo-Settings/Topics nur, wo der Host sie kann — Discovery
+  trägt sonst der `.claude/template-version`-Stempel. README-Abschnitt
   „Ohne GitHub" auf den Skill-Pfad umstellen.
 - Renovate: offiziell Azure, Bitbucket (Cloud/Server), Forgejo, Gitea, GitHub, GitLab;
   Gerrit und `local` experimentell. Preset-Referenz je Host klären.
 - CI: GitHub Actions, Forgejo/Gitea Actions (weitgehend kompatibel), GitLab CI,
   Woodpecker, Bitbucket Pipelines, Azure Pipelines — Template-Seite betroffen
-  (Übergabe nach F-035).
-- Der GitHub-Request im Übernahme-Vorschlag (`update-conventions`) entfällt ggf. durch
-  das Inbox-Format aus F-035 — eine `gh`-Abhängigkeit weniger.
+  (im selben Commit).
+- Der GitHub-Request im Übernahme-Vorschlag (`update-conventions`, seit F-039 ein Issue
+  im coding-kit-Repo) braucht einen Weg ohne `gh`; der kopierfertige Prompt für eine
+  Kit-Session kommt bereits ohne aus.
 - Template-Seite neben CI und Renovate: die Noreply-Regel in den Vorlagen (siehe
-  F-024) — eine gemeinsame Übergabe.
+  F-024) — gemeinsam im selben Commit.
+- Aus F-026: `check-upstreams` leitet das Kit-Repo aus `gh api user` ab — das trägt nur
+  beim Eigentümer und nie ohne `gh`. Die kanonische Quelle deklarieren (wie der
+  Marketplace seine Quelle nennt), Personal-Config als Override.
 - Publishing-Hygiene: Basis-URLs und Hostnamen selbst gehosteter Server sind privat —
   nur in der Personal-Config, nie im Repo oder in der lebenden Doku; Credentials
   bleiben im Store der jeweiligen CLI.
 
-**Abhängigkeiten:** F-035 (Template-Gegenstücke laufen als Übergabe). F-024, F-025 und
-F-026 bauen auf der Host-Erkennung auf.
+**Abhängigkeiten:** F-039 (Template-Gegenstücke entstehen im selben Commit). F-024 und
+F-025 bauen auf der Host-Erkennung auf.
 
 **Noch zu analysieren:**
 - Welche Hosts in der ersten Ausbaustufe voll unterstützt werden (Vorschlag: GitHub,
@@ -561,8 +479,8 @@ das sonst im Graph landet.
   `teach-step` (lebt heute nur im Graph) und Infra-Fakten — dafür
   Claude-Code-Auto-Memory, eine Datei unter `private/` oder bewusst kein Ersatz, dann
   dokumentiert.
-- Der Graphiti-Block der CLAUDE.md-Vorlage in project-template ist mitbetroffen —
-  Übergabe nach F-035.
+- Der Graphiti-Block der CLAUDE.md-Vorlage im Template (`template/core/CLAUDE.md`) ist
+  mitbetroffen — im selben Commit.
 
 **Abhängigkeiten:** F-036 (übernimmt den Großteil des Ersatzwegs). Thematische Nähe zu
 F-029/F-030 (Graphiti) und F-032 (gleicher Grundsatz: optionale Infrastruktur wird
@@ -596,13 +514,13 @@ Inhalt regelt die `CODING-STANDARDS.md`.
   benennen) und `step-done` (Review-Kriterien Verständlichkeit und Secure Coding)
   konsistent nachziehen.
 - Inhaltliche Lücken der Vorlage (Lesbarkeit vor Cleverness, Secure Coding über Secrets
-  hinaus) laufen als eigener Eintrag in project-template; Bestandsprojekte erhalten sie
-  über `/update-conventions`.
+  hinaus) sind mit TPL-021 (project-template 0.14.0) bereits im Template;
+  Bestandsprojekte erhalten sie über `/update-conventions`.
 
 **Abhängigkeiten:** F-036 — schreibt prep-step und step-done grundlegend um, deshalb
 erst danach (sonst doppelte Arbeit); zusammen mit F-037 umsetzen. Gegenstück:
-project-template F-021 (Inhalte der CODING-STANDARDS-Vorlage) — Paarungsprüfung nach
-F-035.
+TPL-021 (Inhalte der CODING-STANDARDS-Vorlage, erledigt) — die Skill-Kriterien darauf
+abstimmen.
 
 ---
 
@@ -638,9 +556,10 @@ Out of Scope mit Verweisen, Entscheidungsprotokoll, offene Fragen als Checkboxen
   Testfälle, Nicht-Ziele, offene Fragen, Entscheidungen), dann Technik-Plan; Tiefe
   skaliert mit Klein/Mittel/Groß. `build-step` ergänzt Abweichungen, `step-done` hängt
   die Abnahme an und schließt ab — die Feature-Datei ersetzt den Archiv-Eintrag.
-- Die Vorlage der Feature-Datei liegt in project-template (entschieden 2026-10-23:
-  Inhalt im Template, Prozess im Kit), kommt per `update-conventions` in die Projekte
-  und wird von den Skills zur Laufzeit gelesen — kein Duplikat im Kit.
+- Die Vorlage der Feature-Datei liegt im Template (`template/core/`; entschieden
+  2026-10-23: Inhalt im Template, Prozess in den Skills), kommt per
+  `update-conventions` in die Projekte und wird von den Skills zur Laufzeit gelesen —
+  kein Duplikat.
 - Übersicht bleibt knapp: Erledigtes ist dort nur ein Haken (F-Nummer, Titel, Datum),
   höchstens mit kurzem Kommentar, wenn ihn jemand beim Überfliegen braucht (offene
   Lücke, Folge-F-Nummer, Release-Version) — keine Zusammenfassungen; die stehen in der
@@ -655,10 +574,10 @@ Out of Scope mit Verweisen, Entscheidungsprotokoll, offene Fragen als Checkboxen
 - Bestandsprojekte: `update-conventions` bietet eine einmalige Migration an
   (REQUIREMENTS.md und offene PROGRESS-Einträge auf die Zielorte verteilen, Diff und
   Bestätigung je Datei); bestehende `PROGRESS-ARCHIVE.md` bleibt eingefroren.
-- Eigene PROGRESS beider Repos (coding-kit, project-template) erst in der Release-Phase
-  umstellen — nach Push und Plugin-Update, mit der neuen Migration (zugleich erster
-  Praxistest). Vorher arbeiten alle Sessions mit dem installierten alten Plugin, das die
-  neue Struktur nicht kennt (entschieden 2026-10-23).
+- Die eigene PROGRESS des Kits erst in der Release-Phase umstellen — nach Push und
+  Plugin-Update, mit der neuen Migration (zugleich erster Praxistest). Vorher arbeiten
+  alle Sessions mit dem installierten alten Plugin, das die neue Struktur nicht kennt
+  (entschieden 2026-10-23).
 
 **Noch zu analysieren:**
 - Name und Ort der Übersicht (`PROGRESS.md` behalten spart Migration) und ob der
@@ -667,10 +586,9 @@ Out of Scope mit Verweisen, Entscheidungsprotokoll, offene Fragen als Checkboxen
   ausgelagert wird.
 - Status an einer Stelle oder an zweien (Datei-Kopf + Übersicht).
 
-**Abhängigkeiten:** F-035 — das Template-Gegenstück (Vorlage der Feature-Datei,
+**Abhängigkeiten:** F-039 — das Template-Gegenstück (Vorlage der Feature-Datei,
 Vorlagen PROGRESS/REQUIREMENTS/CLAUDE/HOW-TO/README, ADR-README, MANIFEST inkl.
-Seed-Sections) läuft als Übergabe in die Inbox von
-project-template, DONE erst nach grüner Paarungsprüfung. Berührt dieselben Skills wie
+Seed-Sections) entsteht im selben Commit wie die Skills. Berührt dieselben Skills wie
 F-034 (prep-step, step-done) — F-034 folgt danach. Entlastet F-029 und F-033.
 
 ---
@@ -698,14 +616,12 @@ dazu Security und Lesbarkeit.
   Nutzer sieht die Liste.
 - Nach Größe staffeln: Klein ein oder kein Reviewer, Mittel/Groß zwei parallel
   (Korrektheit gegen Spec; Security + Lesbarkeit). Token-Kosten im Blick behalten.
-- Gleiches Muster wie der Paarungs-Prüfer aus F-035 (frischer Kontext, ohne
-  Schreibrechte) — Wiederverwendung bei der Planung prüfen.
 
 **Abhängigkeiten:** F-036 (Feature-Spec als Prüfgrundlage; ohne sie nur Prüfung gegen
 den PROGRESS-Eintrag). Zusammen mit F-034 umsetzen — dessen Review-Kriterien
 (verständlich, einfach, Secure Coding) sind der Prüfmaßstab des Reviewers.
 Template-Seite: HOW-TO-Abschnitt „What `/step-done` does in detail" um den Review-Schritt
-ergänzen — Übergabe nach F-035.
+ergänzen — im selben Commit.
 
 ---
 
@@ -781,7 +697,7 @@ F-022 Begleithandlungen beim Fragment-Einbau (DONE)
 F-023 new-project ohne GitHub (lokaler Bootstrap-Pfad) (→ aufgegangen in F-032)
 F-024 Commit-Adresse aus der Personal-Config statt hart aus gh
 F-025 install.sh: fehlender gh-Login und Plattform-Abdeckung
-F-026 Template-Auflösung: Aktualität, Herkunft und Klontiefe
+F-026 Template-Auflösung: Aktualität, Herkunft und Klontiefe (→ aufgegangen in F-039/F-032)
 F-027 Stop-Hook plattformfähig machen (Windows greift ins WSL)
 F-028 Utility-Skill handoff (DONE)
 F-029 Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren
