@@ -145,11 +145,13 @@ bleibt lokaler Backstop).
 ### 4d. Verifikation (Write-then-Verify)
 
 ```bash
-mise trust && mise install && just setup && just check
+mise trust && mise install && mise lock && just setup && just check
 ```
 
-Muss grün sein — rote Ergebnisse erst fixen. `mise.lock` entsteht dabei und wird
-mitcommittet.
+Muss grün sein — rote Ergebnisse erst fixen. Die `mise.lock` erzeugt `mise lock` (nicht
+`mise install` — das schreibt keine Plattform-Einträge, und die CI scheitert dann im
+`--locked`-Modus); danach die Prüfung aus `/choose-stack` § Lock-Datei erzeugen und
+prüfen. Die Lock-Datei wird mitcommittet.
 
 ### 4e. Anforderungen
 

@@ -35,6 +35,7 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 | F-019 | Pflege-Skill go-public → **geführter, fail-closed Übergang private/lokal → public: vier blockierende Preflight-Gates (Historie-Secrets, Privacy inkl. Commit-Metadaten, Lizenz, private/-Hygiene), Nachzug vor Übergang via update-conventions-Sichtbarkeits-Prämisse, Push nur mit laufbezogener Freigabe (Plugin 0.17.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-07-20 |
 | F-022 | Begleithandlungen beim Fragment-Einbau → **`/choose-stack` § Begleithandlungen als einzige Fundstelle (generisch, Fragment-Wissen bleibt im Template), von new-project/prep-step/step-done referenziert; entkoppelt von der Idempotenz-Regel; `update-conventions` prüft zusätzlich bei unverändertem Fragment-Text und erreicht damit als einziger Pfad Bestandsprojekte. Anlass/Pairing: project-template 0.13.1 (F-016), `nextjs`-Fragment (Plugin 0.18.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-08-11 |
 | F-028 | Utility-Skill handoff → **kopierfertiger Handoff-Prompt am Kontextlimit: Orientierung zuerst (zuletzt, Stand, als Nächstes inkl. Reihenfolge-Vorgabe der Aufgabenliste), sonst nur Undokumentiertes (Maßstab je Zeile) mit Verweisen auf Quellen; kontextsparsam (keine Rückfrage, max. ein Shell-Aufruf), Schreibverbot inkl. Memory, Ausgabe als ein Codeblock (Plugin 0.19.0).** Details in `PROGRESS-ARCHIVE.md`. | 2026-09-16 |
+| F-031 | mise.lock mit Plattform-Einträgen erzeugen → **`/choose-stack` § Lock-Datei erzeugen und prüfen als gemeinsame Mechanik: `mise lock` nach `mise install`, ohne `--platform` (Liste allein aus `lockfile_platforms`), Lücke auf der CI-Runner-Plattform blockiert den Commit; new-project/choose-stack erzeugen und prüfen, `update-conventions` gleicht auch bei aktuellem Stempel ab. Pairing: project-template 0.13.3 (F-020) (Plugin 0.19.1).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 
 ---
 
@@ -52,18 +53,16 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 **Empfohlene Reihenfolge** (Stand 2026-10-23; die Einträge darunter bleiben nach Nummer
 sortiert):
 
-1. **F-031** — laufender Fehler (rote CI in jedem neuen Projekt), klein; erst nach
-   project-template F-020, dessen MANIFEST-Eintrag der Vertrag ist.
-2. **F-035** — Prozess-Grundlage: ab hier laufen Template-Gegenstücke als Übergabe.
-3. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
+1. **F-035** — Prozess-Grundlage: ab hier laufen Template-Gegenstücke als Übergabe.
+2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
-4. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
-5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-6. **F-032 → F-024 → F-026 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil
+3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
+4. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+5. **F-032 → F-024 → F-026 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil
    von F-030 mit.
-7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+6. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
 
-Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 4 und 5 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
@@ -305,56 +304,6 @@ zuletzt geschriebenen eigenen Episoden angekommen sind.
 
 **Abhängigkeiten:** keine. Thematische Nähe zu F-029 (Graphiti). Den
 `install.sh`-Teil (`cleanupPeriodDays`) zusammen mit F-025 bauen.
-
-### F-031 — mise.lock mit Plattform-Einträgen erzeugen (CI im --locked-Modus)
-
-**Status:** BACKLOG
-
-**Problem:** Projekte aus `/new-project` bekommen eine `mise.lock` nur mit Versionen, ohne
-`[tools.X."platforms.*"]`-Einträge — `mise install` schreibt sie so. Sobald eine
-`mise.lock` existiert, läuft die CI (`jdx/mise-action`) `mise install --locked` und
-scheitert für jedes Tool mit „No lockfile URL found for <tool>@<version> on platform
-linux-x64 (--locked mode)". Beobachtet bei einem Projekt aus project-template 0.13.2:
-jeder CI-Lauf rot seit dem Bootstrap-Commit. Das Template-Repo selbst ist grün, weil
-seine Lock-Datei per `mise lock` entstand.
-
-**Idee:** Überall, wo ein Skill `mise install` ausführt, danach die Lock-Datei mit
-Plattform-Einträgen erzeugen und vor dem Commit prüfen, dass jedes Tool einen
-`linux-x64`-Eintrag hat. Bestandsprojekte erkennt `/update-conventions` und bietet die
-Regeneration an.
-
-**Lösungsskizze:**
-- Drei Stellen mit `mise install`: `new-project` § 4d (Verifikation), `choose-stack` § 4
-  (Modul-Einbau/-Wechsel ändert die Tools) und `update-conventions` § 5 (Tooling
-  nachrüsten) — jeweils z. B. `mise lock --platform …` anschließen.
-- Plattformliste nicht starr festschreiben: CI-Runner (`linux-x64`) plus lokale
-  Entwicklungsplattform; Windows/WSL im Blick (siehe F-027).
-- Bestandsprüfung in `/update-conventions`: `mise.lock` vorhanden, aber ohne
-  `platforms.linux-x64`-Einträge → Regeneration anbieten (betrifft Projekte aus
-  Template ≤ 0.13.2). Bewusst nicht in `/step-done` — einmalige Migration, kein
-  Dauer-Check je Substep.
-
-**Abhängigkeiten:** project-template F-020 muss vorher fertig sein (Lock-Befehl und
-`lockfile_platforms` in der Vorlage, MANIFEST-Vertrag) — dort in eigener Session
-umsetzen; die Paarungsprüfung aus F-035 nachholen, sobald es sie gibt. Thematische Nähe
-zu F-027 (Plattform-Abdeckung).
-
-**Noch zu analysieren:**
-- Gibt es eine mise-Einstellung, mit der schon `mise install` Plattform-Einträge
-  schreibt? Wäre robuster als ein Zusatzbefehl — zur Laufzeit gegen die aktuelle
-  mise-Doku prüfen.
-- Renovate: Zieht ein Versions-Bump in `mise.toml` die `mise.lock` samt
-  Plattform-Einträgen mit? Sonst wird die CI nach jedem Tool-Update erneut rot —
-  dieselbe Fehlerklasse auf zweitem Weg.
-- Lohnt ein Guard in `just check` (Lock vollständig?), damit der Fehler vor dem Commit
-  statt erst in der CI auffällt?
-- Widerspruch zum Gegenstück klären: project-template F-020 hält fest, dass die
-  Template-CI `jdx/mise-action` ohne Argumente aufruft und `--locked` nicht erzwingt;
-  hier wurde ein Abbruch im `--locked`-Modus beobachtet. Gemeinsam festlegen, wie
-  sich die Action verhält und ob die Vorlage `--locked` ausdrücklich setzt.
-- Migration genau einer Stelle zuordnen: Hier bietet `/update-conventions` die
-  Regeneration an, F-020 plant einen CHANGELOG-Hinweis „einmal `mise lock`". Vorschlag:
-  das Kit migriert, der CHANGELOG verweist nur darauf.
 
 ### F-032 — Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git)
 
@@ -663,7 +612,7 @@ F-027 Stop-Hook plattformfähig machen (Windows greift ins WSL)
 F-028 Utility-Skill handoff (DONE)
 F-029 Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren
 F-030 Graphiti-Episodenverlust erkennen und wiederherstellbar halten
-F-031 mise.lock mit Plattform-Einträgen erzeugen (CI im --locked-Modus)
+F-031 mise.lock mit Plattform-Einträgen erzeugen (CI im --locked-Modus) (DONE)
 F-032 Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git)
 F-033 Betrieb ohne Graphiti absichern
 F-034 Senior-Maßstab in den Bau-Skills (Lesbarkeit, keine Workarounds, Secure Coding)

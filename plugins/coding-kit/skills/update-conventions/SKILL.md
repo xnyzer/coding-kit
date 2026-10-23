@@ -53,9 +53,11 @@ Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf überneh
 
 ### A2. Je Projekt mit Stempel: deterministischer Abgleich
 
-1. Stempel lesen (`.claude/template-version`). Stempel == aktuelle VERSION → „aktuell",
-   fertig. Sonst die CHANGELOG-Einträge zwischen Stempel und aktueller VERSION zeigen
-   (das ist das Update-Fenster).
+1. Stempel lesen (`.claude/template-version`). Stempel == aktuelle VERSION → nur noch
+   den Lock-Abgleich aus Schritt 9 (ohne Stempel-Änderung), dann „aktuell", fertig —
+   auch Projekte mit aktuellem Stempel können eine `mise.lock` ohne Plattform-Einträge
+   tragen, wenn ein älterer Kit-Stand sie angelegt hat. Sonst die CHANGELOG-Einträge
+   zwischen Stempel und aktueller VERSION zeigen (das ist das Update-Fenster).
 2. **Projektwerte rückauflösen** für die Platzhalter: Name (Repo), OWNER (`gh api
    user`), Beschreibung (Repo-Beschreibung), GROUP_ID + die fünf `LANG_*`-Sprachen
    (Languages-Block der Projekt-CLAUDE.md; Alt-Projekte mit einzeiliger
@@ -124,8 +126,12 @@ Bei Wiederaufnahme: bereits behandelte Projekte/Dateien aus dem Verlauf überneh
    Alt-Datei löschen); **Entfernung** → Rückbau anbieten. Immer je Datei
    bestätigen; Overrides gelten (Schritt 4). **seed-Dateien nie löschen oder
    verschieben** — nur melden, die Entscheidung liegt beim Nutzer.
-9. Abschluss pro Projekt: Stempel auf die neue VERSION setzen, `just check` muss grün
-   sein (Write-then-Verify), Commit-Vorschlag (z. B.
+9. Abschluss pro Projekt: **Lock-Abgleich** — die Prüfung aus `/choose-stack`
+   § Lock-Datei erzeugen und prüfen. Hat sich die `mise.toml` in diesem Lauf
+   geändert, die Prüfung Lücken gezeigt oder fehlt die Lock-Datei: `mise install &&
+   mise lock` anbieten (Ergebnis zusammenfassen, bestätigen lassen), danach erneut
+   prüfen. Dann Stempel auf die neue VERSION setzen, `just check` muss grün sein
+   (Write-then-Verify), Commit-Vorschlag (z. B.
    `chore: sync template conventions <alt> -> <neu>`) — **nur nach OK**, dann Push-Frage.
    Fehlt der Languages-Block in der Projekt-CLAUDE.md, die Migration aus A3 Schritt 6
    anbieten — CLAUDE.md ist `seed` und wird nie automatisch angefasst.
@@ -149,8 +155,9 @@ Erst der Abgleich, dann jede Migration als **eigener bestätigter Schritt**:
    ["github>OWNER/coding-kit"]` anbieten (OWNER zur Laufzeit); Hinweis: die
    Renovate-App-Freigabe ist eine manuelle Nutzeraktion.
 5. **Tooling nachrüsten:** mise.toml + justfile + lefthook.yml aus dem Template-Kern
-   (bzw. Modul via `/choose-stack`) anbieten; danach `mise install && just setup &&
-   just check`.
+   (bzw. Modul via `/choose-stack`) anbieten; danach `mise install && mise lock &&
+   just setup && just check` und die Prüfung aus `/choose-stack` § Lock-Datei
+   erzeugen und prüfen.
 6. **Languages-Block nachrüsten:** Trägt die Projekt-CLAUDE.md noch die einzeilige
    Alt-Sprachkonvention, die Migration zum Languages-Block anbieten — CLAUDE.md ist
    `seed`, das passiert nie automatisch. Werte: bisherige Doku-Sprache behalten,

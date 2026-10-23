@@ -72,7 +72,9 @@ Kandidaten.
    Sprachfragment des Alt-Moduls wird dabei gegen das neue getauscht; vorhandene
    Katalog-Fragmente bleiben stehen und werden nur aufgelistet („noch aktuell?") —
    Entfernen ist eine Projektentscheidung, kein Automatismus.
-4. **Verifikation:** `mise install && just setup && just check` muss grün sein
+4. **Verifikation:** `mise install && mise lock && just setup && just check` muss grün
+   sein, danach die Prüfung aus § Lock-Datei erzeugen und prüfen — der Modulwechsel
+   ändert die Tools, `mise lock` nimmt neue auf und entfernt gestrichene
    (Write-then-Verify). Kein Commit ohne Nachfrage; `.claude/template-version` wird hier
    **nicht** gestempelt (das macht /new-project; Projekte ohne Stempel gleicht später
    /update-conventions heuristisch ab).
@@ -108,6 +110,29 @@ Aktuell einziger Fall im Katalog: **`nextjs`** — verlangt eine `AGENTS.md` im 
 bevor `next dev` das erste Mal läuft, weil Nexts Agent-Rules-Generator seinen Managed-Block
 sonst in die `CLAUDE.md` schreibt und ihn dort bei jedem Lauf erneuert. Bedingungen und
 Nachbesserung stehen im Fragment.
+
+## Lock-Datei erzeugen und prüfen
+
+Gilt überall, wo ein Skill die Toolchain eines Projekts installiert — Modus B,
+`/new-project` und `/update-conventions`. Die CI (`jdx/mise-action`) installiert mit
+`--locked`, sobald eine `mise.lock` existiert, und braucht dafür je Tool eine
+Download-URL für die Plattform des Runners. `mise install` schreibt diese Einträge nicht.
+
+- **Erzeugen:** nach `mise install` schlicht `mise lock` — **ohne `--platform`**. Welche
+  Plattformen hineingehören, steht allein in `lockfile_platforms` (`[settings]` der
+  `mise.toml`, aus der Vorlage); ein Flag daneben würde die Liste doppelt führen.
+  Fehlt die Einstellung (Projekt vor dem Template-Stand mit `lockfile_platforms`), kein
+  Flag als Ersatz setzen, sondern auf `/update-conventions` verweisen — die
+  `mise.toml` ist managed und bringt die Einstellung mit.
+- **Prüfen:** jedes Tool in der `mise.lock` (`[[tools.<tool>]]`) hat einen Eintrag
+  `[tools.<tool>."platforms.<p>"]` für jede Plattform `<p>` aus `lockfile_platforms`.
+  - **Lücke auf der Plattform des CI-Runners** (aus `runs-on` der Projekt-CI ableiten,
+    z. B. `ubuntu-*` → `linux-x64`) → blockiert den Commit; die CI wäre rot. Ursache
+    klären (Netz, Tool-Version ohne Release für die Plattform), nicht übergehen.
+  - **Übrige Lücken** → melden und gegen die „Known limitation"-Einträge im
+    Template-`CHANGELOG.md` abgleichen; dort dokumentierte Upstream-Lücken sind
+    bekannt und blockieren nicht.
+- Die `mise.lock` wird mitcommittet — sie ist Projektdatei, nie Template-Inhalt.
 
 ## Rückgabe an den Aufrufer
 

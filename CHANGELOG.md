@@ -4,6 +4,26 @@ Versioniert wird das Plugin (`plugins/coding-kit/.claude-plugin/plugin.json`, se
 Jede inhaltliche Plugin-Änderung bumpt die Version und bekommt hier einen Eintrag —
 im selben Commit.
 
+## 0.19.1 — 2026-10-23
+
+Fix (F-031): Projekte aus `/new-project` bekamen eine `mise.lock` ohne Plattform-Einträge,
+weil nur `mise install` lief — die CI (`jdx/mise-action`, installiert mit `--locked`)
+scheiterte daran auf `linux-x64` seit dem Bootstrap-Commit. Gegenstück zu
+project-template 0.13.3 (`lockfile_platforms` in `core/mise.toml`):
+
+- **`choose-stack` § Lock-Datei erzeugen und prüfen** (neu, gemeinsame Mechanik): nach
+  `mise install` schlicht `mise lock`, ohne `--platform` — die Plattformliste kommt
+  allein aus `lockfile_platforms`. Prüfung: jedes Tool hat einen Eintrag je Plattform
+  der Liste; eine Lücke auf der Plattform des CI-Runners blockiert den Commit, übrige
+  Lücken werden gemeldet und gegen die „Known limitation"-Einträge des
+  Template-CHANGELOG abgeglichen.
+- **`new-project` § 4d** und **`choose-stack` § 4** führen `mise lock` nach
+  `mise install` aus und prüfen danach.
+- **`update-conventions`:** Lock-Abgleich am Projektabschluss (A2.9), auch bei
+  aktuellem Stempel (A2.1) — betroffen sind auch Projekte aus Template 0.13.3, die
+  ein älterer Kit-Stand angelegt hat. Tooling-Nachrüstung (A3.5) erzeugt und prüft
+  die Lock-Datei ebenso.
+
 ## 0.19.0 — 2026-09-16
 
 Neuer Utility-Skill **handoff** (F-028): kopierfertiger Handoff-Prompt für einen
