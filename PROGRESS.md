@@ -41,8 +41,81 @@ So funktioniert's: `/coding-kit:add-feature` nimmt neue Aufgaben auf (F-Nummer),
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
-`/coding-kit:prep-step` vorbereiten._
+### F-038 — Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature als von Claude aufrufbar klarstellen
+
+**Status:** PLANNED
+
+**Problem:** Ob Claude PROGRESS-Einträge ohne ausdrückliche Freigabe schreiben darf, regelt
+jeder Skill für sich: add-feature und prep-step warten auf OK, andere Pfade (add-skill
+„spätestens beim Abschluss", step-done) sagen dazu nichts. Gleichzeitig hält Claude
+add-feature für nur vom Nutzer startbar, obwohl der Skill seit jeher
+`disable-model-invocation: false` trägt — die Texte legen das nahe (build-step: „via
+add-feature … vorschlagen", add-feature: „Der Nutzer hat eine Idee …").
+
+**Idee:** Eine kit-weite Regel, die für alle gilt: Claude darf add-feature (und andere
+PROGRESS-schreibende Skills) selbst starten, aber jeder neue oder geänderte PROGRESS-Eintrag
+wird erst als Vorschau gezeigt und nach ausdrücklichem OK geschrieben. Die Regel ist an
+einer Stelle definiert (Authoring-Doku); die Skills tragen sie als einheitlichen Standardsatz.
+
+**Lösungsskizze** (Stand Planung 2026-10-23):
+- Konvention in `docs/skill-authoring.md` als Pflicht-Baustein „Freigabe-Gate" mit
+  Standardsatz; jeder PROGRESS-schreibende Skill trägt den Satz an seiner Schreibstelle
+  (die Doku liegt nicht im Plugin-Cache, Skills können sie zur Laufzeit nicht lesen).
+- Geltung: alles, was in `PROGRESS.md`, `PROGRESS-ARCHIVE.md` oder den FEATURE-INDEX
+  geschrieben wird — ausgenommen das Schreiben genau des zuvor freigegebenen Texts.
+- Bereits gegated (bleiben, wie sie sind): add-feature, prep-step, define-requirements,
+  refine-requirements; teach-step, check-upstreams, new-project gehen über diese.
+- `step-done`: § 4 zeigt Done-Zeile, Archiv-Eintrag und `(DONE)`-Marker als Vorschau,
+  gebündelt mit der Commit-Frage (ein OK für beides, „nur verbuchen" möglich); „Direkt
+  tun, ohne zu fragen" entfällt. Reihenfolge: Vorschau → OK → schreiben → Checks → Commit.
+- `build-step`: Claude startet add-feature selbst (Entwurf, Freigabe); im autonomen Lauf
+  werden neue Ideen nur gesammelt und am Ende vorgeschlagen. Start-Freigabe des Laufs =
+  „verbuchen und committen"; ohne sie bleiben PROGRESS- und Commit-Änderungen Vorschläge.
+- `add-feature`: Beschreibung und Einleitung sagen, dass Claude ihn selbst starten darf.
+- prep-step/build-step bleiben nur manuell startbar (gewollt).
+- `templates/global-CLAUDE.md` bleibt unverändert (gilt auch für Projekte ohne Kit).
+- Repo-lokaler Teil: Freigabe-Regel in die Kit-CLAUDE.md; `add-skill` ausdrücklich von
+  Claude aufrufbar, deckt repo-lokale Skills ab, Freigabe-Pflicht vor PROGRESS-Einträgen;
+  Schritt 3 (HOW-TO im Template) vermerkt den Nachzug in F-039, solange project-template
+  eingefroren ist.
+- Plugin 0.20.0 (Verhaltensänderung), CHANGELOG.
+
+**Abhängigkeiten:** keine. Vor F-039 und F-036 umsetzen (beide laufen dann schon nach der
+Regel; F-036 und F-034 bauen auf denselben Skills auf).
+
+#### F-038a — Plugin: Freigabe-Gate und add-feature-Aufruf
+
+**Was:** step-done § 4/§ 6 (Vorschau + Freigabe, gebündelt mit der Commit-Frage),
+build-step (add-feature selbst starten, autonom sammeln, Start-Freigabe „verbuchen und
+committen"), add-feature (Aufruf durch Claude), `docs/skill-authoring.md`
+(Pflicht-Baustein), README (Satz zum Zyklus), plugin.json 0.20.0, CHANGELOG.
+
+**Dateien:** `plugins/coding-kit/skills/{step-done,build-step,add-feature}/SKILL.md`,
+`docs/skill-authoring.md`, `README.md`, `plugins/coding-kit/.claude-plugin/plugin.json`,
+`CHANGELOG.md`.
+
+**Abnahmekriterien:**
+- [ ] `just check` grün.
+- [ ] Kein PROGRESS-schreibender Skill schreibt ohne Vorschau (grep über alle
+      Schreibstellen belegt).
+- [ ] Version-Bump und CHANGELOG im selben Commit.
+
+#### F-038b — Repo-lokal: CLAUDE.md und add-skill
+
+**Was:** Freigabe-Regel in die Kit-CLAUDE.md (Verweis auf die Skills); `add-skill`
+ausdrücklich von Claude aufrufbar, repo-lokale Skills mit eigener kurzer Checkliste,
+Freigabe-Pflicht in Schritt 0 und 5, Schritt 3 vermerkt HOW-TO-Nachzug in F-039.
+
+**Dateien:** `CLAUDE.md`, `.claude/skills/add-skill/SKILL.md`, `PROGRESS.md` (Vermerk in
+F-039).
+
+**Abhängigkeiten:** F-038a.
+
+**Abnahmekriterien:**
+- [ ] `just check` grün.
+- [ ] `add-skill` erscheint weiter in der Skill-Liste.
+- [ ] F-039 trägt den Template-Nachzug (HOW-TO § step-done: Vorschau + Freigabe) —
+      nach Freigabe.
 
 ---
 
@@ -54,7 +127,7 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 sortiert):
 
 1. **F-038** — klein; Freigabe-Regel kit-weit (inkl. `add-skill` und Kit-CLAUDE.md), damit
-   die folgenden Sessions schon danach laufen.
+   die folgenden Sessions schon danach laufen (in Arbeit, siehe „Offene Aufgaben").
 2. **F-039** — ein Repo: Template ins Plugin, Version 1.0.0; vor F-036, damit dessen Umbau
    Skills und Vorlage in einem Commit trifft.
 3. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
@@ -534,46 +607,6 @@ ergänzen — Übergabe nach F-035.
 
 ---
 
-### F-038 — Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature als von Claude aufrufbar klarstellen
-
-**Status:** BACKLOG
-
-**Problem:** Ob Claude PROGRESS-Einträge ohne ausdrückliche Freigabe schreiben darf, regelt
-jeder Skill für sich: add-feature und prep-step warten auf OK, andere Pfade (add-skill
-„spätestens beim Abschluss", step-done) sagen dazu nichts. Gleichzeitig hält Claude
-add-feature für nur vom Nutzer startbar, obwohl der Skill seit jeher
-`disable-model-invocation: false` trägt — die Texte legen das nahe (build-step: „via
-add-feature … vorschlagen", add-feature: „Der Nutzer hat eine Idee …").
-
-**Idee:** Eine kit-weite Regel, die für alle gilt: Claude darf add-feature (und andere
-PROGRESS-schreibende Skills) selbst starten, aber jeder neue oder geänderte PROGRESS-Eintrag
-wird erst als Vorschau gezeigt und nach ausdrücklichem OK geschrieben. Die Regel steht an
-einer Stelle und wird von den Skills referenziert, nicht in jedem Skill neu formuliert.
-
-**Lösungsskizze:**
-- Konvention in `docs/skill-authoring.md` (Freigabe-Gate für PROGRESS/FEATURE-INDEX).
-- Alle PROGRESS-schreibenden Skills gegen die Regel prüfen und angleichen: add-feature,
-  prep-step, step-done, build-step, define-requirements, refine-requirements, teach-step,
-  check-upstreams, update-conventions.
-- add-feature und build-step: ausdrücklich, dass Claude add-feature selbst starten darf
-  (z. B. für eine beim Bauen entdeckte Idee) — mit Entwurf und Freigabe.
-- Repo-lokaler Teil im Kit: Freigabe-Regel in die Kit-CLAUDE.md; `add-skill` sagt
-  ausdrücklich, dass Claude ihn selbst starten darf, deckt auch repo-lokale Skills
-  (`.claude/skills/`) ab und zeigt jeden PROGRESS-Eintrag vorher als Vorschau (bisher:
-  F-Nummer „spätestens beim Abschluss vergeben").
-- Prüfen, ob die Regel zusätzlich in `templates/global-CLAUDE.md` gehört.
-- Plugin-Änderung: Version-Bump und CHANGELOG (Sync-Invariante).
-
-**Noch zu analysieren:**
-- Autonomer `/goal`-Lauf: gilt dieselbe laufbezogene Freigabe-Ausnahme wie bei Commits?
-- Ab welcher Änderung gilt ein Eintrag als „geändert" (Status-Marker, Checkbox abhaken,
-  Done-Zeile) — alles freigabepflichtig oder nur inhaltliche Änderungen?
-
-**Abhängigkeiten:** keine. Vor F-039 und F-036 umsetzen (beide laufen dann schon nach der
-Regel; F-036 und F-034 bauen auf denselben Skills auf).
-
----
-
 ### F-039 — Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0
 
 **Status:** BACKLOG
@@ -694,6 +727,6 @@ F-034 Senior-Maßstab in den Bau-Skills (Lesbarkeit, keine Workarounds, Secure C
 F-035 Repo-übergreifende Übergabe statt Parallelarbeit (coding-kit ↔ project-template) (→ aufgegangen in F-039)
 F-036 Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt
 F-037 Unabhängiges Review in step-done (Reviewer mit frischem Kontext)
-F-038 Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature von Claude aufrufbar
+F-038 Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature von Claude aufrufbar (PLANNED)
 F-039 Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0
 -->
