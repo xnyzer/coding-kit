@@ -49,6 +49,23 @@ _Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
 
 _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer._
 
+**Empfohlene Reihenfolge** (Stand 2026-10-23; die Einträge darunter bleiben nach Nummer
+sortiert):
+
+1. **F-031** — laufender Fehler (rote CI in jedem neuen Projekt), klein; erst nach
+   project-template F-020, dessen MANIFEST-Eintrag der Vertrag ist.
+2. **F-035** — Prozess-Grundlage: ab hier laufen Template-Gegenstücke als Übergabe.
+3. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
+   Feature-Datei geplant.
+4. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
+5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+6. **F-032 → F-024 → F-026 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil
+   von F-030 mit.
+7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+
+Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+bzw. ohne GitHub zuerst.
+
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
 
 **Status:** BACKLOG
@@ -70,6 +87,9 @@ Skill statt zu raten.
   für GitHub-Projekte, Kernaussage bleibt „keine private Adresse".
 - Weitere Fundstellen desselben Musters prüfen (u. a. `new-project` 4a) und die
   README-Zeile zum Schlüssel an die neue Rolle anpassen.
+- Template-Seite: Die Noreply-Regel steht auch in project-template (`core/CLAUDE.md`,
+  `CODING-STANDARDS.md`, `CONTRIBUTING.md`, HOW-TO, `scripts/privacy-lint.sh`) —
+  Übergabe nach F-035, gemeinsam mit F-032.
 
 **Abhängigkeiten:** F-032 (Host-Profil bestimmt, welche Noreply-Adresse gilt) — sinnvoll
 im selben Zug umzusetzen
@@ -148,11 +168,13 @@ Konto des Aufrufers zu folgen, und der benutzte Stand wird im Lauf immer benannt
 - Klontiefe am Bedarf ausrichten: die Stempel-Auflösung braucht `VERSION`-Historie.
 
 **Abhängigkeiten:** F-032 (Herkunft und Clone-Weg hängen am Host-Profil) — sinnvoll
-zusammen mit F-025
+zusammen mit F-025. Berührung mit F-035 (Übergaben gehen in den lokalen
+Arbeits-Checkout, nicht an den Live-Stand).
 
 **Noch zu analysieren:**
 - Wie erkennt ein Lauf „ich arbeite gerade am Template" — expliziter Schalter oder
-  Folgerung aus einem dirty bzw. abweichenden Checkout?
+  Folgerung aus einem dirty bzw. abweichenden Checkout? F-035 braucht genau diesen
+  Fall — Lösung abstimmen.
 - Bleibt die Personal-Config der Ort für den Override, oder gehört die kanonische Quelle
   in eine Plugin-Datei?
 
@@ -228,7 +250,9 @@ seine Zeitstempel — kein manuelles Löschen.
   dabei etwa 2.000–3.000 Zeichen pro Episode nicht deutlich überschreiten (sonst
   droht Abbruch der Extraktion).
 - Ein Schreibanlass pro Feature statt mehrerer (z. B. nur beim Abschluss); andere Skills
-  schreiben nur bei echten Entscheidungen.
+  schreiben nur bei echten Entscheidungen. Mit F-036 liegt das Detail in der
+  Feature-Datei — der Graph bekommt eine knappe Zusammenfassung mit Verweis statt
+  ausführlicher Prosa, also weniger Entitäten.
 - `reference_time` setzen, wo vergangene Ereignisse beschrieben werden, damit die
   zeitliche Auflösung ohne Nacharbeit stimmt; `update_communities` bleibt aus.
 - Globale CLAUDE.md-Vorlage anpassen: Löschanweisung streichen, Splitting-Regel
@@ -248,7 +272,8 @@ seine Zeitstempel — kein manuelles Löschen.
 - Wo die zentrale Konvention liegt, damit Plugin-Skills sie zur Laufzeit erreichen.
 
 **Abhängigkeiten:** Auswertung der serverseitigen Kostenmessung (extern, ein bis zwei
-Wochen Daten).
+Wochen Daten). F-036 — erst danach umsetzen, sonst werden Skills optimiert, die F-036
+ohnehin umschreibt.
 
 ---
 
@@ -278,7 +303,8 @@ zuletzt geschriebenen eigenen Episoden angekommen sind.
   wird.
 - Speicherbedarf der Transkripte bei längerer Aufbewahrung im Blick behalten.
 
-**Abhängigkeiten:** keine. Thematische Nähe zu F-029 (Graphiti) und F-025 (install.sh).
+**Abhängigkeiten:** keine. Thematische Nähe zu F-029 (Graphiti). Den
+`install.sh`-Teil (`cleanupPeriodDays`) zusammen mit F-025 bauen.
 
 ### F-031 — mise.lock mit Plattform-Einträgen erzeugen (CI im --locked-Modus)
 
@@ -308,7 +334,10 @@ Regeneration an.
   Template ≤ 0.13.2). Bewusst nicht in `/step-done` — einmalige Migration, kein
   Dauer-Check je Substep.
 
-**Abhängigkeiten:** keine. Thematische Nähe zu F-027 (Plattform-Abdeckung).
+**Abhängigkeiten:** project-template F-020 muss vorher fertig sein (Lock-Befehl und
+`lockfile_platforms` in der Vorlage, MANIFEST-Vertrag) — dort in eigener Session
+umsetzen; die Paarungsprüfung aus F-035 nachholen, sobald es sie gibt. Thematische Nähe
+zu F-027 (Plattform-Abdeckung).
 
 **Noch zu analysieren:**
 - Gibt es eine mise-Einstellung, mit der schon `mise install` Plattform-Einträge
@@ -319,6 +348,13 @@ Regeneration an.
   dieselbe Fehlerklasse auf zweitem Weg.
 - Lohnt ein Guard in `just check` (Lock vollständig?), damit der Fehler vor dem Commit
   statt erst in der CI auffällt?
+- Widerspruch zum Gegenstück klären: project-template F-020 hält fest, dass die
+  Template-CI `jdx/mise-action` ohne Argumente aufruft und `--locked` nicht erzwingt;
+  hier wurde ein Abbruch im `--locked`-Modus beobachtet. Gemeinsam festlegen, wie
+  sich die Action verhält und ob die Vorlage `--locked` ausdrücklich setzt.
+- Migration genau einer Stelle zuordnen: Hier bietet `/update-conventions` die
+  Regeneration an, F-020 plant einen CHANGELOG-Hinweis „einmal `mise lock`". Vorschlag:
+  das Kit migriert, der CHANGELOG verweist nur darauf.
 
 ### F-032 — Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git)
 
@@ -358,12 +394,17 @@ tragen.
   Gerrit und `local` experimentell. Preset-Referenz je Host klären.
 - CI: GitHub Actions, Forgejo/Gitea Actions (weitgehend kompatibel), GitLab CI,
   Woodpecker, Bitbucket Pipelines, Azure Pipelines — Template-Seite betroffen
-  (Pairing mit project-template).
+  (Übergabe nach F-035).
+- Der GitHub-Request im Übernahme-Vorschlag (`update-conventions`) entfällt ggf. durch
+  das Inbox-Format aus F-035 — eine `gh`-Abhängigkeit weniger.
+- Template-Seite neben CI und Renovate: die Noreply-Regel in den Vorlagen (siehe
+  F-024) — eine gemeinsame Übergabe.
 - Publishing-Hygiene: Basis-URLs und Hostnamen selbst gehosteter Server sind privat —
   nur in der Personal-Config, nie im Repo oder in der lebenden Doku; Credentials
   bleiben im Store der jeweiligen CLI.
 
-**Abhängigkeiten:** keine. F-024, F-025 und F-026 bauen auf der Host-Erkennung auf.
+**Abhängigkeiten:** F-035 (Template-Gegenstücke laufen als Übergabe). F-024, F-025 und
+F-026 bauen auf der Host-Erkennung auf.
 
 **Noch zu analysieren:**
 - Welche Hosts in der ersten Ausbaustufe voll unterstützt werden (Vorschlag: GitHub,
@@ -388,12 +429,17 @@ das sonst im Graph landet.
 **Lösungsskizze:**
 - Alle Graphiti-Stellen (Skills, globale Vorlage, Template-Block, README) auf harte
   Kopplung prüfen — auch impliziten Text wie „erst den Graph fragen".
-- Ersatz prüfen: Claude-Code-Auto-Memory oder eine Datei unter `private/` — oder
-  bewusst kein Ersatz, dann dokumentiert.
-- Lernprofil von `teach-step` gesondert betrachten — es lebt heute nur im Graph.
+- Ersatz nur für Wissen ohne eigenen Ort: Entscheidungen, Nicht-Ziele und offene Fragen
+  tragen nach F-036 Feature-Dateien und ADRs. Übrig bleiben u. a. das Lernprofil von
+  `teach-step` (lebt heute nur im Graph) und Infra-Fakten — dafür
+  Claude-Code-Auto-Memory, eine Datei unter `private/` oder bewusst kein Ersatz, dann
+  dokumentiert.
+- Der Graphiti-Block der CLAUDE.md-Vorlage in project-template ist mitbetroffen —
+  Übergabe nach F-035.
 
-**Abhängigkeiten:** keine. Thematische Nähe zu F-029/F-030 (Graphiti) und F-032
-(gleicher Grundsatz: optionale Infrastruktur wird ausgewiesen übersprungen).
+**Abhängigkeiten:** F-036 (übernimmt den Großteil des Ersatzwegs). Thematische Nähe zu
+F-029/F-030 (Graphiti) und F-032 (gleicher Grundsatz: optionale Infrastruktur wird
+ausgewiesen übersprungen).
 
 ---
 
@@ -426,13 +472,164 @@ Inhalt regelt die `CODING-STANDARDS.md`.
   hinaus) laufen als eigener Eintrag in project-template; Bestandsprojekte erhalten sie
   über `/update-conventions`.
 
-**Abhängigkeiten:** keine. Ergänzungen in der `CODING-STANDARDS.md` von project-template
-laufen parallel als eigener Eintrag dort.
+**Abhängigkeiten:** F-036 — schreibt prep-step und step-done grundlegend um, deshalb
+erst danach (sonst doppelte Arbeit); zusammen mit F-037 umsetzen. Gegenstück:
+project-template F-021 (Inhalte der CODING-STANDARDS-Vorlage) — Paarungsprüfung nach
+F-035.
+
+---
+
+### F-035 — Repo-übergreifende Übergabe statt Parallelarbeit (coding-kit ↔ project-template)
+
+**Status:** BACKLOG
+
+**Problem:** Template-Gegenstücke wurden bisher im selben Lauf „direkt miterledigt"
+(z. B. F-020, F-021), teils aus einem übergeordneten Ordner. Weil beide Repos eine
+eigene PROGRESS.md führen, war unklar, was wohin gehört; Einträge, Versionen und
+CHANGELOGs vermischten sich. Ob beide Hälften am Ende zusammenpassen, prüft niemand
+unabhängig.
+
+**Idee:** Eine Session arbeitet nur in ihrem eigenen Repo. Braucht eine Änderung ein
+Gegenstück im anderen Repo, erzeugt sie eine Übergabe-Datei im Eingangsordner des
+Ziel-Repos (`private/inbox/`, gitignoriert) — das ist der einzige erlaubte
+Schreibzugriff auf das andere Repo. Die Ziel-Session nimmt sie als eigene F-Nummer auf.
+Sind beide Seiten fertig, prüft ein Agent mit frischem Kontext und ohne Schreibrechte
+beide Repos gegen die Vertragspunkte der Übergabe.
+
+**Lösungsskizze:**
+- Strukturregel in die CLAUDE.md: keine Änderungen am anderen Repo aus dieser Session,
+  stattdessen Übergabe.
+- Repo-lokaler Skill erzeugt die Übergabe: Was und Warum, Quell-F-Nummer, prüfbare
+  Vertragspunkte (Dateien, Marker, Platzhalter, Abschnitte, die die Gegenseite
+  erwartet), Abnahme, Rückmeldeweg. Ziel ist der **lokale Arbeits-Checkout** des
+  anderen Repos (zur Laufzeit auflösen, nichts hardcoden) — nicht die Template-Auflösung
+  aus `/choose-stack` § 0, die F-026 auf „Live-Stand zuerst" umstellt. Im Quell-Eintrag
+  vermerken, dass eine Übergabe offen ist.
+- Übergaben in der Sprache der lebenden Doku des Ziel-Repos schreiben (project-template:
+  Englisch).
+- Aufnahme im Ziel-Repo: Übergabe als F-Nummer übernehmen, Vertragspunkte in den
+  versionierten Eintrag kopieren, Inbox-Datei danach entfernen.
+- Repo-lokaler Prüf-Skill: liest beide Repos ohne Schreibrechte, bewertet jeden
+  Vertragspunkt (erfüllt / fehlt / weicht ab). Die Quell-F-Nummer wird erst nach
+  grüner Prüfung DONE.
+- Rückrichtung (Template → Kit) symmetrisch: die Template-Hälfte dieses Mechanismus
+  ist selbst die erste Übergabe.
+
+**Noch zu analysieren:**
+- Wie die Ziel-Session offene Übergaben bemerkt (Hinweis beim Sessionstart, Hook oder
+  Schritt in add-feature/prep-step).
+- Status für „eigene Hälfte fertig, wartet auf Gegenseite": neuer Marker oder Vermerk.
+- Ob der bestehende Übernahme-Vorschlag (Projekt → Template, `update-conventions`)
+  auf dasselbe Inbox-Format umgestellt wird.
+
+**Abhängigkeiten:** keine. Repo-lokal, kein Plugin-Release. Voraussetzung für F-036.
+Berührung mit F-026 (Auflösung des Arbeits-Checkouts). Vor F-035 erfasste Paare
+(F-031 ↔ project-template F-020, F-034 ↔ project-template F-021) nachträglich prüfen.
+
+---
+
+### F-036 — Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt
+
+**Status:** BACKLOG
+
+**Problem:** Anforderungen leben doppelt und laufen auseinander. `define-requirements`
+schreibt die Kern-Features in die `REQUIREMENTS.md` und zugleich als F-Nummern in die
+`PROGRESS.md`; die Auflösung der REQUIREMENTS.md (alles überführt, keine offene
+Produktfrage, Nutzer bestätigt) wird praktisch nie erreicht, die Überführung in
+CLAUDE.md, ADRs und PROGRESS bleibt Handarbeit. Zugleich fehlt je Feature eine
+gründliche Spezifikation: Edge-Cases, prüfbare Abnahmekriterien, Testfälle,
+Nicht-Ziele und offene Fragen werden nirgends verlangt, und die PROGRESS.md wächst
+mit jedem Eintrag weiter.
+
+**Idee:** Jede Information wird sofort an ihren endgültigen Ort geschrieben, ein
+Übergangs-Dokument entfällt. Projektweites (Ziele, Nicht-Ziele, Constraints) landet in
+der Projekt-CLAUDE.md, Grundsatzentscheidungen als ADR, jedes Feature in einer eigenen
+Datei `features/F-NNN-….md`, die über seinen ganzen Lebenszyklus wächst: Erfassung,
+Spezifikation, Plan, Abweichungen beim Bau, Abnahme. Die `PROGRESS.md` wird zur reinen
+Übersicht. Vorbild: der Spec-Workflow aus AlexPEClub/ai-coding-starter-kit (Interview
+eine Frage je Runde mit Empfehlung, Abnahmekriterien im Given/When/Then-Muster,
+Out of Scope mit Verweisen, Entscheidungsprotokoll, offene Fragen als Checkboxen).
+
+**Lösungsskizze:**
+- `REQUIREMENTS.md` entfällt. `define-requirements` legt nur die Feature-Landkarte an
+  (je Feature eine schlanke Datei mit Status BACKLOG + Übersichtszeile) und schreibt
+  Projektweites direkt in CLAUDE.md bzw. ADRs; die Detail-Spec entsteht erst kurz vor
+  dem Bau.
+- `add-feature` legt die Feature-Datei an (Problem, Idee, Skizze), `prep-step` baut sie
+  in zwei Phasen aus: Spezifikation per Interview (Edge-Cases, Abnahmekriterien,
+  Testfälle, Nicht-Ziele, offene Fragen, Entscheidungen), dann Technik-Plan; Tiefe
+  skaliert mit Klein/Mittel/Groß. `build-step` ergänzt Abweichungen, `step-done` hängt
+  die Abnahme an und schließt ab — die Feature-Datei ersetzt den Archiv-Eintrag.
+- Die Vorlage der Feature-Datei liegt in project-template (entschieden 2026-10-23:
+  Inhalt im Template, Prozess im Kit), kommt per `update-conventions` in die Projekte
+  und wird von den Skills zur Laufzeit gelesen — kein Duplikat im Kit.
+- Übersicht bleibt knapp: Erledigtes ist dort nur ein Haken (F-Nummer, Titel, Datum),
+  höchstens mit kurzem Kommentar, wenn ihn jemand beim Überfliegen braucht (offene
+  Lücke, Folge-F-Nummer, Release-Version) — keine Zusammenfassungen; die stehen in der
+  Feature-Datei. Anlass: Done-Tabellen in Projekten wachsen heute je Aufgabe um einen
+  Absatz. Die Migration bietet an, bestehende lange Done-Zeilen zu kürzen.
+- `refine-requirements` arbeitet auf CLAUDE.md, Feature-Dateien und ADRs; der
+  Auflöse-Mechanismus fällt weg. Nicht-Ziele der Spec speisen den Scope-Schutz in
+  `build-step`.
+- Übrige Skills mit PROGRESS-/REQUIREMENTS-Bezug nachziehen (u. a. new-project,
+  handoff, teach-step, audit-code); Konsistenzprüfung Übersicht ↔ Feature-Dateien als
+  Check-Kandidat für `just check`.
+- Bestandsprojekte: `update-conventions` bietet eine einmalige Migration an
+  (REQUIREMENTS.md und offene PROGRESS-Einträge auf die Zielorte verteilen, Diff und
+  Bestätigung je Datei); bestehende `PROGRESS-ARCHIVE.md` bleibt eingefroren.
+
+**Noch zu analysieren:**
+- Name und Ort der Übersicht (`PROGRESS.md` behalten spart Migration) und ob der
+  FEATURE-INDEX-Kommentar in der Übersichtstabelle aufgeht.
+- Projektweite Inhalte in CLAUDE.md oder eigener Produktdatei — Schwelle, ab der
+  ausgelagert wird.
+- Status an einer Stelle oder an zweien (Datei-Kopf + Übersicht).
+- Dogfooding: Migration dieses Repos selbst als letzter Substep.
+
+**Abhängigkeiten:** F-035 — das Template-Gegenstück (Vorlage der Feature-Datei,
+Vorlagen PROGRESS/REQUIREMENTS/CLAUDE/HOW-TO/README, ADR-README, MANIFEST inkl.
+Seed-Sections) läuft als Übergabe in die Inbox von
+project-template, DONE erst nach grüner Paarungsprüfung. Berührt dieselben Skills wie
+F-034 (prep-step, step-done) — F-034 folgt danach. Entlastet F-029 und F-033.
+
+---
+
+### F-037 — Unabhängiges Review in step-done (Reviewer mit frischem Kontext)
+
+**Status:** BACKLOG
+
+**Problem:** Das Review in `step-done` macht derselbe Kontext, der den Code geschrieben
+hat. Er kennt jede Begründung und neigt dazu, seine eigenen Entscheidungen zu
+bestätigen. Im autonomen `/goal`-Lauf prüft zwischen den Substeps zudem kein Mensch.
+
+**Idee:** Nach grünen Checks prüft ein separater Agent ohne Schreibrechte den Diff mit
+frischem Kontext. Er bekommt bewusst nur F-Nummer, Diff, Feature-Spec und
+CODING-STANDARDS, keine Zusammenfassung vom Bauen. Er prüft gegen die Spezifikation:
+Abnahmekriterien erfüllt, Edge-Cases behandelt, nichts aus „Out of Scope" berührt;
+dazu Security und Lesbarkeit.
+
+**Lösungsskizze:**
+- Eigene Agent-Definition im Plugin mit gesperrten Schreib-Tools (analog teach-step);
+  ob Plugins Agents mitliefern können, zur Umsetzungszeit gegen die aktuelle Doku
+  prüfen. Der eingebaute `/code-review` reicht nicht, weil er die Spec nicht kennt.
+- Neuer Schritt in `step-done` nach den grünen Checks, vor Secrets-Scan und Commit;
+  Haupt-Agent bewertet jeden Befund (beheben oder mit Begründung verwerfen), der
+  Nutzer sieht die Liste.
+- Nach Größe staffeln: Klein ein oder kein Reviewer, Mittel/Groß zwei parallel
+  (Korrektheit gegen Spec; Security + Lesbarkeit). Token-Kosten im Blick behalten.
+- Gleiches Muster wie der Paarungs-Prüfer aus F-035 (frischer Kontext, ohne
+  Schreibrechte) — Wiederverwendung bei der Planung prüfen.
+
+**Abhängigkeiten:** F-036 (Feature-Spec als Prüfgrundlage; ohne sie nur Prüfung gegen
+den PROGRESS-Eintrag). Zusammen mit F-034 umsetzen — dessen Review-Kriterien
+(verständlich, einfach, Secure Coding) sind der Prüfmaßstab des Reviewers.
+Template-Seite: HOW-TO-Abschnitt „What `/step-done` does in detail" um den Review-Schritt
+ergänzen — Übergabe nach F-035.
 
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-035
+next-feature: F-038
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -467,4 +664,7 @@ F-031 mise.lock mit Plattform-Einträgen erzeugen (CI im --locked-Modus)
 F-032 Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git)
 F-033 Betrieb ohne Graphiti absichern
 F-034 Senior-Maßstab in den Bau-Skills (Lesbarkeit, keine Workarounds, Secure Coding)
+F-035 Repo-übergreifende Übergabe statt Parallelarbeit (coding-kit ↔ project-template)
+F-036 Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt
+F-037 Unabhängiges Review in step-done (Reviewer mit frischem Kontext)
 -->
