@@ -12,6 +12,8 @@
   and narrow.
 - **Tests: vitest**, colocated as `*.test.ts` next to the code; excluded from production
   builds via `tsconfig.build.json`.
+- **Safe calls (core §8):** `execFile`/`spawn` with an argument array, never `exec` with a
+  string built from foreign input; no `eval`/`new Function`.
 - **Naming:** camelCase for values/functions, PascalCase for types/classes,
   kebab-case file names.
 - **Dependencies:** exact-pinned by the lockfile (`pnpm-lock.yaml`, committed); Renovate

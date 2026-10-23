@@ -19,20 +19,17 @@
 
 **Request / response**
 - **Validate every external input server-side** with a schema — body, query, params, headers —
-  using a whitelist (accept only what is explicitly allowed), not a denylist.
+  as an allowlist (core §8).
 - Define an explicit **response shape** so internal fields cannot leak by accident.
 - No sensitive data in URLs / query parameters.
 - Consistent error envelope: `{ error: string, details?: object }`.
 - Paginate large collections (prefer cursor-based); never return an unbounded list.
 
 **Security boundary**
-- **Authorize every route explicitly** by permission — never by comparing role strings; only
-  auth and health endpoints are open.
+- **Authorize every route explicitly** by permission (core §8) — never by comparing role
+  strings; only auth and health endpoints are open.
 - **Rate-limit** sensitive endpoints (login, password reset, registration, MFA).
-- Forbidden by default — use the safe alternative:
-  - dynamic code execution (`eval`, `new Function`) → never;
-  - spawning a process with user input → an argument-array exec, never a shell string;
-  - raw SQL with string interpolation → parameterised queries only;
+- Beyond core §8 (injection), forbidden by default on web paths — use the safe alternative:
   - rendering raw HTML from input → sanitise first;
   - tokens/sessions in browser web storage → httpOnly, Secure cookies;
   - unstructured `console` logging on a server path → the structured logger.

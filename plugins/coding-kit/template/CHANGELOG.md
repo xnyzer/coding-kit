@@ -4,6 +4,44 @@ All notable changes to the **template content** (`core/` + `modules/`) are docum
 Every entry corresponds to a `VERSION` bump. `/update-conventions` reads this file to
 explain pending updates to projects.
 
+## [0.14.0] — 2026-10-23
+
+### Added
+- `core/CODING-STANDARDS.md` §1 (Mindset): two readability rules — *simplest viable
+  solution wins* (no abstraction on speculation) and *write for the next maintainer*, with
+  a checkable yardstick (a teammate new to the code understands it without explanation).
+- `core/CODING-STANDARDS.md` §6 (Control flow): *readable over clever* — no dense
+  one-liners, long chains or nested loops that must be decoded before changing them; name
+  the intermediate steps or extract a helper.
+- `core/CODING-STANDARDS.md` §8: secure-coding rules beyond secrets — validate input at
+  every trust boundary (allowlist), no injection paths (parameterised queries, argument-list
+  process spawning, no dynamic code execution, context-appropriate output encoding),
+  authorize every access on the concrete resource (not only at login), least privilege,
+  and *secure by default* linking §7 (fail closed, no leaked internals) and §10 (negative
+  tests as proof).
+- Language fragments `python`, `go`, `ts-node`: one *Safe calls* line each with the
+  language's safe variant of the core §8 injection rule (`subprocess` argument lists and
+  `yaml.safe_load`, no `pickle` on untrusted data; `exec.Command` with separate args and
+  `database/sql` placeholders; `execFile`/`spawn` over `exec`, no `eval`).
+
+### Changed
+- `core/CODING-STANDARDS.md` §8 is renamed from "Security & secrets" to "Secure coding &
+  secrets". Section numbers §1–§13 are unchanged, so every "core §N" reference stays valid.
+- `core/CODING-STANDARDS.md` §6: the nesting-depth rule now covers loops as well as
+  conditionals (target max 2–3 levels).
+- `modules/standards/api-design.md`: de-duplicated against core §8 — input validation and
+  route authorization reference core §8; the "forbidden by default" list drops dynamic code
+  execution, shell strings and interpolated SQL (now core §8) and keeps the web-specific
+  items (raw HTML, browser web storage, unstructured logging). "No sensitive data in URLs"
+  stays here because it is HTTP-specific.
+- `modules/standards/api-design.md`, `modules/standards/nextjs.md`: "whitelist" →
+  "allowlist", aligned with core §8.
+
+### Migration note
+- The core changes sit outside the `module:coding-standards` slot of the managed
+  `CODING-STANDARDS.md`; the fragment changes sit inside it. `/update-conventions` takes
+  over both. Projects that edited §1, §6 or §8 locally merge the new rules by hand.
+
 ## [0.13.3] — 2026-10-23
 
 ### Fixed

@@ -5,6 +5,70 @@ and notable decisions. Newest entries at the top. The living list is `PROGRESS.m
 
 ---
 
+## F-021 — CODING-STANDARDS: readability over cleverness + secure coding beyond secrets (2026-10-23)
+
+**Problem:** `core/CODING-STANDARDS.md` set no explicit bar for readability (simplest
+viable solution, code written for the next maintainer), and §8 covered almost only
+secrets — input validation, injection, authorization and least privilege were missing
+from the core. coding-kit's F-034 makes the build skills apply the standard actively; the
+content they apply has to come from this file (what applies lives here, when/how it is
+checked lives in the skills).
+
+**Idea:** Close both gaps by extending existing sections — no new section, so §1–§13 keep
+their numbers (skills and fragments reference them, e.g. `api-design` → "core §8"). Terse
+style: one bold rule plus one sentence, stack-neutral. Language-specific safe variants go
+into the language fragments; `api-design` is de-duplicated against the new core rules.
+
+**What was built (6 template files + sync):**
+
+- `core/CODING-STANDARDS.md`
+  - §1 (Mindset): *Simplest viable solution wins* (no abstraction or extension point on
+    speculation — introduce it with the second real use case); *Write for the next
+    maintainer* (yardstick: a teammate new to the code understands it without
+    explanation).
+  - §6 (Control flow): the nesting-depth rule covers conditionals **and loops**; new
+    *Readable over clever* (no dense one-liners, long chains or nested loops that must be
+    decoded before changing them — named intermediate steps or a helper instead).
+  - §8 renamed "Secure coding & secrets"; five rules after the crypto rule: validate
+    input at every trust boundary (allowlist), no injection paths (parameterised queries,
+    argument-list process spawning, no `eval`, context-appropriate output encoding),
+    authorize every access on the concrete resource, least privilege, secure by default
+    (links §7 and §10 instead of restating them).
+- `modules/standards/api-design.md`: validation and route authorization reference core §8;
+  the "forbidden by default" list drops `eval`, shell strings and interpolated SQL and
+  keeps the web-specific items (raw HTML, browser web storage, unstructured logging);
+  "whitelist" → "allowlist".
+- `modules/standards/nextjs.md`: "whitelist validation" → "allowlist validation".
+- Language fragments, one *Safe calls (core §8)* line each — `python`: `subprocess` with an
+  argument list, never `shell=True`; no `eval`/`exec`, `pickle` or `yaml.load` on untrusted
+  data. `go`: `exec.Command` with separate args, never `sh -c` with foreign input;
+  `database/sql` placeholders, never `fmt.Sprintf` into a query. `ts-node`:
+  `execFile`/`spawn` over `exec`; no `eval`/`new Function`.
+- Sync invariant: `VERSION` 0.13.3 → 0.14.0 (minor, new binding rules) + `CHANGELOG.md`
+  entry (Added, Changed, Migration note). No `MANIFEST.md` change.
+
+**Verification:** every edited section re-read; no stale "Security & secrets" heading or
+"whitelist" left in template content; `just check` green; gitleaks clean.
+
+**Notable decisions:**
+
+- **No blanket ban on nested loops** (deviation from the intake sketch): a 2D grid walk is
+  legitimate. The existing depth limit is extended to loops instead, and *Readable over
+  clever* targets loops that have to be decoded.
+- **§8 renamed** to "Secure coding & secrets" (user decision) — the section now covers
+  far more than secrets; references go by number, so nothing breaks.
+- **"No sensitive data in URLs" stays in `api-design`** (deviation from the sketch, which
+  linked it to §7): §7 covers errors and internals, not URLs, and URLs are HTTP-specific.
+- **Dynamic code execution moved into core §8** — it is language-neutral, so it left the
+  `api-design` list together with shell strings and raw SQL.
+- **`python` also forbids `pickle`/unsafe `yaml.load` on untrusted data** — unsafe
+  deserialisation is Python's typical injection path; added beyond the sketch.
+- `java`/`swift-ios` ship no language fragment yet, so they got no *Safe calls* line;
+  `prisma` already covered parameterised SQL.
+- Sequence agreed with the owner: F-021 → F-018 → F-019, one commit each.
+
+---
+
 ## F-020 — mise.lock carries platform URLs for CI (2026-10-23)
 
 **Problem:** `core/mise.toml` named `mise install` as the generator of `mise.lock`. That

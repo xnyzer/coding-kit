@@ -11,6 +11,8 @@
   via the `I` rules. Zero lint findings — warnings count as errors (§1).
 - **Tests: pytest** under `tests/`, mirroring the package structure; plain asserts,
   fixtures over setup methods.
+- **Safe calls (core §8):** `subprocess` with an argument list, never `shell=True`; no
+  `eval`/`exec`, `pickle`, or `yaml.load` (use `yaml.safe_load`) on untrusted data.
 - **Naming:** snake_case for functions/modules, PascalCase for classes, UPPER_SNAKE for
   constants.
 - **Dependencies:** locked in `uv.lock` (committed); Renovate keeps them fresh.

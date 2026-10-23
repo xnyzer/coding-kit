@@ -19,7 +19,7 @@ Do not write App Router code from memory, and heed deprecation notices.
 
 **Routing & data**
 - Route Handlers follow the `api-design` fragment (thin route to service, explicit response
-  shape, whitelist validation).
+  shape, allowlist validation).
 - Caching is explicit. User-specific data declares its caching behaviour deliberately — never
   let a personalised route be statically prerendered by accident.
 - File conventions carry the structure: `layout` / `page` / `loading` / `error` / `not-found`.

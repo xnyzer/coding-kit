@@ -16,6 +16,8 @@
   honour cancellation.
 - **Concurrency:** no shared state without synchronisation; no goroutine leaks (bounded
   lifetimes, respect `ctx`). Tests run with `-race`.
+- **Safe calls (core §8):** `exec.Command(name, args...)` with separate arguments, never
+  `sh -c` with foreign input; `database/sql` placeholders, never `fmt.Sprintf` into a query.
 - **Tests:** standard `testing` package, table-driven where it helps; `_test.go` next to
   the code. Negative tests for every boundary (§10).
 - **Dependencies:** `go.mod`/`go.sum` pinned; `go mod tidy` clean; permissive licenses

@@ -15,6 +15,10 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
   anything security-critical (crypto, auth, session handling), use a vetted library —
   never hand-roll.
 - **Code must be production-ready when first written.** No "good enough for now".
+- **Simplest viable solution wins.** No over-engineering, no abstraction or extension point
+  on speculation — introduce it when the second real use case arrives.
+- **Write for the next maintainer.** Code is read far more often than written; the yardstick
+  is whether a teammate new to this code understands it without your explanation.
 - **Dead code is deleted.** No commented-out blocks, no unused imports, no unreachable paths.
 
 ---
@@ -69,7 +73,10 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 
 - **Early returns / guard clauses** over deep nesting. Handle the error/edge case first,
   keep the happy path unindented.
-- **No deeply nested conditionals** (target max 2–3 levels).
+- **No deeply nested conditionals or loops** (target max 2–3 levels).
+- **Readable over clever.** No dense one-liners, long chains (nested comprehensions, stream
+  pipelines) or nested loops that must be decoded before they can be changed — name the
+  intermediate steps or extract a helper function.
 - **Exhaustive handling** of enums/variants — no silent fall-through.
 
 ---
@@ -93,9 +100,22 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 
 ---
 
-## 8. Security & secrets
+## 8. Secure coding & secrets
 
 - **No hand-rolled crypto/auth.** Vetted libraries only.
+- **Validate input at every trust boundary.** Anything from outside the process (requests,
+  files, messages, upstream APIs) is parsed into typed values against an allowlist —
+  accept only what is explicitly allowed, never filter with a blocklist.
+- **No injection paths.** Parameterised queries only; spawn processes with an argument list,
+  never a shell string built from foreign input; no dynamic code execution (`eval` and
+  friends); encode output for its context (HTML, SQL, shell, logs).
+- **Authorize every access, not only login.** Check server-side, on each operation, that the
+  caller may act on this specific resource — never trust client-side checks or
+  unguessable-looking identifiers.
+- **Least privilege.** Processes, service accounts, tokens, and file permissions get only
+  the rights they need — scoped narrowly and short-lived where possible.
+- **Secure by default.** Fail closed and never leak internals in errors (§7); every
+  boundary above is proven by negative tests (§10).
 - **Never commit secrets or private identifiers** — no tokens, passwords, private keys,
   private emails, real names (people, customers, concrete projects), or deployment internals
   (IPs, hostnames, key names). Operational internals belong in `private/` (gitignored).
