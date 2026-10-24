@@ -13,10 +13,10 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 1.1.0 — unveröffentlicht
+## 1.1.0 — 2026-10-24
 
-Projektzusätze in managed Dateien sollen Template-Updates überstehen, Abweichungen früh
-auffallen (F-041, in Arbeit).
+Projektzusätze in managed Dateien überstehen Template-Updates, und Abweichungen fallen
+früh auf (F-041).
 
 - **`update-conventions`** gleicht managed Dateien per Drei-Wege-Merge gegen den
   Basis-Snapshot ab: Projektzusätze bleiben, Template-Änderungen kommen an, nur
@@ -27,8 +27,11 @@ auffallen (F-041, in Arbeit).
   (veraltete Zeilen austragen, unregistrierte Abweichungen eintragen). Rendern und Merge
   laufen auch bei aktuellem Stempel. Die seed-Zonen kommen aus dem Renderer. Projekte
   ohne Snapshot werden migriert: Antworten aus dem Projekt zurückgewinnen, Basis aus der
-  Template-Historie (Stempel-Version oder älter) oder einmal zweiwegig, Registry in die
-  Tabellen Files und Rules überführen.
+  Template-Historie (Stempel-Version, eine ältere oder eine Mischbasis, damit früher
+  übersprungene Änderungen wieder angeboten werden) oder einmal zweiwegig, Registry in
+  die Tabellen Files und Rules überführen. Schreibzugriffe unter `.claude/` fragt Claude
+  Code einzeln ab; ohne Freigabe bereitet der Skill die Dateien vor und nennt den
+  Kopierbefehl.
 - **`new-project`** instanziiert über den Renderer (`render --seeds`): Antworten-Datei
   schreiben, rendern, dann nur noch `template:adapt`-Stellen, Lizenztext und
   Begleithandlungen von Hand; konkretisierte managed Dateien bekommen eine `adapt`-Zeile.

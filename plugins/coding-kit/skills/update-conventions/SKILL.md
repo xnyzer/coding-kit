@@ -40,6 +40,9 @@ managed Dateien nie selbst zusammenführen oder aus dem Template abschreiben.
   aufgelösten Pfad über `sh` aufrufen; sein Kopf beschreibt Befehle, Ausgabezeilen und
   Klassen. Render- und Merge-Ergebnisse gehören in ein frisches Temp-Verzeichnis
   (`mktemp -d`, im Folgenden `<tmp>`), nie ins Projekt.
+- Schreibzugriffe unter `.claude/` (Antworten, Snapshot, Registry, `.claude/README.md`)
+  stuft Claude Code als sensibel ein und fragt sie einzeln ab — das ist erwartet, nie
+  umgehen. Ohne Freigabe die Dateien in `<tmp>` vorbereiten und den Kopierbefehl nennen.
 
 ## Kontext-Recovery
 
@@ -190,6 +193,14 @@ Jede Migration ist ein eigener bestätigter Schritt; danach A2 ab Schritt 3.
      oder einen Klon des Repos aus `homepage` in `plugin.json` nach `<tmp>` anbieten
      (Netzzugriff — nur nach OK). Dann `sh <skript> base-from-history <checkout> <version>
      <tmp>/kit` und `sh <skript> render <tmp>/kit/template <antworten> <tmp>/base`.
+     Fragmente aus `FRAGMENTS`, die es in dieser Version noch nicht gab, für den
+     Basis-Render weglassen — der Slot zählt beim Vergleich ohnehin nicht.
+     **Mischbasis** (empfohlen bei älterer Version): Dateien, die ein früherer Sync schon
+     übernommen hat, tragen den Zwischenstand und würden mit der älteren Basis
+     unnötig kollidieren. Deshalb beide Versionen rendern und in `<tmp>/base` für die
+     Dateien, die der Commit mit dem letzten Stempel-Wechsel geändert hat (`git show
+     --stat` auf `git log -1 -- .claude/template-version`), die Fassung der
+     Stempel-Version nehmen, für alle übrigen die ältere.
    - **(b) Zweiwegig:** ohne Historie (oder ohne Stempel) — der erste Merge vergleicht
      Projekt und Soll direkt (`two-way`).
 
