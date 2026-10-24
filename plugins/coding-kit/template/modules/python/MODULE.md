@@ -25,7 +25,7 @@ language fragment; it pulls no catalog fragments from `modules/standards/`.
 | File | Policy |
 |------|--------|
 | `pyproject.toml` | seed for `[project]` (evolves with the project); the `[tool.*]` sections are managed conventions |
-| `src/{{PROJECT_NAME_SNAKE}}/__init__.py`, `py.typed` | seed (sample code — replace freely) |
+| `src/{{PROJECT_NAME_SNAKE}}/__init__.py`, `src/{{PROJECT_NAME_SNAKE}}/py.typed` | seed (sample code — replace freely) |
 | `tests/test_smoke.py` | seed |
 
 ## Instantiation notes

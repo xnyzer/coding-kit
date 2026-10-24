@@ -16,6 +16,87 @@ zusammen:
 
 ---
 
+## F-041a — Renderer (2026-10-24)
+
+Teil von F-041 (Projektzusätze in managed Dateien erhalten und Abweichungen früh
+erkennen; F-041b–e folgen).
+
+**Problem:** Der Drei-Wege-Merge braucht eine Soll-Fassung, die bei gleichem Template und
+gleichen Projektwerten byte-gleich herauskommt. Bisher instanziierte das Sprachmodell
+das Template und erschloss die Projektwerte bei jedem Lauf neu.
+
+**Was entstanden ist (1.1.0, unveröffentlicht):**
+
+- **Renderer (`plugins/coding-kit/scripts/template-sync.sh render`, POSIX sh):** liest
+  Core-Tabelle und Modul-Kontrakt aus dem MANIFEST und schreibt die reine
+  Instanziierung in einen leeren Ordner, dazu eine Liste „Ziel, managed/seed,
+  core/module". Er setzt die Modul-Teile ein (justfile ersetzt, Modul-Tools ans Ende von
+  `[tools]`, gitignore- und CI-Teil direkt unter ihren Marker, `files/**` laut Policy
+  samt Pfad-Platzhaltern), ersetzt Platzhalter literal (auch `&`, `/`, `\`), löst
+  `optional`-Blöcke auf und setzt den Fragment-Slot zusammen. Ohne `--seeds` schreibt er
+  nur managed Ziele, mit `--seeds` auch die seed-Dateien. Mehrdeutige Antworten
+  (doppelte Schlüssel, Tab oder `{{` im Wert, unbekanntes Modul oder Fragment) und
+  unaufgelöste Platzhalter weist er ab; unbekannte Schlüssel ergeben eine Warnung. Ein
+  voller Render dauert etwa 0,25 s.
+- **Antworten-Datei:** MANIFEST § Answers legt `.claude/template-answers` fest
+  (`KEY=value`; Platzhalterwerte plus `MODULE`, `VISIBILITY`, `OPTIONAL`, `FRAGMENTS`).
+  Abgeleitet und nie gespeichert: `PROJECT_NAME_SNAKE`, `CODEQL_LANGUAGES` (aus dem
+  `MODULE.md`; ohne Wert entfällt jedes Ziel, das ihn braucht, sodass docs-only keinen
+  CodeQL-Workflow bekommt), `TEMPLATE_VERSION` und die Lizenzblöcke.
+- **MANIFEST § Module contract:** exakte Einsetzregeln (Reihenfolge, Leerzeilen,
+  Marker). Die Policy-Tabelle im `MODULE.md` nennt jede Datei mit vollem Pfad; ihr
+  erstes Wort (`managed`/`seed`) ist maschinenlesbar. Im Python-Modul steht jetzt
+  `src/{{PROJECT_NAME_SNAKE}}/py.typed`. Ältere Templates mit kurzem Dateinamen rendert
+  der Renderer weiter, solange der Name eindeutig ist.
+- **TBD-Lizenz** (Fund aus der Gegenprobe, mit Freigabe mitgenommen):
+  `core/CONTRIBUTING.md` verwies bei Lizenz TBD auf eine `LICENSE`-Datei, die es dann
+  nicht gibt; ein Projekt hatte den Satz beim Anlegen deshalb von Hand umformuliert.
+  Jetzt gibt es zwei optionale Blöcke `license` und `license-tbd`; der Renderer wählt aus
+  `LICENSE_SPDX`. Projekte mit Lizenz rendern byte-gleich wie unter 1.0.0.
+- **Kit:** Die Versionsregel zählt `plugins/coding-kit/scripts/` zum Plugin-Inhalt; die
+  Formulierung in `CLAUDE.md`, README, `docs/skill-authoring.md` und im CHANGELOG-Kopf
+  ist nachgezogen. Der Validator prüft Plugin-Skripte (ausführbar, `sh -n`), die
+  Datei-Policies der Module (jede Datei genau einmal, voller Pfad, `managed`/`seed`) und
+  ob der Renderer jeden Modul-Teil des MANIFEST kennt. `just check` führt
+  `tests/template-sync/run.sh` aus: 164 Prüfungen, je 82 unter dash und bash.
+- **Version:** `plugin.json` 1.1.0, CHANGELOG-Eintrag mit `### Template`.
+
+**Verifikation:** Ein Render des Templates 0.13.2 aus der Kit-Historie (`c55460e`) mit
+den Werten zweier Bestandsprojekte: Beim docs-only-Projekt sind alle 16 managed Dateien
+byte-gleich mit dem Bootstrap-Commit, beim ts-node-Projekt 26 von 28. Die zwei
+Abweichungen sind Handkonkretisierungen beim Anlegen (`adapt`-Stelle in `SECURITY.md`,
+TBD-Satz in `CONTRIBUTING.md`), keine Renderfehler; geprüft im Scratchpad, ohne
+Projektdaten im Repo. Fehlerinjektion: drei eingebaute Fehler im Renderer
+(Tool-Einfügung, Fragment-Trenner, public-only) und fünf im Validator (fehlende
+Policy-Zeile, falsches Policy-Wort, Kurzname, unbekannter Modul-Teil, Skript nicht
+ausführbar) werden erkannt. `just check`, Versionsregel und gitleaks grün.
+
+**Notable decisions:**
+- Renderer statt Sprachmodell: gleiche Antworten ergeben byte-gleiche Dateien —
+  Voraussetzung für Snapshot und Merge (F-041b).
+- Lizenzblock aus `LICENSE_SPDX` abgeleitet statt einer Formulierung für beide Fälle:
+  Kein Satz ist mit und ohne `LICENSE`-Datei richtig, und eine Ableitung kann kein Skill
+  vergessen.
+- Tests in `just check` (rund 5 s) statt nur in der CI, damit der Pre-Commit
+  Renderfehler abfängt.
+- Nur POSIX-awk, kein shellcheck (GPL). Ubuntu nutzt mawk; das prüft erst die CI.
+- `.github/workflows/ci.yml` blieb unverändert, obwohl im Plan genannt: Die CI ruft
+  bereits `just check` auf.
+
+**Im selben Commit:** Plan F-041c/F-041d ergänzt (Antworten und Registry bei
+Fragment-Einbau und Lizenzwahl; render → merge auch bei aktuellem Stempel), F-042 ins
+Backlog.
+
+**Geänderte Dateien:** `plugins/coding-kit/scripts/template-sync.sh` (neu),
+`tests/template-sync/run.sh` (neu), `plugins/coding-kit/template/MANIFEST.md`,
+`plugins/coding-kit/template/core/CONTRIBUTING.md`,
+`plugins/coding-kit/template/modules/python/MODULE.md`, `scripts/validate.py`,
+`scripts/version-rule.py`, `justfile`, `plugins/coding-kit/.claude-plugin/plugin.json`,
+`plugins/coding-kit/CHANGELOG.md`, `CLAUDE.md`, `README.md`, `docs/skill-authoring.md`,
+`PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-039e — Test, Release, Gegenprobe (2026-10-24)
 
 Schließt F-039 ab (Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0;

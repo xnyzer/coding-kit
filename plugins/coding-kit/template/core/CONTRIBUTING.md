@@ -18,8 +18,15 @@ project workflow and the coding-kit plugin skills this repo is built around.
 
 ## License of contributions
 
+<!-- template:optional:license -->
 This project is licensed under **{{LICENSE_SPDX}}** (see `LICENSE`). By submitting a
 contribution you agree that it is licensed under the same terms (inbound = outbound).
+<!-- /template:optional:license -->
+<!-- template:optional:license-tbd -->
+No license has been chosen yet (TBD), so there is no `LICENSE` file. By submitting a
+contribution you agree that it will be licensed under the terms the project adopts
+(inbound = outbound).
+<!-- /template:optional:license-tbd -->
 
 ## Commit email policy
 

@@ -30,12 +30,36 @@ lowercase and therefore never collide).
 | `{{CODEQL_LANGUAGES}}` | CodeQL language for the module | stack module (`javascript-typescript`, `python`, `go`) |
 | `{{TEMPLATE_VERSION}}` | Plugin version at instantiation | `version` in the plugin's `.claude-plugin/plugin.json` |
 
+## Answers
+
+`.claude/template-answers` in a project records the values it was instantiated with, so
+the template can be rendered again without guessing. `/new-project` writes it; a skill
+that changes one of these values updates it in the same step.
+
+Format: one `KEY=value` per line; lines starting with `#` are comments. The value is
+everything after the first `=`, trimmed and taken literally (no quoting, no expansion);
+it must not contain a tab or `{{`.
+
+| Key | Value |
+|-----|-------|
+| `PROJECT_NAME`, `PROJECT_DESCRIPTION`, `OWNER`, `YEAR`, `GROUP_ID`, `LANG_LIVING_DOCS`, `LANG_CLAUDE_MD`, `LANG_COMMENTS`, `LANG_COMMITS`, `LANG_README`, `LICENSE_SPDX` | the placeholder of the same name (§ Placeholders); a key no rendered file needs may be left out |
+| `MODULE` | the stack module (`docs-only` without a stack) — required |
+| `VISIBILITY` | `public` or `private`; decides the public-only targets — required |
+| `OPTIONAL` | the `template:optional` blocks the project keeps by choice, comma-separated (e.g. `graphiti`); missing or empty = none; the license blocks are derived, never listed |
+| `FRAGMENTS` | standards fragments beyond the module's own and its declared ones (the characteristic fragments the project chose), comma-separated, in slot order |
+
+Derived, never stored: `PROJECT_NAME_SNAKE` (from `PROJECT_NAME`), `CODEQL_LANGUAGES`
+(from the module's `MODULE.md`; a module without one gets no target that needs it, so a
+docs-only project has no CodeQL workflow), `TEMPLATE_VERSION` (the plugin version) and
+the license blocks: `license-tbd` is kept while `LICENSE_SPDX` is `TBD`, `license`
+otherwise.
+
 ## Markers
 
 | Marker | Meaning |
 |--------|---------|
 | `<!-- template:adapt: hint -->` | Spot `/new-project` must concretise from the short-info — never raw-copy. |
-| `<!-- template:optional:NAME -->` … `<!-- /template:optional:NAME -->` | Block kept or removed at instantiation (used: `graphiti`). |
+| `<!-- template:optional:NAME -->` … `<!-- /template:optional:NAME -->` | Block kept or removed at instantiation (used: `graphiti`, `license`, `license-tbd`). |
 | `<!-- module:coding-standards -->` … `<!-- /module:coding-standards -->` | Slot in `CODING-STANDARDS.md` §13 where standards fragments are **appended** (each wrapped in `fragment:NAME`), not single-inserted. |
 | `<!-- fragment:NAME -->` … `<!-- /fragment:NAME -->` | Wraps one self-contained standards fragment inside the `module:coding-standards` slot. `NAME` = a catalog fragment (`modules/standards/`) or a stack module's own language fragment. See § Standards fragments. |
 | `<!-- section:NAME -->` … `<!-- /section:NAME -->` | Marks a template-owned zone inside a **seed** file that `/update-conventions` may diff and offer individually — never the whole file. Names are lowercase-kebab, unique across the template. See § Seed sections. |
@@ -125,6 +149,21 @@ Each `modules/<name>/` may provide (all optional except `MODULE.md`):
 | `CODING-STANDARDS.part.md` | `CODING-STANDARDS.md` | the module's own language fragment — appended in the `module:coding-standards` slot, wrapped as `fragment:<module>`; a module may also declare catalog fragments (§ Standards fragments) | managed |
 | `ci.part.yml` | `.github/workflows/ci.yml` | jobs appended below the `# module:ci-jobs` marker | managed |
 | `files/**` | project root (same relative path) | copied after placeholder substitution | per file, see `MODULE.md` |
+
+**Composition rules.** Rendering must be reproducible byte for byte, so the mechanics
+above are exact. The plugin's `scripts/template-sync.sh render` implements them:
+
+- `mise.part.toml` holds a `[tools]` table only; its entries follow the last entry of the
+  core `[tools]` table, in file order.
+- `gitignore.part` and `ci.part.yml` are inserted directly below their marker line.
+- The fragments replace the placeholder text of the slot, in this order: the module's
+  language fragment, its declared catalog fragments, the project's `FRAGMENTS`
+  (§ Answers). Each comes without surrounding blank lines, one blank line between two.
+- A kept `template:optional` block loses only its two marker lines; a dropped one goes
+  with its content.
+- `files/**`: the table `## File policies (files/)` in `MODULE.md` names every file by its
+  full path below `files/`; the first word of its policy cell (`managed` or `seed`) is
+  machine-read.
 
 **Standard recipe set** every module's justfile must implement (skills call only these):
 `setup`, `dev`, `test`, `lint`, `format`, `check`, `build`. `check` is the full gate

@@ -100,7 +100,7 @@ formulieren, Trigger-Situationen nennen.
 
 ## Versionierung & Test
 
-- Jede inhaltliche Änderung am Plugin (Skills, Hooks, Template): **Version in
+- Jede inhaltliche Änderung am Plugin (Skills, Hooks, Skripte, Template): **Version in
   `plugins/coding-kit/.claude-plugin/plugin.json` über den gepushten Stand heben**
   (semver) und einen Eintrag in `plugins/coding-kit/CHANGELOG.md` schreiben; mehrere
   Commits dürfen sich eine unveröffentlichte Version teilen. Ändert sich Template-Inhalt,

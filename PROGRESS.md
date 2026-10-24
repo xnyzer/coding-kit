@@ -20,6 +20,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-039c | Skills und Vertrag auf das gebündelte Template → **Template-Auflösung über `${CLAUDE_PLUGIN_ROOT}/template` (kein Klon, Checkout oder Override); new-project baut ein leeres Repo und stempelt die Plugin-Version; update-conventions mit Update-Fenster aus `### Template` und der MANIFEST-Tabelle für entfernte/umbenannte Ziele; Vertragsprüfungen im Validator; HOW-TO-Nachzug aus F-038a; toter `security-tool`-Verweis entfernt.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 | F-039d | Repo-Doku und Regeln → **CLAUDE.md, README, CONTRIBUTING, Authoring- und Renovate-Doku auf ein Repo umgestellt (Template im Plugin, Versionsregel inkl. Template, Test mit `--plugin-dir`, TPL-Nummern, Einfrier-Regel entfernt); `add-skill` zieht die HOW-TO im selben Commit nach; Marketplace-Beschreibung; Stempel-Satz im Template-`.claude/README.md` korrigiert.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 | F-039e | Test, Release, Gegenprobe → **lokaler Test an einer Projekt-Kopie (Stempel 0.13.2), Release 1.0.0 gepusht (CI grün), Plugin aktualisiert, Gegenprobe an einem echten Projekt, project-template archiviert. F-039 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
+| F-041a | Renderer → **`template-sync.sh render` schreibt die reine Instanziierung deterministisch aus `.claude/template-answers` (MANIFEST § Answers, exakte Einsetzregeln); ein Render von 0.13.2 reproduziert zwei Bootstrap-Commits bis auf Handkonkretisierungen; Lizenzabsatz in `CONTRIBUTING.md` mit TBD-Variante; Validator, Versionsregel und Tests (dash/bash) im Kit; Version 1.1.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 
 ---
 
@@ -125,36 +126,6 @@ Template-Fassung → Eintrag überflüssig).
 
 **Abhängigkeiten:** F-039 (Release 1.0.0, erledigt). Vor F-036.
 
-#### F-041a — Renderer
-
-**Was:** `template-sync.sh render`: aus Template-Ordner und Antworten-Datei die reine
-Instanziierung in einen Ausgabeordner schreiben — Core-Ziele laut MANIFEST-Tabelle (ohne
-seed, außer auf Wunsch), public-only nach Sichtbarkeit, Modul-Teile nach dem
-Modul-Kontrakt, `files/**` nach Policy (Pfad-Platzhalter wie
-`src/{{PROJECT_NAME_SNAKE}}/`), Platzhalter literal ersetzen (auch `&`, `/`, `\` in
-Werten), `optional`-Blöcke behalten oder entfernen, Fragment-Slot zusammensetzen.
-Antworten-Format festlegen (nicht abgeleitete Platzhalter der Registry plus Modul,
-Sichtbarkeit und gewählte `optional`-Blöcke). MANIFEST additiv: § Answers, Policy-Token in
-§ Module contract. Kit-Seite: Versionsregel zählt `plugins/coding-kit/scripts/` als
-Plugin-Inhalt, Validator prüft Plugin-Skripte mit `sh -n` und die Policy-Spalten der
-`MODULE.md`, Test-Rezept unter `dash` und bash in `just check` und der CI. Version 1.1.0
-(unveröffentlicht) mit CHANGELOG-Eintrag.
-
-**Dateien:** `plugins/coding-kit/scripts/template-sync.sh` (neu), `tests/template-sync/`
-(neu: Testskript und Fixtures), `plugins/coding-kit/template/MANIFEST.md`,
-`scripts/validate.py`, `scripts/version-rule.py`, `justfile`, `.github/workflows/ci.yml`,
-`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** —
-
-**Abnahmekriterien:**
-- [ ] Render der ausgebauten Module (docs-only, python, go, ts-node) mit Test-Antworten:
-      keine Restplatzhalter, Markerpaare intakt, Dateimenge = MANIFEST- und Modul-Ziele.
-- [ ] Ein Render des Templates 0.13.2 (aus der Kit-Historie) mit den Werten zweier
-      Bestandsprojekte ist für alle managed Ziele byte-gleich mit ihren Bootstrap-Commits
-      (Prüfung im Scratchpad, keine Projektdaten im Repo).
-- [ ] Tests laufen unter `dash` und bash 3.2; `just check` grün.
-
 #### F-041b — Merge und Erkennung
 
 **Was:** Unterbefehle `status` (alle Snapshot-Ziele: unverändert, abweichend oder fehlend,
@@ -193,8 +164,9 @@ template-answers, Registry), `.gitattributes` (`linguist-generated`), HOW-TO
 (`update-conventions`, `step-done`), Fragmente `nextjs` und `astro` („als `keep`
 registrieren" statt „sonst zurückgedreht"). `update-conventions` neu: Projektwahl (ohne
 Argument nur dieses Projekt, `alle`); A2 mit render → status → merge → je Datei Ergebnis
-oder Konflikt → Snapshot; Registry-Revision; Modi `status` und `revise`; `status` auch bei
-aktuellem Stempel; A3/Migration (Basis aus der Kit-Historie, sonst zweiwegig; Registry ins
+oder Konflikt → Snapshot; Registry-Revision; Modi `status` und `revise`; render → merge
+läuft auch bei aktuellem Stempel, weil sich Antworten ändern können (z. B. Lizenz
+gewählt); A3/Migration (Basis aus der Kit-Historie, sonst zweiwegig; Registry ins
 Zwei-Tabellen-Format überführen, Antworten-Datei anlegen). Formatprüfung in allen Skills
 auf 2. Validator: Registry-Vorlage mit beiden Tabellen, `.gitattributes`-Zeile.
 `/add-skill` läuft mit (HOW-TO im selben Commit).
@@ -224,10 +196,19 @@ in den Antworten nachziehen. `step-done` Schritt 1b (nicht blockierend): `change
 auswerten, je unregistrierter Abweichung den Diff gegen den Snapshot zeigen und anbieten:
 Registry-Zeile, zurücknehmen oder Übernahme-Vorschlag; Handänderungen am Snapshot als
 Fehler melden. `go-public`: Hinweis, dass der Nachzug Snapshot und Antworten mitzieht.
+Fragment-Einbau unter F-041, zentral in `choose-stack` (Modus B und § Begleithandlungen);
+die übrigen Skills verweisen darauf: Ein Fragment, das das Modul nicht selbst
+deklariert, kommt in `FRAGMENTS` der Antworten-Datei. Ändert eine Begleithandlung
+managed Dateien (z. B. `nextjs`: `tsconfig.json`, `biome.json`, `justfile`), gehören die
+Registry-Zeilen (`keep` mit Grund) in denselben Schritt. `prep-step` § 2a und
+`step-done` § 1a weisen beides im Vorschlag aus. `choose-license` im Bestandsprojekt:
+`LICENSE_SPDX` in den Antworten setzen und davon abhängige managed Dateien
+(`CONTRIBUTING.md`) über render und merge nachziehen.
 `docs/skill-authoring.md`: Baustein „Hilfsskripte unter `${CLAUDE_PLUGIN_ROOT}/scripts`".
 README (Repo-Baum, Skill-Tabelle). `/add-skill` läuft mit.
 
-**Dateien:** `plugins/coding-kit/skills/{new-project,choose-stack,step-done,go-public}/SKILL.md`,
+**Dateien:**
+`plugins/coding-kit/skills/{new-project,choose-stack,step-done,go-public,prep-step,choose-license}/SKILL.md`,
 `docs/skill-authoring.md`, `README.md`, ggf.
 `plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`,
 `plugins/coding-kit/CHANGELOG.md`.
@@ -240,6 +221,11 @@ README (Repo-Baum, Skill-Tabelle). `/add-skill` läuft mit.
       nur die `adapt`-Dateien, und zwar als registriert.
 - [ ] `step-done` an einer Kopie mit geänderter `mise.toml` meldet die Abweichung, ohne
       zu blockieren.
+- [ ] Fragment-Einbau `nextjs` an einer ts-node-Kopie (Scratchpad): `FRAGMENTS`
+      nachgetragen, die geänderten managed Dateien registriert; `status` meldet danach
+      keine unregistrierte Abweichung.
+- [ ] `choose-license` TBD → Apache-2.0 an einer Kopie: Antworten, `LICENSE` und
+      `CONTRIBUTING.md` nachgezogen.
 - [ ] `just check` grün.
 
 #### F-041e — Test, Release, Gegenprobe
@@ -273,18 +259,20 @@ sortiert):
 
 1. **F-041** — nach dem Release 1.0.0 als 1.1.0; vor F-036, weil dessen Migration über
    `update-conventions` läuft (in Arbeit, siehe „Offene Aufgaben").
-2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
+2. **F-042** — direkt nach F-041, weil es dieselbe Mechanik nutzt (Antworten-Datei,
+   `choose-stack`, `template-sync.sh`).
+3. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
-3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
-4. **F-040** — vor den Strängen Graphiti und Host, deren Änderungen an der globalen
+4. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
+5. **F-040** — vor den Strängen Graphiti und Host, deren Änderungen an der globalen
    Vorlage sonst bestehende Rechner nicht erreichen.
-5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-6. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
+6. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+7. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
    mit. F-026 ist in F-039 aufgegangen, sein Rest (Kit-Repo-Herkunft in `check-upstreams`)
    in F-032.
-7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+8. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
 
-Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 6 und 7 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
@@ -752,10 +740,47 @@ Kit gemeldet — die Vererbung bleibt abwärts wie bei den Konventionen (F-018).
 F-024, F-029 und F-030 — deren Änderungen an der Vorlage erreichen bestehende Rechner erst
 über den Abgleich.
 
+### F-042 — Neue Sprachen und Frameworks erkennen und Vorlagen nachziehen
+
+**Status:** BACKLOG
+
+**Problem:** Die Erkennung aus F-015, F-016 und F-017 deckt nur Standards-Fragmente ab
+und greift nur, wenn eine Aufgabe ein Framework neu einführt. Eine neue Sprache, für die
+das Template ein Stack-Modul hat, fällt durch: Ein docs-only-Projekt hat Python so von
+Hand in `mise.toml` und justfile eingebaut, ohne Modul. Bekommt das Template später ein
+Fragment oder ein Modul für etwas, das ein Projekt längst nutzt, zieht es außerdem niemand
+nach — `update-conventions` hängt nur Fragmente an, die das `MODULE.md` deklariert.
+
+**Idee:** Ein deterministischer Abgleich der Projektsignale (Paket-Manifeste,
+Signal-Dateien, Tools in `mise.toml`) mit den Auslösern des Fragment-Katalogs und mit neuen
+Modul-Signalen. Er läuft bei neuer Nutzung (prep-step, step-done) und beim Nachzug
+(`update-conventions`) und schlägt `/choose-stack` oder das Anhängen von Fragmenten vor —
+immer erst nach Bestätigung.
+
+**Lösungsskizze:**
+- Modul-Signale in `modules/README.md` (z. B. `pyproject.toml` oder `python` in
+  `mise.toml` → `python`), analog zur Auslöser-Tabelle des Fragment-Katalogs.
+- Unterbefehl `detect` in `template-sync.sh`: Projektsignale gegen beide Tabellen,
+  abgeglichen mit `MODULE` und `FRAGMENTS` der Antworten-Datei; Ausgabe: fehlendes Modul,
+  fehlende Fragmente.
+- prep-step § 2a und step-done § 1a um die Modul-Erkennung ergänzen (Verweis auf
+  `/choose-stack`); `update-conventions` prüft bei jedem Lauf, ob das Template inzwischen
+  Vorlagen für bereits Genutztes hat.
+- Keine neuen Dependencies.
+
+**Noch zu analysieren:**
+- Projekte mit mehreren Sprachen: Der Modul-Kontrakt kennt nur ein Modul pro Projekt. Wie
+  wird eine Zweitsprache als Werkzeug behandelt, wie im docs-only-Projekt?
+- Welche Signale verlässlich sind (Manifeste, Dependencies, Dateiendungen) und wie
+  Fehlalarme gedämpft werden, etwa ein einmal abgelehnter Vorschlag.
+
+**Abhängigkeiten:** F-041 (Antworten-Datei mit `MODULE` und `FRAGMENTS`, Fragment-Mechanik
+in `choose-stack`).
+
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-042
+next-feature: F-043
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -797,4 +822,5 @@ F-038 Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature von Claude au
 F-039 Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0 (DONE)
 F-040 Globale CLAUDE.md mit dem Plugin ausliefern und abgleichen
 F-041 Projektzusätze in managed Dateien erhalten, Abweichungen früh erkennen (PLANNED)
+F-042 Neue Sprachen und Frameworks erkennen, Vorlagen nachziehen
 -->

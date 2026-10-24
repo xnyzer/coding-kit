@@ -303,10 +303,11 @@ private/                          Gitignoriert — private Notizen/Quellen
 - Installierte Version aktualisieren: `claude plugin marketplace update xnyzer`, dann
   `claude plugin update coding-kit@xnyzer` (voll qualifiziert — der kurze Name wird
   nicht gefunden); Session-Neustart wendet die Änderung an.
-- Jede inhaltliche Änderung an Skills, Hooks oder Template braucht eine Version über dem
-  gepushten Stand in `plugin.json` und einen Eintrag in `plugins/coding-kit/CHANGELOG.md`
-  (Template-Änderungen im Abschnitt `### Template`, den `/update-conventions` Projekten
-  zeigt); `just version-rule` prüft das vor jedem Commit und in der CI.
+- Jede inhaltliche Änderung an Skills, Hooks, Skripten oder Template braucht eine Version
+  über dem gepushten Stand in `plugin.json` und einen Eintrag in
+  `plugins/coding-kit/CHANGELOG.md` (Template-Änderungen im Abschnitt `### Template`, den
+  `/update-conventions` Projekten zeigt); `just version-rule` prüft das vor jedem Commit
+  und in der CI.
 - Skills und Template testen: `claude --plugin-dir plugins/coding-kit` — eine normale
   Session im Repo läuft mit dem installierten Plugin, nicht mit dem Arbeitsstand.
 - `just setup` installiert die Git-Hooks (gitleaks, Validator, Versionsregel),

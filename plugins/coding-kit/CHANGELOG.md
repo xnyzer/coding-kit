@@ -2,7 +2,7 @@
 
 Eine Version für Plugin und Template, seit 1.0.0
 (`plugins/coding-kit/.claude-plugin/plugin.json`, semver). Jede inhaltliche Änderung an
-Skills, Hooks oder Template bumpt die Version und bekommt hier einen Eintrag;
+Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen Eintrag;
 `scripts/version-rule.py` prüft das vor jedem Commit und in der CI.
 
 - **`### Template`:** Ändert ein Release Template-Inhalt (`template/`), beschreibt dieser
@@ -12,6 +12,31 @@ Skills, Hooks oder Template bumpt die Version und bekommt hier einen Eintrag;
   mehr geändert. Stempel unter 1.0.0 (`.claude/template-version`) gehören zur alten
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
+
+## 1.1.0 — unveröffentlicht
+
+Projektzusätze in managed Dateien sollen Template-Updates überstehen, Abweichungen früh
+auffallen (F-041, in Arbeit).
+
+- **Renderer:** `scripts/template-sync.sh render` (POSIX sh, ohne Sprachmodell) schreibt
+  die reine Instanziierung des Templates für ein Projekt: Core-Ziele laut MANIFEST,
+  Modul-Teile, Platzhalter, `optional`-Blöcke und Fragment-Slot — wiederholbar und
+  byte-gleich. Eingabe ist die neue Antworten-Datei `.claude/template-answers`. Noch ruft
+  ihn kein Skill auf; er ist die Grundlage für Basis-Snapshot und Drei-Wege-Merge.
+- **Kit:** Die Versionsregel zählt `plugins/coding-kit/scripts/` zum Plugin-Inhalt. Der
+  Validator prüft Plugin-Skripte (ausführbar, `sh -n`), die Datei-Policies der Module und
+  ob der Renderer jeden Modul-Teil des MANIFEST kennt. `just check` testet den Renderer
+  unter `dash` und bash.
+
+### Template
+
+- MANIFEST: neuer Abschnitt `## Answers` (Format der Antworten-Datei) und exakte
+  Einsetzregeln im Modul-Kontrakt. Das `MODULE.md` des Python-Moduls nennt `py.typed`
+  mit vollem Pfad.
+- `CONTRIBUTING.md`: Der Lizenzabsatz hat zwei Varianten. Mit gewählter Lizenz bleibt er
+  wie bisher. Bei Lizenz TBD verweist er nicht mehr auf eine `LICENSE`-Datei, die es
+  dann nicht gibt. Welche Variante gilt, folgt aus `LICENSE_SPDX` (optionale Blöcke
+  `license` und `license-tbd`).
 
 ## 1.0.0 — 2026-10-24
 

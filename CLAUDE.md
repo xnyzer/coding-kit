@@ -42,15 +42,15 @@ Details: `README.md`.
   Personendaten-grep.
 - **Keine statischen Versionsstände** in Texten; technisch nötige Pins (Action-SHAs,
   mise-Tools) hält Renovate aktuell.
-- **Versionsregel:** Jede inhaltliche Änderung an Skills, Hooks oder Template braucht
-  eine Version über dem gepushten Stand (`plugins/coding-kit/.claude-plugin/plugin.json`)
-  und einen Eintrag dafür in `plugins/coding-kit/CHANGELOG.md`; mehrere Commits dürfen
-  sich eine unveröffentlichte Version teilen. Ändert sich Template-Inhalt, bekommt der
-  Eintrag einen Abschnitt `### Template` (den liest `/update-conventions`). Werden
-  Template-Dateien angelegt, entfernt oder umgewidmet, zieht das MANIFEST im selben
-  Commit nach; verlässt ein Ziel die Core-Tabelle, kommt eine Zeile in
-  `## Removed and renamed targets`. `just version-rule` prüft das vor jedem Commit und in
-  der CI.
+- **Versionsregel:** Jede inhaltliche Änderung an Skills, Hooks, Skripten oder Template
+  braucht eine Version über dem gepushten Stand
+  (`plugins/coding-kit/.claude-plugin/plugin.json`) und einen Eintrag dafür in
+  `plugins/coding-kit/CHANGELOG.md`; mehrere Commits dürfen sich eine unveröffentlichte
+  Version teilen. Ändert sich Template-Inhalt, bekommt der Eintrag einen Abschnitt
+  `### Template` (den liest `/update-conventions`). Werden Template-Dateien angelegt,
+  entfernt oder umgewidmet, zieht das MANIFEST im selben Commit nach; verlässt ein Ziel
+  die Core-Tabelle, kommt eine Zeile in `## Removed and renamed targets`.
+  `just version-rule` prüft das vor jedem Commit und in der CI.
 - Neue Skills folgen `docs/skill-authoring.md` — erst lesen, dann bauen. Anlage und
   Änderung laufen über den repo-lokalen Skill `/add-skill` (`.claude/skills/`): er
   führt durch Konvention, Begleit-Änderungen und Abschluss inkl. PROGRESS-Pflege —

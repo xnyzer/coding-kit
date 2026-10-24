@@ -85,6 +85,14 @@ REMOVED_ROW_RE = re.compile(
     r"^\|\s*(\d+(?:\.\d+)*)\s*\|\s*`([^`]+)`\s*\|\s*(`[^`]+`|removed)\s*\|\s*([^|]*?)\s*\|",
     re.MULTILINE,
 )
+# Module contract rows with a target file, and the per-file policy table of a MODULE.md.
+MODULE_PART_ROW_RE = re.compile(r"^\|\s*`([^`]+)`\s*\|\s*`[^`]+`\s*\|", re.MULTILINE)
+FILE_POLICY_ROW_RE = re.compile(r"^\|([^|]*)\|([^|]*)\|", re.MULTILINE)
+BACKTICKED_RE = re.compile(r"`([^`]+)`")
+FILE_POLICY_WORDS = {"managed", "seed"}
+# Deterministic helpers shipped with the plugin (POSIX sh, called with `sh <path>`).
+PLUGIN_SCRIPTS_DIR = PLUGIN_ROOT / "scripts"
+TEMPLATE_SYNC = PLUGIN_SCRIPTS_DIR / "template-sync.sh"
 # `${CLAUDE_PLUGIN_ROOT}/<path>` as written in skill text (substituted at load time).
 PLUGIN_ROOT_VAR = "${CLAUDE_PLUGIN_ROOT}"
 PLUGIN_PATH_RE = re.compile(re.escape(PLUGIN_ROOT_VAR) + r"/([^\s`'\"),;]+)")
@@ -428,6 +436,69 @@ def check_optional_blocks(text: str, skills: list[Path], findings: list[str]) ->
                 )
 
 
+def check_module_parts_known(text: str, findings: list[str]) -> None:
+    """Every module part with a target file in § Module contract is one the renderer
+    (`scripts/template-sync.sh`) can apply — a new part needs its mechanics there."""
+    if not TEMPLATE_SYNC.is_file():
+        findings.append(f"{display_path(TEMPLATE_SYNC)}: missing — it renders the template")
+        return
+    script = TEMPLATE_SYNC.read_text(encoding="utf-8")
+    for part in MODULE_PART_ROW_RE.findall(manifest_section(text, "Module contract") or ""):
+        if f"{part})" not in script:
+            findings.append(
+                f"{display_path(MANIFEST_PATH)}: module part '{part}' is not handled by "
+                f"{display_path(TEMPLATE_SYNC)}"
+            )
+
+
+def check_module_file_policies(findings: list[str]) -> None:
+    """`## File policies (files/)` in each MODULE.md lists every file under `files/` once,
+    by its full path, with a policy cell starting with `managed` or `seed`."""
+    for module_dir in sorted(p for p in (TEMPLATE_ROOT / "modules").iterdir() if p.is_dir()):
+        files_dir = module_dir / "files"
+        if not files_dir.is_dir():
+            continue
+        module_doc = module_dir / "MODULE.md"
+        rel = display_path(module_doc)
+        text = module_doc.read_text(encoding="utf-8") if module_doc.is_file() else ""
+        section = re.search(r"^## File policies[^\n]*$(.*?)(?=^## |\Z)", text, re.M | re.S)
+        if not section:
+            findings.append(f"{rel}: no '## File policies (files/)' table, but files/ exists")
+            continue
+        listed: dict[str, str] = {}
+        for entries, policy in FILE_POLICY_ROW_RE.findall(section.group(1)):
+            names = BACKTICKED_RE.findall(entries)
+            if not names:
+                continue  # header or separator row
+            first = re.match(r"\s*([a-z]+)", policy)
+            word = first.group(1) if first else ""
+            for name in names:
+                if name in listed:
+                    findings.append(f"{rel}: '{name}' is listed twice in § File policies")
+                listed[name] = word
+                if word not in FILE_POLICY_WORDS:
+                    findings.append(
+                        f"{rel}: policy of '{name}' must start with managed or seed, not '{word}'"
+                    )
+        present = {p.relative_to(files_dir).as_posix() for p in template_files(
+            files_dir.relative_to(TEMPLATE_ROOT).as_posix())}
+        for name in sorted(present - listed.keys()):
+            findings.append(f"{rel}: files/{name} has no row (full path) in § File policies")
+        for name in sorted(listed.keys() - present):
+            findings.append(f"{rel}: § File policies lists '{name}', which is not under files/")
+
+
+def check_plugin_scripts(findings: list[str]) -> None:
+    """Plugin scripts are executable and parse as POSIX sh."""
+    for script in sorted(PLUGIN_SCRIPTS_DIR.glob("*.sh")):
+        rel = display_path(script)
+        if not os.access(script, os.X_OK):
+            findings.append(f"{rel}: not executable (chmod +x)")
+        result = subprocess.run(["sh", "-n", str(script)], capture_output=True, text=True)
+        if result.returncode != 0:
+            findings.append(f"{rel}: sh -n failed — {result.stderr.strip()}")
+
+
 def check_plugin_paths(skills: list[Path], findings: list[str]) -> None:
     """Every `${CLAUDE_PLUGIN_ROOT}/<path>` a skill names exists in the plugin."""
     for skill in skills:
@@ -454,6 +525,8 @@ def check_template_contract(findings: list[str]) -> None:
     check_removed_table(text, {core_target(s, t) for s, t in rows}, findings)
     check_optional_blocks(text, skills, findings)
     check_plugin_paths(skills, findings)
+    check_module_parts_known(text, findings)
+    check_module_file_policies(findings)
 
 
 def parse_frontmatter(path: Path, findings: list[str]) -> dict | None:
@@ -550,6 +623,8 @@ def check_plugin_contracts(findings: list[str]) -> None:
         path = REPO_ROOT / name
         if path.is_file() and not os.access(path, os.X_OK):
             findings.append(f"{name}: not executable (chmod +x)")
+
+    check_plugin_scripts(findings)
 
 
 def main() -> int:

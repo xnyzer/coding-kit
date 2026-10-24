@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Version rule: a change to plugin content needs a version bump and a CHANGELOG entry.
 
-Plugin content is everything under plugins/coding-kit/{skills,hooks,template}/. When a
-change touches it, plugin.json must carry a version above the comparison base, and
+Plugin content is everything under plugins/coding-kit/{skills,hooks,scripts,template}/.
+When a change touches it, plugin.json must carry a version above the comparison base, and
 the CHANGELOG must have a `## <version>` entry for it. Several commits may share one
 unreleased version: the base is the pushed state, not the previous commit. A target that
 leaves the MANIFEST core-managed table also needs a row for that version in
@@ -23,7 +23,9 @@ import subprocess
 import sys
 
 PLUGIN = "plugins/coding-kit"
-CONTENT_PREFIXES = tuple(f"{PLUGIN}/{part}/" for part in ("skills", "hooks", "template"))
+CONTENT_PREFIXES = tuple(
+    f"{PLUGIN}/{part}/" for part in ("skills", "hooks", "scripts", "template")
+)
 PLUGIN_JSON = f"{PLUGIN}/.claude-plugin/plugin.json"
 CHANGELOG = f"{PLUGIN}/CHANGELOG.md"
 MANIFEST = f"{PLUGIN}/template/MANIFEST.md"
