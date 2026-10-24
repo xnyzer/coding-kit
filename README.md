@@ -310,8 +310,9 @@ private/                          Gitignoriert — private Notizen/Quellen
   und in der CI.
 - Skills und Template testen: `claude --plugin-dir plugins/coding-kit` — eine normale
   Session im Repo läuft mit dem installierten Plugin, nicht mit dem Arbeitsstand.
-- `just setup` installiert die Git-Hooks (gitleaks, Validator, Versionsregel),
-  `just check` ist das Vollgate — muss vor jedem Commit grün sein.
+- `just setup` installiert die Git-Hooks (gitleaks, Validator, Versionsregel; die
+  Skript-Tests, wenn Skript, Template oder Tests sich ändern), `just check` ist das
+  Vollgate — muss vor jedem Commit grün sein.
 - Aufgaben laufen als F-Nummern in `PROGRESS.md` — das Kit nutzt seine eigenen Skills
   (Dogfooding).
 

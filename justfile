@@ -7,11 +7,15 @@ default:
 setup:
     lefthook install
 
-# Full repo validation: JSON/YAML/TOML syntax, plugin/marketplace/skill contracts,
-# privacy lint + blocklist, bundled template (placeholders, markers, fragment catalog),
-# then the plugin script tests
-check:
+# Full gate: repo validation, then the plugin script tests
+check: validate test
+
+# Repo validation: syntax, plugin and template contracts, privacy lint and blocklist
+validate:
     uv run --with pyyaml python3 scripts/validate.py
+
+# Tests of the plugin scripts (template-sync.sh) under dash and bash
+test:
     sh tests/template-sync/run.sh
 
 # Version rule for plugin content: --staged (pre-commit) or --since <rev> (CI)

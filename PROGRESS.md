@@ -21,6 +21,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-039d | Repo-Doku und Regeln → **CLAUDE.md, README, CONTRIBUTING, Authoring- und Renovate-Doku auf ein Repo umgestellt (Template im Plugin, Versionsregel inkl. Template, Test mit `--plugin-dir`, TPL-Nummern, Einfrier-Regel entfernt); `add-skill` zieht die HOW-TO im selben Commit nach; Marketplace-Beschreibung; Stempel-Satz im Template-`.claude/README.md` korrigiert.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-23 |
 | F-039e | Test, Release, Gegenprobe → **lokaler Test an einer Projekt-Kopie (Stempel 0.13.2), Release 1.0.0 gepusht (CI grün), Plugin aktualisiert, Gegenprobe an einem echten Projekt, project-template archiviert. F-039 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 | F-041a | Renderer → **`template-sync.sh render` schreibt die reine Instanziierung deterministisch aus `.claude/template-answers` (MANIFEST § Answers, exakte Einsetzregeln); ein Render von 0.13.2 reproduziert zwei Bootstrap-Commits bis auf Handkonkretisierungen; Lizenzabsatz in `CONTRIBUTING.md` mit TBD-Variante; Validator, Versionsregel und Tests (dash/bash) im Kit; Version 1.1.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
+| F-041b | Merge und Erkennung → **`template-sync.sh` kann `merge` (Drei-Wege je Datei mit `git merge-file`, Klassen von `identical` bis `conflict`, `keep`/`skip` aus der Files-Tabelle), `status`, `changed`, `snapshot` und `base-from-history`; Vergleich ohne Zeilenende-, Endzeilen- und Slot-Unterschiede; die drei Abweichungen des docs-only-Projekts mergen konfliktfrei; Skript-Tests im Pre-Commit nur bei passenden Dateien.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 
 ---
 
@@ -126,32 +127,6 @@ Template-Fassung → Eintrag überflüssig).
 
 **Abhängigkeiten:** F-039 (Release 1.0.0, erledigt). Vor F-036.
 
-#### F-041b — Merge und Erkennung
-
-**Was:** Unterbefehle `status` (alle Snapshot-Ziele: unverändert, abweichend oder fehlend,
-mit Registry-Status und Diffstat), `changed` (für `step-done`: berührte managed Ziele im
-Arbeitsbaum gegen HEAD plus neue Dateien, dazu Änderungen unter `.claude/template-base/`),
-`merge` (je Ziel `git merge-file -p --diff3`, Klassifikation, `keep` → `--ours`, `skip`
-ausgelassen), `snapshot` (Basis der bestätigten Ziele setzen), `base-from-history`
-(Template einer Version aus einem coding-kit-Checkout exportieren). Dazu Registry-Parser,
-Normalisierung (LF, Endzeile), Feature-Detection für `--diff-algorithm` und das Ausblenden
-des Fragment-Slots.
-
-**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`, `tests/template-sync/`,
-`plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-041a.
-
-**Abnahmekriterien:**
-- [ ] Tests decken ab: fehlende Endzeile, CRLF, beide Seiten hängen am Ende an
-      (Konflikt), leere oder fehlende Basis (zweiwegig), gleiche Änderung auf beiden
-      Seiten, `keep`, `skip`, Glob-Zeilen, Fragment-Slot.
-- [ ] Die drei Abweichungen des docs-only-Projekts (`justfile`, `mise.toml`,
-      `.gitignore`) gehen gegen eine aus der Kit-Historie gerenderte Basis konfliktfrei
-      zusammen (Scratchpad-Kopie).
-- [ ] `base-from-history` findet 0.11.2, 0.13.2 und 1.0.0.
-- [ ] `just check` grün.
-
 #### F-041c — Vertrag und update-conventions
 
 **Was:** MANIFEST `manifest-format: 2`: § Base snapshot (Ablage
@@ -166,7 +141,9 @@ registrieren" statt „sonst zurückgedreht"). `update-conventions` neu: Projekt
 Argument nur dieses Projekt, `alle`); A2 mit render → status → merge → je Datei Ergebnis
 oder Konflikt → Snapshot; Registry-Revision; Modi `status` und `revise`; render → merge
 läuft auch bei aktuellem Stempel, weil sich Antworten ändern können (z. B. Lizenz
-gewählt); A3/Migration (Basis aus der Kit-Historie, sonst zweiwegig; Registry ins
+gewählt); A3/Migration (Basis aus der Kit-Historie: standardmäßig die Stempel-Version,
+auf Wunsch eine ältere wie die Bootstrap-Version, damit früher abgelehnte
+Template-Änderungen erneut angeboten werden; sonst zweiwegig; Registry ins
 Zwei-Tabellen-Format überführen, Antworten-Datei anlegen). Formatprüfung in allen Skills
 auf 2. Validator: Registry-Vorlage mit beiden Tabellen, `.gitattributes`-Zeile.
 `/add-skill` läuft mit (HOW-TO im selben Commit).

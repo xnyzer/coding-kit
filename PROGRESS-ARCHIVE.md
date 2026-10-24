@@ -16,6 +16,83 @@ zusammen:
 
 ---
 
+## F-041b — Merge und Erkennung (2026-10-24)
+
+Teil von F-041 (Projektzusätze in managed Dateien erhalten und Abweichungen früh
+erkennen; F-041a erledigt, F-041c–e folgen).
+
+**Problem:** Der Renderer liefert die Soll-Fassung, aber noch nichts vergleicht oder
+mergt sie mit dem Projekt. Es fehlten der Merge je Datei, die Erkennung von Abweichungen,
+das Setzen des Basis-Snapshots und eine Basis für die Erst-Migration.
+
+**Was entstanden ist (1.1.0, unveröffentlicht):**
+
+- **`merge PROJECT SOLL OUT`:** je Ziel `git merge-file -p --diff3` aus Basis-Snapshot
+  (`.claude/template-base/<Ziel>.base`), Projekt und gerenderter Soll-Fassung. Die
+  Ergebnisse landen in einem leeren Ordner, dazu je Datei eine Zeile mit Klasse,
+  Konfliktzahl und Registry-Art. Klassen: `identical`, `template-only`, `project-only`,
+  `merged`, `caught-up`, `conflict`, `kept`, `two-way`, `new`, `missing`, `removed`,
+  `skipped`. `keep`-Zeilen lösen Konflikte mit `--ours`, `skip`-Zeilen bleiben unberührt.
+- **Normalisierung:** Vergleich und Merge laufen auf LF-Kopien mit Endzeilenumbruch. Der
+  Inhalt des Fragment-Slots wird ausgeblendet und nach dem Merge mit der Projektfassung
+  wieder eingesetzt; ein Slot ohne Ende bleibt unmaskiert. `--diff-algorithm=histogram`
+  nur, wenn git es kann (ab 2.44).
+- **`status` und `changed`:** vergleichen Projekt und Snapshot (`unchanged`, `deviates`,
+  `missing`, mit Registry-Art und Diffstat). `changed` beschränkt sich auf die Dateien,
+  die der Arbeitsbaum gegenüber HEAD berührt, plus neue, und meldet Handänderungen am
+  Snapshot als `snapshot-edited`. Ohne Snapshot endet beides mit Exit 3.
+- **`snapshot`:** setzt die Basis bestätigter Ziele auf die Soll-Fassung oder entfernt
+  sie, wenn das Template das Ziel nicht mehr rendert.
+- **`base-from-history`:** exportiert das Template einer Version aus der Historie eines
+  coding-kit-Checkouts, und zwar den Stand des neuesten Template-Commits mit dieser
+  Version (`plugin.json` ab 1.0.0, davor `template/VERSION`).
+- **Registry-Parser:** liest die Files-Tabelle (`## Files`) in
+  `convention-overrides.md`: Pfade oder Globs (Komma-Listen, Backticks, `*` passt auch
+  auf `/`), Art `skip`, `keep`, `adapt` oder leer; unbekannte Arten werden abgewiesen.
+  Im MANIFEST legt F-041c das Format fest.
+- **Kit:** `just check` ruft `validate` und `test` auf. Der Pre-Commit-Hook führt die
+  Skript-Tests nur aus, wenn Skript, Template oder Tests gestaged sind (lefthook-`glob`).
+  Die Tests sind aufgeteilt in `run.sh` (Gerüst), `render.sh` und `sync.sh`.
+  `CONTRIBUTING.md`, README und CHANGELOG sind nachgezogen.
+
+**Verifikation:** 282 Prüfungen, je 141 unter dash und bash. Abgedeckt sind fehlende
+Endzeile, CRLF, beidseitiges Anhängen (Konflikt), leere und fehlende Basis, gleiche
+Änderung, `keep`, `skip`, Glob-Zeilen, Fragment-Slot, `changed` an einem echten
+Git-Repo und `base-from-history` für 0.11.2, 0.13.2 und 1.0.0. Fehlerinjektion: Vier
+eingebaute Fehler im Skript (CR-Normalisierung, Registry, Slot-Maskierung, vertauschte
+Klassen) werden erkannt. Abnahme an einer Scratch-Kopie des docs-only-Projekts (Basis =
+Render von 0.13.2 aus der Historie, Soll = Arbeitsstand): `mise.toml` ist `merged` ohne
+Konflikt (Python bleibt, `lockfile_platforms` kommt dazu), `justfile` und `.gitignore`
+sind `project-only`, drei Dateien `caught-up`; die Skip-Zeilen greifen, es entstehen
+keine Konfliktmarker. Für alle Versionen vor 1.0.0 geprüft: Template-Inhalt änderte sich
+nie ohne Versionssprung, die Suchregel von `base-from-history` hält. Der lefthook-Glob
+ist geprüft: Skript- und verschachtelte Template-Dateien lösen die Tests aus, eine
+README-Änderung nicht.
+
+**Notable decisions:**
+- Eine leere Basis zählt als Basis (beidseitig hinzugefügt → Konflikt), nur eine fehlende
+  Basis bedeutet zweiwegig — allein die fehlende Datei sagt „keine gemeinsame Herkunft".
+- Gegenüber der Planskizze kamen die Klassen `project-only`, `two-way`, `kept` und
+  `removed` dazu; der Skill stellt für jede eine andere Frage.
+- Ergebnisse immer mit LF und Endzeilenumbruch: Die `.gitattributes` des Templates setzt
+  `eol=lf`.
+- Kein eigener `apply`-Befehl: Ergebnisse übernimmt der Skill nach Bestätigung per Kopie.
+- Skript-Tests im Pre-Commit nur bei passenden Dateien statt immer (rund 13 s); die CI
+  und `just check` testen weiter vollständig.
+
+**Im selben Commit:** F-041c um die Wahl der Migrationsbasis ergänzt (standardmäßig die
+Stempel-Version, auf Wunsch eine ältere, damit früher abgelehnte Änderungen erneut
+angeboten werden). Anlass: Der F-039e-Sync hatte drei Dateien des docs-only-Projekts
+nicht angefasst, sein Stempel steht trotzdem auf 1.0.0.
+
+**Geänderte Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
+`tests/template-sync/run.sh`, `tests/template-sync/render.sh` (neu, aus `run.sh`),
+`tests/template-sync/sync.sh` (neu), `justfile`, `lefthook.yml`,
+`plugins/coding-kit/CHANGELOG.md`, `CONTRIBUTING.md`, `README.md`, `PROGRESS.md`,
+`PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-041a — Renderer (2026-10-24)
 
 Teil von F-041 (Projektzusätze in managed Dateien erhalten und Abweichungen früh

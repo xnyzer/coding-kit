@@ -79,7 +79,8 @@ contribution you agree that it is licensed under the same terms (inbound = outbo
 
 Never commit secrets, tokens, private keys, private email addresses, or deployment
 internals. `lefthook` runs gitleaks, the validator and the versioning rule before every
-commit (`just setup` installs the hooks).
+commit, and the plugin script tests when a script, the template or the tests change
+(`just setup` installs the hooks).
 
 ## Pull requests
 

@@ -1,23 +1,51 @@
 #!/bin/sh
 # template-sync.sh — deterministic helper behind the coding-kit template contract
-# (template/MANIFEST.md). Skills call it with resolved paths:
+# (template/MANIFEST.md). Skills call it with resolved paths; every command prints
+# tab-separated lines for the skill to show.
 #
-#   sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
+#   render [--seeds] TEMPLATE ANSWERS OUT
+#       Writes the pure instantiation of TEMPLATE for the project that ANSWERS describes
+#       (.claude/template-answers, MANIFEST § Answers) into OUT (missing or empty).
+#       Line per file: <target> <managed|seed> <core|module>. Without --seeds only the
+#       managed targets; with --seeds the seed files follow as raw instantiation
+#       (template:adapt spots and the license text stay with the calling skill).
+#   status PROJECT
+#       Compares every target of the base snapshot (.claude/template-base/<target>.base)
+#       with the project. Line: <target> <unchanged|deviates|missing> <registry> <+a -d>.
+#   changed PROJECT
+#       Like status, for the targets the working tree touches (against HEAD, plus
+#       untracked files) — the backstop of /step-done. Edits below the snapshot itself
+#       come out as <path> snapshot-edited.
+#   merge PROJECT SOLL OUT
+#       Three-way merge per target: base snapshot, project, rendered SOLL. Results go to
+#       OUT (missing or empty). Line: <target> <class> <conflicts> <registry>, classes:
+#       identical, template-only, project-only, merged, caught-up (the result equals
+#       the template although the project deviated — the template has caught up),
+#       conflict, kept (keep row: conflicts resolved to the project), two-way (no base),
+#       new, missing (project deleted it), removed (no longer rendered), skipped.
+#   snapshot PROJECT SOLL TARGET…
+#       Sets the base of each TARGET to its rendered version; a TARGET that SOLL no
+#       longer has loses its base. Line: <target> <set|removed>.
+#   base-from-history KIT VERSION OUT
+#       Exports the template of VERSION from the git history of a coding-kit checkout
+#       into OUT/template (missing or empty OUT). Line: <template dir> <commit>.
 #
-# render  Writes the pure instantiation of TEMPLATE for the project that ANSWERS
-#         describes (.claude/template-answers, MANIFEST § Answers) into OUT, which must
-#         be missing or empty, and prints one line per written file:
-#           <target> TAB <managed|seed> TAB <core|module>
-#         Without --seeds only managed targets are written. With --seeds the seed files
-#         follow as raw instantiation: concretising template:adapt spots and the license
-#         text stays with the calling skill.
+# <registry> is the kind of the matching row in the Files table of
+# .claude/convention-overrides.md: skip, keep, adapt, registered (row without kind) or
+# none. Comparisons ignore CR line ends, a missing final newline and the content of the
+# module:coding-standards slot (fragments are synced one by one, never with the file).
 #
-# POSIX sh plus awk, sed, find, sort and mktemp. No network, no writes outside OUT and a
-# private temp directory. Exit status 1 on a contract violation, 2 on wrong usage.
+# POSIX sh plus git, awk, sed, find, sort, tar and mktemp. No network, no writes outside
+# the named directories and a private temp directory. Exit status 1 on a contract
+# violation, 2 on wrong usage, 3 when PROJECT has no base snapshot (status, changed).
 
 set -eu
 
 TAB=$(printf '\t')
+SNAP_DIR=.claude/template-base
+REGISTRY=.claude/convention-overrides.md
+SLOT_OPEN='<!-- module:coding-standards -->'
+SLOT_CLOSE='<!-- /module:coding-standards -->'
 
 die() {
   printf 'template-sync: %s\n' "$*" >&2
@@ -25,8 +53,30 @@ die() {
 }
 
 usage() {
-  printf 'usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT\n' >&2
+  cat >&2 << 'EOF'
+usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
+       sh template-sync.sh status PROJECT
+       sh template-sync.sh changed PROJECT
+       sh template-sync.sh merge PROJECT SOLL OUT
+       sh template-sync.sh snapshot PROJECT SOLL TARGET...
+       sh template-sync.sh base-from-history KIT VERSION OUT
+EOF
   exit 2
+}
+
+# Private temp directory, removed on exit.
+setup_work() {
+  WORK=$(mktemp -d "${TMPDIR:-/tmp}/template-sync.XXXXXX") || die "cannot create a temp directory"
+  trap 'rm -rf "$WORK"' EXIT
+  trap 'exit 1' HUP INT TERM
+}
+
+# OUT must be missing or an empty directory.
+check_out_dir() {  # DIR
+  if [ -e "$1" ]; then
+    [ -d "$1" ] || die "$1 exists and is not a directory"
+    [ -z "$(ls -A "$1")" ] || die "$1 is not empty"
+  fi
 }
 
 # --- answers and values --------------------------------------------------------
@@ -263,8 +313,7 @@ insert_below_marker() {  # FILE MARKER PART
 
 # Fragments replace the slot's placeholder text, one blank line between them.
 fill_slot() {  # FILE CONTENT
-  if awk -v content="$2" '
-    BEGIN { open = "<!-- module:coding-standards -->"; shut = "<!-- /module:coding-standards -->" }
+  if awk -v content="$2" -v open="$SLOT_OPEN" -v shut="$SLOT_CLOSE" '
     { t = $0; gsub(/^[ \t]+|[ \t]+$/, "", t) }
     t == open {
       print
@@ -422,14 +471,8 @@ render() {
   TEMPLATE=$1 ANSWERS=$2 OUT=$3
   [ -f "$TEMPLATE/MANIFEST.md" ] || die "no MANIFEST.md in $TEMPLATE"
   [ -f "$ANSWERS" ] || die "answers file not found: $ANSWERS"
-  if [ -e "$OUT" ]; then
-    [ -d "$OUT" ] || die "$OUT exists and is not a directory"
-    [ -z "$(ls -A "$OUT")" ] || die "$OUT is not empty"
-  fi
-
-  WORK=$(mktemp -d "${TMPDIR:-/tmp}/template-sync.XXXXXX") || die "cannot create a temp directory"
-  trap 'rm -rf "$WORK"' EXIT
-  trap 'exit 1' HUP INT TERM
+  check_out_dir "$OUT"
+  setup_work
 
   load_answers "$ANSWERS" > "$WORK/values.tsv" || die "invalid answers file: $ANSWERS"
   warn_unknown_keys
@@ -518,10 +561,341 @@ render() {
   fi
 }
 
-case ${1:-} in
-  render)
-    shift
-    render "$@"
-    ;;
+# --- project side: normalization, registry, snapshot ----------------------------
+
+# IN → OUT with LF line ends and a final newline; with "mask" the lines inside the
+# module:coding-standards slot are dropped, the two marker lines stay. A slot that is
+# never closed stays as it is.
+normalize() {  # IN OUT [mask]
+  awk -v mask="${3:-}" -v open="$SLOT_OPEN" -v shut="$SLOT_CLOSE" '
+    { sub(/\r$/, ""); t = $0; gsub(/^[ \t]+|[ \t]+$/, "", t) }
+    mask != "" && !inslot && t == open { print; inslot = 1; n = 0; next }
+    inslot && t == shut { inslot = 0; print; next }
+    inslot { buf[++n] = $0; next }
+    { print }
+    END { if (inslot) for (i = 1; i <= n; i++) print buf[i] }' "$1" > "$2"
+}
+
+# Content of the slot in IN (LF line ends) → OUT; status 1 when IN has no slot.
+slot_of() {  # IN OUT
+  awk -v open="$SLOT_OPEN" -v shut="$SLOT_CLOSE" '
+    { sub(/\r$/, ""); t = $0; gsub(/^[ \t]+|[ \t]+$/, "", t) }
+    inslot && t == shut { inslot = 0; done = 1; exit }
+    inslot { print }
+    !done && t == open { inslot = 1 }
+    END { exit !done }' "$1" > "$2"
+}
+
+# IN with SLOT inserted below the first slot opening → OUT; status 1 when IN has none.
+unmask() {  # IN SLOT OUT
+  awk -v slot="$2" -v open="$SLOT_OPEN" '
+    { print; t = $0; gsub(/^[ \t]+|[ \t]+$/, "", t) }
+    !done && t == open {
+      while ((getline l < slot) > 0) print l
+      close(slot)
+      done = 1
+    }
+    END { exit !done }' "$1" > "$3"
+}
+
+# Files table of the deviation registry → "path-or-glob<TAB>kind" lines in
+# $WORK/registry.tsv. A row lists one or more paths (comma-separated, backticks allowed);
+# its kind is skip, keep, adapt or empty ("registered").
+load_registry() {  # PROJECT
+  : > "$WORK/registry.tsv"
+  [ -f "$1/$REGISTRY" ] || return 0
+  awk '
+    function fail(msg) { print "template-sync: " FILENAME ": " msg | "cat 1>&2"; bad = 1 }
+    /^#+[ \t]/ { insec = ($0 ~ /^## Files[ \t]*$/); next }
+    insec && /^\|/ {
+      split($0, c, "|")
+      paths = c[2]; kind = c[3]
+      gsub(/^[ \t]+|[ \t]+$/, "", paths); gsub(/[ \t`]/, "", kind); kind = tolower(kind)
+      if (paths == "" || paths ~ /^[:-]+$/ || tolower(paths) == "path" || paths ~ /^_/) next
+      if (kind == "") kind = "registered"
+      else if (kind != "skip" && kind != "keep" && kind != "adapt") {
+        fail("unknown kind \"" kind "\" for " paths); next
+      }
+      n = split(paths, p, ",")
+      for (i = 1; i <= n; i++) {
+        x = p[i]; gsub(/[ \t`]/, "", x)
+        if (x != "") print x "\t" kind
+      }
+    }
+    END { close("cat 1>&2"); exit bad }' "$1/$REGISTRY" > "$WORK/registry.tsv" \
+    || die "invalid Files table in $1/$REGISTRY"
+}
+
+# Kind of the first registry row whose path or glob matches TARGET; "none" without one.
+# Globs follow sh case patterns, so * also matches /.
+kind_of() {  # TARGET
+  while IFS="$TAB" read -r ko_glob ko_kind; do
+    # The pattern must stay unquoted to act as a glob.
+    case $1 in
+      $ko_glob)
+        printf '%s\n' "$ko_kind"
+        return 0
+        ;;
+    esac
+  done < "$WORK/registry.tsv"
+  printf 'none\n'
+}
+
+# Targets with a base in PROJECT's snapshot, sorted.
+snapshot_targets() {  # PROJECT
+  (cd "$1/$SNAP_DIR" && find . -type f -name '*.base') | sed 's|^\./||; s|\.base$||' | LC_ALL=C sort
+}
+
+require_snapshot() {  # PROJECT
+  [ -d "$1" ] || die "project not found: $1"
+  if [ ! -d "$1/$SNAP_DIR" ]; then
+    printf 'template-sync: no base snapshot in %s (%s)\n' "$1" "$SNAP_DIR" >&2
+    exit 3
+  fi
+}
+
+# Changed lines between two normalized files as "+added -deleted".
+diffstat() {  # A B
+  git diff --no-index --numstat -- "$1" "$2" | awk '{ a += $1; d += $2 } END { printf "+%d -%d\n", a, d }'
+}
+
+# State of TARGET in PROJECT against its base: unchanged, deviates or missing, plus the
+# diffstat ("-" when there is nothing to count).
+compare_line() {  # PROJECT TARGET
+  cl_kind=$(kind_of "$2")
+  if [ ! -e "$1/$2" ]; then
+    printf '%s\tmissing\t%s\t-\n' "$2" "$cl_kind"
+    return 0
+  fi
+  normalize "$1/$SNAP_DIR/$2.base" "$WORK/cl.base" mask
+  normalize "$1/$2" "$WORK/cl.project" mask
+  if cmp -s "$WORK/cl.base" "$WORK/cl.project"; then
+    printf '%s\tunchanged\t%s\t-\n' "$2" "$cl_kind"
+  else
+    printf '%s\tdeviates\t%s\t%s\n' "$2" "$cl_kind" "$(diffstat "$WORK/cl.base" "$WORK/cl.project")"
+  fi
+}
+
+check_target() {  # TARGET — relative, inside the project
+  case $1 in
+    '' | /* | .. | ../* | */.. | */../*) die "invalid target path '$1'" ;;
+  esac
+}
+
+# --- status, changed -----------------------------------------------------------
+
+status() {
+  [ $# -eq 1 ] || usage
+  require_snapshot "$1"
+  setup_work
+  load_registry "$1"
+  snapshot_targets "$1" > "$WORK/targets.lst"
+  while IFS= read -r st_t; do
+    compare_line "$1" "$st_t"
+  done < "$WORK/targets.lst"
+}
+
+changed() {
+  [ $# -eq 1 ] || usage
+  require_snapshot "$1"
+  setup_work
+  load_registry "$1"
+  git -C "$1" rev-parse --git-dir > /dev/null 2>&1 || die "$1 is not a git repository"
+  if git -C "$1" rev-parse --verify -q HEAD > /dev/null; then
+    git -C "$1" -c core.quotePath=false diff --name-only --relative HEAD -- > "$WORK/touched"
+  else
+    git -C "$1" -c core.quotePath=false ls-files --cached > "$WORK/touched"
+  fi
+  git -C "$1" -c core.quotePath=false ls-files --others --exclude-standard >> "$WORK/touched"
+  LC_ALL=C sort -u "$WORK/touched" > "$WORK/touched.lst"
+  while IFS= read -r ch_p; do
+    case $ch_p in
+      "$SNAP_DIR"/*)
+        printf '%s\tsnapshot-edited\t-\t-\n' "$ch_p"
+        continue
+        ;;
+    esac
+    if [ -f "$1/$SNAP_DIR/$ch_p.base" ]; then compare_line "$1" "$ch_p"; fi
+  done < "$WORK/touched.lst"
+}
+
+# --- merge ----------------------------------------------------------------------
+
+# --diff-algorithm needs git 2.44 or later; older versions merge with the default.
+merge_algorithm() {
+  : > "$WORK/empty"
+  if git merge-file -p --diff-algorithm=histogram "$WORK/empty" "$WORK/empty" "$WORK/empty" > /dev/null 2>&1; then
+    printf '%s' '--diff-algorithm=histogram'
+  fi
+}
+
+# Writes a merge result: FILE as is, or with the project's slot content put back.
+finish() {  # FILE TARGET
+  if [ "$MG_SLOT" = 1 ]; then
+    unmask "$1" "$WORK/mg.slot" "$MG_RES" \
+      || die "$2: the template dropped the module:coding-standards slot — merge it by hand"
+  else
+    cp "$1" "$MG_RES"
+  fi
+}
+
+merge_one() {  # TARGET
+  mg_t=$1
+  mg_kind=$(kind_of "$mg_t")
+  mg_base=$P/$SNAP_DIR/$mg_t.base
+  mg_ours=$P/$mg_t
+  mg_theirs=$SOLL/$mg_t
+  MG_RES=$OUT/$mg_t
+  mg_n=0
+  if [ "$mg_kind" = skip ]; then
+    mg_class=skipped
+  elif [ ! -f "$mg_theirs" ]; then
+    mg_class=removed
+  elif [ ! -f "$mg_ours" ]; then
+    if [ -f "$mg_base" ]; then
+      mg_class=missing
+    else
+      mg_class=new
+      mkdir -p "${MG_RES%/*}"
+      normalize "$mg_theirs" "$MG_RES"
+    fi
+  else
+    mkdir -p "${MG_RES%/*}"
+    MG_SLOT=0
+    if slot_of "$mg_ours" "$WORK/mg.slot"; then MG_SLOT=1; fi
+    normalize "$mg_ours" "$WORK/mg.ours" mask
+    normalize "$mg_theirs" "$WORK/mg.theirs" mask
+    if [ -f "$mg_base" ]; then normalize "$mg_base" "$WORK/mg.base" mask; fi
+    if cmp -s "$WORK/mg.ours" "$WORK/mg.theirs"; then
+      if [ ! -f "$mg_base" ] || cmp -s "$WORK/mg.ours" "$WORK/mg.base"; then
+        mg_class=identical
+      else
+        mg_class=caught-up
+      fi
+      normalize "$mg_ours" "$MG_RES"
+    elif [ ! -f "$mg_base" ]; then
+      mg_class=two-way
+      finish "$WORK/mg.theirs" "$mg_t"
+    elif cmp -s "$WORK/mg.ours" "$WORK/mg.base"; then
+      mg_class=template-only
+      finish "$WORK/mg.theirs" "$mg_t"
+    elif cmp -s "$WORK/mg.theirs" "$WORK/mg.base"; then
+      mg_class=project-only
+      normalize "$mg_ours" "$MG_RES"
+    else
+      set +e
+      # $ALGORITHM is empty or one word, so it stays unquoted.
+      git merge-file -p --diff3 $ALGORITHM -L project -L "template base" -L "template new" \
+        "$WORK/mg.ours" "$WORK/mg.base" "$WORK/mg.theirs" > "$WORK/mg.result"
+      mg_n=$?
+      set -e
+      [ "$mg_n" -lt 128 ] || die "git merge-file failed for $mg_t"
+      if [ "$mg_n" -eq 0 ]; then
+        if cmp -s "$WORK/mg.result" "$WORK/mg.theirs"; then mg_class=caught-up; else mg_class=merged; fi
+      elif [ "$mg_kind" = keep ]; then
+        mg_class=kept
+        git merge-file -p --ours $ALGORITHM "$WORK/mg.ours" "$WORK/mg.base" "$WORK/mg.theirs" \
+          > "$WORK/mg.result" || die "git merge-file --ours failed for $mg_t"
+      else
+        mg_class=conflict
+      fi
+      finish "$WORK/mg.result" "$mg_t"
+    fi
+  fi
+  printf '%s\t%s\t%s\t%s\n' "$mg_t" "$mg_class" "$mg_n" "$mg_kind"
+}
+
+merge() {
+  [ $# -eq 3 ] || usage
+  P=$1 SOLL=$2 OUT=$3
+  [ -d "$P" ] || die "project not found: $P"
+  [ -d "$SOLL" ] || die "rendered template not found: $SOLL"
+  check_out_dir "$OUT"
+  setup_work
+  load_registry "$P"
+  ALGORITHM=$(merge_algorithm)
+  {
+    if [ -d "$P/$SNAP_DIR" ]; then snapshot_targets "$P"; fi
+    (cd "$SOLL" && find . -type f) | sed 's|^\./||'
+  } | LC_ALL=C sort -u > "$WORK/targets.lst"
+  mkdir -p "$OUT"
+  while IFS= read -r mg_target; do
+    merge_one "$mg_target"
+  done < "$WORK/targets.lst"
+}
+
+# --- snapshot, base-from-history ------------------------------------------------
+
+snapshot() {
+  [ $# -ge 3 ] || usage
+  P=$1 SOLL=$2
+  shift 2
+  [ -d "$P" ] || die "project not found: $P"
+  [ -d "$SOLL" ] || die "rendered template not found: $SOLL"
+  for sn_t in "$@"; do
+    check_target "$sn_t"
+    sn_base=$P/$SNAP_DIR/$sn_t.base
+    if [ -f "$SOLL/$sn_t" ]; then
+      mkdir -p "${sn_base%/*}"
+      cp "$SOLL/$sn_t" "$sn_base"
+      printf '%s\tset\n' "$sn_t"
+    else
+      rm -f "$sn_base"
+      printf '%s\tremoved\n' "$sn_t"
+    fi
+  done
+}
+
+# Version recorded at COMMIT: plugin.json from 1.0.0 on, template/VERSION before.
+version_at() {  # KIT COMMIT
+  va_v=$(git -C "$1" show "$2:plugins/coding-kit/.claude-plugin/plugin.json" 2> /dev/null \
+    | sed -n 's/.*"version"[ ]*:[ ]*"\([^"]*\)".*/\1/p' | sed -n 1p)
+  if [ -z "$va_v" ]; then
+    va_v=$(git -C "$1" show "$2:plugins/coding-kit/template/VERSION" 2> /dev/null | sed -n 1p)
+  fi
+  printf '%s\n' "$va_v"
+}
+
+# The template of a version is its state at the newest commit that touches the template
+# while carrying that version: later commits of a released version cannot change the
+# template, because the version rule demands a bump for that.
+base_from_history() {
+  [ $# -eq 3 ] || usage
+  KIT=$1 WANT=$2 OUT=$3
+  case $WANT in
+    '' | *[!0-9.]*) die "invalid version '$WANT'" ;;
+  esac
+  git -C "$KIT" rev-parse --git-dir > /dev/null 2>&1 || die "$KIT is not a git checkout"
+  check_out_dir "$OUT"
+  setup_work
+  git -C "$KIT" log --format=%H -- plugins/coding-kit/template > "$WORK/commits"
+  bf_commit=
+  while IFS= read -r bf_c; do
+    if [ "$(version_at "$KIT" "$bf_c")" = "$WANT" ]; then
+      bf_commit=$bf_c
+      break
+    fi
+  done < "$WORK/commits"
+  [ -n "$bf_commit" ] || die "no template of version $WANT in the history of $KIT (shallow clone?)"
+  mkdir -p "$WORK/x" "$OUT"
+  git -C "$KIT" archive "$bf_commit" plugins/coding-kit/template | (cd "$WORK/x" && tar -xf -)
+  mv "$WORK/x/plugins/coding-kit/template" "$OUT/template"
+  if git -C "$KIT" cat-file -e "$bf_commit:plugins/coding-kit/.claude-plugin/plugin.json" 2> /dev/null; then
+    mkdir -p "$OUT/.claude-plugin"
+    git -C "$KIT" show "$bf_commit:plugins/coding-kit/.claude-plugin/plugin.json" \
+      > "$OUT/.claude-plugin/plugin.json"
+  fi
+  printf '%s\t%s\n' "$OUT/template" "$bf_commit"
+}
+
+cmd=${1:-}
+[ $# -eq 0 ] || shift
+case $cmd in
+  render) render "$@" ;;
+  status) status "$@" ;;
+  changed) changed "$@" ;;
+  merge) merge "$@" ;;
+  snapshot) snapshot "$@" ;;
+  base-from-history) base_from_history "$@" ;;
   *) usage ;;
 esac

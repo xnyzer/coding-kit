@@ -18,15 +18,24 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
 Projektzusätze in managed Dateien sollen Template-Updates überstehen, Abweichungen früh
 auffallen (F-041, in Arbeit).
 
-- **Renderer:** `scripts/template-sync.sh render` (POSIX sh, ohne Sprachmodell) schreibt
-  die reine Instanziierung des Templates für ein Projekt: Core-Ziele laut MANIFEST,
-  Modul-Teile, Platzhalter, `optional`-Blöcke und Fragment-Slot — wiederholbar und
-  byte-gleich. Eingabe ist die neue Antworten-Datei `.claude/template-answers`. Noch ruft
-  ihn kein Skill auf; er ist die Grundlage für Basis-Snapshot und Drei-Wege-Merge.
+- **`scripts/template-sync.sh`** (POSIX sh, ohne Sprachmodell; noch ruft es kein Skill
+  auf):
+  - `render` schreibt die reine Instanziierung des Templates für ein Projekt: Core-Ziele
+    laut MANIFEST, Modul-Teile, Platzhalter, `optional`-Blöcke und Fragment-Slot —
+    wiederholbar und byte-gleich. Eingabe ist die neue Antworten-Datei
+    `.claude/template-answers`.
+  - `merge` führt je Datei einen Drei-Wege-Merge mit `git merge-file` aus: Basis-Snapshot
+    (`.claude/template-base/<Ziel>.base`), Projekt und Soll-Fassung. Zeilenenden, eine
+    fehlende Endzeile und der Inhalt des Fragment-Slots zählen nicht als Unterschied.
+    `status` und `changed` vergleichen das Projekt mit dem Snapshot, `snapshot` setzt
+    ihn, `base-from-history` holt das Template einer alten Version aus der Kit-Historie.
+    Abweichungen mit Grund stehen in einer Files-Tabelle der `convention-overrides.md`
+    (Arten `skip`, `keep`, `adapt`).
 - **Kit:** Die Versionsregel zählt `plugins/coding-kit/scripts/` zum Plugin-Inhalt. Der
   Validator prüft Plugin-Skripte (ausführbar, `sh -n`), die Datei-Policies der Module und
-  ob der Renderer jeden Modul-Teil des MANIFEST kennt. `just check` testet den Renderer
-  unter `dash` und bash.
+  ob der Renderer jeden Modul-Teil des MANIFEST kennt. `just check` testet das Skript
+  unter `dash` und bash; der Pre-Commit-Hook nur, wenn Skript, Template oder Tests sich
+  ändern.
 
 ### Template
 
