@@ -93,6 +93,15 @@ FILE_POLICY_WORDS = {"managed", "seed"}
 # Deterministic helpers shipped with the plugin (POSIX sh, called with `sh <path>`).
 PLUGIN_SCRIPTS_DIR = PLUGIN_ROOT / "scripts"
 TEMPLATE_SYNC = PLUGIN_SCRIPTS_DIR / "template-sync.sh"
+# Base snapshot and deviation registry (MANIFEST format 2): the tables template-sync.sh and
+# the skills read, and the attribute that collapses the snapshot in diffs.
+REGISTRY_TEMPLATE = TEMPLATE_ROOT / "core" / ".claude" / "convention-overrides.md"
+REGISTRY_TABLES = (
+    ("Files", "| Path | Kind | Reason | Since |"),
+    ("Rules", "| Rule | Deviation | Reason | Since |"),
+)
+GITATTRIBUTES_TEMPLATE = TEMPLATE_ROOT / "core" / ".gitattributes"
+SNAPSHOT_ATTRIBUTE_RE = re.compile(r"^\.claude/template-base/\*\*\s.*linguist-generated", re.M)
 # `${CLAUDE_PLUGIN_ROOT}/<path>` as written in skill text (substituted at load time).
 PLUGIN_ROOT_VAR = "${CLAUDE_PLUGIN_ROOT}"
 PLUGIN_PATH_RE = re.compile(re.escape(PLUGIN_ROOT_VAR) + r"/([^\s`'\"),;]+)")
@@ -488,6 +497,37 @@ def check_module_file_policies(findings: list[str]) -> None:
             findings.append(f"{rel}: § File policies lists '{name}', which is not under files/")
 
 
+def check_snapshot_contract(text: str, findings: list[str]) -> None:
+    """MANIFEST declares the base snapshot and the deviation registry; the registry template
+    carries both tables with the headers the script and the skills read; the template's
+    .gitattributes marks the snapshot as generated."""
+    rel = display_path(MANIFEST_PATH)
+    for title in ("Base snapshot", "Deviation registry"):
+        if manifest_section(text, title) is None:
+            findings.append(f"{rel}: no '## {title}' section")
+    if REGISTRY_TEMPLATE.is_file():
+        registry = REGISTRY_TEMPLATE.read_text(encoding="utf-8")
+        for title, header in REGISTRY_TABLES:
+            section = re.search(rf"^## {title}[ \t]*$(.*?)(?=^## |\Z)", registry, re.M | re.S)
+            if not section or header not in section.group(1):
+                findings.append(
+                    f"{display_path(REGISTRY_TEMPLATE)}: no '## {title}' table with the "
+                    f"header {header!r}"
+                )
+    else:
+        findings.append(f"{display_path(REGISTRY_TEMPLATE)}: missing")
+    attributes = (
+        GITATTRIBUTES_TEMPLATE.read_text(encoding="utf-8")
+        if GITATTRIBUTES_TEMPLATE.is_file()
+        else ""
+    )
+    if not SNAPSHOT_ATTRIBUTE_RE.search(attributes):
+        findings.append(
+            f"{display_path(GITATTRIBUTES_TEMPLATE)}: no "
+            "'.claude/template-base/** linguist-generated' line"
+        )
+
+
 def check_plugin_scripts(findings: list[str]) -> None:
     """Plugin scripts are executable and parse as POSIX sh."""
     for script in sorted(PLUGIN_SCRIPTS_DIR.glob("*.sh")):
@@ -527,6 +567,7 @@ def check_template_contract(findings: list[str]) -> None:
     check_plugin_paths(skills, findings)
     check_module_parts_known(text, findings)
     check_module_file_policies(findings)
+    check_snapshot_contract(text, findings)
 
 
 def parse_frontmatter(path: Path, findings: list[str]) -> dict | None:

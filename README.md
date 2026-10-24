@@ -148,7 +148,7 @@ git config user.email "adresse@example.org"
 
 Die Instanziierung ab Schritt 4b (MANIFEST, Modul, Fragmente, `just check`) läuft lokal;
 die Repo-Settings aus 4c entfallen. Die projektübergreifende Discovery
-von `/update-conventions` findet lokale Projekte über `.claude/template-version` unter
+von `/update-conventions alle` findet lokale Projekte über `.claude/template-version` unter
 `$CODING_KIT_PROJECTS_DIR`, das Marker-Topic braucht sie dafür nicht.
 
 **Commit-Identität:** Die Kit-Vorlage der globalen `~/.claude/CLAUDE.md` schreibt die
@@ -179,7 +179,7 @@ Die Spalte **GitHub** sagt, was ohne GitHub bleibt: `–` = rein lokal über git
 | `/coding-kit:choose-stack` | – | Modul-Empfehlung für Neuanlage oder Nachrüsten/Wechsel EINES Moduls im Bestand (Diff + Bestätigung); baut die vom Modul deklarierten Standards-Fragmente komponierbar ein, Eigenschafts-Fragmente nachrüstbar auf Bestätigung; hält die Begleithandlungen, die einzelne Fragmente beim Einbau verlangen (referenziert von new-project, update-conventions, prep-step, step-done), und die Regel zum Erzeugen und Prüfen der `mise.lock` mit Plattform-Einträgen (referenziert von new-project, update-conventions). |
 | `/coding-kit:define-requirements` | – | Interview → REQUIREMENTS.md (Übergangs-Artefakt) → initiale PROGRESS.md mit F-Nummern; fragt die Eigenschafts-Trigger des Fragment-Katalogs ab. |
 | `/coding-kit:refine-requirements` | – | Zurück zur Spec: Diagnose mit drei Pfaden, darf Features splitten, datiertes Decision Log. |
-| `/coding-kit:update-conventions` | teils | Konventions-Sync Template → Projekte (nur abwärts), Update-Fenster aus dem CHANGELOG: Diff + Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (`section:NAME`), Override-Schutz, Altprojekt-Migrationen; erkennt im Template entfernte/umbenannte Dateien (Rückbau/Umzug je Datei bestätigt); projektlokale Fragmente werden mit manuell anstoßbarem Übernahme-Vorschlag fürs Template gemeldet; prüft die `mise.lock` auf Plattform-Einträge für die CI (auch bei aktuellem Stempel) und bietet `mise lock` an. |
+| `/coding-kit:update-conventions` | teils | Konventions-Sync Template → Projekte (nur abwärts), Update-Fenster aus dem CHANGELOG: managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (`scripts/template-sync.sh`) — Projektzusätze bleiben, Konflikte kommen mit Lösungsvorschlag; Diff + Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (`section:NAME`); Abweichungs-Registry mit den Arten `skip`, `keep`, `adapt` samt Revision; ohne Argument nur das aktuelle Projekt, `alle` für alle, Modi `status` und `revise`; Migration für Projekte ohne Snapshot (Basis aus der Template-Historie) und für Altprojekte; erkennt im Template entfernte/umbenannte Dateien (Rückbau/Umzug je Datei bestätigt); projektlokale Fragmente werden mit manuell anstoßbarem Übernahme-Vorschlag fürs Template gemeldet; prüft die `mise.lock` auf Plattform-Einträge für die CI und bietet `mise lock` an. |
 | `/coding-kit:check-upstreams` | ja | Watchliste externer Vorbild-Repos prüfen (`upstreams.json`), Neuerungen seit letztem Ref, Übernahme-Vorschläge. |
 | `/coding-kit:go-public` | ja | Projekt nachträglich public machen: blockierendes Preflight-Audit (Secrets in der vollen Historie, Privacy inkl. Commit-Metadaten, Lizenz, `private/`-Hygiene), Datei-Nachzug **vor** dem Umstellen (update-conventions mit Sichtbarkeits-Prämisse), dann Sichtbarkeitswechsel bzw. Repo-Anlage + Push nur nach laufbezogener Freigabe; Abschluss-Check (CodeQL, Settings). |
 | `/coding-kit:refine-prompt` | – | Übergebenen Prompt analysieren, Schwachstellen benennen, nach Best Practices neu formulieren und ausführen. |
@@ -190,8 +190,8 @@ Was bei `teils` konkret entfällt — der Rest des Skills läuft lokal weiter:
 - **`new-project`:** die Repo-Anlage über `gh repo create` (Schritt 4a) und die
   Repo-Settings samt Topics (4c). Instanziierung, Verifikation und Erst-Commit sind lokal;
   Ersatz für 4a steht unter [Ohne GitHub](#ohne-github-nur-git).
-- **`update-conventions`:** die projektübergreifende Discovery über das Marker-Topic
-  (`gh search repos`). Lokale Projekte findet sie weiter über `.claude/template-version`
+- **`update-conventions`:** die projektübergreifende Discovery (`alle`) über das
+  Marker-Topic (`gh search repos`). Lokale Projekte findet sie weiter über `.claude/template-version`
   unter `$CODING_KIT_PROJECTS_DIR`.
 - **`name-it`:** der GitHub-Verfügbarkeitscheck; npm, PyPI und Domain bleiben.
 - **`step-done`:** allein die Zeile, die `git config user.email` auf die

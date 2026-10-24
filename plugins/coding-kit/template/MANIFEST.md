@@ -1,6 +1,6 @@
 # MANIFEST
 
-`manifest-format: 1`
+`manifest-format: 2`
 
 The contract between this template and the coding-kit skills (`/new-project`,
 `/update-conventions`, `/choose-stack`). Template and skills ship together in the
@@ -64,7 +64,7 @@ otherwise.
 | `<!-- fragment:NAME -->` … `<!-- /fragment:NAME -->` | Wraps one self-contained standards fragment inside the `module:coding-standards` slot. `NAME` = a catalog fragment (`modules/standards/`) or a stack module's own language fragment. See § Standards fragments. |
 | `<!-- section:NAME -->` … `<!-- /section:NAME -->` | Marks a template-owned zone inside a **seed** file that `/update-conventions` may diff and offer individually — never the whole file. Names are lowercase-kebab, unique across the template. See § Seed sections. |
 | `# module:gitignore` / `# module:ci-jobs` | Append points for module parts in non-HTML files. |
-| `<!-- override: reason -->` | Project-local deviation. `/update-conventions` never touches a file/section carrying it. Register in `.claude/convention-overrides.md`. |
+| `<!-- override: reason -->` | Project-local deviation inside a seed zone or a standards fragment: `/update-conventions` leaves that zone or fragment alone. Whole files are registered in § Deviation registry instead. |
 
 ## Sync direction
 
@@ -76,13 +76,59 @@ issue there) — never as an automatic write from a project.
 
 ## Policies
 
-- **managed** — owned by the template. `/update-conventions` may propose an overwrite
-  (diff shown, confirmed per file; overrides are always respected).
+- **managed** — owned by the template. `/update-conventions` merges template updates
+  three-way against the base snapshot (§ Base snapshot): project additions stay, only
+  overlapping changes conflict, every result is shown and confirmed per file; registered
+  deviations follow their kind (§ Deviation registry).
 - **seed** — instantiated once, then a living document. Updates never touch it — except
   zones explicitly marked `section:NAME`, which `/update-conventions` may offer
   individually (diff shown, confirmed per section); the file as a whole is never offered.
 - **public-only** — instantiated only for public repositories.
-- **module** — provided/replaced by the stack module.
+- **module** — provided/replaced by the stack module; synced like managed.
+
+## Base snapshot
+
+`.claude/template-base/` holds, for every managed target a project has, the pure
+instantiation of the template at its last sync, as `<target>.base`. The suffix keeps
+tools from reading the copies: Biome rejects a second root `biome.json`, Renovate updates
+`mise.toml` and workflows in any folder, git applies nested `.gitignore` and
+`.gitattributes` files.
+
+- **Content:** what `scripts/template-sync.sh render` in the plugin writes for the
+  project's answers (§ Answers) — managed core targets, module parts and managed
+  `files/**`; placeholders filled, `template:adapt` markers left raw. Seed files are not
+  in the snapshot; their zones are synced by marker (§ Seed sections).
+- **Merge:** `/update-conventions` merges each target three-way (`git merge-file`: base,
+  project, current template): project additions stay, template changes arrive, only
+  overlapping changes conflict. Line ends, a missing final newline and the content of the
+  standards slot do not count as differences — fragments are synced one by one.
+- **Deviation:** what a project changed is `diff(base, project)` — computed, never
+  described. `/step-done` reports changed managed files that have no registry row.
+- **Generated:** written only by the skills, after the user confirmed the result; never
+  edited by hand. `.gitattributes` marks the folder `linguist-generated`.
+
+## Deviation registry
+
+`.claude/convention-overrides.md` (seed, zone `overrides-head`) records **why** a project
+deviates, in two tables after the zone:
+
+- **`## Files`** — machine-read: `| Path | Kind | Reason | Since |`, one row per path or
+  glob (several comma-separated paths allowed; `*` also matches `/`, as in `.github/**`).
+- **`## Rules`** — `| Rule | Deviation | Reason | Since |`, for deviations that are not
+  about one file (e.g. a different rule for living docs); read by people only.
+
+The kind decides how updates treat a file:
+
+| Kind | Effect |
+|------|--------|
+| `skip` | never created, changed or offered (e.g. no CI in a local-only project) |
+| `keep` | template changes still merge in; on a conflict the project side wins |
+| `adapt` | carries spots concretised for this project (`template:adapt`); merged normally |
+| *(empty)* | merged normally; the row documents the reason |
+
+A deviation without a row is merged like any other and reported as unregistered until it
+has one. A row whose file no longer deviates, or whose deviation the template now
+contains itself, is offered for removal.
 
 ## Core-managed files
 
@@ -187,7 +233,8 @@ of a project's `CODING-STANDARDS.md`.
   additional catalog fragments — in order — via a `Standards fragments:` line in its `MODULE.md`
   (omit the line, or leave it empty, to pull none).
 - **Policy** — managed. `/update-conventions` refreshes each fragment by its `fragment:NAME`
-  marker — fragment-granular and downward only (template → project), respecting overrides.
+  marker — fragment-granular and downward only (template → project), respecting inline
+  overrides.
   A project-added fragment not in the catalog is never written to; it is reported as a
   manually triggerable adoption proposal for the template (see § Sync direction).
 - **Assembly** — appending the fragments at instantiation / `/choose-stack` is coding-kit logic;
@@ -214,11 +261,14 @@ contract and the inventory:
 
 ## Version stamp
 
-`/new-project` writes the plugin version into `.claude/template-version`.
-`/update-conventions` takes the update window from the plugin `CHANGELOG.md` — the
+`/new-project` writes the plugin version into `.claude/template-version`, next to
+`.claude/template-answers` (§ Answers) and the base snapshot (§ Base snapshot).
+`/update-conventions` shows the update window from the plugin `CHANGELOG.md` — the
 `### Template` sections of the releases above the stamp; stamps below 1.0.0 belong to the
-former project-template series and also read its frozen section — and diffs using this
-manifest; projects without a stamp get a heuristic comparison with per-file
-confirmation. `mise.lock` is generated
-per project at instantiation with `mise lock` — the platform set comes from
-`lockfile_platforms` in `core/mise.toml` — and never shipped by the template.
+former project-template series and also read its frozen section — then renders the
+template from the answers and merges against the snapshot, also when the stamp is
+current (answers can change). A project without snapshot or answers is migrated first:
+the answers are recovered from the project, the base comes from the template of the stamp
+version (or an older one) in the coding-kit history, or the first sync compares two-way.
+`mise.lock` is generated per project at instantiation with `mise lock` — the platform set
+comes from `lockfile_platforms` in `core/mise.toml` — and never shipped by the template.

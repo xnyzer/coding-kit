@@ -5,9 +5,11 @@
 module, an Astro project deviates from three managed files: `tsconfig.json` extends
 `astro/tsconfigs/strict`, `biome.json` carries the `.astro` override (see *Build & quality
 gate*), and the `justfile` gate runs `astro check` (devDependencies `@astrojs/check` and
-`typescript`). Register each deviation in `.claude/convention-overrides.md` in the same
-step — otherwise `/update-conventions` reverts them and `.astro` files drop out of the
-gate. Add `.astro/` (generated types) to `.gitignore`.
+`typescript`). Register each of the three as `keep` in the Files table of
+`.claude/convention-overrides.md` in the same step: template updates then still merge in,
+and where they collide with the Astro changes the project side wins — otherwise a
+conflict resolved the wrong way drops `.astro` files out of the gate. Add `.astro/`
+(generated types) to `.gitignore`.
 
 **Static first, islands only where needed**
 - Pages and layouts are `.astro` components; they render to HTML at build time and ship no
@@ -57,5 +59,5 @@ gate. Add `.astro/` (generated types) to `.gitignore`.
 **Imports**
 - Extensionless relative imports (bundler resolution). This is the documented exception to
   the `.js`-extension rule of the `ts-node` fragment; a project adopting Astro records it in
-  `.claude/convention-overrides.md`.
+  the Rules table of `.claude/convention-overrides.md`.
 <!-- /fragment:astro -->

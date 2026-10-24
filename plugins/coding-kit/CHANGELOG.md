@@ -18,8 +18,20 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
 Projektzusätze in managed Dateien sollen Template-Updates überstehen, Abweichungen früh
 auffallen (F-041, in Arbeit).
 
-- **`scripts/template-sync.sh`** (POSIX sh, ohne Sprachmodell; noch ruft es kein Skill
-  auf):
+- **`update-conventions`** gleicht managed Dateien per Drei-Wege-Merge gegen den
+  Basis-Snapshot ab: Projektzusätze bleiben, Template-Änderungen kommen an, nur
+  Überschneidungen werden Konflikte — mit Lösungsvorschlag, je Datei bestätigt. Je Datei:
+  übernehmen, diesmal nicht oder dauerhaft ablehnen; Konflikte auch als `keep`
+  registrieren. Ohne Argument bearbeitet der Skill nur das Projekt im aktuellen Ordner,
+  alle Projekte nur mit `alle`; `status` berichtet nur, `revise` prüft die Registry
+  (veraltete Zeilen austragen, unregistrierte Abweichungen eintragen). Rendern und Merge
+  laufen auch bei aktuellem Stempel. Die seed-Zonen kommen aus dem Renderer. Projekte
+  ohne Snapshot werden migriert: Antworten aus dem Projekt zurückgewinnen, Basis aus der
+  Template-Historie (Stempel-Version oder älter) oder einmal zweiwegig, Registry in die
+  Tabellen Files und Rules überführen.
+- **`new-project`:** prüft Manifest-Format 2 (Snapshot und Antworten im Erst-Commit
+  folgen).
+- **`scripts/template-sync.sh`** (POSIX sh, ohne Sprachmodell):
   - `render` schreibt die reine Instanziierung des Templates für ein Projekt: Core-Ziele
     laut MANIFEST, Modul-Teile, Platzhalter, `optional`-Blöcke und Fragment-Slot —
     wiederholbar und byte-gleich. Eingabe ist die neue Antworten-Datei
@@ -30,15 +42,30 @@ auffallen (F-041, in Arbeit).
     `status` und `changed` vergleichen das Projekt mit dem Snapshot, `snapshot` setzt
     ihn, `base-from-history` holt das Template einer alten Version aus der Kit-Historie.
     Abweichungen mit Grund stehen in einer Files-Tabelle der `convention-overrides.md`
-    (Arten `skip`, `keep`, `adapt`).
+    (Arten `skip`, `keep`, `adapt`). `status` und `merge` nehmen mit `--base` auch eine
+    gerenderte Basis statt des Snapshots (Migration, Vorschau).
 - **Kit:** Die Versionsregel zählt `plugins/coding-kit/scripts/` zum Plugin-Inhalt. Der
-  Validator prüft Plugin-Skripte (ausführbar, `sh -n`), die Datei-Policies der Module und
-  ob der Renderer jeden Modul-Teil des MANIFEST kennt. `just check` testet das Skript
-  unter `dash` und bash; der Pre-Commit-Hook nur, wenn Skript, Template oder Tests sich
-  ändern.
+  Validator prüft Plugin-Skripte (ausführbar, `sh -n`), die Datei-Policies der Module, ob
+  der Renderer jeden Modul-Teil des MANIFEST kennt, und den Snapshot-Vertrag
+  (MANIFEST-Abschnitte, Registry-Tabellen, `.gitattributes`). `just check` testet das
+  Skript unter `dash` und bash; der Pre-Commit-Hook nur, wenn Skript, Template oder Tests
+  sich ändern.
 
 ### Template
 
+- **Basis-Snapshot und Registry** (`manifest-format: 2`): Projekte tragen unter
+  `.claude/template-base/` die reine Template-Fassung jeder managed Datei
+  (`<Datei>.base`) und unter `.claude/template-answers` die Werte, aus denen sie
+  gerendert wird. Die `convention-overrides.md` hat neu eine Files-Tabelle (Pfad, Art
+  `skip`/`keep`/`adapt` oder leer, Grund) und eine Rules-Tabelle; der Kopf erklärt die
+  Arten. `<!-- override: … -->` gilt nur noch für seed-Zonen und Fragmente.
+  `/update-conventions` legt alles bei der Migration an.
+- `.gitattributes`: `.claude/template-base/**` ist `linguist-generated`.
+- `.claude/README.md` und HOW-TO beschreiben Snapshot, Antworten und Registry; die HOW-TO
+  den Merge in `/update-conventions`.
+- Fragmente `nextjs` und `astro`: Abweichungen an managed Dateien als `keep` registrieren
+  (Template-Änderungen kommen weiter an, bei Konflikten gewinnt das Projekt); die
+  Import-Ausnahme gehört in die Rules-Tabelle.
 - MANIFEST: neuer Abschnitt `## Answers` (Format der Antworten-Datei) und exakte
   Einsetzregeln im Modul-Kontrakt. Das `MODULE.md` des Python-Moduls nennt `py.typed`
   mit vollem Pfad.

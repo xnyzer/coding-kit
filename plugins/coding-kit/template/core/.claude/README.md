@@ -38,14 +38,30 @@ project internals.
 
 ## convention-overrides.md
 
-The registry of deliberate project-local deviations from template conventions.
-`/update-conventions` reads it and leaves registered files/sections untouched.
+The registry of deliberate project-local deviations from template conventions: why a
+managed file deviates (Files table, with a kind — `skip`, `keep`, `adapt` or none) and
+which rules differ (Rules table). `/update-conventions` follows the kinds; `/step-done`
+reports changed managed files that have no row.
 
 ## template-version
 
 Stamped by `/new-project`; records the coding-kit version (template and skills share it)
-this project was instantiated from or last synced to. `/update-conventions` uses it to
-compute pending updates. Do not edit by hand.
+this project was instantiated from or last synced to. `/update-conventions` shows the
+template changes since then. Do not edit by hand.
+
+## template-answers
+
+The values this project was instantiated with (name, languages, license, stack module,
+visibility, chosen optional blocks and fragments), one `KEY=value` per line. The skills
+render the template from it; a skill that changes one of these values updates the file.
+
+## template-base/
+
+The base snapshot: the pure template version of every managed file at the last sync, as
+`<file>.base` (the suffix keeps tools from picking the copies up). `/update-conventions`
+merges three-way against it, so your own additions to managed files survive template
+updates. Generated — never edit it by hand. To see what this project changed in a
+managed file: `git diff --no-index .claude/template-base/<file>.base <file>`.
 
 ## skills/
 

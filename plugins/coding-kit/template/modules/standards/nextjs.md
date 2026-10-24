@@ -2,8 +2,9 @@
 ### Next.js (App Router)
 
 **Adopting Next changes managed files — do it in the adoption step.** On the `ts-node`
-module, a Next project deviates from managed files; register each deviation in
-`.claude/convention-overrides.md` in the same step, otherwise `/update-conventions` reverts it:
+module, a Next project deviates from managed files; register each one as `keep` in the
+Files table of `.claude/convention-overrides.md` in the same step, so template updates
+still merge in while the project side wins any conflict:
 - `tsconfig.json` — Next rewrites it in place on every `next dev` / `next build` /
   `next typegen` unless it uses `extends` or `references`: it forces its mandatory compiler
   options (e.g. `jsx`, `esModuleInterop`, `resolveJsonModule`) and adds `include`, `exclude`
@@ -68,8 +69,9 @@ Do not write App Router code from memory, and heed deprecation notices.
   Next keeps updating whichever file already hosts it. Remove the block from `CLAUDE.md` in the
   same step, then the next run writes `AGENTS.md`. A project that would rather not host the
   block at all sets `agentRules: false` and carries the read-the-shipped-docs rule above on its
-  own — registered in `.claude/convention-overrides.md`. This routing is not public API; verify
-  it against the installed version in `node_modules/next/dist/server/lib/generate-agent-files.js`.
+  own — registered in the Rules table of `.claude/convention-overrides.md`. This routing is
+  not public API; verify it against the installed version in
+  `node_modules/next/dist/server/lib/generate-agent-files.js`.
 - Biome owns linting and formatting; `next lint` is not used.
 
 **Configuration**
@@ -83,5 +85,5 @@ Do not write App Router code from memory, and heed deprecation notices.
 **Imports**
 - Extensionless relative imports (bundler resolution). This is the documented exception to the
   `.js`-extension rule of the `ts-node` fragment; a project adopting Next records it in
-  `.claude/convention-overrides.md`.
+  the Rules table of `.claude/convention-overrides.md`.
 <!-- /fragment:nextjs -->

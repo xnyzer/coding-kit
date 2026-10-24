@@ -16,6 +16,89 @@ zusammen:
 
 ---
 
+## F-041c — Vertrag und update-conventions (2026-10-24)
+
+Teil von F-041 (Projektzusätze in managed Dateien erhalten und Abweichungen früh
+erkennen; F-041a–b erledigt, F-041d–e folgen).
+
+**Problem:** Renderer und Merge gab es, aber weder Vertrag noch Skill nutzten sie. Das
+MANIFEST kannte keinen Snapshot und keine Registry-Arten; `update-conventions` verglich
+zweiwegig, durchsuchte ohne Argument alle Projektordner und brach bei aktuellem Stempel
+ab.
+
+**Was entstanden ist (1.1.0, unveröffentlicht):**
+
+- **MANIFEST `manifest-format: 2`:** Abschnitt Base snapshot (Ablage `<Ziel>.base` samt
+  Begründung der Endung, Inhalt, Merge, berechnete Abweichung, generiert) und Abschnitt
+  Deviation registry (Tabellen Files und Rules, Arten `skip`, `keep`, `adapt` oder leer,
+  Revision). `managed` heißt jetzt Drei-Wege-Merge; der `override`-Marker gilt nur noch
+  für seed-Zonen und Fragmente; § Version stamp beschreibt Render und Merge auch bei
+  aktuellem Stempel sowie die Migration.
+- **Template-Inhalt:** Registry-Vorlage mit erklärendem Kopf (Zone `overrides-head`) und
+  den Tabellen Files und Rules; `.gitattributes` mit
+  `.claude/template-base/** linguist-generated=true`; `.claude/README.md` (Registry,
+  `template-answers`, `template-base/` mit dem `git diff --no-index`-Tipp); HOW-TO (Zeile
+  `/update-conventions`, drei Dateien in der Tabelle der wichtigen Dateien); Fragmente
+  `nextjs` und `astro`: Abweichungen an managed Dateien als `keep` registrieren, die
+  Import-Ausnahme in die Rules-Tabelle.
+- **`update-conventions` neu:**
+  - Argumente: ohne Angabe nur das aktuelle Projekt (sonst fragen statt suchen), Pfad
+    oder Name, `alle`, `status`, `revise`, Sichtbarkeits-Prämisse eines Aufrufers.
+  - A2: Update-Fenster ohne Abbruch bei aktuellem Stempel, Antworten gegen das Projekt
+    prüfen, render → merge, Entscheidung je Klasse (übernehmen / diesmal nicht /
+    dauerhaft ablehnen; Konflikt mit Lösungsvorschlag oder `keep`), Fragmente wie bisher,
+    seed-Zonen aus `render --seeds`, entfernte Ziele, Snapshot setzen, Registry-Revision,
+    Abschluss mit Lock-Abgleich und Stempel. Der Modus `status` schreibt nichts.
+  - A3 Migration: Antworten aus dem Projekt zurückgewinnen; Basis aus der
+    Template-Historie (Stempel-Version oder älter; Checkout aus `--plugin-dir`, per Pfad
+    oder als Klon nach OK) oder einmal zweiwegig; Registry in die zwei Tabellen
+    überführen; Altprojekt-Migrationen.
+- **Skript:** `status` und `merge` nehmen mit `--base DIR` eine gerenderte Basis statt des
+  Snapshots, damit der Status-Modus und die Migrationsvorschau nichts ins Projekt
+  schreiben; Tests dazu.
+- **`new-project`:** Formatprüfung auf 2.
+- **Validator:** prüft die MANIFEST-Abschnitte, die Registry-Tabellen (Kopfzeilen) und die
+  `.gitattributes`-Zeile.
+- **Begleitend (add-skill):** README-Zeile von `update-conventions` und die
+  Discovery-Hinweise (`alle`); CHANGELOG 1.1.0 mit `### Template`.
+
+**Verifikation:** `just check` grün (296 Prüfungen). Fehlerinjektion im Validator: ein
+fehlender Abschnitt Base snapshot, eine umbenannte Rules-Tabelle und eine fehlende
+`.gitattributes`-Zeile werden gemeldet. Nicht-interaktiver Test mit
+`claude -p --plugin-dir plugins/coding-kit` an einer Kopie des docs-only-Projekts
+(`/coding-kit:update-conventions status` ohne Projektangabe; Bash erlaubt, Write/Edit
+gesperrt): Migrationsvorschau mit zurückgewonnenen Antworten und Basis 1.0.0 aus der
+Kit-Historie; `.gitignore`, `justfile` und `mise.toml` als `project-only`, nicht
+registriert; nur dieses Projekt bearbeitet; `git status` der Kopie danach leer. Der
+Agent empfahl von sich aus die Basis 0.13.2, damit die beim F-039e-Sync übersprungene
+`lockfile_platforms`-Änderung wieder angeboten wird.
+
+**Notable decisions:**
+- „Diesmal nicht" setzt keinen Snapshot, der nächste Lauf bietet die Änderung wieder an.
+  „Dauerhaft ablehnen" setzt ihn und verlangt eine Registry-Zeile mit Grund — so bleibt
+  eine Ablehnung sichtbar.
+- `--base` statt eines vorläufigen Snapshots im Projekt: Status-Modus und
+  Migrationsvorschau bleiben schreibfrei.
+- seed-Zonen aus `render --seeds` statt von Hand instanziiert: dieselbe Quelle wie für
+  die managed Dateien.
+- Die HOW-TO-Zeile für `step-done` folgt in F-041d mit dem Backstop. `choose-stack` prüft
+  das Manifest-Format nicht; umgestellt wurden nur `update-conventions` und `new-project`.
+- Der Plan-Modus taugt nicht für den Abnahmetest, weil Render und Merge ins
+  Temp-Verzeichnis schreiben; geprüft wurde deshalb mit erlaubtem Bash und gesperrten
+  Schreib-Werkzeugen. Die Plan-Datei aus dem ersten Versuch ist entfernt.
+
+**Geänderte Dateien:** `plugins/coding-kit/template/MANIFEST.md`,
+`plugins/coding-kit/template/core/.claude/{convention-overrides.md,README.md}`,
+`plugins/coding-kit/template/core/.gitattributes`,
+`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`,
+`plugins/coding-kit/template/modules/standards/{nextjs,astro}.md`,
+`plugins/coding-kit/skills/{update-conventions,new-project}/SKILL.md`,
+`plugins/coding-kit/scripts/template-sync.sh`, `tests/template-sync/sync.sh`,
+`scripts/validate.py`, `plugins/coding-kit/CHANGELOG.md`, `README.md`, `PROGRESS.md`,
+`PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-041b — Merge und Erkennung (2026-10-24)
 
 Teil von F-041 (Projektzusätze in managed Dateien erhalten und Abweichungen früh

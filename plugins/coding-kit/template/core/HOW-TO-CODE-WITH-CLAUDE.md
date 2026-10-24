@@ -50,7 +50,7 @@ the plugin.
 |-------|-------------|
 | `/choose-stack` | Add a stack module later, or switch modules. Composes the module's declared catalog fragments (append, idempotent per `fragment:NAME` marker) and can retrofit characteristic fragments after confirmation. Some fragments require more than the text in the slot — a file that has to exist before a framework first runs, say; that change is made in the same step and confirmed with it |
 | `/choose-license` | Pick or change the project license |
-| `/update-conventions` | Pull template updates into this project — per managed file, per standards fragment and per marked seed section (`section:NAME`), downward only (template → project). Respects overrides; seed files are never replaced as a whole; project-local fragments are never touched, only reported with a manually triggerable adoption proposal for the template. Fragment requirements of that kind are re-checked even when the fragment text itself is unchanged — this is the only route that reaches a project which adopted a fragment before it carried the requirement |
+| `/update-conventions` | Pull template updates into this project — downward only (template → project). Managed files are merged three-way against the base snapshot in `.claude/template-base/`: your additions stay, template changes arrive, only overlapping changes need a decision, and every result is confirmed per file; registered deviations follow their kind. Standards fragments and marked seed sections (`section:NAME`) are synced one by one; seed files are never replaced as a whole; project-local fragments are never touched, only reported with a manually triggerable adoption proposal for the template. Fragment requirements of that kind are re-checked even when the fragment text itself is unchanged — this is the only route that reaches a project which adopted a fragment before it carried the requirement. Without an argument it syncs this project; `status` only reports, `revise` reviews the deviation registry |
 | `/go-public` | Take a private or local-only project public, guided and fail-closed: blocking preflight audit (secrets across the full git history, privacy incl. commit metadata, license, `private/` hygiene), file catch-up **before** the switch (public-only files arrive while still private), then visibility change or repo creation + initial push only after explicit per-run approval |
 | `/define-requirements` | Elicit requirements (M1 interview → `REQUIREMENTS.md`). The interview also asks the fragment catalog's characteristic triggers (e.g. audit-logging: "Are there user/admin actions that mutate data?") |
 | `/refine-requirements` | Go back to the spec when something fundamental changed |
@@ -127,7 +127,9 @@ Large → 3–5 substeps. `/prep-step` without an argument takes the next open t
 | `REQUIREMENTS.md` | Transitional spec — dissolved once fully transferred to PROGRESS.md |
 | `CODING-STANDARDS.md` | Binding coding rules (incl. stack section) |
 | `CLAUDE.md` | Project-specific Claude instructions (auto-loaded) |
-| `.claude/convention-overrides.md` | Registered deviations from template conventions |
+| `.claude/convention-overrides.md` | Registered deviations from template conventions — why a managed file deviates and how updates treat it |
+| `.claude/template-answers` | Values the template is rendered with for this project |
+| `.claude/template-base/` | Base snapshot for template updates (generated — never edit) |
 | `.claude/skills/` | Project-specific skills only (workflow skills come from the plugin) |
 
 ---

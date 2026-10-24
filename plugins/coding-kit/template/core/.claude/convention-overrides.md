@@ -2,12 +2,32 @@
 
 <!-- section:overrides-head -->
 Registry of deliberate, project-local deviations from the template conventions.
-`/update-conventions` respects every entry here: registered files (or sections marked
-inline with `<!-- override: reason -->`) are **never** overwritten by template updates.
+`/update-conventions` merges template updates into managed files three-way, so a project
+addition survives without a row here. A row records **why** a file deviates and how
+updates treat it — the Kind column:
 
-An override needs a reason — "we never got around to it" is drift, not an override.
+- `skip` — the file is never created, changed or offered (e.g. no CI in a local-only
+  project).
+- `keep` — template changes still merge in; on a conflict the project side wins.
+- `adapt` — the file carries spots concretised for this project (`template:adapt`).
+- empty — merged normally; the row only documents the reason.
+
+`/step-done` reports changes to managed files that have no row. Paths may be globs
+(`.github/**`); several paths can share a row. Deviations that are not about one file go
+to the Rules table. Inside a seed zone or a standards fragment, `<!-- override: reason -->`
+protects just that part.
+
+A deviation needs a reason — "we never got around to it" is drift, not a deviation.
 <!-- /section:overrides-head -->
 
-| File / rule | Deviation | Reason | Since |
-|-------------|-----------|--------|-------|
+## Files
+
+| Path | Kind | Reason | Since |
+|------|------|--------|-------|
+| _(none)_ | | | |
+
+## Rules
+
+| Rule | Deviation | Reason | Since |
+|------|-----------|--------|-------|
 | _(none)_ | | | |

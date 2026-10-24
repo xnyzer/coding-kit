@@ -34,7 +34,7 @@ zuerst lesen und die Short-Info daraus vorschlagen statt offen zu fragen.
 
 Wie in `/choose-stack` § 0: das Template unter `${CLAUDE_PLUGIN_ROOT}/template`. Dann
 `MANIFEST.md` lesen — sie ist der Vertrag für alles Folgende. **`manifest-format`
-prüfen:** dieser Skill kann Format `1`; bei einer anderen Formatversion abbrechen und auf
+prüfen:** dieser Skill kann Format `2`; bei einer anderen Formatversion abbrechen und auf
 ein Kit-Update verweisen. Die Version aus `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`
 merken — sie wird gestempelt und füllt `TEMPLATE_VERSION`.
 

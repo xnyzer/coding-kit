@@ -150,6 +150,18 @@ run_sync_cases() {
   check "changed: file without base not listed" no_row c other.txt
   check "changed: untouched managed file not listed" no_row c calm.txt
 
+  # --- --base: a rendered base instead of the snapshot ----------------------------
+  put bp.base/a.txt 'a\nb\n'
+  put bp.soll/a.txt 'A\nb\n'
+  put bp/a.txt 'a\nb\nP\n'
+  check "status --base without snapshot" eval 'ts status --base "$TMP/bp.base" "$TMP/bp" > "$TMP/b.tsv"'
+  check "status --base: deviation" row_is b a.txt deviates none "+1 -0"
+  check "merge --base" eval 'ts merge --base "$TMP/bp.base" "$TMP/bp" "$TMP/bp.soll" "$TMP/bo" > "$TMP/bm.tsv"'
+  check "merge --base: merged" row_is bm a.txt merged 0
+  check "merge --base: result" file_is bo/a.txt 'A\nb\nP\n'
+  refute "merge --base: snapshot left alone" test -e "$TMP/bp/.claude/template-base"
+  refute "--base needs a directory" ts status --base "$TMP/nope" "$TMP/bp"
+
   # --- snapshot ------------------------------------------------------------------
   fixture np keep.txt 'old\n' 'x\n' 'new\n'
   fixture np drop.txt 'old\n' 'x\n' -

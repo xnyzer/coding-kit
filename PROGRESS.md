@@ -22,6 +22,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-039e | Test, Release, Gegenprobe → **lokaler Test an einer Projekt-Kopie (Stempel 0.13.2), Release 1.0.0 gepusht (CI grün), Plugin aktualisiert, Gegenprobe an einem echten Projekt, project-template archiviert. F-039 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 | F-041a | Renderer → **`template-sync.sh render` schreibt die reine Instanziierung deterministisch aus `.claude/template-answers` (MANIFEST § Answers, exakte Einsetzregeln); ein Render von 0.13.2 reproduziert zwei Bootstrap-Commits bis auf Handkonkretisierungen; Lizenzabsatz in `CONTRIBUTING.md` mit TBD-Variante; Validator, Versionsregel und Tests (dash/bash) im Kit; Version 1.1.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 | F-041b | Merge und Erkennung → **`template-sync.sh` kann `merge` (Drei-Wege je Datei mit `git merge-file`, Klassen von `identical` bis `conflict`, `keep`/`skip` aus der Files-Tabelle), `status`, `changed`, `snapshot` und `base-from-history`; Vergleich ohne Zeilenende-, Endzeilen- und Slot-Unterschiede; die drei Abweichungen des docs-only-Projekts mergen konfliktfrei; Skript-Tests im Pre-Commit nur bei passenden Dateien.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
+| F-041c | Vertrag und update-conventions → **`manifest-format: 2` mit Basis-Snapshot und Abweichungs-Registry (Files/Rules, Arten `skip`/`keep`/`adapt`); Template-Inhalt nachgezogen (Registry-Vorlage, `.gitattributes`, `.claude/README.md`, HOW-TO, `nextjs`/`astro`); `update-conventions` mergt dreiwegig, ohne Argument nur das aktuelle Projekt, Modi `status`/`revise`, Migration mit Basis aus der Template-Historie; Skript mit `--base`.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 
 ---
 
@@ -126,43 +127,6 @@ Template-Fassung → Eintrag überflüssig).
 - Inline-Marker bleiben nur in Markdown (seed-Zonen, Fragmente).
 
 **Abhängigkeiten:** F-039 (Release 1.0.0, erledigt). Vor F-036.
-
-#### F-041c — Vertrag und update-conventions
-
-**Was:** MANIFEST `manifest-format: 2`: § Base snapshot (Ablage
-`.claude/template-base/<Ziel>.base`, reine Instanziierung, `adapt`-Marker roh, ohne
-seed-Dateien, generiert), § Deviation registry (Files- und Rules-Tabelle, Arten),
-Policy-Text „managed: three-way merged against the base snapshot", `override`-Marker nur
-für Markdown-Zonen und Fragmente. Template-Inhalt: Registry-Vorlage (Zone
-`overrides-head` und beide Tabellen), `.claude/README.md` (template-base,
-template-answers, Registry), `.gitattributes` (`linguist-generated`), HOW-TO
-(`update-conventions`, `step-done`), Fragmente `nextjs` und `astro` („als `keep`
-registrieren" statt „sonst zurückgedreht"). `update-conventions` neu: Projektwahl (ohne
-Argument nur dieses Projekt, `alle`); A2 mit render → status → merge → je Datei Ergebnis
-oder Konflikt → Snapshot; Registry-Revision; Modi `status` und `revise`; render → merge
-läuft auch bei aktuellem Stempel, weil sich Antworten ändern können (z. B. Lizenz
-gewählt); A3/Migration (Basis aus der Kit-Historie: standardmäßig die Stempel-Version,
-auf Wunsch eine ältere wie die Bootstrap-Version, damit früher abgelehnte
-Template-Änderungen erneut angeboten werden; sonst zweiwegig; Registry ins
-Zwei-Tabellen-Format überführen, Antworten-Datei anlegen). Formatprüfung in allen Skills
-auf 2. Validator: Registry-Vorlage mit beiden Tabellen, `.gitattributes`-Zeile.
-`/add-skill` läuft mit (HOW-TO im selben Commit).
-
-**Dateien:** `plugins/coding-kit/template/MANIFEST.md`,
-`plugins/coding-kit/template/core/.claude/{convention-overrides.md,README.md}`,
-`plugins/coding-kit/template/core/.gitattributes`,
-`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`,
-`plugins/coding-kit/template/modules/standards/{nextjs,astro}.md`,
-`plugins/coding-kit/skills/{update-conventions,new-project,choose-stack}/SKILL.md`,
-`scripts/validate.py`, `plugins/coding-kit/CHANGELOG.md` (mit `### Template`).
-
-**Abhängigkeiten:** F-041b.
-
-**Abnahmekriterien:**
-- [ ] `just check` grün (Format, Registry-Vorlage, `.gitattributes`).
-- [ ] `update-conventions status` an einer Kopie des docs-only-Projekts (`--plugin-dir`,
-      Plan-Modus) meldet die drei Abweichungen als unregistriert.
-- [ ] Ohne Argument bearbeitet der Skill nur das aktuelle Projekt.
 
 #### F-041d — Übrige Skills
 

@@ -9,14 +9,16 @@
 #       Line per file: <target> <managed|seed> <core|module>. Without --seeds only the
 #       managed targets; with --seeds the seed files follow as raw instantiation
 #       (template:adapt spots and the license text stay with the calling skill).
-#   status PROJECT
+#   status [--base DIR] PROJECT
 #       Compares every target of the base snapshot (.claude/template-base/<target>.base)
 #       with the project. Line: <target> <unchanged|deviates|missing> <registry> <+a -d>.
+#       --base takes the bases from a rendered DIR instead (no suffix) — for a project
+#       that has no snapshot yet; merge accepts it the same way.
 #   changed PROJECT
 #       Like status, for the targets the working tree touches (against HEAD, plus
 #       untracked files) — the backstop of /step-done. Edits below the snapshot itself
 #       come out as <path> snapshot-edited.
-#   merge PROJECT SOLL OUT
+#   merge [--base DIR] PROJECT SOLL OUT
 #       Three-way merge per target: base snapshot, project, rendered SOLL. Results go to
 #       OUT (missing or empty). Line: <target> <class> <conflicts> <registry>, classes:
 #       identical, template-only, project-only, merged, caught-up (the result equals
@@ -46,6 +48,7 @@ SNAP_DIR=.claude/template-base
 REGISTRY=.claude/convention-overrides.md
 SLOT_OPEN='<!-- module:coding-standards -->'
 SLOT_CLOSE='<!-- /module:coding-standards -->'
+BASE_DIR=
 
 die() {
   printf 'template-sync: %s\n' "$*" >&2
@@ -55,9 +58,9 @@ die() {
 usage() {
   cat >&2 << 'EOF'
 usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
-       sh template-sync.sh status PROJECT
+       sh template-sync.sh status [--base DIR] PROJECT
        sh template-sync.sh changed PROJECT
-       sh template-sync.sh merge PROJECT SOLL OUT
+       sh template-sync.sh merge [--base DIR] PROJECT SOLL OUT
        sh template-sync.sh snapshot PROJECT SOLL TARGET...
        sh template-sync.sh base-from-history KIT VERSION OUT
 EOF
@@ -646,6 +649,36 @@ snapshot_targets() {  # PROJECT
   (cd "$1/$SNAP_DIR" && find . -type f -name '*.base') | sed 's|^\./||; s|\.base$||' | LC_ALL=C sort
 }
 
+# Where the base of TARGET lives: the snapshot of $P, or $BASE_DIR when --base was given.
+base_of() {  # TARGET
+  if [ -n "$BASE_DIR" ]; then
+    printf '%s\n' "$BASE_DIR/$1"
+  else
+    printf '%s\n' "$P/$SNAP_DIR/$1.base"
+  fi
+}
+
+# Targets that have a base, sorted.
+base_targets() {
+  if [ -n "$BASE_DIR" ]; then
+    (cd "$BASE_DIR" && find . -type f) | sed 's|^\./||' | LC_ALL=C sort
+  elif [ -d "$P/$SNAP_DIR" ]; then
+    snapshot_targets "$P"
+  fi
+}
+
+# Optional leading "--base DIR" of status and merge; sets BASE_DIR, ARGS_SHIFT.
+parse_base() {
+  BASE_DIR=
+  ARGS_SHIFT=0
+  if [ "${1:-}" = --base ]; then
+    [ $# -ge 2 ] || usage
+    [ -d "$2" ] || die "base directory not found: $2"
+    BASE_DIR=$2
+    ARGS_SHIFT=2
+  fi
+}
+
 require_snapshot() {  # PROJECT
   [ -d "$1" ] || die "project not found: $1"
   if [ ! -d "$1/$SNAP_DIR" ]; then
@@ -659,20 +692,20 @@ diffstat() {  # A B
   git diff --no-index --numstat -- "$1" "$2" | awk '{ a += $1; d += $2 } END { printf "+%d -%d\n", a, d }'
 }
 
-# State of TARGET in PROJECT against its base: unchanged, deviates or missing, plus the
+# State of TARGET in $P against its base: unchanged, deviates or missing, plus the
 # diffstat ("-" when there is nothing to count).
-compare_line() {  # PROJECT TARGET
-  cl_kind=$(kind_of "$2")
-  if [ ! -e "$1/$2" ]; then
-    printf '%s\tmissing\t%s\t-\n' "$2" "$cl_kind"
+compare_line() {  # TARGET
+  cl_kind=$(kind_of "$1")
+  if [ ! -e "$P/$1" ]; then
+    printf '%s\tmissing\t%s\t-\n' "$1" "$cl_kind"
     return 0
   fi
-  normalize "$1/$SNAP_DIR/$2.base" "$WORK/cl.base" mask
-  normalize "$1/$2" "$WORK/cl.project" mask
+  normalize "$(base_of "$1")" "$WORK/cl.base" mask
+  normalize "$P/$1" "$WORK/cl.project" mask
   if cmp -s "$WORK/cl.base" "$WORK/cl.project"; then
-    printf '%s\tunchanged\t%s\t-\n' "$2" "$cl_kind"
+    printf '%s\tunchanged\t%s\t-\n' "$1" "$cl_kind"
   else
-    printf '%s\tdeviates\t%s\t%s\n' "$2" "$cl_kind" "$(diffstat "$WORK/cl.base" "$WORK/cl.project")"
+    printf '%s\tdeviates\t%s\t%s\n' "$1" "$cl_kind" "$(diffstat "$WORK/cl.base" "$WORK/cl.project")"
   fi
 }
 
@@ -685,18 +718,24 @@ check_target() {  # TARGET — relative, inside the project
 # --- status, changed -----------------------------------------------------------
 
 status() {
+  parse_base "$@"
+  shift "$ARGS_SHIFT"
   [ $# -eq 1 ] || usage
-  require_snapshot "$1"
+  P=$1
+  if [ -z "$BASE_DIR" ]; then require_snapshot "$P"; fi
+  [ -d "$P" ] || die "project not found: $P"
   setup_work
-  load_registry "$1"
-  snapshot_targets "$1" > "$WORK/targets.lst"
+  load_registry "$P"
+  base_targets > "$WORK/targets.lst"
   while IFS= read -r st_t; do
-    compare_line "$1" "$st_t"
+    compare_line "$st_t"
   done < "$WORK/targets.lst"
 }
 
 changed() {
   [ $# -eq 1 ] || usage
+  P=$1
+  BASE_DIR=
   require_snapshot "$1"
   setup_work
   load_registry "$1"
@@ -715,7 +754,7 @@ changed() {
         continue
         ;;
     esac
-    if [ -f "$1/$SNAP_DIR/$ch_p.base" ]; then compare_line "$1" "$ch_p"; fi
+    if [ -f "$1/$SNAP_DIR/$ch_p.base" ]; then compare_line "$ch_p"; fi
   done < "$WORK/touched.lst"
 }
 
@@ -742,7 +781,7 @@ finish() {  # FILE TARGET
 merge_one() {  # TARGET
   mg_t=$1
   mg_kind=$(kind_of "$mg_t")
-  mg_base=$P/$SNAP_DIR/$mg_t.base
+  mg_base=$(base_of "$mg_t")
   mg_ours=$P/$mg_t
   mg_theirs=$SOLL/$mg_t
   MG_RES=$OUT/$mg_t
@@ -806,6 +845,8 @@ merge_one() {  # TARGET
 }
 
 merge() {
+  parse_base "$@"
+  shift "$ARGS_SHIFT"
   [ $# -eq 3 ] || usage
   P=$1 SOLL=$2 OUT=$3
   [ -d "$P" ] || die "project not found: $P"
@@ -815,7 +856,7 @@ merge() {
   load_registry "$P"
   ALGORITHM=$(merge_algorithm)
   {
-    if [ -d "$P/$SNAP_DIR" ]; then snapshot_targets "$P"; fi
+    base_targets
     (cd "$SOLL" && find . -type f) | sed 's|^\./||'
   } | LC_ALL=C sort -u > "$WORK/targets.lst"
   mkdir -p "$OUT"
