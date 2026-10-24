@@ -167,16 +167,16 @@ Die Spalte **GitHub** sagt, was ohne GitHub bleibt: `–` = rein lokal über git
 
 | Skill | GitHub | Zweck |
 |-------|:------:|-------|
-| `/coding-kit:new-project` | teils | **Der Orchestrator:** Short-Info → Abfragen (Name/Lizenz/Stack/…, Sub-Skills aufrufbar) → Plan → leeres Repo anlegen und aus dem mitgelieferten Template befüllen, verifizieren, Erst-Commit nach OK. Trockenlauf: Argument `dry-run`. |
+| `/coding-kit:new-project` | teils | **Der Orchestrator:** Short-Info → Abfragen (Name/Lizenz/Stack/…, Sub-Skills aufrufbar) → Plan → leeres Repo anlegen und aus dem mitgelieferten Template befüllen (Renderer, Antworten-Datei und Basis-Snapshot im Erst-Commit), verifizieren, Erst-Commit nach OK. Trockenlauf: Argument `dry-run`. |
 | `/coding-kit:add-feature` | – | Neue Aufgabe analysieren und mit F-Nummer ins PROGRESS-Backlog aufnehmen (Status `BACKLOG`); Umsetzungsideen nur als grobe Lösungsskizze. Startest du oder Claude selbst, eingetragen wird nach deinem OK. |
 | `/coding-kit:prep-step` | – | Aufgabe vor der Umsetzung analysieren: Lösungsskizze gegen den aktuellen Codestand hinterfragen, Standards-Abdeckung neuer Frameworks prüfen (Fragment-Vorschlag), ggf. in Substeps zerlegen, Plan festhalten (Status `PLANNED`). |
 | `/coding-kit:build-step` | – | Aufgabe plan-treu umsetzen: Substep für Substep mit Verifikation. Interaktiv endet jeder Substep mit einer step-done-Empfehlung (du prüfst und schließt selbst ab); nur im autonomen `/goal`-Lauf läuft step-done je Substep automatisch. Mit `autonom` bereitet er stattdessen einen `/goal`-Lauf vor. |
-| `/coding-kit:step-done` | teils | Abschluss-Checkliste: Review, `just check`, Standards-Abdeckungs-Backstop (neue Frameworks ohne Fragment), Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Verbuchung und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben). |
+| `/coding-kit:step-done` | teils | Abschluss-Checkliste: Review, `just check`, Standards-Abdeckungs-Backstop (neue Frameworks ohne Fragment), Backstop für geänderte managed Dateien ohne Registry-Zeile, Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Verbuchung und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben). |
 | `/coding-kit:audit-code` | – | Vollaudit (Code, Security, Deps, Deployment) → `AUDIT-RESULTS.md`, fixt nichts. |
 | `/coding-kit:teach-step` | – | Lehrer-Modus: Aufgabe selbst umsetzen, der Skill leitet sokratisch an, prüft und testet — schreibt nie Code. |
 | `/coding-kit:name-it` | teils | Namenskandidaten nach Kriterien + Verfügbarkeits-Checks (GitHub/npm/PyPI, Domain optional). |
-| `/coding-kit:choose-license` | – | Kurzinterview → Lizenz-Empfehlung (Default Apache-2.0, „TBD" gültig). |
-| `/coding-kit:choose-stack` | – | Modul-Empfehlung für Neuanlage oder Nachrüsten/Wechsel EINES Moduls im Bestand (Diff + Bestätigung); baut die vom Modul deklarierten Standards-Fragmente komponierbar ein, Eigenschafts-Fragmente nachrüstbar auf Bestätigung; hält die Begleithandlungen, die einzelne Fragmente beim Einbau verlangen (referenziert von new-project, update-conventions, prep-step, step-done), und die Regel zum Erzeugen und Prüfen der `mise.lock` mit Plattform-Einträgen (referenziert von new-project, update-conventions). |
+| `/coding-kit:choose-license` | – | Kurzinterview → Lizenz-Empfehlung (Default Apache-2.0, „TBD" gültig); im Bestandsprojekt zieht sie Antworten-Datei und lizenzabhängige managed Dateien nach. |
+| `/coding-kit:choose-stack` | – | Modul-Empfehlung für Neuanlage oder Nachrüsten/Wechsel EINES Moduls im Bestand (Render und Drei-Wege-Merge, Diff + Bestätigung, Snapshot nachgezogen); baut die vom Modul deklarierten Standards-Fragmente komponierbar ein, Eigenschafts-Fragmente nachrüstbar auf Bestätigung; hält die Begleithandlungen, die einzelne Fragmente beim Einbau verlangen, samt `FRAGMENTS`-Eintrag und `keep`-Zeilen (referenziert von new-project, update-conventions, prep-step, step-done), und die Regel zum Erzeugen und Prüfen der `mise.lock` mit Plattform-Einträgen (referenziert von new-project, update-conventions). |
 | `/coding-kit:define-requirements` | – | Interview → REQUIREMENTS.md (Übergangs-Artefakt) → initiale PROGRESS.md mit F-Nummern; fragt die Eigenschafts-Trigger des Fragment-Katalogs ab. |
 | `/coding-kit:refine-requirements` | – | Zurück zur Spec: Diagnose mit drei Pfaden, darf Features splitten, datiertes Decision Log. |
 | `/coding-kit:update-conventions` | teils | Konventions-Sync Template → Projekte (nur abwärts), Update-Fenster aus dem CHANGELOG: managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (`scripts/template-sync.sh`) — Projektzusätze bleiben, Konflikte kommen mit Lösungsvorschlag; Diff + Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (`section:NAME`); Abweichungs-Registry mit den Arten `skip`, `keep`, `adapt` samt Revision; ohne Argument nur das aktuelle Projekt, `alle` für alle, Modi `status` und `revise`; Migration für Projekte ohne Snapshot (Basis aus der Template-Historie) und für Altprojekte; erkennt im Template entfernte/umbenannte Dateien (Rückbau/Umzug je Datei bestätigt); projektlokale Fragmente werden mit manuell anstoßbarem Übernahme-Vorschlag fürs Template gemeldet; prüft die `mise.lock` auf Plattform-Einträge für die CI und bietet `mise lock` an. |
@@ -285,6 +285,7 @@ plugins/coding-kit/               Das Plugin
   CHANGELOG.md                    Ein CHANGELOG ab 1.0.0, darunter die eingefrorenen Reihen
   skills/<name>/SKILL.md          Die Skills (ein Ordner je Skill)
   hooks/hooks.json + *.sh         Projekterkennender Stop-Hook
+  scripts/template-sync.sh        Rendern, Drei-Wege-Merge und Snapshot (von Skills aufgerufen)
   template/                       Projekt-Template (englisch): MANIFEST.md, core/, modules/
 default.json                      Renovate-Shareable-Preset (Root = Preset-Konvention)
 upstreams.json                    Watchliste für /check-upstreams (persistierte Refs)
@@ -293,6 +294,7 @@ docs/                             Pflege-Doku (Skill-Authoring, Renovate-Preset)
 install.sh                        Neuer-Rechner-Bootstrap (idempotent)
 scripts/validate.py               Validator für Kit, Template und Vertrag (`just check` + CI)
 scripts/version-rule.py           Versionsregel (Pre-Commit + CI, `just version-rule`)
+tests/template-sync/              Tests des Skripts unter dash und bash (`just test`)
 PROGRESS.md, PROGRESS-ARCHIVE.md  Aufgaben (F-NNN); das Archiv führt auch die TPL-Reihe
 private/                          Gitignoriert — private Notizen/Quellen
 ```

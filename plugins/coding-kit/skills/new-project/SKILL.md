@@ -72,8 +72,9 @@ Bereits Bekanntes (aus Argument/Verlauf) nicht erneut abfragen.
 
 Kompakt: alle geklärten Werte + die Ausführungsschritte aus Schritt 4 (inkl. exakter
 `gh repo create`-Zeile). **Explizit bestätigen lassen** („Ausführen? j/N"). Im
-**Trockenlauf** hier enden: zusätzlich die Ziel-Dateiliste aus den MANIFEST-Tabellen
-zeigen (core-managed + Modul-Parts), nichts ausführen.
+**Trockenlauf** hier enden: zusätzlich die Ziel-Dateiliste zeigen — die Zeilen von
+`render --seeds` (§ 4b) mit Antworten in einem Temp-Verzeichnis —, sonst nichts
+ausführen.
 
 ## Schritt 4 — Ausführen
 
@@ -97,42 +98,48 @@ git config user.email "$(gh api user --jq '.id')+$(gh api user --jq '.login')@us
 
 Schlägt `create` fehl (Name belegt): zurück zu Schritt 2.1.
 
-### 4b. Instanziieren (MANIFEST ist die Quelle — nichts roh kopieren)
+### 4b. Instanziieren (der Renderer schreibt — MANIFEST ist die Quelle)
 
-Je Zeile der **Core-managed-Tabelle**: Quelle `core/<…>` (relativ zu
-`${CLAUDE_PLUGIN_ROOT}/template`) → `<Ziel>` im Projekt instanziieren:
+Instanziiert wird mit `${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh` (in Shell-Befehlen
+der aufgelöste Pfad, Aufruf über `sh`; der Skriptkopf beschreibt die Befehle) — nie
+Template-Dateien selbst abschreiben. Render-Ergebnisse gehören in ein frisches
+Temp-Verzeichnis (`mktemp -d`, im Folgenden `<tmp>`).
 
-- **Platzhalter** der Registry ersetzen (PROJECT_NAME, PROJECT_NAME_SNAKE,
-  PROJECT_DESCRIPTION, OWNER, YEAR, GROUP_ID, LANG_LIVING_DOCS, LANG_CLAUDE_MD,
-  LANG_COMMENTS, LANG_COMMITS, LANG_README, LICENSE_SPDX, CODEQL_LANGUAGES,
-  TEMPLATE_VERSION) — Werte aus Schritt 2 bzw. zur Laufzeit.
-- **`<!-- template:adapt: … -->`**-Stellen aus der Short-Info **konkretisieren** (Zweck/
-  Scope in CLAUDE.md, README-Intro, Status-Zeile) und den Marker entfernen.
-- **`<!-- template:optional:NAME -->`**-Blöcke behalten oder samt Inhalt entfernen —
-  welche es gibt, nennt MANIFEST § Markers („used"): `template:optional:graphiti` je
-  Schritt 2.6.
-- **`<!-- section:NAME -->`**-Markerpaare in seed-Dateien **unverändert übernehmen**
-  (nie entfernen oder „aufräumen") — sie markieren die Zonen, die
-  `/update-conventions` später abschnittsweise aktualisieren darf.
-- **public-only**-Dateien (CODE_OF_CONDUCT, codeql.yml) nur bei public instanziieren.
-- **LICENSE:** kanonischen Text der gewählten Lizenz einsetzen; bei **TBD** keine
-  LICENSE-Datei anlegen und im README „License: TBD" vermerken.
+1. **Antworten schreiben:** `.claude/template-answers` nach MANIFEST § Answers mit den
+   Werten aus Schritt 2 — `PROJECT_NAME`, `PROJECT_DESCRIPTION`, `OWNER`, `YEAR`,
+   `GROUP_ID` (nur mit Graphiti), die fünf `LANG_*`, `LICENSE_SPDX`, `MODULE`,
+   `VISIBILITY`, `OPTIONAL` (`graphiti`, wenn gewählt) und `FRAGMENTS` (schon bekannte
+   Eigenschafts-Fragmente; die Lizenzblöcke leitet der Renderer selbst ab).
+2. **Rendern:** `sh <skript> render --seeds <template> <projekt>/.claude/template-answers
+   <tmp>/neu` und den Inhalt von `<tmp>/neu` ins Projekt kopieren. Der Renderer setzt
+   Platzhalter, `template:optional`-Blöcke, public-only-Dateien, Modul-Teile,
+   `files/**` (mit Pfad-Platzhaltern) und den Fragment-Slot (Sprachfragment, deklarierte
+   Katalog-Fragmente, `FRAGMENTS`); `section:NAME`-Markerpaare bleiben, wie sie sind.
+3. **Was der Renderer offen lässt, jetzt konkretisieren:**
+   - **`<!-- template:adapt: … -->`**-Stellen aus der Short-Info konkretisieren (Zweck/
+     Scope in CLAUDE.md, README-Intro, Status-Zeile) und den Marker entfernen. Für jede
+     **managed** Datei mit konkretisierter Stelle (z. B. `SECURITY.md`) eine Zeile mit
+     Art `adapt` in die Files-Tabelle der `.claude/convention-overrides.md`.
+   - **LICENSE:** kanonischen Text der gewählten Lizenz einsetzen; bei **TBD** die
+     gerenderte LICENSE löschen und im README „License: TBD" vermerken. Paket-Metadaten
+     ohne gültigen SPDX-Wert (z. B. `[project].license` bei TBD) laut `MODULE.md`
+     anpassen.
+   - **Begleithandlungen:** Verlangt ein Fragment eine Handlung beim Einbau
+     (`/choose-stack` § Begleithandlungen), gehört sie in denselben Schritt — hier ist
+     sie am billigsten, weil sie greift, bevor der Stack das erste Mal läuft.
+4. **Snapshot:** `sh <skript> render <template> <projekt>/.claude/template-answers
+   <tmp>/soll` (nur managed Ziele), dann `sh <skript> snapshot <projekt> <tmp>/soll
+   <alle Ziele dieser Liste>`. Der Snapshot ist die reine Fassung — die Konkretisierungen
+   aus Schritt 3 sind ab jetzt Projektabweichungen mit Registry-Zeile.
+5. **Prüfen:** `sh <skript> status <projekt>` — nur die Dateien aus Schritt 3 dürfen
+   `deviates` zeigen, und zwar mit Art `adapt`. **Nur Manifest-Ziele:** mit `git status`
+   gegenprüfen, dass außer den gerenderten Dateien, der LICENSE, den Antworten und dem
+   Snapshot nichts im Projekt liegt — nie Template-Interna wie `MANIFEST.md`, `modules/`
+   oder `MODULE.md`.
+6. **Stempeln:** die Version aus Schritt 1 nach `.claude/template-version`.
 
-Dann **Modul einsetzen** (Modul-Kontrakt, wie `/choose-stack` Modus B): justfile
-ersetzen, `mise.part.toml` in `[tools]` mergen, gitignore-/CI-Parts an ihre Marker,
-Standards-Fragmente (Sprachfragment + deklarierte Katalog-Fragmente + die im
-Requirements-Interview bejahten Eigenschafts-Fragmente) in den
-CODING-STANDARDS-Slot anhängen, `files/**` nach Substitution kopieren
-(`src/…{{PROJECT_NAME_SNAKE}}…`-Umbenennung beachten; Datei-Policies laut `MODULE.md`).
-Verlangt eines der Fragmente eine **Begleithandlung** beim Einbau (`/choose-stack`
-§ Begleithandlungen), gehört sie in denselben Schritt — hier ist sie am billigsten, weil
-sie greift, bevor der Stack das erste Mal läuft.
-
-**Nur Manifest-Ziele:** Ins Repo kommen ausschließlich die Ziele der Core-Tabelle und die
-Modul-Dateien — nie Template-Interna wie `MANIFEST.md`, `modules/` oder `MODULE.md`. Mit
-`git status` gegenprüfen, dass nichts anderes im Projekt liegt.
-
-**Stempeln:** die Version aus Schritt 1 nach `.claude/template-version`.
+Bejaht das Requirements-Interview (4e) weitere Eigenschafts-Fragmente, kommen sie nach der
+Mechanik von `/choose-stack` in den Slot und nach `FRAGMENTS`.
 
 ### 4c. Repo-Settings (bestätigt)
 
@@ -164,7 +171,8 @@ REQUIREMENTS.md + initiale F-Nummern in PROGRESS.md) — oder Skelett belassen.
 - **Personendaten-grep** über den Baum: private E-Mail-Adressen, absolute lokale Pfade,
   private IPs/Hostnames, Klarnamen (Muster wie `/step-done` § 3). Quell-Dokumente mit
   Privatbezug (z. B. die STARTPROMPT-Datei) nach `private/` des Projekts verschieben.
-- Erst-Commit **erst nach explizitem OK** — Vorschlag:
+- Erst-Commit **erst nach explizitem OK**, mit `.claude/template-answers` und
+  `.claude/template-base/` — sonst stimmt die Basis späterer Updates nie. Vorschlag:
   `feat: bootstrap from coding-kit <TEMPLATE_VERSION> (<modul> module)`,
   Body mit den Kernentscheidungen (Lizenz, Sichtbarkeit, Modul), Abschluss
   `Co-Authored-By: Claude <noreply@anthropic.com>`. Danach Push (bestätigt).

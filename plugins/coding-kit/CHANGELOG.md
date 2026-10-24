@@ -29,8 +29,25 @@ auffallen (F-041, in Arbeit).
   ohne Snapshot werden migriert: Antworten aus dem Projekt zurückgewinnen, Basis aus der
   Template-Historie (Stempel-Version oder älter) oder einmal zweiwegig, Registry in die
   Tabellen Files und Rules überführen.
-- **`new-project`:** prüft Manifest-Format 2 (Snapshot und Antworten im Erst-Commit
-  folgen).
+- **`new-project`** instanziiert über den Renderer (`render --seeds`): Antworten-Datei
+  schreiben, rendern, dann nur noch `template:adapt`-Stellen, Lizenztext und
+  Begleithandlungen von Hand; konkretisierte managed Dateien bekommen eine `adapt`-Zeile.
+  Antworten und Basis-Snapshot gehören in den Erst-Commit; `status` prüft danach, dass
+  nur die `adapt`-Dateien abweichen.
+- **`choose-stack`** rüstet Module über Render und Drei-Wege-Merge nach oder wechselt sie
+  (Projektzusätze bleiben, Dateien des Alt-Moduls fallen als `removed` heraus) und zieht
+  Antworten und Snapshot nach. Fragment-Einbau überall: Fragmente, die das Modul nicht
+  deklariert, kommen in `FRAGMENTS`; ändert eine Begleithandlung managed Dateien, gehören
+  `keep`-Zeilen in die Registry — `prep-step` und `step-done` weisen beides im Vorschlag
+  aus.
+- **`step-done`** bekommt einen zweiten Backstop (Schritt 1b): Geänderte managed Dateien
+  ohne Registry-Zeile werden gemeldet, mit der Wahl registrieren, zurücknehmen oder dem
+  Template vorschlagen; Handänderungen am Snapshot gelten als Fehler. Nie blockierend.
+- **`choose-license`** setzt im Bestandsprojekt `LICENSE_SPDX` in den Antworten und zieht
+  die lizenzabhängigen managed Dateien (z. B. `CONTRIBUTING.md`) über Render und Merge nach.
+- **`go-public`** setzt `VISIBILITY=public` in den Antworten im Nachzug-Commit.
+- **Authoring-Doku:** neuer Baustein „Hilfsskripte" (deterministische Arbeit ins Skript,
+  Aufruf über `sh` mit aufgelöstem Pfad, Tests unter `tests/`).
 - **`scripts/template-sync.sh`** (POSIX sh, ohne Sprachmodell):
   - `render` schreibt die reine Instanziierung des Templates für ein Projekt: Core-Ziele
     laut MANIFEST, Modul-Teile, Platzhalter, `optional`-Blöcke und Fragment-Slot —
@@ -62,7 +79,8 @@ auffallen (F-041, in Arbeit).
   `/update-conventions` legt alles bei der Migration an.
 - `.gitattributes`: `.claude/template-base/**` ist `linguist-generated`.
 - `.claude/README.md` und HOW-TO beschreiben Snapshot, Antworten und Registry; die HOW-TO
-  den Merge in `/update-conventions`.
+  den Merge in `/update-conventions` und `/choose-stack`, den neuen Backstop in
+  `/step-done` und den Nachzug in `/choose-license`.
 - Fragmente `nextjs` und `astro`: Abweichungen an managed Dateien als `keep` registrieren
   (Template-Änderungen kommen weiter an, bei Konflikten gewinnt das Projekt); die
   Import-Ausnahme gehört in die Rules-Tabelle.

@@ -105,8 +105,11 @@ Entscheidung hat), weiter zum Nachzug.
 **Sichtbarkeits-Prämisse `public`** übergeben: die public-only-Policy behandelt
 das Projekt schon jetzt als öffentlich, obwohl es noch privat/lokal ist. Dadurch
 erscheinen CODE_OF_CONDUCT, codeql.yml & Co. zusammen mit allen ausstehenden
-Template-Updates als regulärer Diff — je Datei bestätigt, Override-Schutz gilt,
-Platzhalter (inkl. CODEQL_LANGUAGES) löst der Lauf selbst rück.
+Template-Updates als regulärer Diff — je Datei bestätigt, die Registry-Arten gelten,
+Platzhalter (inkl. CODEQL_LANGUAGES) setzt der Renderer. Der Lauf setzt auch den
+Basis-Snapshot der neuen public-only-Dateien. Die Prämisse gilt nur für diesen Lauf:
+`VISIBILITY=public` in `.claude/template-answers` setzen (gehört in denselben
+Nachzug-Commit), sonst rendert der nächste Abgleich wieder privat.
 
 Danach: `just check` muss grün sein; Secrets- und Privacy-Scan über die neu
 entstandenen Dateien (Preflight-Maßstab). Dann **Commit nach Freigabe**
@@ -150,8 +153,8 @@ Schritt (Languages-Block editieren; prospektive Semantik wie bei
 - **CodeQL:** `codeql.yml` liegt im Repo und der Workflow läuft nach dem
   Push/Umstellen an (`gh run list --workflow codeql.yml`); Fehlschläge melden.
 - **Vollständigkeit:** keine offenen public-only-Lücken mehr (kurzer
-  `/update-conventions`-Gegencheck bzw. Manifest-Abgleich), Template-Stempel
-  aktuell.
+  `/update-conventions status`-Gegencheck), Template-Stempel aktuell,
+  `VISIBILITY=public` in `.claude/template-answers`.
 - **Settings:** Sichtbarkeit tatsächlich public, Topics/Beschreibung gesetzt,
   Push-Protection aktiv (soweit vom Plan unterstützt).
 - **Checks:** `just check` grün.

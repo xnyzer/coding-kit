@@ -16,6 +16,80 @@ zusammen:
 
 ---
 
+## F-041d — Übrige Skills (2026-10-24)
+
+Teil von F-041 (Projektzusätze in managed Dateien erhalten und Abweichungen früh
+erkennen; F-041a–c erledigt, F-041e folgt).
+
+**Problem:** Nach F-041c arbeitete nur `update-conventions` mit Snapshot, Antworten und
+Registry. `new-project` legte Projekte noch ohne beides an, `choose-stack` setzte
+Modul-Teile von Hand ein, `step-done` bemerkte geänderte managed Dateien nicht, und
+Fragment-Einbau, Lizenz- und Sichtbarkeitswechsel hielten die Antworten nicht aktuell.
+
+**Was entstanden ist (1.1.0, unveröffentlicht):**
+
+- **`new-project` § 4b:** Antworten-Datei schreiben und `render --seeds` ins Projekt
+  kopieren. Von Hand bleiben die `template:adapt`-Stellen (je konkretisierter managed
+  Datei eine `adapt`-Zeile), der Lizenztext (bei TBD die gerenderte LICENSE löschen) und
+  die Begleithandlungen. Danach den Snapshot aus dem managed Render setzen; `status`
+  prüft, dass nur die `adapt`-Dateien abweichen. Antworten und Snapshot gehören in den
+  Erst-Commit. Der Trockenlauf zeigt die Zielliste aus `render --seeds`.
+- **`choose-stack` Modus B:** Modulwechsel über eine Kopie der Antworten (`MODULE=<neu>`),
+  Render und Merge gegen den Snapshot; seed-Dateien des Moduls nur anlegen, wenn sie
+  fehlen; danach `MODULE` in den Antworten und den Snapshot nachziehen. Ohne Antworten
+  oder Snapshot zuerst die Migration über `update-conventions`. § Begleithandlungen:
+  Fragmente, die das Modul nicht deklariert, kommen in `FRAGMENTS`; ändert eine
+  Begleithandlung managed Dateien, gehören `keep`-Zeilen in die Registry.
+- **`step-done` § 1b:** `changed` nach dem Review; je unregistrierter Abweichung den Diff
+  gegen den Snapshot zeigen und registrieren, zurücknehmen oder dem Template vorschlagen
+  anbieten. Handänderungen am Snapshot sind ein Fehler, außer der Schritt war ein Lauf
+  eines Skills, der ihn setzt. Nie blockierend. § 1a weist beim Fragment-Vorschlag
+  `FRAGMENTS` und `keep`-Zeilen mit aus, ebenso `prep-step` § 2a.
+- **`choose-license`:** setzt im Bestandsprojekt `LICENSE_SPDX` in den Antworten. Die
+  lizenzabhängigen managed Dateien findet ein Render mit alter und neuer Antwort; nur sie
+  werden über den Merge übernommen und im Snapshot gesetzt.
+- **`go-public`:** `VISIBILITY=public` in den Antworten im Nachzug-Commit; der
+  Abschluss-Check prüft es.
+- **Doku:** Baustein „Hilfsskripte" in `docs/skill-authoring.md`; README (Repo-Baum mit
+  `scripts/` und `tests/`, Zeilen für new-project, step-done, choose-stack,
+  choose-license); HOW-TO-Zeilen für `/step-done`, `/choose-stack` und
+  `/choose-license`; CHANGELOG.
+
+**Verifikation:** `just check` grün (296 Prüfungen).
+
+- § 4b per Skript nachgestellt (ts-node, public): Der Snapshot entspricht allen 30
+  gerenderten managed Zielen; `status` zeigt danach nur `SECURITY.md` und
+  `CODE_OF_CONDUCT.md`, beide als `adapt`.
+- `nextjs`-Einbau nach der neuen Mechanik nachgestellt: Ohne Zeilen gibt es vier
+  unregistrierte Abweichungen (`tsconfig.json`, `biome.json`, justfile, `.gitignore`),
+  der Slot zählt nicht; mit `keep`-Zeilen keine mehr; `FRAGMENTS=nextjs` rendert das
+  Fragment in den Slot.
+- `step-done` mit `claude -p --plugin-dir plugins/coding-kit` an einem Scratch-Projekt mit
+  geänderter `mise.toml`: `changed` meldet `mise.toml deviates none`; der Skill zeigt den
+  Diff gegen den Snapshot, bietet die drei Wege an und läuft ohne Blockade bis zur
+  Commit-Frage.
+- `choose-license` TBD → Apache-2.0 auf dieselbe Weise: Antworten, `LICENSE`,
+  `CONTRIBUTING.md` und dessen Basis sind nachgezogen. Der Agent renderte alt und neu,
+  mergte und übernahm nur `CONTRIBUTING.md`.
+
+**Notable decisions:**
+- Die lizenzabhängigen Dateien ergeben sich aus dem Vergleich zweier Renders statt aus
+  einer Liste im Skill — kommt eine neue Datei mit `LICENSE_SPDX` dazu, braucht der Skill
+  keine Änderung.
+- `choose-stack` verlangt Antworten und Snapshot und verweist sonst auf die Migration,
+  statt ohne Basis zu mergen.
+- `snapshot-edited` ist erwartet, wenn der Schritt ein Lauf von update-conventions,
+  new-project, choose-stack oder choose-license war.
+- HOW-TO: neben `/step-done` auch `/choose-stack` und `/choose-license` nachgezogen, weil
+  sich ihr Verhalten in Projekten sichtbar ändert.
+
+**Geänderte Dateien:**
+`plugins/coding-kit/skills/{new-project,choose-stack,step-done,prep-step,choose-license,go-public}/SKILL.md`,
+`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`, `docs/skill-authoring.md`,
+`README.md`, `plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-041c — Vertrag und update-conventions (2026-10-24)
 
 Teil von F-041 (Projektzusätze in managed Dateien erhalten und Abweichungen früh

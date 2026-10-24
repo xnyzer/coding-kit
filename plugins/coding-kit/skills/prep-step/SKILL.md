@@ -66,7 +66,10 @@ in der `CODING-STANDARDS.md`) — sonst still überspringen:
    vorschlagen, das Katalog-Fragment anzuhängen (Mechanik wie `/choose-stack`,
    idempotent). Verlangt das Fragment eine **Begleithandlung** am Projekt
    (`/choose-stack` § Begleithandlungen), im Vorschlag mitausweisen — sie gehört in
-   denselben Schritt, nicht in einen Folgeschritt.
+   denselben Schritt, nicht in einen Folgeschritt. Ebenso ausweisen (gleiche Stelle):
+   den Eintrag des Fragments in `FRAGMENTS` der `.claude/template-answers` und je
+   managed Datei, die die Begleithandlung ändert, eine `keep`-Zeile in der Files-Tabelle
+   der `.claude/convention-overrides.md`.
 4. Treffer-Thema ganz ohne Katalog-Fragment → vorschlagen, ein **projektlokales**
    Fragment zu autoren (eigener `fragment:NAME`-Block im Slot). Direkt nach der
    Anlage den **Übernahme-Vorschlag** fürs Template ausgeben (kopierfertiger Prompt

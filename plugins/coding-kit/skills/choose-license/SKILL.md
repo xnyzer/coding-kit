@@ -47,6 +47,23 @@ bestehenden Projekt nach Bestätigung:
   `package.json` — gültiger SPDX-Ausdruck; bei „TBD" das Feld weglassen statt einen
   ungültigen Wert zu schreiben).
 - README-Lizenzabschnitt aktualisieren.
+- **Antworten und managed Dateien** — hat das Projekt eine `.claude/template-answers`:
+  Die Lizenz steckt auch in managed Dateien (z. B. `CONTRIBUTING.md`). Mit
+  `${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh` (in Shell-Befehlen der aufgelöste Pfad,
+  Aufruf über `sh`; Ergebnisse in ein Temp-Verzeichnis `<tmp>`):
+  1. mit den bisherigen Antworten rendern: `sh <skript> render <template>
+     <projekt>/.claude/template-answers <tmp>/alt` (`<template>` wie
+     `/coding-kit:choose-stack` § 0);
+  2. `LICENSE_SPDX` in `.claude/template-answers` setzen und genauso nach `<tmp>/neu`
+     rendern — die Ziele, die sich zwischen `<tmp>/alt` und `<tmp>/neu` unterscheiden,
+     hängen an der Lizenz;
+  3. `sh <skript> merge <projekt> <tmp>/neu <tmp>/out`, für genau diese Ziele den Diff
+     Projekt → Ergebnis zeigen, nach Bestätigung das Ergebnis übernehmen und
+     `sh <skript> snapshot <projekt> <tmp>/neu <diese Ziele>` setzen. Andere
+     Template-Unterschiede gehören zu `/coding-kit:update-conventions`, nicht hierher.
+
+  Ohne Antworten-Datei (Projekt vor dem Snapshot-Vertrag) nur melden, dass
+  `/coding-kit:update-conventions` die managed Dateien nachzieht.
 
 ## Rückgabe an den Aufrufer
 

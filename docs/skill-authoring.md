@@ -8,8 +8,9 @@ prüfen, dann bauen.
 - Ein Skill = ein Ordner: `plugins/coding-kit/skills/<skill-name>/SKILL.md`.
 - `<skill-name>` ist lowercase-kebab und identisch mit dem `name:`-Frontmatter-Feld.
 - Plugin-Skills sind immer namespaced sichtbar: `/coding-kit:<skill-name>`.
-- Hilfsdateien (Vorlagen, Scripts) liegen im Skill-Ordner; Scripts referenzieren nur
-  relative Pfade bzw. `${CLAUDE_PLUGIN_ROOT}`.
+- Hilfsdateien eines einzelnen Skills (Vorlagen, Scripts) liegen im Skill-Ordner;
+  Skripte, die mehrere Skills teilen, unter `plugins/coding-kit/scripts/` (§ Hilfsskripte).
+  Scripts referenzieren nur relative Pfade bzw. `${CLAUDE_PLUGIN_ROOT}`.
 - **Das Projekt-Template** liegt im Plugin unter `template/` (`MANIFEST.md`, `core/`,
   `modules/`). Skills nennen es immer als `${CLAUDE_PLUGIN_ROOT}/template/…` — nie einen
   Checkout, Klon oder absoluten Pfad. Claude Code ersetzt `${CLAUDE_PLUGIN_ROOT}` beim
@@ -97,6 +98,26 @@ formulieren, Trigger-Situationen nennen.
   gesammelt und am Ende vorgeschlagen.
 - **Nie automatisch committen** — Commits werden vorbereitet und vorgeschlagen, der
   Nutzer entscheidet.
+
+## Hilfsskripte
+
+- **Was deterministisch sein muss, gehört in ein Skript, nicht in den Skill-Text:**
+  Rendern, Mergen, Vergleichen — alles, was bei gleicher Eingabe gleich ausgehen muss und
+  dessen Fehler (eine vergessene Zeile) niemand sähe. Der Skill zeigt die Ausgabe, berät
+  und führt den Dialog; was das Skript kann, baut er nie selbst nach. Vorbild:
+  `scripts/template-sync.sh` hinter new-project, update-conventions, choose-stack,
+  choose-license und step-done.
+- **Aufruf:** im Skill-Text als `${CLAUDE_PLUGIN_ROOT}/scripts/<name>.sh` nennen (der
+  Validator prüft, dass es den Pfad gibt); in Shell-Befehlen den aufgelösten Pfad über
+  `sh` aufrufen — die Variable gibt es dort nicht, und `sh` braucht kein Ausführungsrecht.
+  Ergebnisse in ein frisches Temp-Verzeichnis, nie ungefragt ins Projekt.
+- **Form:** POSIX sh mit Standardwerkzeugen (git, awk, sed …), kein Python-Zwang. Der
+  Kopfkommentar beschreibt Befehle, Ausgabezeilen (tabulatorgetrennt) und Exit-Codes;
+  geschrieben wird nur in die genannten Ordner.
+- **Tests:** unter `tests/<name>/`, laufen unter dash und bash in `just check` (der
+  Pre-Commit-Hook nur, wenn Skript, Template oder Tests sich ändern). Der Validator prüft
+  `sh -n` und das Ausführungsrecht; die Versionsregel zählt `plugins/coding-kit/scripts/`
+  zum Plugin-Inhalt.
 
 ## Versionierung & Test
 

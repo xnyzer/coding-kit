@@ -23,6 +23,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-041a | Renderer → **`template-sync.sh render` schreibt die reine Instanziierung deterministisch aus `.claude/template-answers` (MANIFEST § Answers, exakte Einsetzregeln); ein Render von 0.13.2 reproduziert zwei Bootstrap-Commits bis auf Handkonkretisierungen; Lizenzabsatz in `CONTRIBUTING.md` mit TBD-Variante; Validator, Versionsregel und Tests (dash/bash) im Kit; Version 1.1.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 | F-041b | Merge und Erkennung → **`template-sync.sh` kann `merge` (Drei-Wege je Datei mit `git merge-file`, Klassen von `identical` bis `conflict`, `keep`/`skip` aus der Files-Tabelle), `status`, `changed`, `snapshot` und `base-from-history`; Vergleich ohne Zeilenende-, Endzeilen- und Slot-Unterschiede; die drei Abweichungen des docs-only-Projekts mergen konfliktfrei; Skript-Tests im Pre-Commit nur bei passenden Dateien.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 | F-041c | Vertrag und update-conventions → **`manifest-format: 2` mit Basis-Snapshot und Abweichungs-Registry (Files/Rules, Arten `skip`/`keep`/`adapt`); Template-Inhalt nachgezogen (Registry-Vorlage, `.gitattributes`, `.claude/README.md`, HOW-TO, `nextjs`/`astro`); `update-conventions` mergt dreiwegig, ohne Argument nur das aktuelle Projekt, Modi `status`/`revise`, Migration mit Basis aus der Template-Historie; Skript mit `--base`.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
+| F-041d | Übrige Skills → **`new-project` instanziiert über den Renderer (Antworten und Snapshot im Erst-Commit); `choose-stack` wechselt Module über Render und Merge; `step-done` meldet geänderte managed Dateien ohne Registry-Zeile (Schritt 1b); Fragment-Einbau mit `FRAGMENTS` und `keep`-Zeilen; `choose-license` und `go-public` ziehen die Antworten nach; Baustein „Hilfsskripte".** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 
 ---
 
@@ -127,47 +128,6 @@ Template-Fassung → Eintrag überflüssig).
 - Inline-Marker bleiben nur in Markdown (seed-Zonen, Fragmente).
 
 **Abhängigkeiten:** F-039 (Release 1.0.0, erledigt). Vor F-036.
-
-#### F-041d — Übrige Skills
-
-**Was:** `new-project` § 4b über `render` (managed und seed), danach `adapt`-Stellen
-konkretisieren; Snapshot, Antworten-Datei und `adapt`-Zeilen der Registry im Erst-Commit.
-`choose-stack` Modus B: Modul-Teile über `render`, Snapshot der Modul-Ziele und das Modul
-in den Antworten nachziehen. `step-done` Schritt 1b (nicht blockierend): `changed`
-auswerten, je unregistrierter Abweichung den Diff gegen den Snapshot zeigen und anbieten:
-Registry-Zeile, zurücknehmen oder Übernahme-Vorschlag; Handänderungen am Snapshot als
-Fehler melden. `go-public`: Hinweis, dass der Nachzug Snapshot und Antworten mitzieht.
-Fragment-Einbau unter F-041, zentral in `choose-stack` (Modus B und § Begleithandlungen);
-die übrigen Skills verweisen darauf: Ein Fragment, das das Modul nicht selbst
-deklariert, kommt in `FRAGMENTS` der Antworten-Datei. Ändert eine Begleithandlung
-managed Dateien (z. B. `nextjs`: `tsconfig.json`, `biome.json`, `justfile`), gehören die
-Registry-Zeilen (`keep` mit Grund) in denselben Schritt. `prep-step` § 2a und
-`step-done` § 1a weisen beides im Vorschlag aus. `choose-license` im Bestandsprojekt:
-`LICENSE_SPDX` in den Antworten setzen und davon abhängige managed Dateien
-(`CONTRIBUTING.md`) über render und merge nachziehen.
-`docs/skill-authoring.md`: Baustein „Hilfsskripte unter `${CLAUDE_PLUGIN_ROOT}/scripts`".
-README (Repo-Baum, Skill-Tabelle). `/add-skill` läuft mit.
-
-**Dateien:**
-`plugins/coding-kit/skills/{new-project,choose-stack,step-done,go-public,prep-step,choose-license}/SKILL.md`,
-`docs/skill-authoring.md`, `README.md`, ggf.
-`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`,
-`plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-041c.
-
-**Abnahmekriterien:**
-- [ ] Instanziierung nach § 4b, im Scratchpad per Skript nachgestellt: Der Snapshot
-      entspricht den gerenderten managed Zielen; `status` meldet direkt nach dem Anlegen
-      nur die `adapt`-Dateien, und zwar als registriert.
-- [ ] `step-done` an einer Kopie mit geänderter `mise.toml` meldet die Abweichung, ohne
-      zu blockieren.
-- [ ] Fragment-Einbau `nextjs` an einer ts-node-Kopie (Scratchpad): `FRAGMENTS`
-      nachgetragen, die geänderten managed Dateien registriert; `status` meldet danach
-      keine unregistrierte Abweichung.
-- [ ] `choose-license` TBD → Apache-2.0 an einer Kopie: Antworten, `LICENSE` und
-      `CONTRIBUTING.md` nachgezogen.
-- [ ] `just check` grün.
 
 #### F-041e — Test, Release, Gegenprobe
 

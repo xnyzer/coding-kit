@@ -1,6 +1,6 @@
 ---
 name: step-done
-description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS, Checks über just, Standards-Abdeckungs-Backstop (neu eingeführte Frameworks ohne Fragment), Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Verbuchung und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), Graphiti-Update.
+description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS, Checks über just, Standards-Abdeckungs-Backstop (neu eingeführte Frameworks ohne Fragment), Backstop für geänderte managed Dateien ohne Registry-Eintrag, Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Verbuchung und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), Graphiti-Update.
 disable-model-invocation: false
 ---
 
@@ -55,8 +55,10 @@ sonst still überspringen:
   nicht — sie sind Planungsmaterie von prep-step 2a).
 - Treffer ohne `<!-- fragment:NAME -->`-Marker im Projekt → **Lücke melden** und das
   Anhängen vorschlagen (Mechanik wie `/coding-kit:choose-stack`, idempotent) — inklusive
-  einer **Begleithandlung**, die das Fragment verlangt (`/coding-kit:choose-stack`
-  § Begleithandlungen); sie gehört in denselben Schritt. Der
+  einer **Begleithandlung**, die das Fragment verlangt, dem Eintrag in `FRAGMENTS` der
+  `.claude/template-answers` und den `keep`-Zeilen für managed Dateien, die die
+  Begleithandlung ändert (alles `/coding-kit:choose-stack` § Begleithandlungen); das
+  gehört in denselben Schritt. Der
   Abschluss wird dadurch **nicht blockiert**; lehnt der Nutzer ab, die offene Lücke
   im Archiv-Eintrag (Schritt 4) vermerken, damit sie sichtbar bleibt.
 - Enthält der Diff einen **neu angelegten projektlokalen Fragment-Block**
@@ -64,6 +66,30 @@ sonst still überspringen:
   ausgeben (kopierfertiger Prompt bzw. GitHub-Request — siehe
   `/coding-kit:update-conventions` § Übernahme-Vorschlag); rein informativ, der
   Nutzer stößt die Aufnahme manuell an.
+
+## 1b. Managed Dateien (Backstop)
+
+Nur wenn das Projekt einen Basis-Snapshot hat (`.claude/template-base/`) — sonst still
+überspringen. Ein Schritt, der eine Datei aus dem Template ändert, soll das bewusst tun
+und mit Grund festhalten, nicht erst beim nächsten Template-Update auffallen.
+
+- `sh <skript> changed <projekt>` ausführen — `<skript>` ist
+  `${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh`, in Shell-Befehlen der aufgelöste Pfad.
+  Es listet die managed Dateien, die der Arbeitsbaum gegenüber HEAD berührt, mit Zustand
+  und Registry-Art (Files-Tabelle der `.claude/convention-overrides.md`).
+- Je Zeile `deviates` mit Registry `none`: die Abweichung zeigen
+  (`git diff --no-index .claude/template-base/<Datei>.base <Datei>`) und anbieten:
+  **(a)** eine Zeile mit Grund in die Files-Tabelle (Art leer, `keep` oder `adapt`),
+  **(b)** die Änderung zurücknehmen, **(c)** einen Übernahme-Vorschlag fürs Template
+  (`/coding-kit:update-conventions` § Übernahme-Vorschlag), wenn die Änderung allen
+  Projekten nützt. Zeilen mit einer Art sind registriert — nichts melden.
+- `snapshot-edited`: Den Snapshot setzen nur `/coding-kit:update-conventions`,
+  `/coding-kit:new-project`, `/coding-kit:choose-stack` und `/coding-kit:choose-license`.
+  War dieser Schritt ein solcher Lauf, ist die Änderung erwartet; sonst wurde der
+  Snapshot von Hand geändert — als Fehler melden und das Zurücknehmen anbieten
+  (`git checkout -- <Pfad>`).
+- **Nicht blockierend:** Lehnt der Nutzer alles ab, geht der Abschluss weiter; die
+  unregistrierte Abweichung im Archiv-Eintrag (Schritt 4) vermerken.
 
 ## 2. Secrets-Scan (KRITISCH)
 
