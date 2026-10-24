@@ -24,130 +24,14 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-041b | Merge und Erkennung → **`template-sync.sh` kann `merge` (Drei-Wege je Datei mit `git merge-file`, Klassen von `identical` bis `conflict`, `keep`/`skip` aus der Files-Tabelle), `status`, `changed`, `snapshot` und `base-from-history`; Vergleich ohne Zeilenende-, Endzeilen- und Slot-Unterschiede; die drei Abweichungen des docs-only-Projekts mergen konfliktfrei; Skript-Tests im Pre-Commit nur bei passenden Dateien.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 | F-041c | Vertrag und update-conventions → **`manifest-format: 2` mit Basis-Snapshot und Abweichungs-Registry (Files/Rules, Arten `skip`/`keep`/`adapt`); Template-Inhalt nachgezogen (Registry-Vorlage, `.gitattributes`, `.claude/README.md`, HOW-TO, `nextjs`/`astro`); `update-conventions` mergt dreiwegig, ohne Argument nur das aktuelle Projekt, Modi `status`/`revise`, Migration mit Basis aus der Template-Historie; Skript mit `--base`.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 | F-041d | Übrige Skills → **`new-project` instanziiert über den Renderer (Antworten und Snapshot im Erst-Commit); `choose-stack` wechselt Module über Render und Merge; `step-done` meldet geänderte managed Dateien ohne Registry-Zeile (Schritt 1b); Fragment-Einbau mit `FRAGMENTS` und `keep`-Zeilen; `choose-license` und `go-public` ziehen die Antworten nach; Baustein „Hilfsskripte".** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
+| F-041e | Test, Release, Gegenprobe → **Migrationstests an Kopien eines docs-only- und eines ts-node-Projekts (Zusätze erhalten, Snapshot gesetzt, Prüfungen grün, `biome ci` mit Snapshot); Mischbasis und `.claude/`-Freigaben in `update-conventions`; Release 1.1.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe am echten docs-only-Projekt ohne unregistrierte Abweichung. F-041 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 
 ---
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-### F-041 — Projektzusätze in managed Dateien erhalten und Abweichungen früh erkennen
-
-**Status:** PLANNED
-
-**Problem:** Ein Override sperrt eine managed Datei für alle künftigen Template-Änderungen;
-zeilenweise Overrides gibt es nur in Markdown. Ein Projekt, das in `mise.toml` ein Tool
-ergänzt, muss deshalb wählen zwischen „Zeile verlieren" und „nie wieder Template-Updates
-für die Datei". Eine Abweichung fällt zudem erst beim nächsten `update-conventions`-Lauf
-auf — `step-done` bemerkt nicht, dass ein Schritt eine managed Datei ändert; der Testlauf
-in F-039e fand so in einem docs-only-Projekt drei nie eingetragene Abweichungen
-(`justfile`, `mise.toml`, `.gitignore`). Und ein eingetragener Override bleibt auch dann
-stehen, wenn das Template die Abweichung längst selbst enthält.
-
-**Idee:** Drei-Wege-Merge wie bei copier/cruft: Jedes Projekt trägt unter
-`.claude/template-base/` die reine Template-Fassung jeder managed Datei zum Stempel-Stand
-(committet, als generiert markiert, je Datei mit der Endung `.base`). Ein mitgeliefertes
-sh-Skript erzeugt die Soll-Fassung deterministisch und führt je Datei `git merge-file` aus
-(alte Template-Fassung, Projekt, neue Template-Fassung) — Projektzusätze bleiben,
-Template-Änderungen kommen an, nur echte Kollisionen werden zu Konflikten. Die Abweichung
-ist berechenbar (Diff gegen die Basis): `step-done` erkennt sie per Vergleich mit dem
-Snapshot, und die Override-Revision ergibt sich aus dem Merge (Projekt = neue
-Template-Fassung → Eintrag überflüssig).
-
-**Entschieden (2026-10-24):**
-- Unabhängiges Design-Review → Drei-Wege-Merge mit Basis-Snapshot im Projekt. Verworfen:
-  Marker in den Dateien (JSON kann sie nicht tragen, Tools schreiben Dateien neu, sie
-  beschreiben einen berechenbaren Diff), Basis nur aus der Git-Historie (taugt nur als
-  Quelle für die Erst-Migration), Versionsarchiv im Plugin, Umbau auf die nativen
-  Include-Mechanismen der Tools (nur als Konvention für neue Projektzusätze).
-- Deterministisch über ein mitgeliefertes POSIX-sh-Skript auf git-Basis: Merge,
-  Erkennung, Revision **und** das Erzeugen der Soll-Fassung (Renderer). Kein Python-Zwang
-  — macOS bringt ohne Homebrew nur Python 3.9.6 mit. Das Sprachmodell führt den Dialog und
-  berät bei Konflikten.
-- Der Snapshot-Ordner `.claude/template-base/` im Projekt (rund 26 Dateien) ist akzeptiert.
-- Nach dem Release 1.0.0 als 1.1.0, vor F-036 (dessen Migration läuft über
-  `update-conventions`).
-- Planung (prep-step):
-  - Snapshot-Dateien tragen die Endung `.base`. Mit gleichem Namen findet Biome eine
-    zweite Root-Konfiguration und bricht ab (nachgestellt mit Biome 2.5), Renovate
-    aktualisiert `mise.toml` und Workflows auch in Unterordnern, und git wendet
-    verschachtelte `.gitignore`/`.gitattributes` an.
-  - Neue Antworten-Datei `.claude/template-answers` (`KEY=value`) als feste Eingabe des
-    Renderers, statt die Werte bei jedem Lauf aus Repo, gh und CLAUDE.md zu erschließen
-    (Vorbild `.copier-answers.yml`).
-  - Ein Renderer für alle Instanziierungen, auch für `new-project`: Der Snapshot im
-    Erst-Commit stimmt so per Konstruktion mit den geschriebenen Dateien überein.
-    `adapt`-Stellen, Lizenztext und Dialog bleiben beim Sprachmodell.
-  - Erst-Migration: Basis ist das Template der Stempel-Version, gerendert aus der
-    Historie eines coding-kit-Checkouts oder -Klons (bis 0.16.0 über `template/VERSION`,
-    danach `plugin.json`); ohne Checkout einmal zweiwegig. Bootstrap-Commit als Quelle
-    verworfen: Drei der vier Bestandsprojekte wurden seither synchronisiert (eines stammt
-    von 0.11.2), und konkretisierte `adapt`-Stellen in der Basis würde der Merge
-    zurückdrehen. Gegenprobe: Eine mechanische Instanziierung von 0.13.2 ist byte-gleich
-    mit den Bootstrap-Commits des docs-only- und eines ts-node-Projekts.
-  - Kein shellcheck (GPL); die Portabilität sichern Tests unter `dash` und bash 3.2.
-
-**Lösungsskizze** (Stand Planung 2026-10-24):
-- Skript `plugins/coding-kit/scripts/template-sync.sh` (POSIX sh, nur git) mit den
-  Unterbefehlen `render`, `status`, `changed`, `merge`, `snapshot`, `base-from-history`;
-  Ausgabe als Tabelle (TSV) für den Skill.
-- Renderer: Ziele aus der Core-Tabelle des MANIFEST; Modul-Teile (justfile ersetzt,
-  Modul-Tools ans Ende von `[tools]`, gitignore und CI unter ihren Marker, `files/**` laut
-  Policy im `MODULE.md`); Platzhalter literal; `optional`-Blöcke nach den Antworten;
-  Fragment-Slot aus Sprachfragment und deklarierten Fragmenten; auf Wunsch auch
-  seed-Dateien (für `new-project` und die Zonen-Abgleiche).
-- Merge: Eingaben auf LF und Endzeilenumbruch normalisieren (sonst Schein-Konflikt über
-  die ganze Datei); `--diff-algorithm=histogram` nur, wenn git es kann (ab 2.44; Ubuntu
-  24.04 liefert 2.43); den Fragment-Slot der `CODING-STANDARDS.md` bei Merge und Vergleich
-  ausblenden (Fragmente bleiben fragmentweise); `keep` → `--ours`. Ergebnis je Datei:
-  `identical`, `template-only`, `merged`, `conflict`, `caught-up`, `new`, `missing`,
-  `skipped`.
-- MANIFEST `manifest-format: 2` mit den Abschnitten Base snapshot, Answers und Deviation
-  registry; der `override`-Marker gilt nur noch für Markdown-Zonen und Fragmente.
-  `convention-overrides.md` bekommt eine Files-Tabelle (`path | kind | reason | since`,
-  Art `skip`, `keep`, `adapt` oder leer = normal mergen, Grund dokumentiert) und eine
-  freie Rules-Tabelle.
-- Offene Analysepunkte, geklärt:
-  - `optional`-Blöcke stehen nur in der seed-Datei `CLAUDE.md` und berühren den Snapshot
-    nicht.
-  - Der Snapshot enthält nur instanziierte Ziele. public-only-Dateien kommen über
-    `update-conventions` mit Sichtbarkeits-Prämisse, auch aus `go-public`.
-  - Managed Moduldateien erkennt der Renderer am ersten Wort der Policy-Spalte im
-    `MODULE.md`. `pyproject.toml` bleibt seed; seine managed `[tool.*]`-Abschnitte bleiben
-    wie heute ungedeckt.
-  - Registry per awk lesen, Backticks entfernen, Globs per `case`.
-  - `step-done` vergleicht den Arbeitsbaum mit HEAD plus neue Dateien (es läuft vor dem
-    Commit).
-  - Windows bleibt ungeprüft (F-027).
-- `update-conventions`: ohne Argument im Ordner eines Kit-Projekts nur dieses Projekt,
-  alle Projekte nur mit `alle`; Modi `status` und `revise`. `status` läuft immer, auch bei
-  aktuellem Stempel — heute bricht der Skill dort ab, sodass `go-public` keine
-  public-only-Dateien nachzieht.
-- `new-project` legt Snapshot, Antworten und `adapt`-Zeilen im Erst-Commit an;
-  `choose-stack` Modus B zieht Snapshot und Antworten nach; `step-done` Schritt 1b meldet
-  nicht blockierend unregistrierte Änderungen an managed Dateien und Handänderungen am
-  Snapshot.
-- Inline-Marker bleiben nur in Markdown (seed-Zonen, Fragmente).
-
-**Abhängigkeiten:** F-039 (Release 1.0.0, erledigt). Vor F-036.
-
-#### F-041e — Test, Release, Gegenprobe
-
-**Was:** Nicht-interaktive Tests mit `claude -p --plugin-dir plugins/coding-kit` an
-Scratch-Kopien des docs-only-Projekts und eines ts-node-Projekts: Migration (Basis aus der
-Kit-Historie), Merge, Snapshot, `just check` inklusive `biome ci` mit Snapshot. Release
-1.1.0: CHANGELOG datieren; Push nur auf ausdrückliche Bitte, vorher Personendaten-grep
-über Diff, Commit-Metadaten und Messages; Plugin aktualisieren und den Cache prüfen.
-Gegenprobe: `/update-conventions` am docs-only-Projekt (Migration auf den Snapshot). Die
-drei übrigen Bestandsprojekte folgen nach F-041.
-
-**Dateien:** `plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-041d.
-
-**Abnahmekriterien:**
-- [ ] Beide Scratch-Kopien: Projektzusätze erhalten, Snapshot gesetzt, `just check` grün.
-- [ ] 1.1.0 installiert und aktiv; der Cache enthält `scripts/template-sync.sh`.
-- [ ] Das docs-only-Projekt steht auf 1.1.0 mit Snapshot; `status` zeigt keine
-      unregistrierte Abweichung mehr.
+_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
+`/coding-kit:prep-step` vorbereiten._
 
 ---
 
@@ -158,22 +42,20 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 **Empfohlene Reihenfolge** (Stand 2026-10-24; die Einträge darunter bleiben nach Nummer
 sortiert):
 
-1. **F-041** — nach dem Release 1.0.0 als 1.1.0; vor F-036, weil dessen Migration über
-   `update-conventions` läuft (in Arbeit, siehe „Offene Aufgaben").
-2. **F-042** — direkt nach F-041, weil es dieselbe Mechanik nutzt (Antworten-Datei,
+1. **F-042** — direkt nach F-041, weil es dieselbe Mechanik nutzt (Antworten-Datei,
    `choose-stack`, `template-sync.sh`).
-3. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
+2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
-4. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
-5. **F-040** — vor den Strängen Graphiti und Host, deren Änderungen an der globalen
+3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
+4. **F-040** — vor den Strängen Graphiti und Host, deren Änderungen an der globalen
    Vorlage sonst bestehende Rechner nicht erreichen.
-6. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-7. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
+5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+6. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
    mit. F-026 ist in F-039 aufgegangen, sein Rest (Kit-Repo-Herkunft in `check-upstreams`)
    in F-032.
-8. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
 
-Strang 6 und 7 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
@@ -722,6 +604,6 @@ F-037 Unabhängiges Review in step-done (Reviewer mit frischem Kontext)
 F-038 Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature von Claude aufrufbar (DONE)
 F-039 Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0 (DONE)
 F-040 Globale CLAUDE.md mit dem Plugin ausliefern und abgleichen
-F-041 Projektzusätze in managed Dateien erhalten, Abweichungen früh erkennen (PLANNED)
+F-041 Projektzusätze in managed Dateien erhalten, Abweichungen früh erkennen (DONE)
 F-042 Neue Sprachen und Frameworks erkennen, Vorlagen nachziehen
 -->

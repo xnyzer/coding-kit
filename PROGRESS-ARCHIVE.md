@@ -16,6 +16,61 @@ zusammen:
 
 ---
 
+## F-041e — Test, Release, Gegenprobe (2026-10-24)
+
+Schließt F-041 ab (Projektzusätze in managed Dateien erhalten und Abweichungen früh
+erkennen; F-041a–d siehe darunter).
+
+**Problem:** Snapshot, Merge und Skills waren gebaut und einzeln getestet, aber noch nicht
+an echten Projekten durchgespielt, nicht veröffentlicht und beim Nutzer nicht
+installiert.
+
+**Was entstanden ist (Release 1.1.0):**
+
+- **Migrationstests an Kopien** (`claude -p --plugin-dir`, nicht-interaktiv, die
+  Entscheidungen standen im Prompt):
+  - docs-only-Projekt (Stempel 1.0.0, angelegt mit 0.13.2): Basis 0.13.2 aus der
+    Kit-Historie; `mise.toml` ist `merged` (Python-Pin bleibt, `lockfile_platforms` kommt
+    dazu), `justfile` und `.gitignore` sind mit Grund registriert, die nicht
+    instanziierten Dateien als `skip`; Snapshot mit 16 Basen, `just check` grün.
+  - ts-node-Projekt (Stempel 0.13.2): `mise.toml` zusammengeführt (der projekteigene
+    `[env]`-Block bleibt); `justfile`, `.gitignore` und `privacy-lint.sh` unangetastet;
+    Alt-Registry in 9 Files- und 2 Rules-Zeilen überführt; Snapshot mit 27 Basen. Alle
+    Docker-freien Prüfungen sind grün, `biome ci` läuft mit Snapshot ohne Fehler (die
+    `.base`-Endung wirkt). `stack-check` war schon vorher nur wegen fehlendem Docker rot.
+- **Funde aus den Tests, in `update-conventions` nachgezogen:** eine Mischbasis für die
+  Migration (Dateien des letzten Syncs aus der Stempel-Version, die übrigen aus der
+  älteren); Fragmente, die es in der Basis-Version noch nicht gab, fallen beim
+  Basis-Render weg; Schreibzugriffe unter `.claude/` fragt Claude Code einzeln ab — ohne
+  Freigabe bereitet der Skill die Dateien vor und nennt den Kopierbefehl, nie umgehen
+  (ein Testagent hatte die Sperre per Shell umgangen).
+- **Release:** CHANGELOG datiert (`8a67f22`), Push von sechs Commits nach Personendaten-,
+  gitleaks- und Versionsregel-Prüfung. Die CI ist grün; die Skript-Tests liefen dort zum
+  ersten Mal unter Ubuntu (296 Prüfungen, dash und bash). Plugin beim Nutzer auf 1.1.0
+  aktualisiert; der Cache enthält `scripts/template-sync.sh` (ausführbar) und ist mit dem
+  Repo dateigleich.
+- **Gegenprobe:** `/coding-kit:update-conventions` am echten docs-only-Projekt mit
+  Mischbasis: Stempel 1.1.0, Snapshot mit 16 Basen, Plattformliste in `mise.toml`
+  angekommen, die drei Projektdateien als `keep` registriert, Alt-Registry überführt
+  (vier Dateien `skip`, eine Regel). `status` zeigt keine unregistrierte Abweichung. Der
+  erste Aufruf lief noch mit dem Skill aus 1.0.0 (Session vor dem Plugin-Update
+  gestartet) und durchsuchte deshalb alle Projekte; nach `/reload-plugins` lief 1.1.0 ohne
+  jede Suche über andere Projekte.
+
+**Notable decisions:**
+- Der Plan-Modus taugt nicht für Migrationstests; geprüft wurde mit nicht-interaktiven
+  Läufen in Wegwerf-Kopien.
+- Release vor dem Abschluss-Eintrag: Die Gegenprobe braucht das installierte 1.1.0, also
+  erst Release-Commit und Push, dann Gegenprobe und Verbuchung.
+- Die drei übrigen Downstream-Projekte (Stempel 0.13.2) folgen jetzt; ihre Migration ist
+  keine Aufgabe im Kit.
+
+**Geänderte Dateien:** `plugins/coding-kit/CHANGELOG.md` und
+`plugins/coding-kit/skills/update-conventions/SKILL.md` (im Release-Commit),
+`PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-041d — Übrige Skills (2026-10-24)
 
 Teil von F-041 (Projektzusätze in managed Dateien erhalten und Abweichungen früh
