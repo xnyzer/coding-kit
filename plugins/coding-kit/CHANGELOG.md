@@ -13,9 +13,9 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 1.3.0 — unveröffentlicht
+## 1.3.0 — 2026-10-25
 
-Sprachregeln gelten auch dort, wo eine Sprache ohne ihr Modul läuft (F-043, in Arbeit).
+Sprachregeln gelten auch dort, wo eine Sprache ohne ihr Modul läuft (F-043).
 
 - **`scripts/template-sync.sh detect`:** Ein Fragment, das das Modul der Antworten
   deklariert, ist `covered`, auch ohne Marker im Slot — der Render bringt es mit. So bietet
