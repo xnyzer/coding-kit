@@ -63,8 +63,9 @@ Pfade; Signale und Zustände beschreibt `MANIFEST.md` § Detection.
    für eine geplante Datei (z. B. `npm:next`, `tool:python`, `file:Dockerfile`).
 2. **Abgleich per Skript:** `sh <skript> detect <template> <projekt> <Signal…>` prüft nur
    diese Signale, ohne den Baum zu lesen. Zeilen `covered` und `declined` → nichts
-   vorschlagen. Fehlt `.claude/template-answers` (Projekt vor dem Snapshot-Vertrag),
-   prüft das Skript keine Module — dann auf die Migration per
+   vorschlagen; eine `tool`-Zeile `unknown` heißt: Für dieses Tool hat das Template
+   weder Modul noch Fragment (Punkt 6). Fehlt `.claude/template-answers` (Projekt vor
+   dem Snapshot-Vertrag), prüft das Skript keine Module — dann auf die Migration per
    `/coding-kit:update-conventions` hinweisen.
 3. **Eigenschafts-Trigger** (`*characteristic:*`-Zeilen in
    `modules/standards/README.md`) zeigt keine Datei: die Aufgabenbeschreibung selbst
@@ -85,16 +86,20 @@ Pfade; Signale und Zustände beschreibt `MANIFEST.md` § Detection.
    `module:NAME` in der Rules-Tabelle der `.claude/convention-overrides.md` (was das
    Projekt stattdessen tut, mit Grund) und `keep`-Zeilen für die managed Dateien, die
    die Toolchain von Hand ändert (z. B. `mise.toml`, justfile).
-6. Treffer-Thema ganz ohne Katalog-Fragment → vorschlagen, ein **projektlokales**
-   Fragment zu autoren (eigener `fragment:NAME`-Block im Slot). Direkt nach der
-   Anlage den **Übernahme-Vorschlag** fürs Template ausgeben (kopierfertiger Prompt
-   bzw. GitHub-Request — siehe `/coding-kit:update-conventions`
-   § Übernahme-Vorschlag); die Aufnahme in den Katalog stößt der Nutzer manuell an,
-   bis dahin bleibt das Fragment projektlokal.
+6. **Tool `unknown`** oder ein Treffer-Thema ganz ohne Katalog-Fragment → im Plan
+   ausweisen, dass das Template dafür keine Vorlage hat, und eine Richtung empfehlen:
+   - **Von Hand im Projekt:** die Toolchain als Werkzeugsprache bauen (`keep`-Zeilen für
+     die managed Dateien, die sie ändert, z. B. `mise.toml`, justfile) bzw. ein
+     **projektlokales** Fragment autoren (eigener `fragment:NAME`-Block im Slot) —
+     beides im selben Schritt. Dazu anbieten, es **dem Template vorzuschlagen**: den
+     Hintergrund-Skill `propose-to-template` mit dem Fund starten, sobald das Material
+     steht (nach dem Bau). Bis zur Aufnahme bleibt es projektlokal.
+   - **Dauerhaft ablehnen**, wenn das Tool keine Konvention braucht: Rules-Zeile
+     `tool:NAME` mit Grund im selben Schritt.
 7. **Nur vorschlagen, nie still einbauen** — die Entscheidung fällt mit der
    Plan-Freigabe (Abschnitte 4–6 dieses Skills). Ein Vorschlag, den der Nutzer dauerhaft
-   ablehnt, wird zur Rules-Zeile `fragment:NAME` bzw. `module:NAME` — dann meldet ihn
-   kein Skill mehr.
+   ablehnt, wird zur Rules-Zeile `fragment:NAME`, `module:NAME` bzw. `tool:NAME` — dann
+   meldet ihn kein Skill mehr.
 
 ## 3. Größe bewerten & ggf. zerlegen
 
@@ -123,9 +128,9 @@ vorschlägst — mit Begründung; entfällt, wenn der Eintrag keine Skizze hat]
 **Neue Endpunkte/Config/Dependencies:** [welche?]
 
 **Standards- und Modul-Abdeckung:** [ok / Fragment `<name>` fehlt → Anhängen
-vorgeschlagen / Modul `<name>` fehlt → `/choose-stack` oder Werkzeugsprache / kein
-Katalog-Fragment → Autoring + Promote vorgeschlagen; Zeile entfällt, wenn Schritt 2a
-übersprungen wurde]
+vorgeschlagen / Modul `<name>` fehlt → `/choose-stack` oder Werkzeugsprache / Tool
+`<name>` ohne Vorlage bzw. kein Katalog-Fragment → von Hand im Projekt + Vorschlag fürs
+Template, oder `tool:NAME`; Zeile entfällt, wenn Schritt 2a übersprungen wurde]
 
 **Risiken / offene Fragen:**
 - …

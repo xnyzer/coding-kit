@@ -30,7 +30,20 @@ Arbeit).
   generalisierten, personendatenfreien Übernahme-Vorschlag fürs Template: als Issue
   (Standard, mit `gh issue create` als Text) oder als Prompt für eine Session im Kit-Repo
   bzw. einem Fork, beides kopierfertig. Er sendet nichts ab und schreibt nirgends hin.
+  Das Material trennt immer, was aus dem Projekt stammt, von dem, was Claude ohne
+  Projektbeleg vorschlägt; der Prompt ist ein Entwurfsauftrag — erst recherchieren,
+  beide Teile gewichten, den Entwurf mit Begründung zeigen, nach Zustimmung bauen.
+  Wörtliche Datei-Inhalte stehen als eigene Codeblöcke, Backticks werden nie
+  verschachtelt (Funde aus dem Testlauf von F-044c).
   Die `CONTRIBUTING.md` des Kit-Repos beschreibt solche Vorschläge.
+- **Skills angebunden:** Je Tool `unknown` bieten `update-conventions` (Schritt 2, jeder
+  Lauf), `step-done` (§ 1a, nur neue Tools) und `prep-step` (§ 2a, geplante Tools) an, es
+  über `propose-to-template` dem Template vorzuschlagen oder dauerhaft mit `tool:NAME`
+  abzulehnen; `choose-stack` Modus B rät für ein unbekanntes Tool kein Modul. Projektlokale
+  Fragmente und Abweichungen an managed Dateien laufen ebenfalls über den neuen Skill —
+  der Abschnitt „Übernahme-Vorschlag" in `update-conventions` entfällt. Die
+  Registry-Revision bietet eine `tool:NAME`-Zeile zum Austragen an, sobald das Template
+  das Tool kennt.
 - **Kit:** Die Erkennungs-Tests decken bekannte Tools, Backend-Tools, `[tools.NAME]`-Tabellen,
   mehrere mise-Dateien, Ablehnung, `--changed` und übergebene Signale ab; ein frischer Render
   jedes Moduls meldet kein unbekanntes Tool.
@@ -41,6 +54,12 @@ Arbeit).
   § Deviation registry: die Rules-Zeile `tool:NAME` lehnt einen Tool-Vorschlag dauerhaft ab.
 - Die Kopfzone der `.claude/convention-overrides.md` (`overrides-head`) erklärt die
   Rules-Zeile `tool:NAME`.
+- Die Spalte **Since** der Registry hat ein festes Format: das Datum, an dem die Zeile
+  angelegt wurde (`YYYY-MM-DD`); MANIFEST § Deviation registry und die Kopfzone nennen
+  es. Bestehende Zeilen bleiben, wie sie sind.
+- `HOW-TO-CODE-WITH-CLAUDE.md`: prep-step, step-done und update-conventions nennen Tools
+  ohne Vorlage, den Übernahme-Vorschlag (kopierfertiges Issue oder Prompt, nichts wird
+  abgeschickt) und die Rules-Zeile `tool:NAME`.
 
 ## 1.3.0 — 2026-10-25
 

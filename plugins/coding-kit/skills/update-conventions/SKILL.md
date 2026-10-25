@@ -1,6 +1,6 @@
 ---
 name: update-conventions
-description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME); Abweichungs-Registry mit den Arten skip, keep, adapt; erkennt bei jedem Lauf per Signal, wofür das Template inzwischen Module oder Fragmente hat (dauerhafte Ablehnung als Rules-Zeile); Migration für Projekte ohne Snapshot; erkennt im Template entfernte/umbenannte Dateien. Ohne Argument nur das Projekt im aktuellen Ordner, alle Projekte nur mit `alle`; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente werden nie angefasst, aber mit einem manuell anstoßbaren Übernahme-Vorschlag fürs Template gemeldet. Nichts wird ungefragt überschrieben.
+description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME); Abweichungs-Registry mit den Arten skip, keep, adapt; erkennt bei jedem Lauf per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt (dauerhafte Ablehnung als Rules-Zeile); Migration für Projekte ohne Snapshot; erkennt im Template entfernte/umbenannte Dateien. Ohne Argument nur das Projekt im aktuellen Ordner, alle Projekte nur mit `alle`; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente werden nie angefasst; sie und Tools ohne Vorlage meldet er mit dem Angebot, sie dem Template vorzuschlagen (Hintergrund-Skill propose-to-template). Nichts wird ungefragt überschrieben.
 disable-model-invocation: true
 ---
 
@@ -107,13 +107,19 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
      Rules-Zeile `module:NAME` (was das Projekt stattdessen tut, mit Grund) und
      `keep`-Zeilen für die managed Dateien der handgebauten Toolchain; **diesmal nicht**
      → nichts speichern.
+
+   Je `tool`-Zeile `unknown` (das Template hat für das Tool weder Modul noch Fragment):
+   melden und anbieten — **dem Template vorschlagen** → den Hintergrund-Skill
+   `propose-to-template` mit dem Fund starten (Art Tool, Name, mise-Datei);
+   **dauerhaft ablehnen** (das Tool braucht keine Konvention) → Rules-Zeile `tool:NAME`
+   mit Grund; **diesmal nicht** → nichts speichern. Ins Projekt kommt dadurch nichts.
 3. **Soll rendern:** `sh <skript> render <template> <projekt>/.claude/template-answers
    <tmp>/soll`.
 4. **Mergen:** `sh <skript> merge <projekt> <tmp>/soll <tmp>/out` — die Tabelle zeigen
    (nur Zeilen, die nicht `identical` sind, dazu deren Anzahl).
 5. **Je Datei entscheiden.** Das Ergebnis liegt in `<tmp>/out/<Ziel>`; übernehmen heißt
-   dorthin kopieren. Hält der Nutzer die Projektfassung für besser als das Template: den
-   **Übernahme-Vorschlag** (s. u.) ausgeben.
+   dorthin kopieren. Hält der Nutzer die Projektfassung für besser als das Template:
+   `propose-to-template` mit dem Fund starten (managed Datei, Ziel, Diff).
    - `template-only`, `merged`, `two-way` (keine Basis): Diff Projekt → Ergebnis zeigen;
      **übernehmen** / **diesmal nicht** (beim nächsten Lauf wieder angeboten) /
      **dauerhaft ablehnen** (Registry-Zeile mit Grund).
@@ -143,9 +149,10 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
    (`CODING-STANDARDS.md.base`) und Render geändert, den Diff Basis → Render **zur Info**
    zeigen (ohne Snapshot: Projekt → Template), übernommen wird von Hand. **Ohne
    Template-Pendant → projektlokal: nie anfassen**; auflisten mit dem Hinweis, dass dieses
-   Set im Template fehlt, und je Fragment einen **Übernahme-Vorschlag** ausgeben —
-   anstoßen muss ihn der Nutzer. Deklariert das `MODULE.md` inzwischen Fragmente, die im
-   Projekt fehlen, oder kam eines aus der Erkennung (Schritt 2) nach `FRAGMENTS` →
+   Set im Template fehlt, und je Fragment anbieten, es dem Template vorzuschlagen
+   (`propose-to-template` mit dem Fund starten). Deklariert das `MODULE.md` inzwischen
+   Fragmente, die im Projekt fehlen, oder kam eines aus der Erkennung (Schritt 2) nach
+   `FRAGMENTS` →
    Anhängen anbieten (Mechanik wie `/choose-stack`, idempotent). Bestehende in-place
    ersetzen, Neues an seine **Stelle aus dem Render**: hinter den nächsten Vorgänger aus
    `<tmp>/soll`, der im Slot steht, ohne Vorgänger an den Slot-Anfang — nie umsortieren.
@@ -182,8 +189,9 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
       Schritt 5 `caught-up` waren → **austragen** anbieten;
     - `deviates` ohne Zeile → Zeile mit Grund anbieten (Art leer, `keep` oder `adapt`);
     - `skip`-Zeilen und die Rules-Tabelle nur auflisten („noch gültig?"); eine Ablehnung
-      `module:NAME` oder `fragment:NAME`, für die die Erkennung (Schritt 2) keine Zeile
-      mehr meldet — das Projekt hat die Signale nicht mehr —, zum Austragen anbieten.
+      `module:NAME`, `fragment:NAME` oder `tool:NAME`, für die die Erkennung (Schritt 2)
+      keine Zeile mehr meldet — das Projekt hat die Signale nicht mehr, oder das Template
+      kennt das Tool inzwischen —, zum Austragen anbieten.
 
     Jede Änderung einzeln bestätigen. Sinngleiche Zeilen eines Alt-Formats übernimmt A3
     Schritt 3.
@@ -199,7 +207,7 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
 **Modus `status`:** Schritte 1–4 (ohne Snapshot über die Vorschau aus A3 Schritt 2) und
 die Tabelle aus `sh <skript> status <projekt>` (ohne Snapshot: `status --base
 <tmp>/base`); die Erkennung aus Schritt 2 als Bericht (fehlende Module und Fragmente,
-Ablehnungen) und was Schritt 10 vorschlagen würde, als Hinweis. Ohne
+Tools ohne Vorlage, Ablehnungen) und was Schritt 10 vorschlagen würde, als Hinweis. Ohne
 `.claude/template-answers` prüft das Skript keine Module — das im Bericht sagen.
 Antworten für die Vorschau nur in `<tmp>` anlegen. Nichts im Projekt schreiben.
 
@@ -266,26 +274,3 @@ dann A2 ab Schritt 3.
    - **section-Marker:** fehlen seed-Dateien die `section:NAME`-Markerpaare, je Datei
      anbieten, sie aus dem MANIFEST-Inventar um die wiedererkennbaren Zonen zu setzen —
      reine Wrapper, Inhalt unverändert; nicht Wiederauffindbares auslassen (Opt-out).
-
----
-
-## Übernahme-Vorschlag (Projekt → Template — nur manuell angestoßen)
-
-Dieser Skill schreibt nie ins Template. Findet ein Lauf projektlokale Fragmente ohne
-Template-Pendant (oder gehört eine lokale Verbesserung in die Vorlage), wird
-stattdessen **fertiges Material** ausgegeben — ausführen bzw. absenden tut es der
-Nutzer:
-
-- **Kopierfertiger Beispiel-Prompt** für eine Session im coding-kit-Repo: das Fragment
-  generalisieren (Projektwerte zu Platzhaltern, Englisch, personendatenfrei), als
-  `plugins/coding-kit/template/modules/standards/<name>.md` anlegen, Katalog-Zeile mit
-  Trigger im dortigen README ergänzen, die Versionsregel des Kits beachten
-  (Versions-Bump in `plugin.json` und CHANGELOG-Eintrag mit Abschnitt `### Template`
-  im selben Commit) — den generalisierten Fragment-Inhalt in den Prompt beilegen.
-- **Alternativ ein Issue** im coding-kit-Repo mit demselben Inhalt. Das Repo steht als
-  `homepage` in `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` (nicht aus dem
-  eigenen Konto ableiten), z. B. `gh issue create -R <owner>/<repo> --title
-  "standards: add <name> fragment" --body <Vorschlag>`.
-
-Nach einem Release mit dem neuen Fragment bringt ein regulärer Abwärts-Lauf es in alle
-Projekte.

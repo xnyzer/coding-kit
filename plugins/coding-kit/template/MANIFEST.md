@@ -120,6 +120,9 @@ deviates, in two tables after the zone:
   it declines that detection proposal for good (§ Detection), and its Deviation cell says
   what the project does instead.
 
+In both tables **Since** is the date the row was added, `YYYY-MM-DD`; a row that is
+changed later keeps it.
+
 The kind decides how updates treat a file:
 
 | Kind | Effect |

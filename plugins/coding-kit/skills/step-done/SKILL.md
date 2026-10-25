@@ -53,9 +53,10 @@ Signal-Datei (z. B. `Dockerfile`) einführt, soll das nicht ohne passende Vorlag
   `${CLAUDE_PLUGIN_ROOT}/template` (wie `/coding-kit:choose-stack` § 0), in
   Shell-Befehlen die aufgelösten Pfade. Es meldet nur Signale, die der Arbeitsbaum
   gegenüber HEAD neu hat — vor dem Commit also die dieses Schritts — und je Treffer
-  `covered`, `declined` oder `missing` (`MANIFEST.md` § Detection). Keine Zeile oder nur
-  `covered`/`declined` → still weiter. Ohne `.claude/template-answers` prüft das Skript
-  keine Module; dann auf die Migration per `/coding-kit:update-conventions` hinweisen.
+  `covered`, `declined` oder `missing`, für Tools ohne Vorlage `unknown` oder `declined`
+  (`MANIFEST.md` § Detection). Keine Zeile oder nur `covered`/`declined` → still weiter.
+  Ohne `.claude/template-answers` prüft das Skript keine Module; dann auf die Migration
+  per `/coding-kit:update-conventions` hinweisen.
 - **Fragment `missing`** → **Lücke melden** und das Anhängen vorschlagen (Mechanik wie
   `/coding-kit:choose-stack`, idempotent; ohne Fragment-Slot nur melden) — inklusive
   einer **Begleithandlung**, die das Fragment verlangt, dem Eintrag in `FRAGMENTS` der
@@ -68,16 +69,20 @@ Signal-Datei (z. B. `Dockerfile`) einführt, soll das nicht ohne passende Vorlag
   `.claude/convention-overrides.md` (was das Projekt stattdessen tut, mit Grund) und
   `keep`-Zeilen für die managed Dateien, die die Toolchain von Hand ändert; beides gehört
   in diesen Commit (sonst meldet 1b die Dateien).
+- **Tool `unknown`** (eine `tool`-Zeile: das Template hat für ein neues Tool weder Modul
+  noch Fragment) → melden und anbieten: **dem Template vorschlagen** — den
+  Hintergrund-Skill `propose-to-template` mit dem Fund starten (Art Tool, Name,
+  mise-Datei) — **oder** dauerhaft ablehnen, weil das Tool keine Konvention braucht
+  (Rules-Zeile `tool:NAME` mit Grund, in diesen Commit).
 - **Dauerhaft ablehnen** geht auch für ein Fragment (Rules-Zeile `fragment:NAME`); danach
   meldet kein Skill den Vorschlag mehr. `*characteristic:*`-Trigger erkennt kein Skript —
   sie sind Planungsmaterie von prep-step 2a.
 - Der Abschluss wird dadurch **nicht blockiert**; lehnt der Nutzer nur für diesmal ab,
   die offene Lücke im Archiv-Eintrag (Schritt 4) vermerken, damit sie sichtbar bleibt.
 - Enthält der Diff einen **neu angelegten projektlokalen Fragment-Block**
-  (`fragment:NAME` ohne Katalog-Pendant) → den **Übernahme-Vorschlag** fürs Template
-  ausgeben (kopierfertiger Prompt bzw. GitHub-Request — siehe
-  `/coding-kit:update-conventions` § Übernahme-Vorschlag); rein informativ, der
-  Nutzer stößt die Aufnahme manuell an.
+  (`fragment:NAME` ohne Katalog-Pendant) → anbieten, ihn dem Template vorzuschlagen
+  (`propose-to-template` mit dem Fund starten); rein informativ, abschicken tut der
+  Nutzer.
 
 ## 1b. Managed Dateien (Backstop)
 
@@ -92,9 +97,9 @@ und mit Grund festhalten, nicht erst beim nächsten Template-Update auffallen.
 - Je Zeile `deviates` mit Registry `none`: die Abweichung zeigen
   (`git diff --no-index .claude/template-base/<Datei>.base <Datei>`) und anbieten:
   **(a)** eine Zeile mit Grund in die Files-Tabelle (Art leer, `keep` oder `adapt`),
-  **(b)** die Änderung zurücknehmen, **(c)** einen Übernahme-Vorschlag fürs Template
-  (`/coding-kit:update-conventions` § Übernahme-Vorschlag), wenn die Änderung allen
-  Projekten nützt. Zeilen mit einer Art sind registriert — nichts melden.
+  **(b)** die Änderung zurücknehmen, **(c)** sie dem Template vorschlagen
+  (`propose-to-template` mit dem Fund starten: Datei, Diff), wenn sie allen Projekten
+  nützt. Zeilen mit einer Art sind registriert — nichts melden.
 - `snapshot-edited`: Den Snapshot setzen nur `/coding-kit:update-conventions`,
   `/coding-kit:new-project`, `/coding-kit:choose-stack` und `/coding-kit:choose-license`.
   War dieser Schritt ein solcher Lauf, ist die Änderung erwartet; sonst wurde der

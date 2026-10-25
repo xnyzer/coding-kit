@@ -89,17 +89,47 @@ Fork, oder beides?" Default: Issue.
 
 ## 4. Ausgabe — immer kopierfertig
 
-Äußere Codeblöcke mit `~~~~` umzäunen, damit Codeblöcke im Material erhalten bleiben.
+**Herkunft trennen (beide Formate):** Was aus dem Projekt stammt und dort läuft, und was
+Claude ohne Projektbeleg ergänzt, stehen nie gemischt. Material und Erkenntnisse kommen
+in zwei Teile:
+
+- **From the project** — die generalisierten Auszüge aus Schritt 1 (mise-Einträge,
+  Rezepte, CI-Schritte, Fragment-Block, Diff) und was das Projekt damit erreicht bzw.
+  nicht abdeckt.
+- **Suggested, not from the project** — eigene Ideen (weitere Rezepte, Regeln, Tools,
+  Struktur), ausdrücklich als ungeprüft markiert: Wer die Ergänzung baut, entscheidet,
+  was davon trägt.
+
+Fehlt einer der Teile, „none" schreiben statt ihn wegzulassen.
+
+**Formatierung:**
+
+- Äußere Codeblöcke mit `~~~~` umzäunen, damit Codeblöcke im Material erhalten bleiben.
+- Was wörtlich in eine Datei soll (eine `Signals:`-Zeile, eine Katalog-Zeile, ein
+  Rezept), steht als eigener Codeblock, nicht als Inline-Code im Satz.
+- Inline-Code, der selbst Backticks enthält, mit doppelten Backticks umschließen
+  (``` `` `tool:rust` `` ```); nie Backticks in Backticks verschachteln.
 
 **Issue** (englisch — das Kit-Repo ist öffentlich):
 
 - Titel je Fund: `template: add a <language> module`, `standards: add a <name> fragment`
   oder `template: <file> — <change in a few words>`.
-- Body mit den Abschnitten **Summary** (was fehlt, in zwei Sätzen), **Today** (was das
-  Projekt stattdessen tut, generalisiert), **Proposal** (Modul oder Fragment, wohin es
-  gehört, Signale wie `tool:<name>`, ein passender Stub), **Material** (der
-  generalisierte Text bzw. die Skizze) und **Kit rules** (MANIFEST im selben Commit,
-  Versions-Bump und CHANGELOG mit `### Template`, `just check` grün).
+- Body genau nach diesem Gerüst — Überschriften und Ebenen wie hier, keine weiteren:
+
+  ```
+  ## Summary
+  (was fehlt, in zwei Sätzen)
+  ## Today
+  (was das Projekt stattdessen tut, generalisiert)
+  ## Proposal
+  (Modul oder Fragment, wohin es gehört, Signale, ein passender Stub, offene Fragen)
+  ## Material
+  ### From the project
+  ### Suggested, not from the project (unverified)
+  ## Kit rules
+  (MANIFEST im selben Commit, Versions-Bump und CHANGELOG mit „### Template",
+  just check grün)
+  ```
 - Ein Block mit dem vollständigen Befehl — Titel und Body eingesetzt, der Body über
   stdin:
 
@@ -113,22 +143,33 @@ Fork, oder beides?" Default: Issue.
   dem Befehl einfügen.
 
 **Prompt** (in der Sprache des Gesprächs, das Material darin englisch) — ohne Vorwissen
-ausführbar, ein einziger Block:
+ausführbar, ein einziger Block. Er ist ein **Entwurfsauftrag**, keine Bauanleitung mit
+fertigem Ergebnis:
 
 - Einstieg: „Du arbeitest in einem Checkout des coding-kit-Repos (`<homepage>`) oder
-  eines Forks." Ziel in einem Satz.
-- Zuerst lesen: `CLAUDE.md`, `CONTRIBUTING.md`, `plugins/coding-kit/template/MANIFEST.md`.
-  - Modul: dazu `plugins/coding-kit/template/modules/README.md` und ein volles Modul als
-    Vorbild (`plugins/coding-kit/template/modules/python/`). Das Ergebnis besteht aus
+  eines Forks. Entwirf für <Fund> eine Ergänzung des Templates (<Modul / Fragment /
+  Änderung an Datei>)."
+- **Das Kit kennenlernen:** `CLAUDE.md`, `CONTRIBUTING.md`,
+  `plugins/coding-kit/template/MANIFEST.md`, dazu je Art:
+  - Modul: `plugins/coding-kit/template/modules/README.md` und ein volles Modul als
+    Vorbild (`plugins/coding-kit/template/modules/python/`). Ein Modul besteht aus
     `MODULE.md` mit `Signals:`-Zeile, `mise.part.toml`, justfile, `ci.part.yml` und
-    `CODING-STANDARDS.part.md` sowie dem Sprachfragment im Katalog. Der Status in
-    `modules/README.md` wechselt auf full.
-  - Fragment: `plugins/coding-kit/template/modules/standards/README.md`. Das Ergebnis
+    `CODING-STANDARDS.part.md`, dazu das Sprachfragment im Katalog; der Status in
+    `modules/README.md` wird full.
+  - Fragment: `plugins/coding-kit/template/modules/standards/README.md`; ein Fragment
     ist `modules/standards/<name>.md` plus eine Katalog-Zeile mit Signalen.
   - Managed Datei: die Datei unter `plugins/coding-kit/template/` und ihre Zeile im
     MANIFEST.
-- Das generalisierte Material aus Schritt 2.
-- Regeln: aktuelle Tool-Versionen zur Laufzeit prüfen, keine Personendaten, Versionsregel
+- **Recherchieren:** den aktuellen Stand der Toolchain bzw. des Themas per Websuche
+  klären (Werkzeuge, Versionen, gängige Praxis), bevor etwas entsteht.
+- **Bisherige Erkenntnisse gewichten** — die beiden Teile *From the project* und
+  *Suggested, not from the project* stehen im Prompt selbst, getrennt und je mit
+  Codeblöcken: *From the project* ist im Einsatz belegt; *Suggested, not from the
+  project* sind Hypothesen, die die Recherche bestätigt, ändert oder verwirft.
+- **Erst entwerfen, dann bauen:** den Entwurf zeigen — was hineinkommt, was aus den
+  Erkenntnissen übernommen und was verworfen wurde, je mit Grund — und erst nach
+  Zustimmung des Nutzers die Dateien anlegen.
+- Regeln: keine Personendaten, Versionsregel
   (`plugin.json`, CHANGELOG mit `### Template`, MANIFEST im selben Commit),
   `just check` grün, erst committen, wenn der Nutzer zustimmt. In einem Fork endet der
   Lauf mit einem PR, dessen Beschreibung die geänderten Dateien nennt.

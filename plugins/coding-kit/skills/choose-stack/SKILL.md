@@ -52,7 +52,11 @@ Kandidaten.
    `MANIFEST.md` § Detection) zeigt, welche Module und Fragmente die Dateien des Projekts
    nahelegen. Steht das Modul nicht schon fest, auf dieser Grundlage **ein** Modul
    empfehlen (wie Modus A Schritt 3, Stubs haben keine Signale); `declined`-Zeilen sind
-   frühere Entscheidungen des Projekts — nennen, nicht übergehen.
+   frühere Entscheidungen des Projekts — nennen, nicht übergehen. Eine `tool`-Zeile
+   `unknown` ist eine Sprache oder ein Werkzeug ohne Vorlage: kein Modul dafür raten —
+   das bestehende Modul behalten bzw. `docs-only` empfehlen (die Sprache bleibt
+   Werkzeugsprache) und anbieten, sie dem Template vorzuschlagen (Hintergrund-Skill
+   `propose-to-template` mit dem Fund starten).
 2. **Plan zeigen:** Das Skript `${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh` (in
    Shell-Befehlen der aufgelöste Pfad, Aufruf über `sh`) wendet den Modul-Kontrakt an
    (MANIFEST § Module contract) — nie Teile selbst einsetzen. Eine Kopie der Antworten

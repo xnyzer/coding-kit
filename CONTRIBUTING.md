@@ -45,9 +45,14 @@ personal data — in one of two forms; nothing is sent automatically:
 - **An issue** (the default, no checkout needed). Title by kind — `template: add a <language>
   module`, `standards: add a <name> fragment`, `template: <file> — <change>` — and a body
   with *Summary*, *Today* (what the project does instead), *Proposal* (module or fragment,
-  its signals, a matching stub), *Material* and *Kit rules*.
-- **A prompt** for a session in this repository or a fork. The session builds the change
-  under the rules above; in a fork it ends with a pull request listing the changed files.
+  its signals, a matching stub), *Material* and *Kit rules*. Material is split into
+  *From the project* (in use there) and *Suggested, not from the project* (unverified
+  ideas), so whoever builds the addition can weigh them.
+- **A prompt** for a session in this repository or a fork, asking it to design the
+  addition: research the current state of the toolchain first, weigh both parts of the
+  material, show the draft with what it kept or dropped and why, and build only after
+  approval — under the rules above. In a fork it ends with a pull request listing the
+  changed files.
 
 A new language usually becomes a stack module plus its language fragment
 (`<language>-lang`); a tool without a language of its own becomes a catalog fragment.
