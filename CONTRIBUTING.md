@@ -35,6 +35,25 @@ Conventions always originate **here in the template** and flow exclusively downw
 in an instantiated project are contributed as a manually initiated adoption proposal — a
 session in this repository, or an issue — never as an automatic write from a project.
 
+## Proposing a module or fragment
+
+The kit's skills notice what the template lacks: a tool in a project's `mise.toml` with no
+module or fragment, a project-local standards fragment, a change to a template file that
+would help every project. They then offer an adoption proposal — generalized and free of
+personal data — in one of two forms; nothing is sent automatically:
+
+- **An issue** (the default, no checkout needed). Title by kind — `template: add a <language>
+  module`, `standards: add a <name> fragment`, `template: <file> — <change>` — and a body
+  with *Summary*, *Today* (what the project does instead), *Proposal* (module or fragment,
+  its signals, a matching stub), *Material* and *Kit rules*.
+- **A prompt** for a session in this repository or a fork. The session builds the change
+  under the rules above; in a fork it ends with a pull request listing the changed files.
+
+A new language usually becomes a stack module plus its language fragment
+(`<language>-lang`); a tool without a language of its own becomes a catalog fragment.
+Read `plugins/coding-kit/template/MANIFEST.md` and an existing full module before
+building one.
+
 ## Rules for template content
 
 Read `plugins/coding-kit/template/MANIFEST.md` before changing template content — it is

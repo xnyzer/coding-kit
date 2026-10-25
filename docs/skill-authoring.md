@@ -27,7 +27,7 @@ Pflicht: `name`, `description`. Relevant außerdem:
 | Feld | Wann |
 |------|------|
 | `disable-model-invocation: true` | Skills, die nur der Nutzer bewusst startet (z. B. prep-step, audit-code) — verhindert Auto-Aufruf durch das Modell. |
-| `user-invocable: false` | Reine Hintergrund-Skills ohne Slash-Command (bisher keine). |
+| `user-invocable: false` | Reine Hintergrund-Skills ohne Slash-Command, die Claude aus anderen Skills oder dem Gespräch startet (z. B. propose-to-template). Andere Skills nennen sie ohne Slash und ohne „der Nutzer ruft auf"; die README führt sie mit dem Zusatz *(Hintergrund)*. |
 | `disallowed-tools` | Wenn ein Skill bestimmte Tools nie braucht/nutzen darf. |
 | `default-enabled` | Nur setzen, wenn ein Skill opt-in sein soll. |
 

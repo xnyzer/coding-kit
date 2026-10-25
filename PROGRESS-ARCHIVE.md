@@ -16,6 +16,75 @@ zusammen:
 
 ---
 
+## F-044b — Skill `propose-to-template` (2026-10-25)
+
+Teil von F-044 (Sprachen ohne Vorlage erkennen und dem Template vorschlagen; F-044a siehe
+darunter, F-044c folgt).
+
+**Problem:** Den Übernahme-Vorschlag gab es nur als Abschnitt in `update-conventions`, nur
+für projektlokale Fragmente und nur als Prompt oder `gh`-Aufruf. prep-step und step-done
+verwiesen auf diesen Abschnitt eines Skills, den Claude nicht starten darf
+(`disable-model-invocation: true`).
+
+**Was entstanden ist (1.4.0, unveröffentlicht):**
+
+- **`plugins/coding-kit/skills/propose-to-template/SKILL.md` (neu):** Hintergrund-Skill
+  mit `user-invocable: false`.
+  - Eingabe ist ein Fund (Tool aus `detect` mit `unknown`, projektlokales Fragment,
+    Abweichung an einer managed Datei). Ohne Übergabe nimmt er ihn aus dem Gespräch oder
+    stellt genau eine Rückfrage; er sucht nie selbst im Projekt.
+  - Das Ziel-Repo kommt aus `homepage` in `plugin.json`.
+  - Er sammelt das Material nur lesend: mise-Einträge, justfile-Rezepte, CI-Schritte und
+    Konfigdateien, den Fragment-Block oder den Diff gegen die Basis. Dann empfiehlt er ein
+    Modul (Sprache mit Toolchain, samt Sprachfragment), ein Fragment (Werkzeug ohne
+    Sprache) oder die Rules-Zeile `tool:NAME`. Einen passenden Stub nennt er als
+    Ausgangspunkt.
+  - Vor jeder Ausgabe generalisiert er (Material englisch, Platzhalter, „a downstream
+    project", keine Versionsstände) und durchsucht den Entwurf nach Projektname,
+    Git-Name, E-Mail und lokalen Pfaden.
+  - Eine Frage zum Format, Default Issue.
+  - Das Issue ist englisch und hat die Abschnitte Summary, Today, Proposal, Material und
+    Kit rules. Ausgegeben wird es als ein Block mit
+    `gh issue create … --body-file - <<'EOF'`, ohne `gh` über `…/issues/new`.
+  - Der Prompt ist ein Block in der Sprache des Gesprächs und ohne Vorwissen ausführbar:
+    Lesereihenfolge, Ergebnisdateien je Art, Material, Kit-Regeln, im Fork ein PR mit
+    Dateiliste.
+  - Die äußeren Blöcke sind mit `~~~~` umzäunt.
+- **Begleit-Änderungen:**
+  - `plugin.json`: In der Beschreibung steht der Hintergrund-Skill. Die Version bleibt
+    1.4.0.
+  - CHANGELOG-Eintrag.
+  - README: eine Zeile `propose-to-template` *(Hintergrund)*.
+  - `CONTRIBUTING.md`: Abschnitt „Proposing a module or fragment" mit beiden Formaten und
+    der Faustregel Modul plus Sprachfragment gegen Fragment.
+  - `docs/skill-authoring.md`: `user-invocable: false` mit Beispiel. Andere Skills nennen
+    einen Hintergrund-Skill ohne Slash, die README führt ihn mit *(Hintergrund)*.
+
+**Verifikation:** `just check` grün (Validator, 552 Skript-Tests). Laut Claude-Code-Doku
+kann Claude Skills mit `user-invocable: false` über das Skill-Tool starten, auch
+Plugin-Skills; `gh issue create --help` bestätigt `--body-file -` für stdin. Beispiel nach
+dem Skill-Text an einem Scratch-Projekt mit `rust` in der `mise.toml` (`detect` meldete
+`tool rust unknown`):
+- Der Issue-Befehl ist syntaktisch gültig (`bash -n`), und ein Ersatz für `gh` bekam Titel
+  und Body (41 Zeilen) korrekt.
+- Grep nach Projektname, Git-Name, E-Mail und lokalen Pfaden sowie die Blocklist: kein
+  Treffer.
+
+**Notable decisions:**
+- Das Issue ist englisch, weil das Kit-Repo öffentlich und die `CONTRIBUTING.md` englisch
+  ist. Der Prompt folgt der Sprache des Gesprächs; das Template-Material darin ist
+  englisch.
+- Der Issue-Body geht über stdin in denselben Block wie der Befehl. So bleibt es ein
+  einziger kopierfertiger Block, und es entsteht keine Datei im Projekt.
+- Die Template-HOW-TO bleibt unverändert: Sie listet Befehle, die man selbst aufruft.
+- Die Verweise der anderen Skills auf „update-conventions § Übernahme-Vorschlag" bleiben
+  bis F-044c stehen.
+
+**Geänderte Dateien:**
+`plugins/coding-kit/skills/propose-to-template/SKILL.md` (neu),
+`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`,
+`README.md`, `CONTRIBUTING.md`, `docs/skill-authoring.md`.
+
 ## F-044a — Erkennung: Zustand `unknown` und Ablehnung `tool:NAME` (2026-10-25)
 
 Teil von F-044 (Sprachen ohne Vorlage erkennen und dem Template vorschlagen; F-044b–c

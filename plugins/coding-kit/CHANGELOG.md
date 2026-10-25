@@ -24,6 +24,13 @@ Arbeit).
   der Core-`mise.toml`, aus der `mise.part.toml` eines Moduls oder als deklariertes
   `tool:`-Signal; Tools mit Backend-Präfix (`npm:…`, `cargo:…`) zählen nie. Gilt für den
   ganzen Baum, `--changed` und übergebene Signale.
+- **`propose-to-template` (neu):** der erste Hintergrund-Skill (`user-invocable: false`,
+  kein Slash-Command). Claude startet ihn mit einem Fund — Tool ohne Vorlage,
+  projektlokales Fragment, Abweichung an einer managed Datei — und bekommt einen
+  generalisierten, personendatenfreien Übernahme-Vorschlag fürs Template: als Issue
+  (Standard, mit `gh issue create` als Text) oder als Prompt für eine Session im Kit-Repo
+  bzw. einem Fork, beides kopierfertig. Er sendet nichts ab und schreibt nirgends hin.
+  Die `CONTRIBUTING.md` des Kit-Repos beschreibt solche Vorschläge.
 - **Kit:** Die Erkennungs-Tests decken bekannte Tools, Backend-Tools, `[tools.NAME]`-Tabellen,
   mehrere mise-Dateien, Ablehnung, `--changed` und übergebene Signale ab; ein frischer Render
   jedes Moduls meldet kein unbekanntes Tool.

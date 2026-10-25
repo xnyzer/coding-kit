@@ -33,6 +33,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-043b | Erkennung, Validator und Skills → **`detect` zählt vom Modul der Antworten deklarierte Fragmente als `covered`; der Validator meldet Katalog-Fragmente mit Modulnamen; update-conventions und choose-stack setzen neue Fragmente an ihre Stelle aus dem Render, geschützte Fragmente zeigen Template-Änderungen zur Info, `FRAGMENTS` folgt dem Modulwechsel in beide Richtungen; Begriffe Modul- und Sprachfragment in den Skills.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-043c | Test, Release, Gegenprobe → **Läufe an Kopien eines docs-only- und eines mit 1.2.1 gerenderten ts-node-Projekts (Sprachfragment angeboten, Modul-Fragment ersetzt, Stelle aus dem Render, Override mit Info-Diff); Funde mitgenommen: Biome auf Code beschränkt, `base-from-history` für Releases ohne Template-Änderung; Release 1.3.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe am echten docs-only-Projekt (`python-lang` angenommen); Messung zu Modell und Effort → F-046. F-043 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-044a | Erkennung: Zustand `unknown` und Ablehnung `tool:NAME` → **`detect` meldet nach Modulen und Fragmenten jedes Tool aus `[tools]` der `mise.toml`, für das das Template keine Konvention hat (`unknown`, mit Rules-Zeile `tool:NAME` `declined`); bekannt sind Tools aus der Core- und den Modul-`mise.toml` sowie deklarierte `tool:`-Signale, Backend-Tools zählen nie; MANIFEST und Registry-Kopf beschreiben Zustand und Zeile.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
+| F-044b | Skill `propose-to-template` → **erster Hintergrund-Skill (`user-invocable: false`): Claude startet ihn mit einem Fund (Tool ohne Vorlage, projektlokales Fragment, Abweichung an einer managed Datei) und bekommt einen generalisierten, personendatenfreien Übernahme-Vorschlag — kopierfertig als Issue (Standard, `gh issue create` als Text) oder als Prompt für eine Session im Kit-Repo; nichts wird abgeschickt. CONTRIBUTING beschreibt solche Vorschläge, die Authoring-Doku Hintergrund-Skills.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 
 ---
 
@@ -98,31 +99,6 @@ nichts.
 - Keine neuen Dependencies.
 
 **Abhängigkeiten:** F-042 (erledigt). Vor F-045.
-
-#### F-044b — Skill `propose-to-template`
-
-**Was:** Neuer Plugin-Skill über `/add-skill`, `user-invocable: false`. Eingabe: ein
-Fund — Tool ohne Vorlage, projektlokales Fragment oder Abweichung an einer managed
-Datei — mit Evidenz; ohne Fund aus dem Gespräch, sonst eine Rückfrage. Inhalt: was fehlt;
-Ausgangsmaterial aus dem Projekt (bei Tools die Einträge in `mise.toml`, justfile-Rezepte
-und CI-Schritte, bei Fragmenten der Block), generalisiert, Englisch, personendatenfrei;
-ein passender Stub aus `modules/README.md`; die Kit-Regeln, die der Bau erfüllen muss
-(MANIFEST, Versionsregel, CHANGELOG mit `### Template`). Formate zur Wahl: Issue
-(Standard) und Prompt, beide kopierfertig im Codeblock, der Prompt ohne Vorwissen
-ausführbar. Ziel-Repo aus `homepage`. Nichts absenden, nichts ins Template schreiben.
-Abschnitt „Proposing a module or fragment" in der `CONTRIBUTING.md`; README
-(Skill-Liste), `plugin.json`-Description, CHANGELOG.
-
-**Dateien:** `plugins/coding-kit/skills/propose-to-template/SKILL.md` (neu),
-`CONTRIBUTING.md`, `README.md`, `plugins/coding-kit/.claude-plugin/plugin.json`,
-`plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-044a (Format der `tool`-Zeilen).
-
-**Abnahmekriterien:**
-- [ ] Der Skill folgt `docs/skill-authoring.md`; `just check` grün.
-- [ ] Beide Formate kopierfertig, ohne Personendaten, lokale Pfade oder Projektnamen
-      (Personendaten-grep über ein Beispiel).
 
 #### F-044c — Skills anbinden, Testlauf, Release
 

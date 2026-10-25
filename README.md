@@ -184,6 +184,7 @@ Die Spalte **GitHub** sagt, was ohne GitHub bleibt: `–` = rein lokal über git
 | `/coding-kit:go-public` | ja | Projekt nachträglich public machen: blockierendes Preflight-Audit (Secrets in der vollen Historie, Privacy inkl. Commit-Metadaten, Lizenz, `private/`-Hygiene), Datei-Nachzug **vor** dem Umstellen (update-conventions mit Sichtbarkeits-Prämisse), dann Sichtbarkeitswechsel bzw. Repo-Anlage + Push nur nach laufbezogener Freigabe; Abschluss-Check (CodeQL, Settings). |
 | `/coding-kit:refine-prompt` | – | Übergebenen Prompt analysieren, Schwachstellen benennen, nach Best Practices neu formulieren und ausführen. |
 | `/coding-kit:handoff` | – | Am Kontextlimit: kopierfertigen Handoff-Prompt für einen frischen Chat schreiben — übergibt nur, was aus der Session noch nicht dokumentiert ist, verweist sonst auf die Quelldateien; baut und ändert nichts. |
+| `propose-to-template` *(Hintergrund)* | – | Kein Slash-Command — Claude startet ihn bei einem Fund: ein Tool ohne Vorlage, ein projektlokales Fragment oder eine Abweichung an einer managed Datei, die allen Projekten nützt. Erzeugt den Übernahme-Vorschlag fürs Template, generalisiert und personendatenfrei, kopierfertig als Issue (Standard, `gh`-Befehl als Text) oder als Prompt für eine Session im Kit-Repo; sendet nichts ab. |
 
 Was bei `teils` konkret entfällt — der Rest des Skills läuft lokal weiter:
 
