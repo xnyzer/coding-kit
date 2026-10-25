@@ -86,7 +86,7 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
    eine Prämisse des Aufrufers gilt vor beidem), Languages-Block der Projekt-CLAUDE.md
    (`LANG_*`), Lizenz (`LICENSE`), Modul (justfile-Kopf, `mise.toml`), Graphiti-Block der
    CLAUDE.md (`OPTIONAL` enthält `graphiti`), Fragmente im Slot (`FRAGMENTS` = die
-   Fragmente im Slot ohne Sprachfragment und ohne die im `MODULE.md` deklarierten).
+   Fragmente im Slot ohne das Modul-Fragment und ohne die im `MODULE.md` deklarierten).
    Unterschiede zeigen und je Wert fragen, welcher gilt; die Antworten-Datei nur nach
    Bestätigung ändern. Die Prämisse eines Aufrufers rendert nur diesen Lauf, sie ändert
    die Datei nicht.
@@ -136,15 +136,19 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
    ohnehin `just check`).
 6. **Fragment-Abgleich (CODING-STANDARDS-Slot, je Fragment):** die
    `fragment:NAME`-Blöcke im Slot einzeln gegen ihr Template-Pendant diffen — das
-   Sprachfragment gegen `CODING-STANDARDS.part.md` des Moduls, Katalog-Fragmente gegen
-   `modules/standards/<name>.md`. Je Fragment **übernehmen** / **diesmal nicht**; ein
-   Inline-`<!-- override: … -->` im Block schützt genau dieses Fragment. **Ohne
+   Modul-Fragment gegen `CODING-STANDARDS.part.md` des Moduls, Katalog-Fragmente (auch
+   das Sprachfragment `<sprache>-lang`) gegen `modules/standards/<name>.md`. Je Fragment
+   **übernehmen** / **diesmal nicht**. Ein Inline-`<!-- override: … -->` im Block schützt
+   genau dieses Fragment — nicht anbieten; hat es sich aber zwischen Basis-Snapshot
+   (`CODING-STANDARDS.md.base`) und Render geändert, den Diff Basis → Render **zur Info**
+   zeigen (ohne Snapshot: Projekt → Template), übernommen wird von Hand. **Ohne
    Template-Pendant → projektlokal: nie anfassen**; auflisten mit dem Hinweis, dass dieses
    Set im Template fehlt, und je Fragment einen **Übernahme-Vorschlag** ausgeben —
    anstoßen muss ihn der Nutzer. Deklariert das `MODULE.md` inzwischen Fragmente, die im
    Projekt fehlen, oder kam eines aus der Erkennung (Schritt 2) nach `FRAGMENTS` →
-   Anhängen anbieten (Mechanik wie `/choose-stack`, idempotent);
-   bestehende in-place ersetzen, Neues ans Slot-Ende — nie umsortieren.
+   Anhängen anbieten (Mechanik wie `/choose-stack`, idempotent). Bestehende in-place
+   ersetzen, Neues an seine **Stelle aus dem Render**: hinter den nächsten Vorgänger aus
+   `<tmp>/soll`, der im Slot steht, ohne Vorgänger an den Slot-Anfang — nie umsortieren.
    **Begleithandlungen (auch bei unverändertem Text):** je Fragment im Slot prüfen, ob die
    dort formulierte Einbau-Anforderung im Projekt erfüllt ist (`/choose-stack`
    § Begleithandlungen), und offene Fälle mit Diff zur Bestätigung anbieten. Dieser Pfad

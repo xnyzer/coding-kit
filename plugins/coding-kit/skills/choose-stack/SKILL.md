@@ -67,12 +67,13 @@ Kandidaten.
    es im Projekt noch nicht gibt, nie überschreiben.
    - **Standards-Fragmente** (der Slot ist im Merge ausgeblendet, er läuft hier) → im
      Slot `<!-- module:coding-standards -->` **anhängen**, nie ersetzen. Fragmentliste in
-     Reihenfolge: eigenes Sprachfragment des Moduls
-     (`CODING-STANDARDS.part.md`), dann die Katalog-Fragmente
-     (`modules/standards/<name>.md`) laut `Standards fragments:`-Zeile des `MODULE.md`
-     — tolerant lesen (fett/plain; `(none)`, leer oder fehlend = keine). Die
-     Quell-Dateien tragen ihre `<!-- fragment:NAME -->`-Marker bereits: unverändert vor
-     dem schließenden `<!-- /module:coding-standards -->` einfügen. **Idempotent:** ist
+     Reihenfolge: das Modul-Fragment (`CODING-STANDARDS.part.md`), dann die
+     Katalog-Fragmente (`modules/standards/<name>.md`, das Sprachfragment zuerst) laut
+     `Standards fragments:`-Zeile des `MODULE.md` — tolerant lesen (fett/plain;
+     `(none)`, leer oder fehlend = keine). Die Quell-Dateien tragen ihre
+     `<!-- fragment:NAME -->`-Marker bereits: unverändert an ihre Stelle aus dem Render
+     einfügen — hinter den nächsten Vorgänger aus `<tmp>/soll`, der im Slot steht, ohne
+     Vorgänger direkt hinter `<!-- module:coding-standards -->`. **Idempotent:** ist
      `fragment:NAME` im Projekt schon vorhanden → überspringen — nie doppelt einbauen,
      nie erneuern (Erneuern macht `/update-conventions`); die **Begleithandlung** des
      Fragments wird davon unabhängig geprüft (§ Begleithandlungen). Beim Erst-Einbau den
@@ -83,11 +84,16 @@ Kandidaten.
 3. **Je Datei Diff zeigen und einzeln bestätigen lassen** — dieselben Entscheidungen wie
    `/update-conventions` A2 Schritt 5 (übernehmen heißt, das Ergebnis aus `<tmp>/out`
    kopieren). Beim **Wechsel** auch das Entfernen der `removed`-Dateien des Alt-Moduls
-   bestätigen lassen. Das Sprachfragment des Alt-Moduls wird gegen das neue getauscht;
-   vorhandene Katalog-Fragmente bleiben stehen und werden nur aufgelistet („noch
-   aktuell?") — Entfernen ist eine Projektentscheidung, kein Automatismus.
-4. **Nachziehen:** `MODULE` in `.claude/template-answers` setzen (und `FRAGMENTS` laut
-   § Begleithandlungen), dann `sh <skript> snapshot <projekt> <tmp>/soll <Ziele>` für jedes
+   bestätigen lassen. Das Modul-Fragment des Alt-Moduls wird an seiner Stelle gegen das
+   neue getauscht; vorhandene Katalog-Fragmente bleiben stehen und werden nur aufgelistet
+   („noch aktuell?") — auch das Sprachfragment des Alt-Moduls, das weiter gilt, wenn die
+   Sprache als Werkzeugsprache bleibt. Entfernen ist eine Projektentscheidung, kein
+   Automatismus.
+4. **Nachziehen:** `MODULE` in `.claude/template-answers` setzen und `FRAGMENTS` laut
+   § Begleithandlungen nachführen, in beide Richtungen: Was das neue Modul selbst
+   deklariert, kommt heraus (z. B. sein Sprachfragment, das dort als Werkzeugsprache
+   stand); ein stehen gebliebenes Katalog-Fragment, das nur das Alt-Modul deklarierte,
+   kommt hinein. Dann `sh <skript> snapshot <projekt> <tmp>/soll <Ziele>` für jedes
    übernommene oder entfernte Ziel — sonst meldet der nächste Abgleich den Modulwechsel
    als Abweichung. Lehnt die Rules-Tabelle der `.claude/convention-overrides.md` das neue
    Modul ab (`module:NAME`, z. B. als Werkzeugsprache), die Zeile zum Austragen anbieten —
@@ -130,7 +136,8 @@ Ist alles erfüllt → still überspringen, nichts melden.
 **Antworten und Registry** — gehören in denselben Schritt wie das Fragment selbst:
 
 - **`FRAGMENTS`:** Ein angehängtes Fragment, das das Modul nicht selbst deklariert
-  (Eigenschafts-Fragment oder Katalog-Fragment für ein später eingeführtes Framework),
+  (Eigenschafts-Fragment, Katalog-Fragment für ein später eingeführtes Framework oder das
+  Sprachfragment einer Werkzeugsprache),
   kommt in `FRAGMENTS` der `.claude/template-answers` — die Antworten beschreiben den Slot
   vollständig, und `/update-conventions` gleicht beides ab.
 - **`keep`-Zeilen:** Ändert eine Begleithandlung **managed** Dateien (z. B. `nextjs` und

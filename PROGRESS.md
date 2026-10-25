@@ -30,6 +30,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-042c | Skills und Doku → **prep-step § 2a prüft geplante Signale per `detect` (Fragment oder Modul fehlt → Anhängen, `/choose-stack` oder Werkzeugsprache); step-done § 1a über `detect --changed`; update-conventions erkennt in Schritt 2 vor dem Rendern (Fragment → `FRAGMENTS`, Modul → `/choose-stack`, dauerhaft ablehnen → Rules-Zeile), `status` berichtet, die Revision trägt Ablehnungen ohne Signale aus; choose-stack empfiehlt aus den Signalen; HOW-TO, README und CHANGELOG nachgezogen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-042d | Test, Release, Gegenprobe → **Läufe an Kopien eines docs-only- und eines ts-node-Projekts (ablehnen, anhängen, diesmal nicht; der folgende `status` ohne Vorschlag für Abgelehntes; Migration von 0.13.2 mit Erkennung); Release 1.2.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe am echten docs-only-Projekt (`module:python` abgelehnt); Fund aus den Tests: Stellvertreter-Optionen `--answers`, `--registry`, `--snapshot` (1.2.1, unveröffentlicht). F-042 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-043a | Fragmente aufteilen → **Sprachfragmente `python-lang`, `typescript-lang`, `go-lang` im Katalog (Signale ohne Dateiendungen); die drei Modul-Fragmente auf die Toolchain gekürzt und als Modul-Fragment benannt, `Standards fragments:` in den `MODULE.md`; MANIFEST, Katalog und §13 mit den neuen Begriffen; Render- und Erkennungs-Tests für Slot-Reihenfolge und Werkzeugsprache; Version 1.3.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
+| F-043b | Erkennung, Validator und Skills → **`detect` zählt vom Modul der Antworten deklarierte Fragmente als `covered`; der Validator meldet Katalog-Fragmente mit Modulnamen; update-conventions und choose-stack setzen neue Fragmente an ihre Stelle aus dem Render, geschützte Fragmente zeigen Template-Änderungen zur Info, `FRAGMENTS` folgt dem Modulwechsel in beide Richtungen; Begriffe Modul- und Sprachfragment in den Skills.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 
 ---
 
@@ -106,32 +107,6 @@ vor.
 - Keine neuen Dependencies.
 
 **Abhängigkeiten:** F-042 (erledigt). Vor F-044.
-
-#### F-043b — Erkennung, Validator und Skills
-
-**Was:** `detect`: Ein Fragment, das das Modul der Antworten deklariert, ist `covered`
-(Skript samt Kopf und Kommentaren mit den neuen Begriffen, MANIFEST § Detection, Tests).
-Validator: ein Katalog-Fragment mit dem Namen eines Moduls ist ein Fund.
-`update-conventions` A2 Schritt 6: neue Fragmente an die Render-Position; ein geschütztes
-Fragment mit geänderter Template-Fassung → Diff zur Info. `choose-stack` Modus B:
-Render-Position beim Anhängen, `FRAGMENTS` beim Wechsel in beide Richtungen. Begriffe
-Modul-Fragment und Sprachfragment in `new-project`, `choose-stack` und
-`update-conventions`; `/add-skill` läuft mit. CHANGELOG ergänzen.
-
-**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
-`tests/template-sync/detect.sh`, `scripts/validate.py`,
-`plugins/coding-kit/template/MANIFEST.md`,
-`plugins/coding-kit/skills/{update-conventions,choose-stack,new-project}/SKILL.md`,
-`plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-043a.
-
-**Abnahmekriterien:**
-- [ ] Test: Projekt mit `MODULE=python`, `tool:python` und ohne `python-lang` im Slot →
-      `fragment python-lang covered`; ohne Antworten-Datei → `missing`.
-- [ ] Der Validator meldet ein Katalog-Fragment, das wie ein Modul heißt (Gegenprobe an
-      einer Scratch-Kopie).
-- [ ] `just check` grün.
 
 #### F-043c — Test, Release, Gegenprobe
 

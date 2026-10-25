@@ -37,7 +37,8 @@
 #       for the project; with --changed only the signals the working tree adds against
 #       HEAD; with SIGNAL arguments (type:value, a file signal names a planned path)
 #       only those. Line per hit: <module|fragment> <name> <covered|declined|missing>
-#       <signal (first path[ +more])>, … — modules first. Without
+#       <signal (first path[ +more])>, … — modules first. A fragment is covered by its
+#       marker in the slot or because the module of the answers declares it. Without
 #       .claude/template-answers the module check is skipped (note on stderr).
 #
 # Options name a stand-in for a file of PROJECT, so a skill can go on with files it
@@ -461,7 +462,7 @@ emit() {  # SRC TARGET POLICY ORIGIN
   printf '%s\t%s\t%s\n' "$e_tgt" "$3" "$4"
 }
 
-# Slot content: language fragment, declared catalog fragments, FRAGMENTS — each trimmed
+# Slot content: module fragment, declared catalog fragments, FRAGMENTS — each trimmed
 # of surrounding blank lines, one blank line between them.
 compose_slot() {
   : > "$WORK/slot"
@@ -1407,6 +1408,14 @@ detect() {
     sed -n 's/^[[:space:]]*<!--[[:space:]]*fragment:\([a-z0-9-]*\)[[:space:]]*-->.*$/\1/p' \
       "$WORK/slot" > "$WORK/covered"
   fi
+  # What the module of the answers declares comes with the render, marker or not.
+  case $dt_module in
+    '' | standards | *[!a-z0-9-]*) ;;
+    *)
+      MODDIR=$TEMPLATE/modules/$dt_module
+      if [ -f "$MODDIR/MODULE.md" ]; then declared_fragments >> "$WORK/covered"; fi
+      ;;
+  esac
   declined_rows > "$WORK/declined"
   report_hits "$dt_module"
 }

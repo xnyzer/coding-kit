@@ -171,6 +171,11 @@ run_detect_cases() {
     'tool:python (mise.toml)'
   check "without stand-ins: no answers, no module rows" dt o2 do
   check "without stand-ins: module check skipped" no_hit o2 module python
+  answers "$TMP/dpy.answers" python private
+  check "detect with the module's answers runs" dt o3 --answers "$TMP/dpy.answers" do
+  check "declared by the module of the answers: covered without a marker" \
+    hit_is o3 fragment python-lang covered
+  check "without answers: the slot alone counts" hit_is o2 fragment python-lang missing
   refute "detect takes no --snapshot" ts detect --snapshot "$TMP/op.snap" "$TEMPLATE" "$TMP/do"
 
   # --- a fresh render detects only its own module ------------------------------------

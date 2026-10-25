@@ -113,8 +113,9 @@ Temp-Verzeichnis (`mktemp -d`, im Folgenden `<tmp>`).
 2. **Rendern:** `sh <skript> render --seeds <template> <projekt>/.claude/template-answers
    <tmp>/neu` und den Inhalt von `<tmp>/neu` ins Projekt kopieren. Der Renderer setzt
    Platzhalter, `template:optional`-Blöcke, public-only-Dateien, Modul-Teile,
-   `files/**` (mit Pfad-Platzhaltern) und den Fragment-Slot (Sprachfragment, deklarierte
-   Katalog-Fragmente, `FRAGMENTS`); `section:NAME`-Markerpaare bleiben, wie sie sind.
+   `files/**` (mit Pfad-Platzhaltern) und den Fragment-Slot (Modul-Fragment, deklarierte
+   Katalog-Fragmente samt Sprachfragment, `FRAGMENTS`); `section:NAME`-Markerpaare
+   bleiben, wie sie sind.
 3. **Was der Renderer offen lässt, jetzt konkretisieren:**
    - **`<!-- template:adapt: … -->`**-Stellen aus der Short-Info konkretisieren (Zweck/
      Scope in CLAUDE.md, README-Intro, Status-Zeile) und den Marker entfernen. Für jede

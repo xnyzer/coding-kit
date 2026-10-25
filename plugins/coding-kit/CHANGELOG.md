@@ -17,10 +17,26 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
 
 Sprachregeln gelten auch dort, wo eine Sprache ohne ihr Modul läuft (F-043, in Arbeit).
 
+- **`scripts/template-sync.sh detect`:** Ein Fragment, das das Modul der Antworten
+  deklariert, ist `covered`, auch ohne Marker im Slot — der Render bringt es mit. So bietet
+  `update-conventions` das Sprachfragment in Projekten mit Modul nicht vorab als fehlend
+  an.
+- **`update-conventions`** (A2 Schritt 6): Neue Fragmente kommen an ihre Stelle aus dem
+  Render (hinter den nächsten Vorgänger, der im Slot steht) statt ans Slot-Ende;
+  Bestehendes wird weiterhin nie umsortiert. Ein durch Override geschütztes Fragment, das
+  sich im Template geändert hat, zeigt den Diff zur Info.
+- **`choose-stack`:** setzt Fragmente ebenso an ihre Stelle aus dem Render und führt
+  `FRAGMENTS` beim Modulwechsel in beide Richtungen nach — was das neue Modul deklariert,
+  kommt heraus, ein stehen gebliebenes Fragment des Alt-Moduls hinein.
+- **Begriffe:** `new-project`, `choose-stack` und `update-conventions` sprechen vom
+  Modul-Fragment (dem eigenen Fragment eines Moduls) und vom Sprachfragment
+  (`<sprache>-lang`).
 - **Kit:** Die Render-Tests prüfen die Reihenfolge im Slot (Modul-Fragment, Sprachfragment,
   `FRAGMENTS`), ein deklariertes Fragment in `FRAGMENTS` erscheint nur einmal, und ein
   docs-only-Projekt mit Werkzeugsprache bekommt das Sprachfragment allein; die
-  Erkennungs-Tests melden es dort als fehlend.
+  Erkennungs-Tests melden es dort als fehlend und mit den Antworten eines Moduls, das es
+  deklariert, als `covered`. Der Validator lässt kein Katalog-Fragment zu, das wie ein
+  Modul heißt — Modul- und Katalog-Fragmente teilen sich die Namen.
 
 ### Template
 

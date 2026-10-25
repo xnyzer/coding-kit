@@ -285,18 +285,19 @@ three states:
 
 | State | Module | Fragment |
 |-------|--------|----------|
-| `covered` | it is `MODULE` in the answers (§ Answers) | its `fragment:NAME` marker is in the standards slot of `CODING-STANDARDS.md` |
+| `covered` | it is `MODULE` in the answers (§ Answers) | its `fragment:NAME` marker is in the standards slot of `CODING-STANDARDS.md`, or the module of the answers declares it (the render brings it) |
 | `declined` | the Rules table of the registry has the row `module:NAME` | the Rules table has the row `fragment:NAME` |
 | `missing` | otherwise | otherwise |
 
-Without an answers file only the module check is skipped. A missing module is proposed
-via `/choose-stack`; a missing fragment is appended like any other (§ Standards fragments)
-and goes into `FRAGMENTS`. A permanent "no" is a Rules row (§ Deviation registry); "not
-this time" is not recorded. A project keeps one stack module: a language whose module the
-project does not have — next to another module, or in a `docs-only` project — is a tool
-language. Its module is declined with a reason, and the hand-built toolchain is registered
-as `keep`. Its language fragment (§ Standards fragments) still applies: it carries the
-language's signals and is proposed like any other fragment.
+Without an answers file the module check is skipped, and fragments count by the slot
+alone. A missing module is proposed via `/choose-stack`; a missing fragment is appended
+like any other (§ Standards fragments) and goes into `FRAGMENTS`. A permanent "no" is a
+Rules row (§ Deviation registry); "not this time" is not recorded. A project keeps one
+stack module: a language whose module the project does not have — next to another module,
+or in a `docs-only` project — is a tool language. Its module is declined with a reason,
+and the hand-built toolchain is registered as `keep`. Its language fragment (§ Standards
+fragments) still applies: it carries the language's signals and is proposed like any other
+fragment.
 
 ## Seed sections
 

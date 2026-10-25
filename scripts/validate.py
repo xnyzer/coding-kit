@@ -318,6 +318,17 @@ def check_catalog_table(catalog_dir: Path, files: dict[str, Path], findings: lis
         findings.append(f"{display_path(files[name])}: fragment has no row in the catalog table")
 
 
+def check_fragment_names(catalog_dir: Path, files: dict[str, Path], findings: list[str]) -> None:
+    """Module fragments are named after their module and share the `fragment:` names with
+    the catalog, so a catalog fragment named like a module would collide in the slot."""
+    modules = {doc.parent.name for doc in catalog_dir.parent.glob("*/MODULE.md")}
+    for name in sorted(files.keys() & modules):
+        findings.append(
+            f"{display_path(files[name])}: catalog fragment is named like the module '{name}' "
+            "(module fragments use the module name)"
+        )
+
+
 def check_catalog(catalog_dir: Path, findings: list[str]) -> None:
     """Standards-fragment catalog: file contract plus catalog/file consistency."""
     if not catalog_dir.is_dir():
@@ -325,6 +336,7 @@ def check_catalog(catalog_dir: Path, findings: list[str]) -> None:
     files = {p.stem: p for p in sorted(catalog_dir.glob("*.md")) if p.name != "README.md"}
     check_fragment_files(files, findings)
     check_catalog_table(catalog_dir, files, findings)
+    check_fragment_names(catalog_dir, files, findings)
 
 
 def manifest_section(text: str, title: str) -> str | None:

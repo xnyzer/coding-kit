@@ -16,6 +16,65 @@ zusammen:
 
 ---
 
+## F-043b — Erkennung, Validator und Skills (2026-10-25)
+
+Teil von F-043 (Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen; F-043a
+siehe darunter, F-043c folgt).
+
+**Problem:** Mit den Sprachfragmenten aus F-043a deklarieren die Module erstmals
+Katalog-Fragmente. `detect` zählte ein Fragment aber nur nach seinem Marker im Slot,
+`update-conventions` hängte neue Fragmente ans Slot-Ende, ein durch Override geschütztes
+Modul-Fragment blieb stumm, und `choose-stack` führte `FRAGMENTS` beim Modulwechsel nicht
+nach.
+
+**Was entstanden ist (1.3.0, unveröffentlicht):**
+
+- **`detect`:** Ein Fragment, das das Modul der Antworten deklariert, ist `covered`, auch
+  ohne Marker — der Render bringt es mit. Der Modulname wird wie beim Rendern geprüft; ein
+  unbekanntes Modul zählt nicht. Skript-Kopf und Kommentar mit dem Begriff
+  Modul-Fragment; MANIFEST § Detection: Zustandstabelle und „ohne Antworten zählt nur der
+  Slot".
+- **Validator:** `check_fragment_names` meldet ein Katalog-Fragment, das wie ein Modul
+  heißt.
+- **`update-conventions`:** Schritt 2 „ohne das Modul-Fragment". Schritt 6: das
+  Modul-Fragment gegen `CODING-STANDARDS.part.md`, Katalog- und Sprachfragmente gegen den
+  Katalog; ein geschütztes Fragment wird nicht angeboten, zeigt aber den Diff Basis →
+  Render zur Info, wenn es sich zwischen Basis-Snapshot und Render geändert hat (ohne
+  Snapshot: Projekt → Template); Neues kommt an seine Stelle aus dem Render (hinter den
+  nächsten Vorgänger aus `<tmp>/soll`, der im Slot steht, ohne Vorgänger an den
+  Slot-Anfang).
+- **`choose-stack`:** Modus B setzt Fragmente an ihre Stelle aus dem Render (unter den
+  Katalog-Fragmenten das Sprachfragment zuerst); beim Wechsel wird das Modul-Fragment an
+  seiner Stelle getauscht, das Sprachfragment des Alt-Moduls bleibt als Katalog-Fragment
+  stehen; `FRAGMENTS` wird in beide Richtungen nachgeführt; § Begleithandlungen nennt das
+  Sprachfragment einer Werkzeugsprache.
+- **`new-project`:** Schritt 4b mit den neuen Begriffen.
+- **Tests:** `detect` mit den Antworten eines python-Projekts ohne Slot →
+  `fragment python-lang covered`; ohne Antworten → `missing`.
+- **CHANGELOG** 1.3.0 ergänzt. add-skill-Checkliste: `plugin.json` (Version schon 1.3.0,
+  Beschreibung unverändert), README, HOW-TO und Authoring-Doku geprüft — keine Änderung
+  nötig.
+
+**Verifikation:** `just check` grün (Validator, 490 Skript-Tests unter dash und bash,
+6 davon neu). Gegenprobe an einer Scratch-Kopie: Ein Katalog-Fragment `go.md` meldet der
+Validator als Kollision mit dem Modul `go`. Versionsregel gegen `origin/main` grün. Die
+Skill-Texte selbst testet F-043c mit `--plugin-dir`.
+
+**Notable decisions:**
+- „Template-Fassung geändert" heißt beim geschützten Fragment: verschieden zwischen
+  Basis-Snapshot und Render, nicht zwischen Projekt und Template — es weicht gewollt ab
+  und würde sonst bei jedem Lauf gemeldet.
+- Die Render-Position gilt für jedes neue Fragment, nicht nur für Sprachfragmente;
+  bestehende werden weiterhin nie umsortiert.
+
+**Geänderte Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
+`plugins/coding-kit/template/MANIFEST.md`, `scripts/validate.py`,
+`tests/template-sync/detect.sh`,
+`plugins/coding-kit/skills/{update-conventions,choose-stack,new-project}/SKILL.md`,
+`plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-043a — Fragmente aufteilen (2026-10-25)
 
 Teil von F-043 (Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen; F-043b–c
