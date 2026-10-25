@@ -13,7 +13,7 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 1.2.1 — unveröffentlicht
+## 1.2.1 — 2026-10-25
 
 Skills kommen weiter, wenn ein Schreibzugriff unter `.claude/` auf Freigabe wartet (Fund
 aus den Tests von F-042).
