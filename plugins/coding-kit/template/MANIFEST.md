@@ -116,9 +116,9 @@ deviates, in two tables after the zone:
   glob (several comma-separated paths allowed; `*` also matches `/`, as in `.github/**`).
 - **`## Rules`** — `| Rule | Deviation | Reason | Since |`, for deviations that are not
   about one file (e.g. a different rule for living docs); read by people — except a row
-  whose Rule cell is `module:NAME` or `fragment:NAME` (backticks allowed): it declines
-  that detection proposal for good (§ Detection), and its Deviation cell says what the
-  project does instead.
+  whose Rule cell is `module:NAME`, `fragment:NAME` or `tool:NAME` (backticks allowed):
+  it declines that detection proposal for good (§ Detection), and its Deviation cell says
+  what the project does instead.
 
 The kind decides how updates treat a file:
 
@@ -298,6 +298,24 @@ or in a `docs-only` project — is a tool language. Its module is declined with 
 and the hand-built toolchain is registered as `keep`. Its language fragment (§ Standards
 fragments) still applies: it carries the language's signals and is proposed like any other
 fragment.
+
+**Tools without a convention.** A tool in `[tools]` of a project's `mise.toml` is
+**known** when the template names it: in `[tools]` of the core `mise.toml` or of a
+module's `mise.part.toml`, or as a declared `tool:` signal. A tool name with a backend
+prefix (`npm:…`, `pipx:…`, `cargo:…`, `aqua:…` — any name with `:`) installs a package,
+not a language, and is never reported. Every other tool gets a line of its own, after the
+modules and fragments, in one of two states:
+
+| State | Tool |
+|-------|------|
+| `declined` | the Rules table of the registry has the row `tool:NAME` |
+| `unknown` | otherwise — the template has no module or fragment for it |
+
+Only tools can be `unknown`; dependencies and files without a convention are not
+reported. An `unknown` tool is proposed to the template — as a module or a fragment, the
+kit decides — never added to the project. Stub modules (`modules/README.md`) declare no
+signals, so their languages count as `unknown` too. A tool that needs no convention (an
+infra CLI, a linter) is declined with a Rules row.
 
 ## Seed sections
 

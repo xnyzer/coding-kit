@@ -13,6 +13,28 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 1.4.0 — unveröffentlicht
+
+Tools ohne Vorlage werden erkannt und können dem Template vorgeschlagen werden (F-044, in
+Arbeit).
+
+- **`scripts/template-sync.sh detect`:** meldet nach Modulen und Fragmenten jedes Tool aus
+  `[tools]` der `mise.toml`, für das das Template keine Konvention hat — Zeile
+  `tool <name> unknown`, mit Rules-Zeile `tool:NAME` `declined`. Bekannt ist ein Tool aus
+  der Core-`mise.toml`, aus der `mise.part.toml` eines Moduls oder als deklariertes
+  `tool:`-Signal; Tools mit Backend-Präfix (`npm:…`, `cargo:…`) zählen nie. Gilt für den
+  ganzen Baum, `--changed` und übergebene Signale.
+- **Kit:** Die Erkennungs-Tests decken bekannte Tools, Backend-Tools, `[tools.NAME]`-Tabellen,
+  mehrere mise-Dateien, Ablehnung, `--changed` und übergebene Signale ab; ein frischer Render
+  jedes Moduls meldet kein unbekanntes Tool.
+
+### Template
+
+- MANIFEST § Detection: Tools ohne Konvention mit den Zuständen `unknown` und `declined`;
+  § Deviation registry: die Rules-Zeile `tool:NAME` lehnt einen Tool-Vorschlag dauerhaft ab.
+- Die Kopfzone der `.claude/convention-overrides.md` (`overrides-head`) erklärt die
+  Rules-Zeile `tool:NAME`.
+
 ## 1.3.0 — 2026-10-25
 
 Sprachregeln gelten auch dort, wo eine Sprache ohne ihr Modul läuft (F-043).

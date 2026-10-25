@@ -40,7 +40,9 @@
 #       only those. Line per hit: <module|fragment> <name> <covered|declined|missing>
 #       <signal (first path[ +more])>, … — modules first. A fragment is covered by its
 #       marker in the slot or because the module of the answers declares it. Without
-#       .claude/template-answers the module check is skipped (note on stderr).
+#       .claude/template-answers the module check is skipped (note on stderr). Then a
+#       line per tool the template has no convention for: tool <name>
+#       <unknown|declined> <tool:name (first path[ +more])>.
 #
 # Options name a stand-in for a file of PROJECT, so a skill can go on with files it
 # prepared in a temp folder while a write below .claude/ waits for approval:
@@ -1322,15 +1324,51 @@ given_signals() {  # SIGNAL…
   file_signals "$WORK/given.files"
 }
 
-# Rules rows of the registry that decline a proposal → "module:NAME" or "fragment:NAME".
+# Rules rows of the registry that decline a proposal → "module:NAME", "fragment:NAME"
+# or "tool:NAME".
 declined_rows() {
   [ -f "$REG_PATH" ] || return 0
   awk '
     /^#+[ \t]/ { insec = ($0 ~ /^## Rules[ \t]*$/); next }
     insec && /^\|/ {
       split($0, c, "|"); r = c[2]; gsub(/[ \t`]/, "", r)
-      if (r ~ /^(module|fragment):[a-z0-9][a-z0-9-]*$/) print r
+      if (r ~ /^(module|fragment):[a-z0-9][a-z0-9-]*$/ ||
+          r ~ /^tool:[A-Za-z0-9][A-Za-z0-9._-]*$/) print r
     }' "$REG_PATH"
+}
+
+# Tools TEMPLATE has a convention for → "tool:NAME" lines: [tools] of the core mise.toml
+# and of each module's mise.part.toml, then every declared tool: signal.
+known_tools() {
+  for kt_toml in "$TEMPLATE/core/mise.toml" "$TEMPLATE"/modules/*/mise.part.toml; do
+    [ -f "$kt_toml" ] || continue
+    mise_signals "$kt_toml" template | cut -f1
+  done
+  awk -F "$TAB" '$3 ~ /^tool:/ { print $3 }' "$WORK/declared.tsv"
+}
+
+# Tools of $WORK/project.lst that TEMPLATE has no convention for, with their state. A
+# name with a backend prefix (npm:…, cargo:…) installs a package, not a language, and
+# never counts.
+report_tools() {
+  known_tools > "$WORK/known"
+  awk -F "$TAB" -v known="$WORK/known" -v dec="$WORK/declined" '
+    FILENAME == known { k[$1] = 1; next }
+    FILENAME == dec { d[$1] = 1; next }
+    substr($1, 1, 5) == "tool:" {
+      n = substr($1, 6)
+      if (n == "" || index(n, ":") || ($1 in k)) next
+      if (!(n in cnt)) { first[n] = $2; names[++nn] = n }
+      cnt[n]++
+    }
+    END {
+      for (i = 1; i <= nn; i++) {
+        n = names[i]
+        more = (cnt[n] > 1) ? " +" (cnt[n] - 1) : ""
+        st = (("tool:" n) in d) ? "declined" : "unknown"
+        print "tool\t" n "\t" st "\ttool:" n " (" first[n] more ")"
+      }
+    }' "$WORK/known" "$WORK/declined" "$WORK/project.lst" | LC_ALL=C sort -t "$TAB" -k2,2
 }
 
 # Hits of $WORK/project.tsv against $WORK/declared.tsv with their state; MODULE empty =
@@ -1432,6 +1470,7 @@ detect() {
   esac
   declined_rows > "$WORK/declined"
   report_hits "$dt_module"
+  report_tools
 }
 
 cmd=${1:-}

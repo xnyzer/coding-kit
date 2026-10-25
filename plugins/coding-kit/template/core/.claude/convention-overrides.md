@@ -20,7 +20,8 @@ protects just that part.
 A Rules row with the Rule `module:NAME` or `fragment:NAME` declines a detection proposal
 for good: the skills stop offering that stack module or standards fragment. The Deviation
 column says what the project does instead — e.g. Python as a tool language with a
-hand-built toolchain instead of the python module.
+hand-built toolchain instead of the python module. `tool:NAME` does the same for a tool
+the template has no convention for: the skills stop proposing it to the template.
 
 A deviation needs a reason — "we never got around to it" is drift, not a deviation.
 <!-- /section:overrides-head -->

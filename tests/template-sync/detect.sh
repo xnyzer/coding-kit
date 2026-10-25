@@ -178,6 +178,36 @@ run_detect_cases() {
   check "without answers: the slot alone counts" hit_is o2 fragment python-lang missing
   refute "detect takes no --snapshot" ts detect --snapshot "$TMP/op.snap" "$TEMPLATE" "$TMP/do"
 
+  # --- tools without a convention -----------------------------------------------------
+  put du/mise.toml '[tools]\njust = "1"\nuv = "0"\npnpm = "11"\ngolangci-lint = "2"\npython = "3.14"\nrust = "1"\n"npm:markdownlint-cli2" = "0"\nterraform = "1"\n\n[tools.zig]\nversion = "0.14"\n\n[tools."cargo:ripgrep"]\nversion = "14"\n'
+  put du/tools/.mise.toml '[tools]\nrust = "1"\n'
+  put du/.claude/convention-overrides.md '## Rules\n\n| Rule | Deviation | Reason | Since |\n|---|---|---|---|\n| tool:terraform | infra only | no convention needed | 2026-10-25 |\n'
+  project_answers du docs-only
+  tgit "$TMP/du" init -q
+  tgit "$TMP/du" add -A
+  tgit "$TMP/du" commit -q -m base
+  check "detect with unknown tools runs" dt u du
+  check "unknown tool, every mise file counted" line_is u tool rust unknown 'tool:rust (mise.toml +1)'
+  check "unknown tool from a [tools.NAME] table" line_is u tool zig unknown 'tool:zig (mise.toml)'
+  check "tool declined by a Rules row, backticks optional" hit_is u tool terraform declined
+  for f_t in just uv pnpm golangci-lint python npm:markdownlint-cli2 cargo:ripgrep; do
+    check "known or backend tool never reported: $f_t" no_hit u tool "$f_t"
+  done
+  check "tool lines come last" awk -F'\t' '$1 == "tool" { t = 1; next } t { bad = 1 } END { exit !(t && !bad) }' "$TMP/u.tsv"
+  check "fragment hit before the tools" hit_is u fragment python-lang missing
+  put du/mise.toml '[tools]\nrust = "1"\nzig = "0.14"\nnim = "2"\n'
+  check "detect --changed with tools runs" dt uc --changed du
+  check "--changed: added tool" line_is uc tool nim unknown 'tool:nim (mise.toml)'
+  check "--changed: tool HEAD had" no_hit uc tool rust
+  check "--changed: tool HEAD had in a table" no_hit uc tool zig
+  check "detect with tool signals runs" dt ug du tool:rust tool:npm:foo tool:node
+  check "given: unknown tool" line_is ug tool rust unknown 'tool:rust (given)'
+  check "given: backend tool never reported" no_hit ug tool npm:foo
+  check "given: known tool not reported" no_hit ug tool node
+  put du.reg '## Rules\n\n| Rule | Deviation | Reason | Since |\n|---|---|---|---|\n| `tool:rust` | helper only | reason | 2026-10-25 |\n'
+  check "detect with a tool decline runs" dt ur --registry "$TMP/du.reg" du tool:rust
+  check "given: tool declined by the stand-in registry" hit_is ur tool rust declined
+
   # --- a fresh render detects only its own module ------------------------------------
   for f_m in ts-node python go docs-only; do
     render "fr-$f_m" "$f_m" private --seeds
@@ -186,6 +216,7 @@ run_detect_cases() {
     tgit "$TMP/fr-$f_m" init -q
     check "fresh $f_m: detect runs" dt "fr-$f_m.d" "fr-$f_m"
     check "fresh $f_m: nothing missing" no_state "fr-$f_m.d" missing
+    check "fresh $f_m: no unknown tool" no_state "fr-$f_m.d" unknown
     if [ "$f_m" = docs-only ]; then
       check "fresh docs-only: no hit at all" test ! -s "$TMP/fr-docs-only.d.tsv"
     else

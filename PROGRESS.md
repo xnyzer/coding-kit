@@ -32,6 +32,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-043a | Fragmente aufteilen → **Sprachfragmente `python-lang`, `typescript-lang`, `go-lang` im Katalog (Signale ohne Dateiendungen); die drei Modul-Fragmente auf die Toolchain gekürzt und als Modul-Fragment benannt, `Standards fragments:` in den `MODULE.md`; MANIFEST, Katalog und §13 mit den neuen Begriffen; Render- und Erkennungs-Tests für Slot-Reihenfolge und Werkzeugsprache; Version 1.3.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-043b | Erkennung, Validator und Skills → **`detect` zählt vom Modul der Antworten deklarierte Fragmente als `covered`; der Validator meldet Katalog-Fragmente mit Modulnamen; update-conventions und choose-stack setzen neue Fragmente an ihre Stelle aus dem Render, geschützte Fragmente zeigen Template-Änderungen zur Info, `FRAGMENTS` folgt dem Modulwechsel in beide Richtungen; Begriffe Modul- und Sprachfragment in den Skills.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-043c | Test, Release, Gegenprobe → **Läufe an Kopien eines docs-only- und eines mit 1.2.1 gerenderten ts-node-Projekts (Sprachfragment angeboten, Modul-Fragment ersetzt, Stelle aus dem Render, Override mit Info-Diff); Funde mitgenommen: Biome auf Code beschränkt, `base-from-history` für Releases ohne Template-Änderung; Release 1.3.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe am echten docs-only-Projekt (`python-lang` angenommen); Messung zu Modell und Effort → F-046. F-043 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
+| F-044a | Erkennung: Zustand `unknown` und Ablehnung `tool:NAME` → **`detect` meldet nach Modulen und Fragmenten jedes Tool aus `[tools]` der `mise.toml`, für das das Template keine Konvention hat (`unknown`, mit Rules-Zeile `tool:NAME` `declined`); bekannt sind Tools aus der Core- und den Modul-`mise.toml` sowie deklarierte `tool:`-Signale, Backend-Tools zählen nie; MANIFEST und Registry-Kopf beschreiben Zustand und Zeile.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 
 ---
 
@@ -97,32 +98,6 @@ nichts.
 - Keine neuen Dependencies.
 
 **Abhängigkeiten:** F-042 (erledigt). Vor F-045.
-
-#### F-044a — Erkennung: Zustand `unknown` und Ablehnung `tool:NAME`
-
-**Was:** `detect` sammelt die bekannten Tools (Core-`mise.toml`, alle `mise.part.toml`,
-deklarierte `tool:`-Signale) und meldet jedes Tool des Projekts ohne Backend-Präfix, das
-nicht bekannt ist, als `unknown`, mit Rules-Zeile `tool:NAME` als `declined`. Gilt für den
-ganzen Baum, `--changed` und übergebene Signale. Skriptkopf; MANIFEST § Detection
-(Zustand, Bekannt-Regel, Backend-Regel) und § Deviation registry (`tool:NAME`); Kopf der
-`convention-overrides.md`-Vorlage. Version 1.4.0, CHANGELOG-Eintrag mit `### Template`.
-
-**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
-`tests/template-sync/detect.sh`, `plugins/coding-kit/template/MANIFEST.md`,
-`plugins/coding-kit/template/core/.claude/convention-overrides.md`,
-`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`;
-`scripts/validate.py`, falls er die Zustände aus § Detection liest.
-
-**Abhängigkeiten:** keine.
-
-**Abnahmekriterien:**
-- [ ] Tests unter dash und bash: `just`, `uv`, `pnpm`, `golangci-lint` und
-      `npm:markdownlint-cli2` werden nie gemeldet; `rust` in `[tools]` und als
-      `[tools.rust]`-Tabelle → `tool rust unknown`; übergebenes `tool:rust` → `unknown`;
-      Rules-Zeile `tool:rust` → `declined`; `--changed` meldet nur ein neu
-      hinzugekommenes Tool.
-- [ ] Die `tool`-Zeilen stehen hinter Modulen und Fragmenten.
-- [ ] `just check` grün.
 
 #### F-044b — Skill `propose-to-template`
 

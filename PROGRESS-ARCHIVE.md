@@ -16,6 +16,58 @@ zusammen:
 
 ---
 
+## F-044a — Erkennung: Zustand `unknown` und Ablehnung `tool:NAME` (2026-10-25)
+
+Teil von F-044 (Sprachen ohne Vorlage erkennen und dem Template vorschlagen; F-044b–c
+folgen).
+
+**Problem:** `detect` kannte nur Signale, die das Template deklariert. Nutzte ein Projekt
+eine Sprache ohne volles Modul — Rust, Ruby oder die Stubs `java` und `swift-ios` —,
+meldete kein Skill etwas.
+
+**Was entstanden ist (1.4.0, unveröffentlicht):**
+
+- **`template-sync.sh detect`:** Nach den Modul- und Fragment-Zeilen folgt je Tool ohne
+  Konvention eine Zeile `tool <name> <unknown|declined> <tool:name (erster Pfad[ +weitere])>`,
+  nach Namen sortiert. `known_tools` sammelt die bekannten Tools (`[tools]` der
+  Core-`mise.toml` und aller `mise.part.toml`, deklarierte `tool:`-Signale), `report_tools`
+  gleicht ab; ein Name mit `:` (Backend-Präfix) zählt nie. `declined_rows` liest auch
+  `tool:NAME`. Gilt für den ganzen Baum, `--changed` und übergebene Signale; der
+  Skriptkopf beschreibt die Zeile.
+- **MANIFEST:** § Detection mit dem neuen Absatz „Tools without a convention"
+  (Bekannt-Regel, Backend-Regel, Zustände `declined` und `unknown`, Stubs zählen als
+  `unknown`, Ablehnung für Tools ohne Konventionsbedarf); § Deviation registry nennt
+  `tool:NAME`.
+- **Registry-Vorlage:** Die Kopfzone `overrides-head` der `convention-overrides.md`
+  erklärt `tool:NAME`; sie kommt per Zonen-Abgleich in die Projekte.
+- **Tests:** Ein Projekt mit bekannten Tools (`just`, `uv`, `pnpm`, `golangci-lint`,
+  `python`), Backend-Tools (`npm:markdownlint-cli2`, `[tools."cargo:ripgrep"]`), `rust` in
+  zwei mise-Dateien, `zig` als `[tools.NAME]`-Tabelle und einer Rules-Zeile für
+  `terraform`; dazu `--changed` (nur das neue Tool), übergebene Signale (bekannt,
+  Backend, unbekannt) und eine Ablehnung über `--registry`. Ein frischer Render jedes
+  Moduls meldet kein unbekanntes Tool.
+- **Version:** `plugin.json` 1.4.0, CHANGELOG-Eintrag mit `### Template`.
+
+**Verifikation:** `just check` grün (Validator, 552 Skript-Tests unter dash und bash,
+54 davon neu). Fehlerinjektion an einer Kopie: Modul-`mise.part.toml` nicht gelesen,
+Backend-Regel entfernt, Tool-Zeilen abgeschaltet, `tool:`-Ablehnung entfernt — alle vier
+gefangen (12, 6, 14 und 4 Fehlschläge). Versionsregel gegen `origin/main` grün.
+
+**Notable decisions:**
+- Die Tool-Zeilen kommen aus einer eigenen Funktion hinter `report_hits`, statt dessen
+  Sortierung zu erweitern: `report_hits` sortiert nach Art absteigend, `tool` stünde dort
+  vor `module`.
+- `tool:NAME` erlaubt Punkte, Unterstriche und Großbuchstaben — mise-Tools folgen nicht
+  dem Namensschema der Module.
+- `scripts/validate.py` bleibt unverändert: Er liest aus § Detection nur die
+  Signal-Typen, nicht die Zustände.
+
+**Geänderte Dateien:**
+`plugins/coding-kit/scripts/template-sync.sh`, `tests/template-sync/detect.sh`,
+`plugins/coding-kit/template/MANIFEST.md`,
+`plugins/coding-kit/template/core/.claude/convention-overrides.md`,
+`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`.
+
 ## F-043c — Test, Release, Gegenprobe (2026-10-25)
 
 Schließt F-043 ab (Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen;
