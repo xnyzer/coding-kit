@@ -34,97 +34,14 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-043c | Test, Release, Gegenprobe → **Läufe an Kopien eines docs-only- und eines mit 1.2.1 gerenderten ts-node-Projekts (Sprachfragment angeboten, Modul-Fragment ersetzt, Stelle aus dem Render, Override mit Info-Diff); Funde mitgenommen: Biome auf Code beschränkt, `base-from-history` für Releases ohne Template-Änderung; Release 1.3.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe am echten docs-only-Projekt (`python-lang` angenommen); Messung zu Modell und Effort → F-046. F-043 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-044a | Erkennung: Zustand `unknown` und Ablehnung `tool:NAME` → **`detect` meldet nach Modulen und Fragmenten jedes Tool aus `[tools]` der `mise.toml`, für das das Template keine Konvention hat (`unknown`, mit Rules-Zeile `tool:NAME` `declined`); bekannt sind Tools aus der Core- und den Modul-`mise.toml` sowie deklarierte `tool:`-Signale, Backend-Tools zählen nie; MANIFEST und Registry-Kopf beschreiben Zustand und Zeile.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-044b | Skill `propose-to-template` → **erster Hintergrund-Skill (`user-invocable: false`): Claude startet ihn mit einem Fund (Tool ohne Vorlage, projektlokales Fragment, Abweichung an einer managed Datei) und bekommt einen generalisierten, personendatenfreien Übernahme-Vorschlag — kopierfertig als Issue (Standard, `gh issue create` als Text) oder als Prompt für eine Session im Kit-Repo; nichts wird abgeschickt. CONTRIBUTING beschreibt solche Vorschläge, die Authoring-Doku Hintergrund-Skills.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
+| F-044c | Skills anbinden, Testlauf, Release → **update-conventions, step-done und prep-step bieten je Tool ohne Vorlage den Vorschlag fürs Template (`propose-to-template`) oder die Ablehnung `tool:NAME` an, choose-stack rät dafür kein Modul; der alte Abschnitt „Übernahme-Vorschlag" entfällt; Funde aus zwei Testläufen mitgenommen (Material getrennt nach Projekt und Vorschlag, Prompt als Entwurfsauftrag mit Recherche, festes Issue-Gerüst, keine verschachtelten Backticks, Datumsformat der Spalte Since); Release 1.4.0 gepusht (CI grün), Plugin aktualisiert. F-044 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 
 ---
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-### F-044 — Sprachen ohne Vorlage erkennen und dem Template vorschlagen
-
-**Status:** PLANNED
-
-**Problem:** `detect` (F-042) kennt nur Signale, die das Template deklariert. Nutzt ein
-Projekt eine Sprache, für die es kein volles Modul gibt — Rust, Ruby oder die Stubs `java`
-und `swift-ios` —, meldet kein Skill etwas: Das Projekt läuft still als docs-only mit
-handgebauter Toolchain, und das Template erfährt nie, dass eine Vorlage fehlt. Den
-Übernahme-Vorschlag fürs Template gibt es heute nur für projektlokale Fragmente, und er
-setzt eine Session im coding-kit-Repo oder einen `gh`-Aufruf voraus — Dritte, die das Kit
-nutzen, haben keinen passenden Weg.
-
-**Idee:** `detect` meldet Tools aus `[tools]` der `mise.toml`, für die das Template keine
-Konvention hat, mit dem Zustand `unknown`. Die Skills schlagen dann vor — nie
-automatisch —, das Tool dem Template zu melden. Den Übernahme-Vorschlag erzeugt ein neuer
-Hintergrund-Skill, für Tools, Fragmente und Module gleich. Nur Text, abgeschickt wird
-nichts.
-
-**Entschieden (2026-10-25):**
-- Bekannt ist ein Tool, das in `[tools]` der Core-`mise.toml` oder der `mise.part.toml`
-  eines Moduls steht oder als `tool:`-Signal eines Moduls oder Fragments deklariert ist.
-  Die Signale allein reichen nicht: `uv`, `pnpm` und `golangci-lint` stehen in keiner
-  `Signals:`-Zeile und wären sonst Fehlalarme. Keine hartcodierte Sprachliste.
-- Nur `tool:` kann `unknown` werden, Dependencies und Dateien nie — sonst wäre jede
-  Dependency ohne Fragment ein Fund.
-- Tools mit Backend-Präfix (Schlüssel mit `:`, z. B. `npm:markdownlint-cli2`, `pipx:…`,
-  `cargo:…`, `aqua:…`) werden nicht gemeldet: Sie installieren ein Paket, keine Sprache.
-  Eine strukturelle Regel, keine Liste.
-- Gemeldet wird „das Template hat für dieses Tool keine Konvention", nicht nur „keine
-  Sprache"; der Vorschlag kann ein Modul oder ein Fragment sein. Fehlalarme wie
-  `terraform` oder `shellcheck` lehnt man dauerhaft über die Rules-Zeile `tool:NAME` ab.
-- Stubs bleiben ohne `Signals:`-Zeile und ohne eigenen Zustand (Entscheidung aus F-042a):
-  `java` ist `unknown`, der Übernahme-Vorschlag nennt einen passenden Stub aus
-  `modules/README.md` als Ausgangspunkt.
-- Der Übernahme-Vorschlag wird ein eigener Plugin-Skill `propose-to-template` mit
-  `user-invocable: false` — der erste Hintergrund-Skill (`docs/skill-authoring.md`).
-  Claude startet ihn mit einem Fund (Art, Name, Evidenz) aus update-conventions,
-  step-done, prep-step und choose-stack. Ohne Fund nimmt er ihn aus dem Gespräch oder
-  stellt genau eine Rückfrage; er sucht nie selbst im Projekt. Bisher lasen prep-step und
-  step-done einen Abschnitt von update-conventions, das Claude nicht starten darf.
-- Zwei Formate: **Issue** (Standard, auch für Dritte — Titel, Text und der
-  `gh issue create -R …`-Befehl als Text) und **Prompt** für eine Session im Kit-Repo
-  oder einem Fork — immer kopierfertig in einem Codeblock und ohne Vorwissen ausführbar.
-  Keine PR-Beschreibung: Die schreibt die Session, die die Änderung baut und die echte
-  Dateiliste kennt. Ziel-Repo aus `homepage` in `plugin.json`.
-- Keine Issue-Vorlage im Kit-Repo, nur ein Abschnitt in der `CONTRIBUTING.md` — die
-  Struktur liefert der Skill.
-
-**Lösungsskizze** (Stand Planung 2026-10-25):
-- Skript: `detect` mit der Zeilenart `tool <name> <unknown|declined> <signal (pfad)>`
-  hinter Modulen und Fragmenten, in allen drei Aufrufarten; `tool:NAME` als Rules-Zeile.
-- Template: MANIFEST §§ Detection und Deviation registry, Kopf der
-  `convention-overrides.md`-Vorlage.
-- Skill `propose-to-template` neu; update-conventions verliert den Abschnitt
-  Übernahme-Vorschlag, alle Verweise zeigen auf den Skill.
-- Skills: update-conventions A2 Schritt 2, step-done §§ 1a und 1b, prep-step § 2a,
-  choose-stack Modus B.
-- Keine neuen Dependencies.
-
-**Abhängigkeiten:** F-042 (erledigt). Vor F-045.
-
-#### F-044c — Skills anbinden, Testlauf, Release
-
-**Was:** Je `unknown`: Vorschlag über `propose-to-template` / dauerhaft ablehnen
-(`tool:NAME` mit Grund) / diesmal nicht. update-conventions A2 Schritt 2 (ganzer Baum;
-der Abschnitt Übernahme-Vorschlag entfällt, die Schritte 5 und 6 rufen den Skill),
-step-done § 1a (`--changed`, blockiert nicht) und § 1b (c), prep-step § 2a (übergebene
-Signale; Werkzeugsprache mit `keep`-Zeilen plus Vorschlag), choose-stack Modus B (kein
-Modul → docs-only plus Vorschlag); `/add-skill` läuft mit. Testlauf mit
-`claude -p --plugin-dir plugins/coding-kit` (Opus auf `medium`, Budget-Cap) an einer
-Scratch-Kopie mit eingeschleustem `rust`-Tool: update-conventions meldet `rust` und gibt
-den Vorschlag kopierfertig aus; nach dauerhafter Ablehnung steht `tool:rust` in der
-Rules-Tabelle, und der folgende `status` meldet nichts mehr. Kosten nennen. Release
-1.4.0: CHANGELOG datieren; Push nur auf ausdrückliche Bitte, vorher Personendaten-grep;
-Plugin aktualisieren, Cache prüfen.
-
-**Dateien:** `plugins/coding-kit/skills/{update-conventions,step-done,prep-step,choose-stack}/SKILL.md`,
-`plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-044b.
-
-**Abnahmekriterien:**
-- [ ] Kein Verweis mehr auf „update-conventions § Übernahme-Vorschlag" (grep).
-- [ ] Testlauf wie beschrieben, Endstand per Skript geprüft (`detect`, Rules-Zeile),
-      Kosten genannt.
-- [ ] Release 1.4.0 gepusht, CI grün, Plugin aktualisiert.
+_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
+`/coding-kit:prep-step` vorbereiten._
 
 ---
 
@@ -135,9 +52,9 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 **Empfohlene Reihenfolge** (Stand 2026-10-25; die Einträge darunter bleiben nach Nummer
 sortiert):
 
-1. **F-044 → F-045** — direkt nach F-043, weil sie dieselbe Mechanik nutzen (`detect`,
-   `template-sync.sh`, `update-conventions`); F-044 erweitert die Erkennung um Sprachen
-   ohne Vorlage, F-045 holt die übrigen Vergleiche von `update-conventions` ins Skript.
+1. **F-045** — direkt nach F-044, weil es dieselbe Mechanik nutzt (`template-sync.sh`,
+   `update-conventions`): holt die übrigen Vergleiche von `update-conventions` ins
+   Skript.
 2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
 3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
@@ -766,7 +683,7 @@ F-040 Globale CLAUDE.md mit dem Plugin ausliefern und abgleichen
 F-041 Projektzusätze in managed Dateien erhalten, Abweichungen früh erkennen (DONE)
 F-042 Neue Sprachen und Frameworks erkennen, Vorlagen nachziehen (DONE)
 F-043 Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen (DONE)
-F-044 Sprachen ohne Vorlage erkennen und dem Template vorschlagen (PLANNED)
+F-044 Sprachen ohne Vorlage erkennen und dem Template vorschlagen (DONE)
 F-045 Zonen-Abgleich und Lock-Prüfung ins Skript
 F-046 Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
 -->

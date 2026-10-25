@@ -16,6 +16,99 @@ zusammen:
 
 ---
 
+## F-044c — Skills anbinden, Testlauf, Release (2026-10-25)
+
+Schließt F-044 ab (Sprachen ohne Vorlage erkennen und dem Template vorschlagen; F-044a–b
+siehe darunter).
+
+**Problem:** `detect` meldete Tools ohne Vorlage, und `propose-to-template` konnte den
+Vorschlag erzeugen — aber kein Skill nutzte beides. prep-step, step-done und
+update-conventions verwiesen noch auf den alten Abschnitt in update-conventions.
+
+**Was entstanden ist (Release 1.4.0):**
+
+- **update-conventions:** Schritt 2 bietet je `tool`-Zeile `unknown` an, das Tool dem
+  Template vorzuschlagen (`propose-to-template` mit dem Fund), es dauerhaft abzulehnen
+  (`tool:NAME`) oder diesmal nicht. Die Schritte 5 und 6 starten den Skill für bessere
+  managed Dateien und projektlokale Fragmente. Die Registry-Revision (Schritt 10) bietet
+  `tool:NAME` zum Austragen an, sobald das Template das Tool kennt. `status` nennt Tools
+  ohne Vorlage. Der Abschnitt „Übernahme-Vorschlag" entfällt; die Beschreibung ist
+  angepasst.
+- **step-done:** § 1a mit den Zuständen für Tools und dem Angebot für ein neues Tool ohne
+  Vorlage, nicht blockierend; der Fragment-Hinweis in § 1a und Option (c) in § 1b starten
+  den Skill.
+- **prep-step:** § 2a erklärt die `tool`-Zeile; Punkt 6 empfiehlt für ein Tool ohne
+  Vorlage den Bau von Hand im Projekt (Werkzeugsprache mit `keep`-Zeilen bzw.
+  projektlokales Fragment) plus Vorschlag fürs Template nach dem Bau, oder `tool:NAME`;
+  Punkt 7 und die Plan-Vorlage nennen `tool:NAME`.
+- **choose-stack** Modus B: Für eine `tool`-Zeile `unknown` wird kein Modul geraten —
+  bestehendes Modul bzw. `docs-only` behalten und den Vorschlag fürs Template anbieten.
+- **README** (Zeilen von update-conventions und step-done) und **HOW-TO im Template**
+  (prep-step, step-done, update-conventions, Detection backstop) nennen Tools ohne
+  Vorlage, den Übernahme-Vorschlag und `tool:NAME`.
+- **Funde aus dem ersten Testlauf, mitgenommen:**
+  - `propose-to-template` trennt das Material immer in *From the project* und *Suggested,
+    not from the project (unverified)*; fehlt ein Teil, steht „none" da.
+  - Der Prompt ist ein Entwurfsauftrag: Kit kennenlernen, recherchieren, beide Teile
+    gewichten, den Entwurf mit Übernommenem und Verworfenem zeigen, erst nach Zustimmung
+    bauen. CONTRIBUTING beschreibt das ebenso.
+  - Wörtliche Datei-Inhalte stehen als eigene Codeblöcke, Inline-Code mit Backticks
+    bekommt doppelte Backticks.
+  - Die Spalte **Since** der Registry ist das Datum, an dem die Zeile angelegt wurde
+    (`YYYY-MM-DD`; MANIFEST § Deviation registry, Kopfzone der Registry-Vorlage).
+- **Fund aus dem zweiten Testlauf, mitgenommen:** Der Issue-Body folgt einem festen
+  Gerüst mit Überschriften-Ebenen; der Prosa-Satz war mehrdeutig, „Kit rules" landete
+  als Unterabschnitt von „Material".
+- **Release 1.4.0:** CHANGELOG datiert, gepusht, CI grün, Plugin aktualisiert und der
+  Cache gegen den Arbeitsstand geprüft.
+
+**Testläufe** (`claude -p --plugin-dir`, Opus auf `medium`, Budget-Cap 6 USD, ein
+docs-only-Projekt aus dem aktuellen Template mit `rust` und `terraform` in der
+`mise.toml`, einem Rust-Rezept im justfile und Entscheidungen im Prompt):
+
+- **Lauf 1** (1,13 USD, 15 Turns): `rust` und `terraform` als `unknown` erkannt;
+  `propose-to-template` über das Skill-Tool gestartet, Issue und Prompt kopierfertig;
+  `terraform` als `tool:terraform` abgelehnt, `justfile` und `mise.toml` als `keep`
+  registriert, Lock-Abgleich wie vorgegeben übersprungen. Funde: Material mischte
+  Projektbelegtes und Erfundenes, verschachtelte Backticks, Format von Since offen.
+- **Lauf 2** (1,14 USD, 19 Turns) mit den Nachbesserungen: Material getrennt, Prompt als
+  Entwurfsauftrag mit konkreten Recherchefragen, `Signals:`-Zeile als eigener Codeblock,
+  alle neuen Registry-Zeilen mit Datum. Fund: Gerüst des Issues (siehe oben).
+- Endstand beider Läufe per Skript (der blockierte Schreibzugriff unter `.claude/` vom
+  Tester nachgeholt): `detect` meldet `rust unknown` und `terraform declined`, `status`
+  zeigt beide Abweichungen als `keep`, die Kopfzone ist unverändert; weder Projektname
+  noch Personendaten im Vorschlag, nur das Ziel-Repo aus `homepage`.
+
+**Planungsentscheidungen von F-044** (aus dem Elterneintrag):
+- Bekannt ist ein Tool aus der Core-`mise.toml`, einer `mise.part.toml` oder einem
+  deklarierten `tool:`-Signal; die Signale allein hätten `uv`, `pnpm` und
+  `golangci-lint` gemeldet. Keine hartcodierte Sprachliste.
+- Nur `tool:` kann `unknown` werden, Backend-Tools (Name mit `:`) nie. Fehlalarme lehnt
+  man mit `tool:NAME` ab.
+- Stubs bleiben ohne Signale und ohne eigenen Zustand (F-042a); der Vorschlag nennt einen
+  passenden Stub.
+- Der Übernahme-Vorschlag ist ein Hintergrund-Skill (`user-invocable: false`), den
+  Claude mit einem Fund startet; ohne Fund eine Rückfrage, nie eine eigene Suche.
+- Zwei Formate: Issue (Standard) und Prompt, immer kopierfertig; keine PR-Beschreibung,
+  keine Issue-Vorlage im Kit-Repo, dafür ein Abschnitt in der CONTRIBUTING.
+
+**Notable decisions:**
+- Abgelehnt wurde im Test `terraform` statt `rust` (Plan): So zeigt ein Lauf beide Wege,
+  den Vorschlag und die Ablehnung.
+- prep-step empfiehlt den Vorschlag fürs Template erst nach dem Bau, weil das Material
+  dann steht.
+- Kein dritter Testlauf für das Gerüst: Es ist eindeutig, eine Fehlinterpretation bleibt
+  dem Modell nicht.
+- Die Spalte Since gehörte nicht zum Plan; sie kam mit, weil 1.4.0 MANIFEST und
+  Registry-Kopf ohnehin ändert und Projekte so ein Update-Fenster bekommen.
+
+**Geänderte Dateien:**
+`plugins/coding-kit/skills/{update-conventions,step-done,prep-step,choose-stack,propose-to-template}/SKILL.md`,
+`plugins/coding-kit/template/MANIFEST.md`,
+`plugins/coding-kit/template/core/.claude/convention-overrides.md`,
+`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`, `README.md`,
+`CONTRIBUTING.md`, `plugins/coding-kit/CHANGELOG.md`.
+
 ## F-044b — Skill `propose-to-template` (2026-10-25)
 
 Teil von F-044 (Sprachen ohne Vorlage erkennen und dem Template vorschlagen; F-044a siehe
