@@ -167,6 +167,8 @@ run_detect_cases() {
   put do.reg '## Rules\n\n| Rule | Deviation | Reason | Since |\n|---|---|---|---|\n| `module:python` | tool language | stdlib scripts | 2026-10-25 |\n'
   check "detect with stand-ins runs" dt o --answers "$TMP/do.answers" --registry "$TMP/do.reg" do
   check "stand-ins: module check runs, decline read" hit_is o module python declined
+  check "tool language: its language fragment missing" line_is o fragment python-lang missing \
+    'tool:python (mise.toml)'
   check "without stand-ins: no answers, no module rows" dt o2 do
   check "without stand-ins: module check skipped" no_hit o2 module python
   refute "detect takes no --snapshot" ts detect --snapshot "$TMP/op.snap" "$TEMPLATE" "$TMP/do"

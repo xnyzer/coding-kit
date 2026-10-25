@@ -46,7 +46,7 @@ it must not contain a tab or `{{`.
 | `MODULE` | the stack module (`docs-only` without a stack) — required |
 | `VISIBILITY` | `public` or `private`; decides the public-only targets — required |
 | `OPTIONAL` | the `template:optional` blocks the project keeps by choice, comma-separated (e.g. `graphiti`); missing or empty = none; the license blocks are derived, never listed |
-| `FRAGMENTS` | standards fragments beyond the module's own and its declared ones (the characteristic fragments the project chose), comma-separated, in slot order |
+| `FRAGMENTS` | standards fragments beyond the module's own and its declared ones (characteristic fragments the project chose, fragments from a detection proposal, the language fragment of a tool language), comma-separated, in slot order |
 
 Derived, never stored: `PROJECT_NAME_SNAKE` (from `PROJECT_NAME`), `CODEQL_LANGUAGES`
 (from the module's `MODULE.md`; a module without one gets no target that needs it, so a
@@ -61,7 +61,7 @@ otherwise.
 | `<!-- template:adapt: hint -->` | Spot `/new-project` must concretise from the short-info — never raw-copy. |
 | `<!-- template:optional:NAME -->` … `<!-- /template:optional:NAME -->` | Block kept or removed at instantiation (used: `graphiti`, `license`, `license-tbd`). |
 | `<!-- module:coding-standards -->` … `<!-- /module:coding-standards -->` | Slot in `CODING-STANDARDS.md` §13 where standards fragments are **appended** (each wrapped in `fragment:NAME`), not single-inserted. |
-| `<!-- fragment:NAME -->` … `<!-- /fragment:NAME -->` | Wraps one self-contained standards fragment inside the `module:coding-standards` slot. `NAME` = a catalog fragment (`modules/standards/`) or a stack module's own language fragment. See § Standards fragments. |
+| `<!-- fragment:NAME -->` … `<!-- /fragment:NAME -->` | Wraps one self-contained standards fragment inside the `module:coding-standards` slot. `NAME` = a catalog fragment (`modules/standards/`) or a stack module's own module fragment. See § Standards fragments. |
 | `<!-- section:NAME -->` … `<!-- /section:NAME -->` | Marks a template-owned zone inside a **seed** file that `/update-conventions` may diff and offer individually — never the whole file. Names are lowercase-kebab, unique across the template. See § Seed sections. |
 | `# module:gitignore` / `# module:ci-jobs` | Append points for module parts in non-HTML files. |
 | `<!-- override: reason -->` | Project-local deviation inside a seed zone or a standards fragment: `/update-conventions` leaves that zone or fragment alone. Whole files are registered in § Deviation registry instead. |
@@ -195,7 +195,7 @@ Each `modules/<name>/` may provide (all optional except `MODULE.md`):
 | `justfile` | `justfile` | **replaces** the core justfile; must implement the standard recipe set | managed |
 | `mise.part.toml` | `mise.toml` | `[tools]` entries merged into the core file | managed |
 | `gitignore.part` | `.gitignore` | appended below the `# module:gitignore` marker | managed |
-| `CODING-STANDARDS.part.md` | `CODING-STANDARDS.md` | the module's own language fragment — appended in the `module:coding-standards` slot, wrapped as `fragment:<module>`; a module may also declare catalog fragments (§ Standards fragments) | managed |
+| `CODING-STANDARDS.part.md` | `CODING-STANDARDS.md` | the module's own module fragment (the rules of its toolchain) — appended in the `module:coding-standards` slot, wrapped as `fragment:<module>`; a module may also declare catalog fragments, its language fragment first (§ Standards fragments) | managed |
 | `ci.part.yml` | `.github/workflows/ci.yml` | jobs appended below the `# module:ci-jobs` marker | managed |
 | `files/**` | project root (same relative path) | copied after placeholder substitution | per file, see `MODULE.md` |
 
@@ -205,9 +205,9 @@ above are exact. The plugin's `scripts/template-sync.sh render` implements them:
 - `mise.part.toml` holds a `[tools]` table only; its entries follow the last entry of the
   core `[tools]` table, in file order.
 - `gitignore.part` and `ci.part.yml` are inserted directly below their marker line.
-- The fragments replace the placeholder text of the slot, in this order: the module's
-  language fragment, its declared catalog fragments, the project's `FRAGMENTS`
-  (§ Answers). Each comes without surrounding blank lines, one blank line between two.
+- The fragments replace the placeholder text of the slot, in this order: the module
+  fragment, its declared catalog fragments, the project's `FRAGMENTS` (§ Answers). Each
+  comes without surrounding blank lines, one blank line between two.
 - A kept `template:optional` block loses only its two marker lines; a dropped one goes
   with its content.
 - `files/**`: the table `## File policies (files/)` in `MODULE.md` names every file by its
@@ -220,20 +220,27 @@ above are exact. The plugin's `scripts/template-sync.sh render` implements them:
 
 ## Standards fragments
 
-`modules/standards/` is a catalog of reusable, framework-granular `CODING-STANDARDS` fragments
-(e.g. `react`, `prisma`, `docker`), separate from the per-language stack modules — a fragment
-can be pulled by any module that needs it. Each fragment is a self-contained file
-`modules/standards/<name>.md` whose body is wrapped in `<!-- fragment:<name> -->` …
-`<!-- /fragment:<name> -->` and **appended** inside the `<!-- module:coding-standards -->` slot
-of a project's `CODING-STANDARDS.md`.
+`modules/standards/` is a catalog of reusable `CODING-STANDARDS` fragments for languages and
+frameworks (e.g. `python-lang`, `react`, `docker`), separate from the per-language stack
+modules — a fragment can be pulled by any module or project that needs it. Each fragment is
+a self-contained file `modules/standards/<name>.md` whose body is wrapped in
+`<!-- fragment:<name> -->` … `<!-- /fragment:<name> -->` and **appended** inside the
+`<!-- module:coding-standards -->` slot of a project's `CODING-STANDARDS.md`.
 
 - **Catalog** — `modules/standards/README.md` lists every fragment and its triggers: typed
   signals (§ Detection) or a project characteristic. Signals are found by script;
   characteristics no file shows, so `/prep-step` and `/define-requirements` ask for them.
-- **Declaration** — a stack module contributes its own language fragment (its
-  `CODING-STANDARDS.part.md`, wrapped as `fragment:<module>`) implicitly, and declares any
-  additional catalog fragments — in order — via a `Standards fragments:` line in its `MODULE.md`
-  (omit the line, or leave it empty, to pull none).
+- **Declaration** — a stack module contributes its own module fragment (its
+  `CODING-STANDARDS.part.md`, wrapped as `fragment:<module>`, with the rules that hold only
+  with its toolchain) implicitly, and declares any additional catalog fragments — in order —
+  via a `Standards fragments:` line in its `MODULE.md` (omit the line, or leave it empty, to
+  pull none).
+- **Language fragments** — the catalog fragment `<language>-lang` (`python-lang`,
+  `typescript-lang`, `go-lang`) holds the rules of a language that hold whatever toolchain
+  runs the code. The module of a language declares it first, so a project with the module
+  gets both; a project that uses the language as a tool language (§ Detection) gets the
+  language fragment alone. Module and catalog fragments share the `fragment:` names, hence
+  the suffix.
 - **Policy** — managed. `/update-conventions` refreshes each fragment by its `fragment:NAME`
   marker — fragment-granular and downward only (template → project), respecting inline
   overrides.
@@ -288,7 +295,8 @@ and goes into `FRAGMENTS`. A permanent "no" is a Rules row (§ Deviation registr
 this time" is not recorded. A project keeps one stack module: a language whose module the
 project does not have — next to another module, or in a `docs-only` project — is a tool
 language. Its module is declined with a reason, and the hand-built toolchain is registered
-as `keep`.
+as `keep`. Its language fragment (§ Standards fragments) still applies: it carries the
+language's signals and is proposed like any other fragment.
 
 ## Seed sections
 

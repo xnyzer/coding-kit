@@ -29,6 +29,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-042b | `detect` im Skript → **`template-sync.sh detect [--changed] TEMPLATE PROJECT [SIGNAL…]`: Leser für `package.json` (auch minifiziert), `pyproject.toml`, `requirements*.txt`, `go.mod`, `mise.toml` und Dateimuster über die git-Dateiliste ohne Snapshot; Zustände aus Antworten, Slot-Markern und Rules-Zeilen; `--changed` nur gegenüber HEAD neue Signale, übergebene Signale ohne Baum; 64 Tests je Shell inklusive frisch gerenderter Projekte; der Validator gleicht die Typliste des Skripts mit dem MANIFEST ab.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-042c | Skills und Doku → **prep-step § 2a prüft geplante Signale per `detect` (Fragment oder Modul fehlt → Anhängen, `/choose-stack` oder Werkzeugsprache); step-done § 1a über `detect --changed`; update-conventions erkennt in Schritt 2 vor dem Rendern (Fragment → `FRAGMENTS`, Modul → `/choose-stack`, dauerhaft ablehnen → Rules-Zeile), `status` berichtet, die Revision trägt Ablehnungen ohne Signale aus; choose-stack empfiehlt aus den Signalen; HOW-TO, README und CHANGELOG nachgezogen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-042d | Test, Release, Gegenprobe → **Läufe an Kopien eines docs-only- und eines ts-node-Projekts (ablehnen, anhängen, diesmal nicht; der folgende `status` ohne Vorschlag für Abgelehntes; Migration von 0.13.2 mit Erkennung); Release 1.2.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe am echten docs-only-Projekt (`module:python` abgelehnt); Fund aus den Tests: Stellvertreter-Optionen `--answers`, `--registry`, `--snapshot` (1.2.1, unveröffentlicht). F-042 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
+| F-043a | Fragmente aufteilen → **Sprachfragmente `python-lang`, `typescript-lang`, `go-lang` im Katalog (Signale ohne Dateiendungen); die drei Modul-Fragmente auf die Toolchain gekürzt und als Modul-Fragment benannt, `Standards fragments:` in den `MODULE.md`; MANIFEST, Katalog und §13 mit den neuen Begriffen; Render- und Erkennungs-Tests für Slot-Reihenfolge und Werkzeugsprache; Version 1.3.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 
 ---
 
@@ -105,38 +106,6 @@ vor.
 - Keine neuen Dependencies.
 
 **Abhängigkeiten:** F-042 (erledigt). Vor F-044.
-
-#### F-043a — Fragmente aufteilen (Template-Inhalt)
-
-**Was:** Je Sprache die Regeln des Modul-Fragments sortieren: die toolchain-unabhängigen
-als Katalog-Fragment `python-lang`, `typescript-lang`, `go-lang` (Überschrift „Python",
-„TypeScript", „Go"), die übrigen bleiben im Modul-Fragment (Überschrift „Python toolchain
-(python module)" usw.). Katalog-Zeilen mit den Signalen; Abschnitt „How a module pulls
-fragments" auf Modul- und Sprachfragment umstellen; `Standards fragments:` in den drei
-`MODULE.md` samt Parts-Notiz. MANIFEST: §§ Markers, Module contract und Standards
-fragments mit den neuen Begriffen, § Detection mit einem Satz zum Sprachfragment einer
-Werkzeugsprache. Satz in §13 der Core-`CODING-STANDARDS.md`. Render-Tests nachziehen.
-Version 1.3.0, CHANGELOG-Eintrag mit `### Template` (Aufteilung, Override-Hinweis,
-beides zusammen übernehmen).
-
-**Dateien:**
-`plugins/coding-kit/template/modules/{python,ts-node,go}/{CODING-STANDARDS.part.md,MODULE.md}`,
-`plugins/coding-kit/template/modules/standards/{python-lang,typescript-lang,go-lang}.md`
-(neu), `plugins/coding-kit/template/modules/standards/README.md`,
-`plugins/coding-kit/template/MANIFEST.md`,
-`plugins/coding-kit/template/core/CODING-STANDARDS.md`, `tests/template-sync/render.sh`,
-`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** keine.
-
-**Abnahmekriterien:**
-- [ ] Keine Regel geht verloren: Jede Regel der bisherigen drei Fragmente steht in einem
-      der beiden neuen; aufgeteilte Zeilen sind im Diff nachvollziehbar.
-- [ ] Render für python, ts-node und go: im Slot Modul-Fragment, dann Sprachfragment, dann
-      `FRAGMENTS` (Tests).
-- [ ] `detect` mit `tool:python` in einem docs-only-Testprojekt meldet
-      `fragment python-lang missing` (Test).
-- [ ] `just check` grün.
 
 #### F-043b — Erkennung, Validator und Skills
 

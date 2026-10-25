@@ -13,6 +13,35 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 1.3.0 — unveröffentlicht
+
+Sprachregeln gelten auch dort, wo eine Sprache ohne ihr Modul läuft (F-043, in Arbeit).
+
+- **Kit:** Die Render-Tests prüfen die Reihenfolge im Slot (Modul-Fragment, Sprachfragment,
+  `FRAGMENTS`), ein deklariertes Fragment in `FRAGMENTS` erscheint nur einmal, und ein
+  docs-only-Projekt mit Werkzeugsprache bekommt das Sprachfragment allein; die
+  Erkennungs-Tests melden es dort als fehlend.
+
+### Template
+
+- Die Fragmente der Module `python`, `ts-node` und `go` sind aufgeteilt. Die Regeln, die für
+  jeden Code der Sprache gelten, stehen in neuen Katalog-Fragmenten (`python-lang`,
+  `typescript-lang`, `go-lang`); das eigene Fragment des Moduls (`fragment:python` usw.)
+  behält nur die Regeln seiner Toolchain und heißt jetzt Modul-Fragment. Keine Regel ist
+  neu oder entfallen.
+- Jedes der drei Module deklariert sein Sprachfragment unter `Standards fragments:`.
+  `/update-conventions` erneuert das Modul-Fragment und hängt das Sprachfragment an —
+  beides zusammen übernehmen, sonst fehlen Regeln oder stehen doppelt da.
+- Trägt das Modul-Fragment im Projekt ein Inline-`<!-- override: … -->`, bleibt es
+  unverändert; die Regeln, die jetzt im Sprachfragment stehen, dort von Hand entfernen.
+- Signale der Sprachfragmente: `python-lang` über `tool:python`, `file:pyproject.toml`,
+  `file:requirements*.txt`; `typescript-lang` über `npm:typescript`, `file:tsconfig.json`;
+  `go-lang` über `tool:go`, `file:go.mod`. Ein Projekt, das eine Sprache als
+  Werkzeugsprache nutzt, bekommt ihr Sprachfragment vorgeschlagen; es kommt in
+  `FRAGMENTS`.
+- MANIFEST (§§ Answers, Markers, Module contract, Standards fragments, Detection),
+  Fragment-Katalog und §13 der `CODING-STANDARDS.md` beschreiben Modul- und Sprachfragment.
+
 ## 1.2.1 — 2026-10-25
 
 Skills kommen weiter, wenn ein Schreibzugriff unter `.claude/` auf Freigabe wartet (Fund

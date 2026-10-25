@@ -36,8 +36,9 @@ run_render_cases() {
   check "ts-node: project name in the justfile head" contains ts/justfile demo-app
   check "ts-node: tools follow the core tools" tools_follow ts ts-node
   check "ts-node: gitignore part below its marker" line_after ts/.gitignore "# module:gitignore" "$(first_line "$M/ts-node/gitignore.part")"
-  check "ts-node: language fragment opens the slot" line_after ts/CODING-STANDARDS.md "<!-- module:coding-standards -->" "<!-- fragment:ts-node -->"
-  check "ts-node: language fragment closes the slot" line_before ts/CODING-STANDARDS.md "<!-- /module:coding-standards -->" "<!-- /fragment:ts-node -->"
+  check "ts-node: module fragment opens the slot" line_after ts/CODING-STANDARDS.md "<!-- module:coding-standards -->" "<!-- fragment:ts-node -->"
+  check "ts-node: language fragment closes the slot" line_before ts/CODING-STANDARDS.md "<!-- /module:coding-standards -->" "<!-- /fragment:typescript-lang -->"
+  check "ts-node: module fragment, then language fragment" slot_order ts/CODING-STANDARDS.md "ts-node typescript-lang"
 
   # go, public: CI part
   check "go renders" render go go public
@@ -47,6 +48,7 @@ run_render_cases() {
   check "go: managed module file" has go/.golangci.yml
   refute "go: seed module file left out" has go/go.mod
   check "go: tools follow the core tools" tools_follow go go
+  check "go: module fragment, then language fragment" slot_order go/CODING-STANDARDS.md "go go-lang"
 
   # python with seeds, graphiti kept, a characteristic fragment
   check "python with seeds renders" render py python private --seeds OPTIONAL=graphiti FRAGMENTS=audit-logging
@@ -64,6 +66,14 @@ run_render_cases() {
   check "python: blank line between fragments" line_after py/CODING-STANDARDS.md "<!-- /fragment:python -->" ""
   check "python: characteristic fragment follows" line_before py/CODING-STANDARDS.md "<!-- fragment:audit-logging -->" ""
   check "python: characteristic fragment closes the slot" line_before py/CODING-STANDARDS.md "<!-- /module:coding-standards -->" "<!-- /fragment:audit-logging -->"
+  check "python: module, language, then FRAGMENTS" slot_order py/CODING-STANDARDS.md "python python-lang audit-logging"
+
+  # a declared fragment in FRAGMENTS comes once; a tool language gets its language fragment
+  check "declared fragment in FRAGMENTS renders" render pyd python private FRAGMENTS=python-lang
+  check "declared fragment in FRAGMENTS: only once" slot_order pyd/CODING-STANDARDS.md "python python-lang"
+  check "tool language renders" render tl docs-only private FRAGMENTS=python-lang
+  check "tool language: language fragment alone" slot_order tl/CODING-STANDARDS.md "python-lang"
+  refute "tool language: placeholder text replaced" contains tl/CODING-STANDARDS.md "No stack module instantiated"
 
   # determinism
   check "same answers render again" render py2 python private --seeds OPTIONAL=graphiti FRAGMENTS=audit-logging

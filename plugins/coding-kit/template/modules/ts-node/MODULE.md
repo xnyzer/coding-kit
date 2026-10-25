@@ -15,11 +15,12 @@ bundler-free Node ESM), **Biome** as formatter + linter (warnings fail the gate)
 | `justfile` | replaces core justfile; `check` = Biome CI (format+lint) + `tsc --noEmit` + vitest |
 | `mise.part.toml` | node (LTS major) + pnpm |
 | `gitignore.part` | node_modules, dist, coverage |
-| `CODING-STANDARDS.part.md` | TypeScript rules for §13 |
+| `CODING-STANDARDS.part.md` | TypeScript toolchain rules for §13 (module fragment) |
 | `files/` | package.json, tsconfig(.build).json, biome.json, vitest.config.ts, src sample |
 
-**Standards fragments:** (none) — this module contributes only its own `fragment:ts-node`
-language fragment; it pulls no catalog fragments from `modules/standards/`.
+**Standards fragments:** `typescript-lang` — the language fragment with the TypeScript
+rules that hold whatever toolchain runs the code; the module's own `fragment:ts-node`
+holds only the rules of this toolchain.
 
 **Signals:** `file:package.json`, `file:tsconfig.json`, `tool:node`
 — a project with one of them but another module gets this one proposed (MANIFEST

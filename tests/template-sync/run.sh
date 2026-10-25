@@ -126,6 +126,12 @@ line_before() {  # FILE MARK EXPECTED
   [ "$lb_got" = "$3" ]
 }
 
+# The fragments of FILE open in this order: NAMES, space-separated (marker lines only).
+slot_order() {  # FILE NAMES
+  so_got=$(sed -n 's/^<!-- fragment:\([a-z0-9-]*\) -->$/\1/p' "$TMP/$1" | tr '\n' ' ')
+  [ "$so_got" = "$2 " ]
+}
+
 has_module_rows() { cut -f3 "$TMP/$1.tsv" | grep -qx module; }
 
 # Managed core targets per MANIFEST for a visibility — parsed here independently of the

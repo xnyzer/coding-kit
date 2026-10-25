@@ -16,6 +16,77 @@ zusammen:
 
 ---
 
+## F-043a — Fragmente aufteilen (2026-10-25)
+
+Teil von F-043 (Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen; F-043b–c
+folgen).
+
+**Problem:** Das Fragment eines Stack-Moduls mischte Regeln, die für jeden Code der
+Sprache gelten, mit Regeln, die nur mit der Toolchain des Moduls stimmen. Ein Projekt,
+das die Sprache ohne ihr Modul als Werkzeugsprache nutzt, bekam deshalb gar keine
+Sprachregeln.
+
+**Was entstanden ist (1.3.0, unveröffentlicht):**
+
+- **Sprachfragmente (neu):** `python-lang`, `typescript-lang` und `go-lang` im Katalog,
+  je mit einem Satz zum Geltungsbereich („whatever toolchain runs it"). python: Type
+  Hints, Safe calls, Namensregeln, Dependencies; typescript: strikte Typen, kein `any`,
+  Safe calls, Namensregeln, Dependencies; go: Formatierung, `go vet`, Namensregeln,
+  Fehler, Context, Nebenläufigkeit, Safe calls, Tests, Dependencies.
+- **Modul-Fragmente gekürzt:** Überschriften „Python toolchain (python module)" usw.; sie
+  behalten Runtime, Paketmanager, Layout, Checker, Linter, Test-Werkzeug, Lock-Datei und
+  just-Rezepte. Aufgeteilte Zeilen: pyright strict (Modul) neben den Type Hints
+  (Sprache); `noExplicitAny` und `--error-on-warnings` (Modul) neben „kein `any`"
+  (Sprache); `just format`, `just check` und das Lizenz-Gate (Modul) neben gofmt und den
+  permissiven Lizenzen (Sprache). Das go-Modul-Fragment hat noch vier Regeln.
+- **Module:** `Standards fragments:` mit dem Sprachfragment in den drei `MODULE.md`; die
+  Parts-Tabelle nennt das Modul-Fragment.
+- **Katalog:** drei Zeilen oben mit den Signalen; „How a module pulls fragments"
+  beschreibt Modul- und Sprachfragment.
+- **MANIFEST:** §§ Markers, Module contract (Reihenfolge Modul-Fragment, deklarierte
+  Fragmente, `FRAGMENTS`) und Standards fragments (neuer Punkt „Language fragments") mit
+  den neuen Begriffen; § Detection: Das Sprachfragment einer Werkzeugsprache gilt weiter
+  und wird über seine Signale vorgeschlagen. § Answers: Die `FRAGMENTS`-Zeile nennt auch
+  Fragmente aus der Erkennung und das Sprachfragment einer Werkzeugsprache — sie war
+  seit F-042 veraltet (nicht im Plan, gehört zum selben Vertrag).
+- **Core-`CODING-STANDARDS.md` §13:** Blöcke je Sprache, Toolchain oder Framework; ein
+  Modul bringt seine Toolchain-Regeln und die deklarierten Fragmente, eine Sprache ohne
+  ihr Modul nur ihre Sprachregeln.
+- **Tests:** Helfer `slot_order`; Render-Fälle für die Reihenfolge im Slot bei python,
+  ts-node und go, ein deklariertes Fragment in `FRAGMENTS` erscheint nur einmal, ein
+  docs-only-Projekt mit `FRAGMENTS=python-lang` bekommt das Sprachfragment allein (der
+  Platzhaltertext entfällt); Erkennung: docs-only mit `tool:python` meldet
+  `fragment python-lang missing`.
+- **Version:** `plugin.json` 1.3.0, CHANGELOG-Eintrag mit `### Template` (Aufteilung,
+  beides zusammen übernehmen, Override-Hinweis, Signale).
+
+**Verifikation:** `just check` grün (Validator, 484 Skript-Tests unter dash und bash,
+18 davon neu). Zeilenabgleich gegen HEAD: Jede Regel der drei alten Fragmente steht
+wörtlich oder als aufgeteilte Zeile im Modul- oder im Sprachfragment. Versionsregel gegen
+`origin/main` grün.
+
+**Notable decisions:**
+- Die Regel zur Lock-Datei steht in beiden Teilen: toolchain-neutral im Sprachfragment
+  („committed lock file"), mit der konkreten Datei im Modul-Fragment — sonst hätte eine
+  Werkzeugsprache keine Regel zu Dependencies.
+- `-race` bleibt als Regel im Sprachfragment (Nebenläufigkeit); dass `just test` es
+  umsetzt, steht im justfile und nicht noch einmal im Modul-Fragment.
+- Kommentar und Kopf von `template-sync.sh` sowie die Skills sprechen noch vom
+  „Sprachfragment" des Moduls; umgestellt wird in F-043b, zusammen mit der Erkennung,
+  die deklarierte Fragmente als `covered` zählt.
+
+**Geänderte Dateien:**
+`plugins/coding-kit/template/modules/standards/{python-lang,typescript-lang,go-lang}.md`
+(neu), `plugins/coding-kit/template/modules/{python,ts-node,go}/{CODING-STANDARDS.part.md,MODULE.md}`,
+`plugins/coding-kit/template/modules/standards/README.md`,
+`plugins/coding-kit/template/MANIFEST.md`,
+`plugins/coding-kit/template/core/CODING-STANDARDS.md`,
+`tests/template-sync/{run,render,detect}.sh`,
+`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`,
+`PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-042d — Test, Release, Gegenprobe (2026-10-25)
 
 Schließt F-042 ab (Neue Sprachen und Frameworks erkennen und Vorlagen nachziehen; F-042a–c

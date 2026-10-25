@@ -14,11 +14,12 @@ enforces the floor. Build backend: `uv_build`.
 | `justfile` | replaces core justfile; `check` = ruff format-check + ruff lint + pyright + pytest |
 | `mise.part.toml` | python (current stable major.minor) + uv |
 | `gitignore.part` | .venv, caches, dist |
-| `CODING-STANDARDS.part.md` | Python rules for §13 |
+| `CODING-STANDARDS.part.md` | Python toolchain rules for §13 (module fragment) |
 | `files/` | pyproject.toml, src/ package skeleton, tests/ |
 
-**Standards fragments:** (none) — this module contributes only its own `fragment:python`
-language fragment; it pulls no catalog fragments from `modules/standards/`.
+**Standards fragments:** `python-lang` — the language fragment with the Python rules
+that hold whatever toolchain runs the code; the module's own `fragment:python` holds only
+the rules of this toolchain.
 
 **Signals:** `file:pyproject.toml`, `file:requirements*.txt`, `tool:python`
 — a project with one of them but another module gets this one proposed (MANIFEST

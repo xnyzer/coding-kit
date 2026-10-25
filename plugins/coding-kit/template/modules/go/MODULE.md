@@ -14,12 +14,13 @@ locally and as an extra CI job. Go version = current stable via mise + `go.mod` 
 | `justfile` | replaces core justfile; `check` = fmt-check + vet + golangci-lint + build + test -race |
 | `mise.part.toml` | go (current major.minor) + golangci-lint |
 | `gitignore.part` | bin, dist, coverage.out |
-| `CODING-STANDARDS.part.md` | Go rules for §13 |
+| `CODING-STANDARDS.part.md` | Go toolchain rules for §13 (module fragment) |
 | `ci.part.yml` | extra CI job: license gate |
 | `files/` | go.mod, main.go + test sample, .golangci.yml |
 
-**Standards fragments:** (none) — this module contributes only its own `fragment:go` language
-fragment; it pulls no catalog fragments from `modules/standards/`.
+**Standards fragments:** `go-lang` — the language fragment with the Go rules that hold
+whatever toolchain runs the code; the module's own `fragment:go` holds only the rules of
+this toolchain.
 
 **Signals:** `file:go.mod`, `tool:go`
 — a project with one of them but another module gets this one proposed (MANIFEST

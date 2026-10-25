@@ -22,6 +22,9 @@ mapping.
 
 | Fragment | Covers | Trigger — signals / project characteristic |
 |----------|--------|------------------------------------------------------|
+| `python-lang` | Python language rules, whatever the toolchain: type hints, safe calls, naming, dependencies | `tool:python`, `file:pyproject.toml`, `file:requirements*.txt` |
+| `typescript-lang` | TypeScript language rules, whatever the toolchain: strict types, no `any`, safe calls, naming, dependencies | `npm:typescript`, `file:tsconfig.json` |
+| `go-lang` | Go language rules, whatever the toolchain: formatting, vet, naming, errors, context, concurrency, safe calls, tests, dependencies | `tool:go`, `file:go.mod` |
 | `react` | React components, styling/theming, i18n, a11y, performance | `npm:react`, `npm:react-dom` |
 | `nextjs` | App Router boundaries, routing & caching, assets, build, configuration | `npm:next` |
 | `astro` | Static-first sites: islands, strict CSP, build & quality gate, images | `npm:astro` |
@@ -33,12 +36,20 @@ mapping.
 
 ## How a module pulls fragments
 
-A stack module contributes its own language fragment (its `CODING-STANDARDS.part.md`, wrapped
-as `fragment:<module>`) implicitly. To also pull catalog fragments, it lists them — in order —
-on a `Standards fragments:` line in its `MODULE.md`, e.g.:
+A stack module contributes its own **module fragment** (its `CODING-STANDARDS.part.md`,
+wrapped as `fragment:<module>`) implicitly — the rules that hold only with the module's
+toolchain. To also pull catalog fragments, it lists them — in order — on a
+`Standards fragments:` line in its `MODULE.md`, e.g.:
 
 ```
 Standards fragments: react, prisma, api-design, docker, nginx
 ```
 
 Omit the line (or leave it empty) to pull no catalog fragments.
+
+**Language fragments** are the catalog fragments named `<language>-lang` (`python-lang`,
+`typescript-lang`, `go-lang`): the rules of a language that hold whatever toolchain runs the
+code. The module of a language declares its language fragment first. A project that uses the
+language without its module — a tool language (MANIFEST § Detection) — pulls the language
+fragment alone, proposed through its signals. Module and catalog fragments share the
+`fragment:` names, hence the suffix.
