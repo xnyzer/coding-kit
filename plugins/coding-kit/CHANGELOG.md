@@ -18,9 +18,18 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
 Neue Sprachen und Frameworks sollen auffallen, auch wenn das Template seine Vorlagen erst
 später bekommt (F-042, in Arbeit).
 
+- **`scripts/template-sync.sh detect`** gleicht die Signale eines Projekts mit Modulen
+  und Fragment-Katalog ab: `package.json` (auch minifiziert), `pyproject.toml` (inklusive
+  Poetry und `[dependency-groups]`), `requirements*.txt`, `go.mod` (ohne `// indirect`),
+  `[tools]` der `mise.toml` und Dateimuster über alles, was git für das Projekt listet,
+  ohne Snapshot. Eine Zeile je Treffer mit Zustand `covered`, `declined` oder `missing`
+  und den auslösenden Signalen samt Fundort. `--changed` meldet nur, was der Arbeitsbaum
+  gegenüber HEAD neu hat; mit Signalen als Argumenten prüft es geplante Dependencies,
+  ohne den Baum zu lesen. Noch ruft es kein Skill auf.
 - **Kit:** Der Validator prüft die Signale: nur Typen aus MANIFEST § Detection, im
   Katalog nur typisierte Signale in Backticks oder ein Eigenschafts-Auslöser, jedes volle
-  Modul mit `Signals:`-Zeile, Stubs ohne.
+  Modul mit `Signals:`-Zeile, Stubs ohne, und das Skript kennt genau diese Typen. Die
+  Skript-Tests decken `detect` ab, auch an frisch gerenderten Projekten jedes Moduls.
 
 ### Template
 

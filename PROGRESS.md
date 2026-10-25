@@ -26,6 +26,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-041d | Übrige Skills → **`new-project` instanziiert über den Renderer (Antworten und Snapshot im Erst-Commit); `choose-stack` wechselt Module über Render und Merge; `step-done` meldet geänderte managed Dateien ohne Registry-Zeile (Schritt 1b); Fragment-Einbau mit `FRAGMENTS` und `keep`-Zeilen; `choose-license` und `go-public` ziehen die Antworten nach; Baustein „Hilfsskripte".** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 | F-041e | Test, Release, Gegenprobe → **Migrationstests an Kopien eines docs-only- und eines ts-node-Projekts (Zusätze erhalten, Snapshot gesetzt, Prüfungen grün, `biome ci` mit Snapshot); Mischbasis und `.claude/`-Freigaben in `update-conventions`; Release 1.1.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe am echten docs-only-Projekt ohne unregistrierte Abweichung. F-041 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 | F-042a | Signal-Vertrag und Daten → **MANIFEST § Detection (Signal-Typen `npm:`, `pypi:`, `go:`, `tool:`, `file:`, Dateiliste aus git, Zustände `covered`/`declined`/`missing`, Werkzeugsprache); Ablehnung als Rules-Zeile `module:NAME`/`fragment:NAME`; Katalog typisiert (`docker` mit Compose-Varianten, `nginx` präzisiert, `api-design` auch für Python und Go); `Signals:`-Zeilen in den vollen Modulen; Validator prüft Typen, Katalog und Module; Version 1.2.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
+| F-042b | `detect` im Skript → **`template-sync.sh detect [--changed] TEMPLATE PROJECT [SIGNAL…]`: Leser für `package.json` (auch minifiziert), `pyproject.toml`, `requirements*.txt`, `go.mod`, `mise.toml` und Dateimuster über die git-Dateiliste ohne Snapshot; Zustände aus Antworten, Slot-Markern und Rules-Zeilen; `--changed` nur gegenüber HEAD neue Signale, übergebene Signale ohne Baum; 64 Tests je Shell inklusive frisch gerenderter Projekte; der Validator gleicht die Typliste des Skripts mit dem MANIFEST ab.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 
 ---
 
@@ -87,7 +88,7 @@ immer erst nach Bestätigung.
   `mise.toml`; Dateimuster auf den Dateinamen); Suchbereich `git ls-files` (getrackt plus
   ungetrackt und nicht ignoriert, ohne `.claude/template-base/`); Bewertung; Ablehnung.
   § Deviation registry: Rules-Zeilen `module:NAME`/`fragment:NAME` sind maschinenlesbar.
-- `template-sync.sh detect [--changed] PROJECT [SIGNAL…]`: eine Zeile je Treffer mit Art
+- `template-sync.sh detect [--changed] TEMPLATE PROJECT [SIGNAL…]`: eine Zeile je Treffer mit Art
   (Modul oder Fragment), Name, Zustand (`covered`, `missing`, `declined`) und den
   auslösenden Signalen samt Fundort. Aus Projektdateien wird nichts ausgeführt.
 - `prep-step` § 2a auch für neue Sprachen und Toolchains, mit `detect` über die geplanten
@@ -98,32 +99,6 @@ immer erst nach Bestätigung.
 - Keine neuen Dependencies (POSIX sh, awk, git).
 
 **Abhängigkeiten:** F-041 (erledigt). Vor F-043.
-
-#### F-042b — `detect` im Skript
-
-**Was:** `template-sync.sh detect [--changed] PROJECT [SIGNAL…]` nach MANIFEST
-§ Detection: Signale aus dem Baum lesen (Leser für `package.json` mit einem Tokenizer, der
-auch minifiziertes JSON verarbeitet, für `pyproject.toml`, `requirements*.txt`, `go.mod`,
-`mise.toml` und Dateimuster); mit `--changed` nur Signale, die gegenüber HEAD neu sind; mit
-SIGNAL-Argumenten nur diese. Bewertung gegen `MODULE` der Antworten, die Marker im Slot und
-die Ablehnungen der Rules-Tabelle. Der Kopf des Skripts beschreibt Befehl und Ausgabe.
-Tests unter dash und bash.
-
-**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
-`tests/template-sync/detect.sh` (neu), `tests/template-sync/run.sh`,
-`plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-042a.
-
-**Abnahmekriterien:**
-- [ ] Tests grün unter dash und bash: je Leser Treffer und Nicht-Treffer (u. a.
-      minifiziertes JSON, mehrzeilige Arrays, Poetry, Kommentare, `// indirect`, ein
-      `go:`-Pfad mit Hauptversions-Suffix);
-      `--changed` meldet nur neue Signale; eine Ablehnungszeile ergibt `declined`; ohne
-      Antworten-Datei läuft nur die Fragment-Prüfung.
-- [ ] An einer Scratch-Kopie des docs-only-Projekts meldet `detect` das python-Modul über
-      `tool:python`; mit der Zeile `module:python` in Rules lautet der Zustand `declined`.
-- [ ] `just check` grün.
 
 #### F-042c — Skills und Doku
 

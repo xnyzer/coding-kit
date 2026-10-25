@@ -100,6 +100,7 @@ CHARACTERISTIC_MARK = "*characteristic:*"
 MODULES_README = TEMPLATE_ROOT / "modules" / "README.md"
 MODULE_STATUS_ROW_RE = re.compile(r"^\|\s*`([a-z0-9][a-z0-9-]*)`\s*\|\s*([a-z]*)", re.MULTILINE)
 MODULE_STATUSES = {"full", "stub"}
+SCRIPT_SIGNAL_TYPES_RE = re.compile(r"^SIGNAL_TYPES='([a-z ]*)'", re.MULTILINE)
 # Deterministic helpers shipped with the plugin (POSIX sh, called with `sh <path>`).
 PLUGIN_SCRIPTS_DIR = PLUGIN_ROOT / "scripts"
 TEMPLATE_SYNC = PLUGIN_SCRIPTS_DIR / "template-sync.sh"
@@ -576,14 +577,29 @@ def check_module_signals(types: set[str], findings: list[str]) -> None:
         check_signals(f"{rel}: Signals", [item.strip("`") for item in items], types, findings)
 
 
+def check_script_signal_types(types: set[str], findings: list[str]) -> None:
+    """`template-sync.sh detect` reads exactly the signal types the MANIFEST defines."""
+    if not TEMPLATE_SYNC.is_file():
+        return  # reported by check_module_parts_known
+    match = SCRIPT_SIGNAL_TYPES_RE.search(TEMPLATE_SYNC.read_text(encoding="utf-8"))
+    script_types = set(match.group(1).split()) if match else set()
+    if script_types != types:
+        findings.append(
+            f"{display_path(TEMPLATE_SYNC)}: SIGNAL_TYPES {sorted(script_types)} differ from "
+            f"MANIFEST § Detection {sorted(types)}"
+        )
+
+
 def check_detection(text: str, findings: list[str]) -> None:
-    """MANIFEST § Detection defines the signal types; catalog and modules use only those."""
+    """MANIFEST § Detection defines the signal types; catalog, modules and the script use
+    only those."""
     types = set(SIGNAL_TYPE_ROW_RE.findall(manifest_section(text, "Detection") or ""))
     if not types:
         findings.append(f"{display_path(MANIFEST_PATH)}: § Detection defines no signal types")
         return
     check_catalog_signals(types, findings)
     check_module_signals(types, findings)
+    check_script_signal_types(types, findings)
 
 
 def check_snapshot_contract(text: str, findings: list[str]) -> None:

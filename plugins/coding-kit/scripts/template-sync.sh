@@ -31,6 +31,14 @@
 #   base-from-history KIT VERSION OUT
 #       Exports the template of VERSION from the git history of a coding-kit checkout
 #       into OUT/template (missing or empty OUT). Line: <template dir> <commit>.
+#   detect [--changed] TEMPLATE PROJECT [SIGNAL…]
+#       Matches the signals of PROJECT against the stack modules and catalog fragments
+#       of TEMPLATE (MANIFEST § Detection). Without SIGNAL it reads the files git lists
+#       for the project; with --changed only the signals the working tree adds against
+#       HEAD; with SIGNAL arguments (type:value, a file signal names a planned path)
+#       only those. Line per hit: <module|fragment> <name> <covered|declined|missing>
+#       <signal (first path[ +more])>, … — modules first. Without
+#       .claude/template-answers the module check is skipped (note on stderr).
 #
 # <registry> is the kind of the matching row in the Files table of
 # .claude/convention-overrides.md: skip, keep, adapt, registered (row without kind) or
@@ -46,6 +54,10 @@ set -eu
 TAB=$(printf '\t')
 SNAP_DIR=.claude/template-base
 REGISTRY=.claude/convention-overrides.md
+ANSWERS_FILE=.claude/template-answers
+# Signal types detect reads (MANIFEST § Detection); the validator compares the list
+# with the MANIFEST table.
+SIGNAL_TYPES='npm pypi go tool file'
 SLOT_OPEN='<!-- module:coding-standards -->'
 SLOT_CLOSE='<!-- /module:coding-standards -->'
 BASE_DIR=
@@ -63,6 +75,7 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh merge [--base DIR] PROJECT SOLL OUT
        sh template-sync.sh snapshot PROJECT SOLL TARGET...
        sh template-sync.sh base-from-history KIT VERSION OUT
+       sh template-sync.sh detect [--changed] TEMPLATE PROJECT [SIGNAL...]
 EOF
   exit 2
 }
@@ -929,6 +942,427 @@ base_from_history() {
   printf '%s\t%s\n' "$OUT/template" "$bf_commit"
 }
 
+# --- detect ---------------------------------------------------------------------
+
+# Normalized PyPI name (lowercase, each run of -, _ and . as one -), shared by the
+# readers and the declarations.
+AWK_PYPI='function pypi(s) { s = tolower(s); gsub(/[-_.]+/, "-", s); return s }'
+
+# Signals TEMPLATE declares → "kind<TAB>name<TAB>signal": the Signals: line of each
+# MODULE.md, then the trigger column of the fragment catalog (characteristics have none).
+declared_signals() {
+  for ds_doc in "$TEMPLATE"/modules/*/MODULE.md; do
+    [ -f "$ds_doc" ] || continue
+    ds_name=${ds_doc%/MODULE.md}
+    ds_name=${ds_name##*/}
+    awk -v name="$ds_name" '
+      /^[*]*Signals:/ {
+        s = substr($0, index($0, "Signals:") + length("Signals:"))
+        sub(/^[* \t]+/, "", s)
+        j = index(s, " — ")
+        if (!j) j = index(s, " – ")
+        if (j) s = substr(s, 1, j - 1)
+        gsub(/^[ \t]+|[ \t]+$/, "", s)
+        if (s == "" || s == "(none)" || s == "none") exit
+        n = split(s, parts, ",")
+        for (i = 1; i <= n; i++) {
+          p = parts[i]; gsub(/[ \t`]/, "", p)
+          if (p != "") print "module\t" name "\t" p
+        }
+        exit
+      }' "$ds_doc"
+  done
+  awk '
+    /^## / { insec = ($0 ~ /^## Catalog[ \t]*$/); next }
+    insec && /^\|[ \t]*`[a-z0-9-]+`[ \t]*\|/ {
+      n = split($0, c, "|")
+      name = c[2]; gsub(/[ \t`]/, "", name)
+      trig = c[n - 1]
+      if (index(trig, "*characteristic:*")) next
+      while (match(trig, /`[^`]+`/)) {
+        print "fragment\t" name "\t" substr(trig, RSTART + 1, RLENGTH - 2)
+        trig = substr(trig, RSTART + RLENGTH)
+      }
+    }' "$TEMPLATE/modules/standards/README.md"
+}
+
+# Declarations on stdin with a known type each; PyPI names normalized.
+typed_declarations() {
+  awk -F "$TAB" -v types=" $SIGNAL_TYPES " "$AWK_PYPI"'
+    {
+      t = $3; sub(/:.*/, "", t); v = substr($3, length(t) + 2)
+      if (!index($3, ":") || v == "" || !index(types, " " t " ")) {
+        print "template-sync: " $1 " " $2 ": invalid signal \"" $3 "\"" | "cat 1>&2"
+        bad = 1
+        next
+      }
+      if (t == "pypi") v = pypi(v)
+      print $1 "\t" $2 "\t" t ":" v
+    }
+    END { close("cat 1>&2"); exit bad }'
+}
+
+# package.json: the names in dependencies, devDependencies, peerDependencies and
+# optionalDependencies. A small tokenizer, so minified JSON reads as well.
+npm_signals() {  # FILE REL
+  awk -v rel="$2" '
+    { buf = buf $0 "\n" }
+    END {
+      deps["dependencies"] = 1; deps["devDependencies"] = 1
+      deps["peerDependencies"] = 1; deps["optionalDependencies"] = 1
+      n = length(buf); d = 0; i = 1
+      while (i <= n) {
+        c = substr(buf, i, 1)
+        if (c == "\"") {
+          s = ""; i++
+          while (i <= n) {
+            c = substr(buf, i, 1)
+            if (c == "\\") { s = s substr(buf, i, 2); i += 2; continue }
+            if (c == "\"") break
+            s = s c; i++
+          }
+          if (obj[d] && want[d]) {
+            key[d] = s; want[d] = 0
+            if (d == 2 && (key[1] in deps)) print "npm:" s "\t" rel
+          }
+        } else if (c == "{") { d++; obj[d] = 1; want[d] = 1 }
+        else if (c == "[") { d++; obj[d] = 0 }
+        else if (c == "}" || c == "]") { if (d > 0) d-- }
+        else if (c == "," && obj[d]) want[d] = 1
+        i++
+      }
+    }' "$1"
+}
+
+# pyproject.toml: PEP 508 names in dependencies of [project], in
+# [project.optional-dependencies] and [dependency-groups], and the keys of the Poetry
+# dependency tables (without python). Strings inside inline tables are not names.
+pyproject_signals() {  # FILE REL
+  awk -v rel="$2" "$AWK_PYPI"'
+    function emit(spec) {
+      if (match(spec, /^[ \t]*[A-Za-z0-9][A-Za-z0-9._-]*/)) {
+        spec = substr(spec, RSTART, RLENGTH); gsub(/[ \t]/, "", spec)
+        print "pypi:" pypi(spec) "\t" rel
+      }
+    }
+    # Counts inline-table braces in TEXT; 1 when the array closes there.
+    function closes(text,   i, ch) {
+      for (i = 1; i <= length(text); i++) {
+        ch = substr(text, i, 1)
+        if (ch == "{") brace++
+        else if (ch == "}") brace--
+        else if (ch == "]" && brace <= 0) return 1
+      }
+      return 0
+    }
+    # Names in one line of an array; 1 while the array goes on. emit() runs match()
+    # itself, so the position of the string is kept before.
+    function collect(line,   pre, h, at, len) {
+      while (match(line, /"[^"]*"|\047[^\047]*\047/)) {
+        at = RSTART; len = RLENGTH
+        pre = substr(line, 1, at - 1)
+        if ((h = index(pre, "#"))) return !closes(substr(pre, 1, h - 1))
+        if (closes(pre)) return 0
+        if (brace <= 0) emit(substr(line, at + 1, len - 2))
+        line = substr(line, at + len)
+      }
+      sub(/#.*/, "", line)
+      return !closes(line)
+    }
+    { sub(/\r$/, "") }
+    inarr { inarr = collect($0); next }
+    /^[ \t]*\[/ {
+      t = $0; sub(/^[ \t]*\[+[ \t]*/, "", t); sub(/[ \t]*\].*$/, "", t); gsub(/["\047 ]/, "", t)
+      tbl = t
+      poetry = (tbl == "tool.poetry.dependencies" || tbl == "tool.poetry.dev-dependencies" \
+        || tbl ~ /^tool\.poetry\.group\.[^.]+\.dependencies$/)
+      next
+    }
+    /^[ \t]*#/ || !/=/ { next }
+    {
+      k = substr($0, 1, index($0, "=") - 1); gsub(/[ \t"\047]/, "", k)
+      v = substr($0, index($0, "=") + 1)
+      if (poetry) {
+        if (k != "python") print "pypi:" pypi(k) "\t" rel
+        next
+      }
+      if ((tbl == "project" && k == "dependencies") || tbl == "project.optional-dependencies" \
+        || tbl == "dependency-groups") {
+        if (sub(/^[ \t]*\[/, "", v)) { brace = 0; inarr = collect(v) }
+      }
+    }' "$1"
+}
+
+# requirements*.txt: one requirement per line; options (-r, -e …), URLs and paths are not
+# names.
+requirements_signals() {  # FILE REL
+  awk -v rel="$2" "$AWK_PYPI"'
+    { sub(/\r$/, ""); sub(/^#.*/, ""); sub(/[ \t]#.*/, "") }
+    /^[ \t]*-/ { next }
+    match($0, /^[ \t]*[A-Za-z0-9][A-Za-z0-9._-]*/) {
+      name = substr($0, RSTART, RLENGTH); gsub(/[ \t]/, "", name)
+      if (substr($0, RSTART + RLENGTH) ~ /^[:+]/) next
+      print "pypi:" pypi(name) "\t" rel
+    }' "$1"
+}
+
+# go.mod: required module paths, except // indirect; a path with a major-version suffix
+# also counts without it.
+gomod_signals() {  # FILE REL
+  awk -v rel="$2" '
+    function emit(p) {
+      print "go:" p "\t" rel
+      if (sub(/\/v[0-9]+$/, "", p)) print "go:" p "\t" rel
+    }
+    { sub(/\r$/, "") }
+    inreq && /^[ \t]*\)/ { inreq = 0; next }
+    inreq {
+      if (index($0, "// indirect")) next
+      sub(/\/\/.*/, "")
+      if (NF >= 2) emit($1)
+      next
+    }
+    /^[ \t]*require[ \t]*\(/ { inreq = 1; next }
+    /^[ \t]*require[ \t]/ {
+      if (index($0, "// indirect")) next
+      sub(/\/\/.*/, "")
+      if (NF >= 3) emit($2)
+    }' "$1"
+}
+
+# mise.toml: the keys of [tools] and the names of [tools.NAME] tables.
+mise_signals() {  # FILE REL
+  awk -v rel="$2" '
+    { sub(/\r$/, "") }
+    /^[ \t]*\[/ {
+      t = $0; sub(/^[ \t]*\[[ \t]*/, "", t); sub(/[ \t]*\].*$/, "", t)
+      intools = (t == "tools")
+      if (substr(t, 1, 6) == "tools.") {
+        k = substr(t, 7); gsub(/["\047]/, "", k)
+        print "tool:" k "\t" rel
+      }
+      next
+    }
+    intools && /=/ && !/^[ \t]*#/ {
+      k = substr($0, 1, index($0, "=") - 1)
+      gsub(/^[ \t]+|[ \t]+$/, "", k); gsub(/^["\047]|["\047]$/, "", k)
+      if (k != "") print "tool:" k "\t" rel
+    }' "$1"
+}
+
+# Manifest signals of FILE, read as the project path REL.
+manifest_signals() {  # FILE REL
+  case ${2##*/} in
+    package.json) npm_signals "$1" "$2" ;;
+    pyproject.toml) pyproject_signals "$1" "$2" ;;
+    requirements*.txt) requirements_signals "$1" "$2" ;;
+    go.mod) gomod_signals "$1" "$2" ;;
+    mise.toml | .mise.toml) mise_signals "$1" "$2" ;;
+  esac
+}
+
+# Declared file globs that match a path of LIST → "file:GLOB<TAB>path". A glob without
+# / matches the file name, one with / the whole path; * and ? as in sh, also across /.
+file_signals() {  # LIST
+  awk -F "$TAB" -v decl="$WORK/declared.tsv" '
+    function re(g,   o, i, j, c, cls) {
+      o = "^"
+      for (i = 1; i <= length(g); i++) {
+        c = substr(g, i, 1)
+        if (c == "*") o = o ".*"
+        else if (c == "?") o = o "."
+        else if (c == "[" && (j = index(substr(g, i + 1), "]")) > 1) {
+          cls = substr(g, i + 1, j - 1)
+          if (substr(cls, 1, 1) == "!") cls = "^" substr(cls, 2)
+          o = o "[" cls "]"; i += j
+        } else if (index("\\^$.|+(){}[]", c)) o = o "\\" c
+        else o = o c
+      }
+      return o "$"
+    }
+    FILENAME == decl {
+      if ($3 ~ /^file:/) {
+        g = substr($3, 6)
+        if (!(g in rx)) { rx[g] = re(g); whole[g] = index(g, "/") > 0 }
+      }
+      next
+    }
+    {
+      b = $0; sub(/.*\//, "", b)
+      for (g in rx) if ((whole[g] ? $0 : b) ~ rx[g]) print "file:" g "\t" $0
+    }' "$WORK/declared.tsv" "$1"
+}
+
+# Files of PROJECT: "worktree" = tracked plus untracked and not ignored, without deleted
+# ones; "head" = the files of HEAD. The snapshot never counts.
+file_list() {  # PROJECT worktree|head
+  if [ "$2" = head ]; then
+    git -C "$1" -c core.quotePath=false ls-tree -r --name-only HEAD
+  else
+    git -C "$1" -c core.quotePath=false ls-files --cached --others --exclude-standard \
+      | LC_ALL=C sort -u > "$WORK/fl.all"
+    git -C "$1" -c core.quotePath=false ls-files --deleted | LC_ALL=C sort -u > "$WORK/fl.del"
+    LC_ALL=C comm -23 "$WORK/fl.all" "$WORK/fl.del"
+  fi | awk -v snap="$SNAP_DIR/" 'index($0, snap) != 1'
+}
+
+# Signals of PROJECT in MODE (worktree or head) → "signal<TAB>path": manifest entries,
+# then the declared file globs that match a path.
+scan_signals() {  # PROJECT MODE
+  file_list "$1" "$2" > "$WORK/files.$2"
+  grep -E '(^|/)(package\.json|pyproject\.toml|requirements[^/]*\.txt|go\.mod|\.?mise\.toml)$' \
+    "$WORK/files.$2" > "$WORK/manifests.$2" || true
+  while IFS= read -r ss_rel; do
+    if [ "$2" = head ]; then
+      git -C "$1" show "HEAD:./$ss_rel" > "$WORK/blob" 2> /dev/null || continue
+      manifest_signals "$WORK/blob" "$ss_rel"
+    else
+      [ -f "$1/$ss_rel" ] || continue
+      manifest_signals "$1/$ss_rel" "$ss_rel"
+    fi
+  done < "$WORK/manifests.$2"
+  file_signals "$WORK/files.$2"
+}
+
+# SIGNAL arguments → "signal<TAB>given"; a file signal names a planned path and is
+# matched against the declared globs like a file of the project.
+given_signals() {  # SIGNAL…
+  : > "$WORK/given.files"
+  for gs_sig in "$@"; do
+    gs_type=${gs_sig%%:*}
+    gs_val=${gs_sig#*:}
+    case " $SIGNAL_TYPES " in
+      *" $gs_type "*) ;;
+      *) die "signal '$gs_sig': type must be one of: $SIGNAL_TYPES" ;;
+    esac
+    [ "$gs_type" != "$gs_sig" ] && [ -n "$gs_val" ] \
+      || die "signal '$gs_sig' needs a value (type:value)"
+    case $gs_type in
+      file) printf '%s\n' "$gs_val" >> "$WORK/given.files" ;;
+      pypi) printf 'pypi:%s\tgiven\n' "$gs_val" | awk -F "$TAB" "$AWK_PYPI"'
+              { sub(/^pypi:/, "", $1); print "pypi:" pypi($1) "\t" $2 }' ;;
+      go)
+        printf '%s\tgiven\n' "$gs_sig"
+        case $gs_val in
+          */v[0-9] | */v[0-9][0-9]) printf 'go:%s\tgiven\n' "${gs_val%/v*}" ;;
+        esac
+        ;;
+      *) printf '%s\tgiven\n' "$gs_sig" ;;
+    esac
+  done
+  file_signals "$WORK/given.files"
+}
+
+# Rules rows of PROJECT's registry that decline a proposal → "module:NAME" or
+# "fragment:NAME".
+declined_rows() {  # PROJECT
+  [ -f "$1/$REGISTRY" ] || return 0
+  awk '
+    /^#+[ \t]/ { insec = ($0 ~ /^## Rules[ \t]*$/); next }
+    insec && /^\|/ {
+      split($0, c, "|"); r = c[2]; gsub(/[ \t`]/, "", r)
+      if (r ~ /^(module|fragment):[a-z0-9][a-z0-9-]*$/) print r
+    }' "$1/$REGISTRY"
+}
+
+# Hits of $WORK/project.tsv against $WORK/declared.tsv with their state; MODULE empty =
+# no module check. Evidence per declared signal: first path (sorted) and how many more.
+report_hits() {  # MODULE
+  LC_ALL=C sort -u "$WORK/project.tsv" > "$WORK/project.lst"
+  awk -F "$TAB" -v module="$1" -v cov="$WORK/covered" -v dec="$WORK/declined" \
+    -v decl="$WORK/declared.tsv" '
+    # covered by the answers (module) or the slot (fragment), else declined or missing.
+    function state(kind, name) {
+      if ((kind == "module") ? (name == module) : (name in covered)) return "covered"
+      if ((kind ":" name) in declined) return "declined"
+      return "missing"
+    }
+    FILENAME == cov { covered[$1] = 1; next }
+    FILENAME == dec { declined[$1] = 1; next }
+    FILENAME == decl {
+      k = $1 "\t" $2
+      if (!(k in seen)) { seen[k] = 1; keys[++nk] = k }
+      sigs[k, ++ns[k]] = $3
+      bysig[$3] = bysig[$3] "\n" k
+      next
+    }
+    $1 in bysig {
+      m = split(substr(bysig[$1], 2), ks, "\n")
+      for (i = 1; i <= m; i++) {
+        e = ks[i] SUBSEP $1
+        if (!(e in cnt)) first[e] = $2
+        cnt[e]++
+      }
+    }
+    END {
+      for (x = 1; x <= nk; x++) {
+        k = keys[x]; split(k, kn, "\t")
+        if (kn[1] == "module" && module == "") continue
+        ev = ""
+        for (j = 1; j <= ns[k]; j++) {
+          e = k SUBSEP sigs[k, j]
+          if (!(e in cnt)) continue
+          more = (cnt[e] > 1) ? " +" (cnt[e] - 1) : ""
+          ev = ev (ev == "" ? "" : ", ") sigs[k, j] " (" first[e] more ")"
+        }
+        if (ev != "") print kn[1] "\t" kn[2] "\t" state(kn[1], kn[2]) "\t" ev
+      }
+    }' "$WORK/covered" "$WORK/declined" "$WORK/declared.tsv" "$WORK/project.lst" \
+    | LC_ALL=C sort -t "$TAB" -k1,1r -k2,2
+}
+
+detect() {
+  dt_changed=0
+  if [ "${1:-}" = --changed ]; then
+    dt_changed=1
+    shift
+  fi
+  [ $# -ge 2 ] || usage
+  TEMPLATE=$1 P=$2
+  shift 2
+  [ -f "$TEMPLATE/MANIFEST.md" ] || die "no MANIFEST.md in $TEMPLATE"
+  [ -d "$P" ] || die "project not found: $P"
+  [ "$dt_changed" -eq 0 ] || [ $# -eq 0 ] || die "--changed reads the project, it takes no signals"
+  setup_work
+  declared_signals | typed_declarations > "$WORK/declared.tsv" \
+    || die "invalid signal declarations in $TEMPLATE"
+
+  if [ $# -gt 0 ]; then
+    given_signals "$@" > "$WORK/project.tsv"
+  else
+    git -C "$P" rev-parse --git-dir > /dev/null 2>&1 || die "$P is not a git repository"
+    scan_signals "$P" worktree > "$WORK/project.tsv"
+    if [ "$dt_changed" -eq 1 ]; then
+      if git -C "$P" rev-parse --verify -q HEAD > /dev/null; then
+        scan_signals "$P" head > "$WORK/head.tsv"
+      else
+        : > "$WORK/head.tsv"
+      fi
+      awk -F "$TAB" -v old="$WORK/head.tsv" 'FILENAME == old { had[$1] = 1; next } !($1 in had)' \
+        "$WORK/head.tsv" "$WORK/project.tsv" > "$WORK/added.tsv"
+      mv "$WORK/added.tsv" "$WORK/project.tsv"
+    fi
+  fi
+
+  dt_module=
+  if [ -f "$P/$ANSWERS_FILE" ]; then
+    load_answers "$P/$ANSWERS_FILE" > "$WORK/values.tsv" \
+      || die "invalid answers file: $P/$ANSWERS_FILE"
+    dt_module=$(value_of MODULE) || die "answers: MODULE is missing"
+  else
+    printf 'template-sync: no %s in %s — module check skipped\n' "$ANSWERS_FILE" "$P" >&2
+  fi
+  part_rows > "$WORK/parts.tsv"
+  : > "$WORK/covered"
+  dt_slot=$(part_target CODING-STANDARDS.part.md) || dt_slot=
+  if [ -n "$dt_slot" ] && [ -f "$P/$dt_slot" ] && slot_of "$P/$dt_slot" "$WORK/slot"; then
+    sed -n 's/^[[:space:]]*<!--[[:space:]]*fragment:\([a-z0-9-]*\)[[:space:]]*-->.*$/\1/p' \
+      "$WORK/slot" > "$WORK/covered"
+  fi
+  declined_rows "$P" > "$WORK/declined"
+  report_hits "$dt_module"
+}
+
 cmd=${1:-}
 [ $# -eq 0 ] || shift
 case $cmd in
@@ -938,5 +1372,6 @@ case $cmd in
   merge) merge "$@" ;;
   snapshot) snapshot "$@" ;;
   base-from-history) base_from_history "$@" ;;
+  detect) detect "$@" ;;
   *) usage ;;
 esac

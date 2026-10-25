@@ -16,6 +16,75 @@ zusammen:
 
 ---
 
+## F-042b — `detect` im Skript (2026-10-25)
+
+Teil von F-042 (Neue Sprachen und Frameworks erkennen und Vorlagen nachziehen; F-042a
+siehe darunter, F-042c–d folgen).
+
+**Problem:** Der Signal-Vertrag aus F-042a stand, aber nichts las die Signale eines
+Projekts: prep-step und step-done glichen Dependencies von Hand mit dem Katalog ab,
+update-conventions gar nicht.
+
+**Was entstanden ist (1.2.0, unveröffentlicht):**
+
+- **`template-sync.sh detect [--changed] TEMPLATE PROJECT [SIGNAL…]`:** eine Zeile je
+  Treffer, `<module|fragment> <name> <covered|declined|missing> <Signal (erster
+  Fundort[ +weitere])>, …`, Module zuerst. Die Deklarationen kommen aus den
+  `Signals:`-Zeilen der `MODULE.md` und der Auslöser-Spalte des Katalogs; Typen werden
+  geprüft, PyPI-Namen normalisiert.
+- **Leser:** `package.json` mit einem kleinen Tokenizer (auch minifiziert, nur die vier
+  Dependency-Tabellen der obersten Ebene); `pyproject.toml` (Dependencies von
+  `[project]`, `[project.optional-dependencies]` und `[dependency-groups]` ohne Strings in
+  Inline-Tabellen, Poetry-Tabellen ohne `python`, Kommentare in mehrzeiligen Arrays);
+  `requirements*.txt` (ohne Optionen, URLs und Pfade); `go.mod` (`require` einzeln und
+  als Block, ohne `// indirect`, ein Pfad mit `/vN` zählt auch ohne Suffix); `[tools]`
+  und `[tools.NAME]` der `mise.toml` bzw. `.mise.toml`; Dateimuster als sh-Glob auf Name
+  oder Pfad.
+- **Dateiliste:** `git ls-files`, getrackt plus ungetrackt und nicht ignoriert, ohne
+  gelöschte Dateien und ohne `.claude/template-base/`; Manifeste zählen in jeder Tiefe.
+- **Zustände:** `covered` nach `MODULE` der Antworten bzw. nach dem `fragment:NAME`-Marker
+  im Slot (Marker außerhalb zählen nicht), `declined` nach einer Rules-Zeile
+  `module:NAME`/`fragment:NAME` (Backticks optional), sonst `missing`. Ohne Antworten-Datei
+  entfällt die Modul-Prüfung, mit Hinweis auf stderr.
+- **`--changed`** liest Arbeitsbaum und HEAD gleich und meldet nur Signale, die HEAD nicht
+  hatte; eine neue Hauptversion eines bekannten Go-Moduls ist damit nicht neu, ohne
+  Commit ist alles neu. **Übergebene Signale** prüfen geplante Dependencies ohne Baum und
+  ohne git; ein `file:`-Signal nennt einen geplanten Pfad.
+- **Validator:** Die Typliste `SIGNAL_TYPES` im Skript muss der Tabelle in MANIFEST
+  § Detection entsprechen — nicht im Plan genannt, verhindert aber, dass ein neuer Typ im
+  Vertrag still unerkannt bleibt.
+- **Tests:** `tests/template-sync/detect.sh`, 64 Prüfungen je Shell: alle Leser mit
+  Treffer und Nicht-Treffer, Snapshot- und Ignore-Ausschluss, ungetrackte Dateien,
+  Slot-Grenze, Ablehnungen, `--changed` mit und ohne HEAD, übergebene Signale samt
+  Fehlerfällen und je Modul ein frisch gerendertes Projekt, das nur sein eigenes Modul
+  als `covered` meldet. Die Suite läuft jetzt in rund 21 statt 13 s.
+- **CHANGELOG:** Eintrag 1.2.0 um `detect` und die Validator-Prüfung ergänzt.
+
+**Verifikation:** `just check` grün (Validator, 424 Prüfungen unter dash und bash). An
+einer Scratch-Kopie des docs-only-Projekts: `module python missing tool:python
+(mise.toml)`, mit der Zeile `module:python` in Rules `declined`; die Kopie ist gelöscht.
+Fehlerinjektion: acht eingebaute Fehler (`// indirect`, Snapshot-Ausschluss,
+`--changed`-Abzug, Kleinschreibung, Dependency-Tabellen, Go-Suffix, Slot-Grenze,
+Ablehnungen) werden alle von Tests gefangen; eine abweichende Typliste meldet der
+Validator.
+
+**Notable decisions:**
+- Template-Pfad als Argument wie bei `render` statt `detect PROJECT`: Die Skills haben ihn
+  aufgelöst, die Tests brauchen ihn.
+- `--changed` vergleicht den ganzen Baum mit HEAD statt nur die berührten Dateien: Eine
+  Dependency, die ein anderes Manifest schon hatte, gilt so nicht als neu.
+- Fundort je Signal als erster Pfad plus Anzahl weiterer, damit Zeilen auch in Monorepos
+  lesbar bleiben.
+- Beim ersten Testlauf hing der pyproject-Leser: `emit()` überschrieb mit seinem eigenen
+  `match()` die Position der Schleife. Behoben; der Fall aus den Fixtures läuft durch.
+
+**Geänderte Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
+`tests/template-sync/detect.sh` (neu), `tests/template-sync/run.sh`,
+`scripts/validate.py`, `plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`,
+`PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-042a — Signal-Vertrag und Daten (2026-10-25)
 
 Teil von F-042 (Neue Sprachen und Frameworks erkennen und Vorlagen nachziehen; F-042b–d
