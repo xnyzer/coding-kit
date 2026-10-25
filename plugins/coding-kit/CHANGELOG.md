@@ -13,10 +13,10 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 1.2.0 — unveröffentlicht
+## 1.2.0 — 2026-10-25
 
-Neue Sprachen und Frameworks sollen auffallen, auch wenn das Template seine Vorlagen erst
-später bekommt (F-042, in Arbeit).
+Neue Sprachen und Frameworks fallen auf, auch wenn das Template seine Vorlagen erst später
+bekommt (F-042).
 
 - **`scripts/template-sync.sh detect`** gleicht die Signale eines Projekts mit Modulen
   und Fragment-Katalog ab: `package.json` (auch minifiziert), `pyproject.toml` (inklusive
