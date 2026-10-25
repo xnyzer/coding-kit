@@ -42,6 +42,10 @@ holds only the rules of this toolchain.
   by Renovate; the mise majors track the current LTS (bump deliberately on LTS change).
 - `biome ci --error-on-warnings` enforces zero-warning policy; if a Biome major changes
   flags, `/update-conventions` carries the fix.
+- `biome.json` keeps Biome on code: `files.includes` excludes Markdown and YAML. Newer
+  Biome versions format both, but the template's docs, workflows and `pnpm-lock.yaml` are
+  not written in Biome's style. An exclusion pattern works with every Biome 2 release; a
+  `markdown` or `yaml` section would be refused by versions that predate them.
 - `biome.json` resolves its `$schema` from `node_modules/@biomejs/biome` instead of a
   versioned biomejs.dev URL — the schema then always matches the installed CLI and cannot
   drift out of sync when Renovate bumps the dependency.

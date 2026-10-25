@@ -30,7 +30,8 @@
 #       longer has loses its base. Line: <target> <set|removed>.
 #   base-from-history KIT VERSION OUT
 #       Exports the template of VERSION from the git history of a coding-kit checkout
-#       into OUT/template (missing or empty OUT). Line: <template dir> <commit>.
+#       into OUT/template (missing or empty OUT); a release without template changes
+#       has the template of the commit that set its version. Line: <template dir> <commit>.
 #   detect [--changed] [--answers FILE] [--registry FILE] TEMPLATE PROJECT [SIGNAL…]
 #       Matches the signals of PROJECT against the stack modules and catalog fragments
 #       of TEMPLATE (MANIFEST § Detection). Without SIGNAL it reads the files git lists
@@ -985,6 +986,19 @@ base_from_history() {
       break
     fi
   done < "$WORK/commits"
+  if [ -z "$bf_commit" ]; then
+    # No template change in this release: the commit that set the version has its template.
+    # Kit commits from before the template moved into the plugin carry none and are skipped.
+    git -C "$KIT" log --format=%H -- plugins/coding-kit/.claude-plugin/plugin.json > "$WORK/bumps"
+    while IFS= read -r bf_c; do
+      git -C "$KIT" cat-file -e "$bf_c:plugins/coding-kit/template/MANIFEST.md" 2> /dev/null \
+        || continue
+      if [ "$(version_at "$KIT" "$bf_c")" = "$WANT" ]; then
+        bf_commit=$bf_c
+        break
+      fi
+    done < "$WORK/bumps"
+  fi
   [ -n "$bf_commit" ] || die "no template of version $WANT in the history of $KIT (shallow clone?)"
   mkdir -p "$WORK/x" "$OUT"
   git -C "$KIT" archive "$bf_commit" plugins/coding-kit/template | (cd "$WORK/x" && tar -xf -)

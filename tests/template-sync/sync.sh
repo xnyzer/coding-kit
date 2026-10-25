@@ -209,13 +209,17 @@ run_sync_cases() {
 
   # --- base-from-history (needs the full history of this checkout) ---------------
   if [ "$(git -C "$ROOT" rev-parse --is-shallow-repository 2> /dev/null)" = false ]; then
-    for b_v in 0.11.2 0.13.2 1.0.0; do
+    for b_v in 0.11.2 0.13.2 1.0.0 1.2.1; do
       check "base-from-history $b_v" eval 'ts base-from-history "$ROOT" "$b_v" "$TMP/h-$b_v" > /dev/null'
       check "base-from-history $b_v: MANIFEST exported" test -f "$TMP/h-$b_v/template/MANIFEST.md"
     done
     check "base-from-history 0.13.2: version file" file_is h-0.13.2/template/VERSION '0.13.2\n'
     check "base-from-history 1.0.0: plugin.json" grep -q '"version": "1.0.0"' "$TMP/h-1.0.0/.claude-plugin/plugin.json"
+    check "base-from-history 1.2.1 (no template change): plugin.json" \
+      grep -q '"version": "1.2.1"' "$TMP/h-1.2.1/.claude-plugin/plugin.json"
     refute "base-from-history: unknown version refused" ts base-from-history "$ROOT" 0.0.1 "$TMP/h-x"
+    refute "base-from-history: kit-only version before the move refused" \
+      ts base-from-history "$ROOT" 0.20.0 "$TMP/h-w"
   fi
   refute "base-from-history: invalid version refused" ts base-from-history "$ROOT" 1.x "$TMP/h-y"
   refute "base-from-history: not a git checkout refused" ts base-from-history "$TMP/nosnap" 1.0.0 "$TMP/h-z"

@@ -28,6 +28,10 @@ Sprachregeln gelten auch dort, wo eine Sprache ohne ihr Modul läuft (F-043, in 
 - **`choose-stack`:** setzt Fragmente ebenso an ihre Stelle aus dem Render und führt
   `FRAGMENTS` beim Modulwechsel in beide Richtungen nach — was das neue Modul deklariert,
   kommt heraus, ein stehen gebliebenes Fragment des Alt-Moduls hinein.
+- **`scripts/template-sync.sh base-from-history`:** findet auch Releases ohne
+  Template-Änderung (etwa 1.2.1) — dann gilt das Template des Commits, der die Version
+  gesetzt hat. Bisher suchte der Befehl nur unter Template-Commits und brach ab (Fund aus
+  den Tests von F-043).
 - **Begriffe:** `new-project`, `choose-stack` und `update-conventions` sprechen vom
   Modul-Fragment (dem eigenen Fragment eines Moduls) und vom Sprachfragment
   (`<sprache>-lang`).
@@ -57,6 +61,11 @@ Sprachregeln gelten auch dort, wo eine Sprache ohne ihr Modul läuft (F-043, in 
   `FRAGMENTS`.
 - MANIFEST (§§ Answers, Markers, Module contract, Standards fragments, Detection),
   Fragment-Katalog und §13 der `CODING-STANDARDS.md` beschreiben Modul- und Sprachfragment.
+- `ts-node`: `biome.json` beschränkt Biome auf Code — `files.includes` schließt Markdown
+  und YAML aus. Biome 2.6 formatiert beide, und ohne Lock-Datei bekommt ein neues Projekt
+  diese Version: `just check` war dann in jedem neuen ts-node-Projekt rot, und in
+  Bestandsprojekten würde der Renovate-PR für Biome rot (Fund aus den Tests von F-043).
+  Die Ausschlussmuster gelten auch mit älteren Biome-2-Versionen.
 
 ## 1.2.1 — 2026-10-25
 
