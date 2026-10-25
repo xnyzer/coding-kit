@@ -34,8 +34,156 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
-`/coding-kit:prep-step` vorbereiten._
+### F-043 — Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen
+
+**Status:** PLANNED
+
+**Problem:** Das Sprachfragment eines Stack-Moduls mischt Regeln, die für jeden Code der
+Sprache gelten (Type Hints, sichere Aufrufe, Namensregeln, Lizenzen), mit Regeln, die nur
+mit der Toolchain des Moduls stimmen (bei python: uv, src-Layout, pyright, ruff, pytest).
+Ein Projekt, das eine Sprache ohne ihr Modul als Werkzeugsprache nutzt — etwa ein
+docs-only-Projekt mit Python-Skripten aus der Standardbibliothek und `unittest` —,
+bekommt deshalb gar keine Sprachregeln: Das ganze Fragment wäre dort zur Hälfte falsch.
+
+**Idee:** Je Sprache ein Katalog-Fragment mit den toolchain-unabhängigen Regeln
+(`python-lang`, `typescript-lang`, `go-lang`), ausgelöst von den Signalen der Sprache. Das
+Modul deklariert es unter `Standards fragments:`, sein eigenes Fragment behält nur die
+Toolchain-Regeln. In Projekten ohne Modul schlägt `detect` das Sprachfragment von selbst
+vor.
+
+**Entschieden (2026-10-25):**
+- Namensschema `<sprache>-lang`, benannt nach der Sprache, nicht nach dem Modul:
+  `python-lang`, `typescript-lang`, `go-lang`. Modul- und Katalog-Fragmente teilen sich
+  die Namen der `fragment:`-Marker, deshalb der Zusatz; `typescript-lang` passt auch zu
+  einem späteren TypeScript-Modul ohne Node.
+- Begriffe: **Modul-Fragment** (module fragment) ist das eigene Fragment eines Moduls
+  (`CODING-STANDARDS.part.md`, Toolchain-Regeln), **Sprachfragment** (language fragment)
+  das Katalog-Fragment `<sprache>-lang`. Bisher hieß das Modul-Fragment „Sprachfragment".
+- Nur umsortieren, keine neuen Regeln. Ins Sprachfragment kommt, was für jeden Code der
+  Sprache gilt (Typen, sichere Aufrufe, Namen, Fehler, Abhängigkeiten und Lizenzen), ins
+  Modul-Fragment, was nur mit der Toolchain des Moduls stimmt (Runtime über mise,
+  Paketmanager, Layout, Checker, Linter, Test-Werkzeug, konkrete Lock-Datei,
+  just-Rezepte).
+- Signale ohne Dateiendungen, wie in F-042 entschieden (ein einzelnes Skript soll nichts
+  auslösen): `python-lang` über `tool:python`, `file:pyproject.toml`,
+  `file:requirements*.txt`; `typescript-lang` über `npm:typescript`, `file:tsconfig.json`;
+  `go-lang` über `tool:go`, `file:go.mod`. Ein Werkzeugsprachen-Projekt bekommt so die
+  Modul-Ablehnung und das Sprachfragment im selben Lauf angeboten.
+- Reihenfolge im Slot bleibt wie im Vertrag: Modul-Fragment, deklarierte Fragmente
+  (darunter das Sprachfragment), `FRAGMENTS`. Umdrehen bräuchte eine Sonderregel. Das
+  Modul-Fragment steht nie allein im Slot, deshalb genügt eine Überschrift wie „Python
+  toolchain (python module)".
+- `detect` erweitert die Regel aus F-042: Ein Fragment ist auch `covered`, wenn das Modul
+  der Antworten es deklariert — der Render bringt es mit. Sonst böte `update-conventions`
+  in Projekten mit Modul das Sprachfragment vor dem Rendern als fehlend an, und
+  „dauerhaft ablehnen" schriebe eine Rules-Zeile gegen ein Fragment, das das Modul
+  ohnehin liefert.
+- Neue Fragmente kommen im Slot an ihre Stelle aus dem Render (hinter den nächsten
+  Vorgänger, der im Slot steht; ohne Vorgänger an den Slot-Anfang), nicht mehr ans
+  Slot-Ende; Bestehendes wird weiterhin nie umsortiert. Sonst landet `python-lang` in
+  Projekten mit `FRAGMENTS` weit weg vom Modul-Fragment.
+- Inline-Override: Ein geschütztes Fragment bleibt unangetastet; hat sich seine
+  Template-Fassung geändert, zeigt `update-conventions` den Diff zur Info, übernommen wird
+  von Hand. Der `### Template`-Abschnitt im CHANGELOG nennt die Aufteilung und empfiehlt,
+  Modul- und Sprachfragment zusammen zu übernehmen.
+- Modulwechsel (`choose-stack`): `FRAGMENTS` wird in beide Richtungen nachgeführt — ein
+  Sprachfragment, das das neue Modul deklariert, kommt heraus; eines, das nur das
+  Alt-Modul deklarierte und stehen bleibt (Werkzeugsprache), kommt hinein.
+- Der Validator lässt kein Katalog-Fragment zu, das wie ein Modul heißt.
+
+**Lösungsskizze** (Stand Planung 2026-10-25):
+- Template: drei `-lang`-Fragmente unter `modules/standards/` mit Katalog-Zeilen, die drei
+  `CODING-STANDARDS.part.md` auf die Toolchain gekürzt, `Standards fragments:` in den drei
+  `MODULE.md`; MANIFEST §§ Markers, Module contract, Standards fragments, Detection; der
+  Satz in §13 der Core-`CODING-STANDARDS.md`.
+- Skript: `detect` zählt die deklarierten Fragmente des Antworten-Moduls als `covered`.
+- Skills: `update-conventions` Schritt 6 (Render-Position, Info-Diff bei Override),
+  `choose-stack` (Render-Position, `FRAGMENTS` beim Wechsel), neue Begriffe in
+  `new-project`, `choose-stack` und `update-conventions`.
+- Bestandsprojekte mit Modul: `update-conventions` ersetzt das Modul-Fragment und hängt
+  das Sprachfragment an seine Render-Position.
+- Keine neuen Dependencies.
+
+**Abhängigkeiten:** F-042 (erledigt). Vor F-044.
+
+#### F-043a — Fragmente aufteilen (Template-Inhalt)
+
+**Was:** Je Sprache die Regeln des Modul-Fragments sortieren: die toolchain-unabhängigen
+als Katalog-Fragment `python-lang`, `typescript-lang`, `go-lang` (Überschrift „Python",
+„TypeScript", „Go"), die übrigen bleiben im Modul-Fragment (Überschrift „Python toolchain
+(python module)" usw.). Katalog-Zeilen mit den Signalen; Abschnitt „How a module pulls
+fragments" auf Modul- und Sprachfragment umstellen; `Standards fragments:` in den drei
+`MODULE.md` samt Parts-Notiz. MANIFEST: §§ Markers, Module contract und Standards
+fragments mit den neuen Begriffen, § Detection mit einem Satz zum Sprachfragment einer
+Werkzeugsprache. Satz in §13 der Core-`CODING-STANDARDS.md`. Render-Tests nachziehen.
+Version 1.3.0, CHANGELOG-Eintrag mit `### Template` (Aufteilung, Override-Hinweis,
+beides zusammen übernehmen).
+
+**Dateien:**
+`plugins/coding-kit/template/modules/{python,ts-node,go}/{CODING-STANDARDS.part.md,MODULE.md}`,
+`plugins/coding-kit/template/modules/standards/{python-lang,typescript-lang,go-lang}.md`
+(neu), `plugins/coding-kit/template/modules/standards/README.md`,
+`plugins/coding-kit/template/MANIFEST.md`,
+`plugins/coding-kit/template/core/CODING-STANDARDS.md`, `tests/template-sync/render.sh`,
+`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** keine.
+
+**Abnahmekriterien:**
+- [ ] Keine Regel geht verloren: Jede Regel der bisherigen drei Fragmente steht in einem
+      der beiden neuen; aufgeteilte Zeilen sind im Diff nachvollziehbar.
+- [ ] Render für python, ts-node und go: im Slot Modul-Fragment, dann Sprachfragment, dann
+      `FRAGMENTS` (Tests).
+- [ ] `detect` mit `tool:python` in einem docs-only-Testprojekt meldet
+      `fragment python-lang missing` (Test).
+- [ ] `just check` grün.
+
+#### F-043b — Erkennung, Validator und Skills
+
+**Was:** `detect`: Ein Fragment, das das Modul der Antworten deklariert, ist `covered`
+(Skript samt Kopf und Kommentaren mit den neuen Begriffen, MANIFEST § Detection, Tests).
+Validator: ein Katalog-Fragment mit dem Namen eines Moduls ist ein Fund.
+`update-conventions` A2 Schritt 6: neue Fragmente an die Render-Position; ein geschütztes
+Fragment mit geänderter Template-Fassung → Diff zur Info. `choose-stack` Modus B:
+Render-Position beim Anhängen, `FRAGMENTS` beim Wechsel in beide Richtungen. Begriffe
+Modul-Fragment und Sprachfragment in `new-project`, `choose-stack` und
+`update-conventions`; `/add-skill` läuft mit. CHANGELOG ergänzen.
+
+**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
+`tests/template-sync/detect.sh`, `scripts/validate.py`,
+`plugins/coding-kit/template/MANIFEST.md`,
+`plugins/coding-kit/skills/{update-conventions,choose-stack,new-project}/SKILL.md`,
+`plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** F-043a.
+
+**Abnahmekriterien:**
+- [ ] Test: Projekt mit `MODULE=python`, `tool:python` und ohne `python-lang` im Slot →
+      `fragment python-lang covered`; ohne Antworten-Datei → `missing`.
+- [ ] Der Validator meldet ein Katalog-Fragment, das wie ein Modul heißt (Gegenprobe an
+      einer Scratch-Kopie).
+- [ ] `just check` grün.
+
+#### F-043c — Test, Release, Gegenprobe
+
+**Was:** Nicht-interaktive Läufe mit `claude -p --plugin-dir plugins/coding-kit` an
+Scratch-Kopien: (1) das docs-only-Projekt — `update-conventions` bietet `python-lang` an,
+nach dem Anhängen steht es in `FRAGMENTS`, der folgende `status` schlägt nichts mehr vor;
+(2) ein mit dem Template von 1.2.1 gerendertes ts-node-Projekt (`base-from-history`), in
+zwei Varianten: mit `FRAGMENTS=audit-logging` (Modul-Fragment ersetzt, `typescript-lang`
+an der Render-Position) und mit Override im Modul-Fragment (bleibt unangetastet,
+Info-Diff). Release 1.3.0: CHANGELOG datieren; Push nur auf ausdrückliche Bitte, vorher
+Personendaten-grep über Diff, Commit-Metadaten und Messages; Plugin aktualisieren und den
+Cache prüfen. Gegenprobe am echten docs-only-Projekt — über `python-lang` entscheidet der
+Nutzer.
+
+**Abhängigkeiten:** F-043b.
+
+**Abnahmekriterien:**
+- [ ] Alle Läufe wie beschrieben, `just check` in den Kopien grün.
+- [ ] Release 1.3.0 gepusht, CI grün, Plugin aktualisiert.
+- [ ] Gegenprobe am echten docs-only-Projekt: `python-lang` gemeldet, die Entscheidung
+      des Nutzers umgesetzt.
 
 ---
 
@@ -47,10 +195,10 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 sortiert):
 
 1. **F-043 → F-044 → F-045** — direkt nach F-042, weil sie dieselbe Mechanik nutzen
-   (`detect`, `template-sync.sh`, `update-conventions`); F-043 ist reiner
-   Template-Inhalt, den `detect` von selbst vorschlägt, F-044 erweitert die Erkennung um
-   Sprachen ohne Vorlage, F-045 holt die übrigen Vergleiche von `update-conventions` ins
-   Skript.
+   (`detect`, `template-sync.sh`, `update-conventions`); F-043 teilt die Sprachfragmente
+   auf, damit `detect` sie auch Werkzeugsprachen vorschlägt, F-044 erweitert die
+   Erkennung um Sprachen ohne Vorlage, F-045 holt die übrigen Vergleiche von
+   `update-conventions` ins Skript.
 2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
 3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
@@ -530,38 +678,6 @@ Kit gemeldet — die Vererbung bleibt abwärts wie bei den Konventionen (F-018).
 F-024, F-029 und F-030 — deren Änderungen an der Vorlage erreichen bestehende Rechner erst
 über den Abgleich.
 
-### F-043 — Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen
-
-**Status:** BACKLOG
-
-**Problem:** Das Sprachfragment eines Stack-Moduls mischt Regeln, die für jeden Code der
-Sprache gelten (Type Hints, sichere Aufrufe, Namensregeln, Lizenzen), mit Regeln, die nur
-mit der Toolchain des Moduls stimmen (bei python: uv, src-Layout, pyright, ruff, pytest).
-Ein Projekt, das eine Sprache ohne ihr Modul als Werkzeugsprache nutzt — etwa ein
-docs-only-Projekt mit Python-Skripten aus der Standardbibliothek und `unittest` —,
-bekommt deshalb gar keine Sprachregeln: Das ganze Fragment wäre dort zur Hälfte falsch.
-
-**Idee:** Je Sprache ein Katalog-Fragment mit den toolchain-unabhängigen Regeln (z. B.
-`python-lang`) und Signalen wie `tool:python` und `file:pyproject.toml`. Das Modul
-deklariert es unter `Standards fragments:`, sein eigenes Fragment behält nur die
-Toolchain-Regeln. `detect` aus F-042 schlägt das Sprachfragment dann in Projekten ohne
-Modul von selbst vor — ohne Code-Änderung.
-
-**Lösungsskizze:**
-- python, ts-node und go: die Regeln je Sprachfragment sortieren, den Sprachteil als
-  Katalog-Fragment mit Signalen anlegen, im `MODULE.md` deklarieren.
-- Bestandsprojekte mit Modul: `update-conventions` erneuert das Modul-Fragment und hängt
-  das Sprachfragment an; Reihenfolge im Slot prüfen.
-- Reiner Template-Inhalt plus Beispiele im MANIFEST; keine neuen Dependencies.
-
-**Noch zu analysieren:**
-- Namensschema der Sprachfragmente; ob ein Modul-Fragment ohne Sprachteil noch für sich
-  lesbar ist.
-- Wie `update-conventions` ein geschrumpftes Fragment behandelt, das im Projekt ein
-  Inline-Override trägt (der Override schützt das ganze Fragment).
-
-**Abhängigkeiten:** F-042 (typisierte Signale im Katalog, `detect`).
-
 ### F-044 — Sprachen ohne Vorlage erkennen und dem Template vorschlagen
 
 **Status:** BACKLOG
@@ -689,7 +805,7 @@ F-039 Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0 (DONE)
 F-040 Globale CLAUDE.md mit dem Plugin ausliefern und abgleichen
 F-041 Projektzusätze in managed Dateien erhalten, Abweichungen früh erkennen (DONE)
 F-042 Neue Sprachen und Frameworks erkennen, Vorlagen nachziehen (DONE)
-F-043 Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen
+F-043 Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen (PLANNED)
 F-044 Sprachen ohne Vorlage erkennen und dem Template vorschlagen
 F-045 Zonen-Abgleich und Lock-Prüfung ins Skript
 -->
