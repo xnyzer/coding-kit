@@ -16,6 +16,84 @@ zusammen:
 
 ---
 
+## F-043c — Test, Release, Gegenprobe (2026-10-25)
+
+Schließt F-043 ab (Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen;
+F-043a–b siehe darunter).
+
+**Problem:** Aufteilung, Erkennung und Skill-Texte waren gebaut und per Skript getestet,
+aber noch nicht in echten Skill-Läufen geprüft, nicht veröffentlicht und beim Nutzer nicht
+installiert.
+
+**Was entstanden ist (Release 1.3.0):**
+
+- **Läufe an Kopien** (`claude -p --plugin-dir`, die Entscheidungen standen im Prompt):
+  - docs-only-Projekt (Stempel 1.2.0, `module:python` abgelehnt): `python-lang` über
+    `tool:python` angeboten, an den Slot-Anfang gesetzt und in `FRAGMENTS` eingetragen;
+    der folgende `status`-Lauf schlägt nichts mehr vor; `just check` grün.
+  - ts-node-Projekt, gerendert mit dem Template von 1.2.1 (`FRAGMENTS=audit-logging`):
+    `detect` meldet `typescript-lang covered`, obwohl der Marker noch fehlt; das
+    Modul-Fragment wird ersetzt, `typescript-lang` steht direkt dahinter und vor
+    `audit-logging`, keine Regel doppelt oder fehlend, `FRAGMENTS` unverändert.
+  - Dieselbe Kopie mit Override im Modul-Fragment: `ts-node` bleibt unangetastet, der
+    Diff Basis → Render erscheint zur Info samt Hinweis auf die doppelten Regeln;
+    `typescript-lang` richtig eingefügt.
+  - Die Endstände sind per Skript nachgeprüft (Slot gegen Katalog und Modul-Fragment,
+    `detect`, `status`). Schreibzugriffe unter `.claude/` blieben gesperrt; die
+    vorbereiteten Dateien kopierte der Tester stellvertretend.
+- **Funde aus den Tests** (mit Freigabe mitgenommen):
+  - **Biome 2.6 formatiert Markdown und YAML.** Über den Caret-Bereich bekommt ein neues
+    ts-node-Projekt diese Version, und `just check` war in jedem neuen ts-node-Projekt
+    rot. `biome.json` schließt beides jetzt per `files.includes` aus; grün mit 2.6.3 und
+    2.5.15, in einer Kopie als `template-only` gemergt und dort grün. Notiz im
+    `MODULE.md`, CHANGELOG unter `### Template`.
+  - **`base-from-history`** fand Releases ohne Template-Änderung nicht (1.2.1). Jetzt gilt
+    das Template des Commits, der die Version gesetzt hat; reine Kit-Versionen vor 1.0
+    bleiben abgewiesen. Vier neue Prüfungen je Shell (498 gesamt).
+  - Die zsh-Wortaufteilung beim `snapshot`-Aufruf ist als Punkt in F-045 notiert.
+- **Release 1.3.0:** Korrekturen (`a0e7070`) und Release-Commit (`3cecdd4`) nach
+  Personendaten-, Blocklist- und gitleaks-Prüfung gepusht; CI grün. Plugin beim Nutzer
+  auf 1.3.0, der Cache ist mit dem Repo dateigleich.
+- **Gegenprobe:** `/coding-kit:update-conventions` am echten docs-only-Projekt:
+  `python-lang` angenommen (Slot und `FRAGMENTS`), Stempel 1.3.0, im Projekt committet;
+  `detect` meldet `covered`, `status` nur die drei `keep`-Dateien.
+- **Messung zu Modell und Effort** (Kostenfrage des Nutzers), je ein Update desselben
+  docs-only-Projekts: Opus 5.5 auf `xhigh` 1,67 USD (29 Werkzeugaufrufe), Opus 5.5 auf
+  `medium` 1,19 USD (18), beide vollständig; Sonnet 5.5 auf `medium` 0,31 USD (7), aber
+  ohne Zonen-Abgleich, Lock-Prüfung und Prüfung entfernter Ziele. Die Testläufe dieses
+  Substeps kosteten zusammen rund 9 USD. Daraus entstand F-046.
+
+**Planungsentscheidungen von F-043** (aus dem Elterneintrag):
+- Sprachfragmente sind Katalog-Fragmente `<sprache>-lang`, nach der Sprache benannt;
+  Begriffe Modul-Fragment und Sprachfragment.
+- Nur umsortieren, keine neuen Regeln; Signale ohne Dateiendungen (wie F-042).
+- Reihenfolge im Slot wie im Vertrag: Modul-Fragment, deklarierte Fragmente, `FRAGMENTS`.
+- `detect` zählt vom Modul der Antworten deklarierte Fragmente als `covered`.
+- Neue Fragmente kommen an ihre Stelle aus dem Render, Bestehendes wird nie umsortiert;
+  geschützte Fragmente zeigen Template-Änderungen zur Info.
+- `FRAGMENTS` folgt dem Modulwechsel in beide Richtungen; kein Katalog-Fragment darf wie
+  ein Modul heißen.
+
+**Notable decisions:**
+- ts-node-Testprojekte aus dem Template von 1.2.1 gerendert statt eines echten Projekts
+  auf 0.13.2: Der Weg vom aktuellen Stand nach 1.3.0 wird ohne teure Migration geprüft.
+- Release vor dem Abschluss-Eintrag (wie F-042d): Die Gegenprobe braucht das installierte
+  Plugin.
+- Biome per Ausschlussmuster statt per `markdown`/`yaml`-Abschnitt: Biome vor 2.6 weist
+  diese Schlüssel ab, und Lock-Dateien in Bestandsprojekten halten ältere Versionen.
+
+**Im selben Commit:** F-046 (Verbrauchsanalyse des Kits und Empfehlungen zu Modell und
+Effort) ins Backlog, als letzter Punkt der Empfohlenen Reihenfolge; der zsh-Fund und das
+Ergebnis der Sonnet-Messung als Ergänzungen in F-045.
+
+**Geänderte Dateien:** `plugins/coding-kit/template/modules/ts-node/files/biome.json`,
+`plugins/coding-kit/template/modules/ts-node/MODULE.md`,
+`plugins/coding-kit/scripts/template-sync.sh`, `tests/template-sync/sync.sh`,
+`plugins/coding-kit/CHANGELOG.md` (Korrekturen und Release-Commit 1.3.0), `PROGRESS.md`,
+`PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-043b — Erkennung, Validator und Skills (2026-10-25)
 
 Teil von F-043 (Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen; F-043a

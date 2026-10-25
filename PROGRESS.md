@@ -31,103 +31,14 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-042d | Test, Release, Gegenprobe → **Läufe an Kopien eines docs-only- und eines ts-node-Projekts (ablehnen, anhängen, diesmal nicht; der folgende `status` ohne Vorschlag für Abgelehntes; Migration von 0.13.2 mit Erkennung); Release 1.2.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe am echten docs-only-Projekt (`module:python` abgelehnt); Fund aus den Tests: Stellvertreter-Optionen `--answers`, `--registry`, `--snapshot` (1.2.1, unveröffentlicht). F-042 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-043a | Fragmente aufteilen → **Sprachfragmente `python-lang`, `typescript-lang`, `go-lang` im Katalog (Signale ohne Dateiendungen); die drei Modul-Fragmente auf die Toolchain gekürzt und als Modul-Fragment benannt, `Standards fragments:` in den `MODULE.md`; MANIFEST, Katalog und §13 mit den neuen Begriffen; Render- und Erkennungs-Tests für Slot-Reihenfolge und Werkzeugsprache; Version 1.3.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-043b | Erkennung, Validator und Skills → **`detect` zählt vom Modul der Antworten deklarierte Fragmente als `covered`; der Validator meldet Katalog-Fragmente mit Modulnamen; update-conventions und choose-stack setzen neue Fragmente an ihre Stelle aus dem Render, geschützte Fragmente zeigen Template-Änderungen zur Info, `FRAGMENTS` folgt dem Modulwechsel in beide Richtungen; Begriffe Modul- und Sprachfragment in den Skills.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
+| F-043c | Test, Release, Gegenprobe → **Läufe an Kopien eines docs-only- und eines mit 1.2.1 gerenderten ts-node-Projekts (Sprachfragment angeboten, Modul-Fragment ersetzt, Stelle aus dem Render, Override mit Info-Diff); Funde mitgenommen: Biome auf Code beschränkt, `base-from-history` für Releases ohne Template-Änderung; Release 1.3.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe am echten docs-only-Projekt (`python-lang` angenommen); Messung zu Modell und Effort → F-046. F-043 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 
 ---
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-### F-043 — Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen
-
-**Status:** PLANNED
-
-**Problem:** Das Sprachfragment eines Stack-Moduls mischt Regeln, die für jeden Code der
-Sprache gelten (Type Hints, sichere Aufrufe, Namensregeln, Lizenzen), mit Regeln, die nur
-mit der Toolchain des Moduls stimmen (bei python: uv, src-Layout, pyright, ruff, pytest).
-Ein Projekt, das eine Sprache ohne ihr Modul als Werkzeugsprache nutzt — etwa ein
-docs-only-Projekt mit Python-Skripten aus der Standardbibliothek und `unittest` —,
-bekommt deshalb gar keine Sprachregeln: Das ganze Fragment wäre dort zur Hälfte falsch.
-
-**Idee:** Je Sprache ein Katalog-Fragment mit den toolchain-unabhängigen Regeln
-(`python-lang`, `typescript-lang`, `go-lang`), ausgelöst von den Signalen der Sprache. Das
-Modul deklariert es unter `Standards fragments:`, sein eigenes Fragment behält nur die
-Toolchain-Regeln. In Projekten ohne Modul schlägt `detect` das Sprachfragment von selbst
-vor.
-
-**Entschieden (2026-10-25):**
-- Namensschema `<sprache>-lang`, benannt nach der Sprache, nicht nach dem Modul:
-  `python-lang`, `typescript-lang`, `go-lang`. Modul- und Katalog-Fragmente teilen sich
-  die Namen der `fragment:`-Marker, deshalb der Zusatz; `typescript-lang` passt auch zu
-  einem späteren TypeScript-Modul ohne Node.
-- Begriffe: **Modul-Fragment** (module fragment) ist das eigene Fragment eines Moduls
-  (`CODING-STANDARDS.part.md`, Toolchain-Regeln), **Sprachfragment** (language fragment)
-  das Katalog-Fragment `<sprache>-lang`. Bisher hieß das Modul-Fragment „Sprachfragment".
-- Nur umsortieren, keine neuen Regeln. Ins Sprachfragment kommt, was für jeden Code der
-  Sprache gilt (Typen, sichere Aufrufe, Namen, Fehler, Abhängigkeiten und Lizenzen), ins
-  Modul-Fragment, was nur mit der Toolchain des Moduls stimmt (Runtime über mise,
-  Paketmanager, Layout, Checker, Linter, Test-Werkzeug, konkrete Lock-Datei,
-  just-Rezepte).
-- Signale ohne Dateiendungen, wie in F-042 entschieden (ein einzelnes Skript soll nichts
-  auslösen): `python-lang` über `tool:python`, `file:pyproject.toml`,
-  `file:requirements*.txt`; `typescript-lang` über `npm:typescript`, `file:tsconfig.json`;
-  `go-lang` über `tool:go`, `file:go.mod`. Ein Werkzeugsprachen-Projekt bekommt so die
-  Modul-Ablehnung und das Sprachfragment im selben Lauf angeboten.
-- Reihenfolge im Slot bleibt wie im Vertrag: Modul-Fragment, deklarierte Fragmente
-  (darunter das Sprachfragment), `FRAGMENTS`. Umdrehen bräuchte eine Sonderregel. Das
-  Modul-Fragment steht nie allein im Slot, deshalb genügt eine Überschrift wie „Python
-  toolchain (python module)".
-- `detect` erweitert die Regel aus F-042: Ein Fragment ist auch `covered`, wenn das Modul
-  der Antworten es deklariert — der Render bringt es mit. Sonst böte `update-conventions`
-  in Projekten mit Modul das Sprachfragment vor dem Rendern als fehlend an, und
-  „dauerhaft ablehnen" schriebe eine Rules-Zeile gegen ein Fragment, das das Modul
-  ohnehin liefert.
-- Neue Fragmente kommen im Slot an ihre Stelle aus dem Render (hinter den nächsten
-  Vorgänger, der im Slot steht; ohne Vorgänger an den Slot-Anfang), nicht mehr ans
-  Slot-Ende; Bestehendes wird weiterhin nie umsortiert. Sonst landet `python-lang` in
-  Projekten mit `FRAGMENTS` weit weg vom Modul-Fragment.
-- Inline-Override: Ein geschütztes Fragment bleibt unangetastet; hat sich seine
-  Template-Fassung geändert, zeigt `update-conventions` den Diff zur Info, übernommen wird
-  von Hand. Der `### Template`-Abschnitt im CHANGELOG nennt die Aufteilung und empfiehlt,
-  Modul- und Sprachfragment zusammen zu übernehmen.
-- Modulwechsel (`choose-stack`): `FRAGMENTS` wird in beide Richtungen nachgeführt — ein
-  Sprachfragment, das das neue Modul deklariert, kommt heraus; eines, das nur das
-  Alt-Modul deklarierte und stehen bleibt (Werkzeugsprache), kommt hinein.
-- Der Validator lässt kein Katalog-Fragment zu, das wie ein Modul heißt.
-
-**Lösungsskizze** (Stand Planung 2026-10-25):
-- Template: drei `-lang`-Fragmente unter `modules/standards/` mit Katalog-Zeilen, die drei
-  `CODING-STANDARDS.part.md` auf die Toolchain gekürzt, `Standards fragments:` in den drei
-  `MODULE.md`; MANIFEST §§ Markers, Module contract, Standards fragments, Detection; der
-  Satz in §13 der Core-`CODING-STANDARDS.md`.
-- Skript: `detect` zählt die deklarierten Fragmente des Antworten-Moduls als `covered`.
-- Skills: `update-conventions` Schritt 6 (Render-Position, Info-Diff bei Override),
-  `choose-stack` (Render-Position, `FRAGMENTS` beim Wechsel), neue Begriffe in
-  `new-project`, `choose-stack` und `update-conventions`.
-- Bestandsprojekte mit Modul: `update-conventions` ersetzt das Modul-Fragment und hängt
-  das Sprachfragment an seine Render-Position.
-- Keine neuen Dependencies.
-
-**Abhängigkeiten:** F-042 (erledigt). Vor F-044.
-
-#### F-043c — Test, Release, Gegenprobe
-
-**Was:** Nicht-interaktive Läufe mit `claude -p --plugin-dir plugins/coding-kit` an
-Scratch-Kopien: (1) das docs-only-Projekt — `update-conventions` bietet `python-lang` an,
-nach dem Anhängen steht es in `FRAGMENTS`, der folgende `status` schlägt nichts mehr vor;
-(2) ein mit dem Template von 1.2.1 gerendertes ts-node-Projekt (`base-from-history`), in
-zwei Varianten: mit `FRAGMENTS=audit-logging` (Modul-Fragment ersetzt, `typescript-lang`
-an der Render-Position) und mit Override im Modul-Fragment (bleibt unangetastet,
-Info-Diff). Release 1.3.0: CHANGELOG datieren; Push nur auf ausdrückliche Bitte, vorher
-Personendaten-grep über Diff, Commit-Metadaten und Messages; Plugin aktualisieren und den
-Cache prüfen. Gegenprobe am echten docs-only-Projekt — über `python-lang` entscheidet der
-Nutzer.
-
-**Abhängigkeiten:** F-043b.
-
-**Abnahmekriterien:**
-- [ ] Alle Läufe wie beschrieben, `just check` in den Kopien grün.
-- [ ] Release 1.3.0 gepusht, CI grün, Plugin aktualisiert.
-- [ ] Gegenprobe am echten docs-only-Projekt: `python-lang` gemeldet, die Entscheidung
-      des Nutzers umgesetzt.
+_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
+`/coding-kit:prep-step` vorbereiten._
 
 ---
 
@@ -138,11 +49,9 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 **Empfohlene Reihenfolge** (Stand 2026-10-25; die Einträge darunter bleiben nach Nummer
 sortiert):
 
-1. **F-043 → F-044 → F-045** — direkt nach F-042, weil sie dieselbe Mechanik nutzen
-   (`detect`, `template-sync.sh`, `update-conventions`); F-043 teilt die Sprachfragmente
-   auf, damit `detect` sie auch Werkzeugsprachen vorschlägt, F-044 erweitert die
-   Erkennung um Sprachen ohne Vorlage, F-045 holt die übrigen Vergleiche von
-   `update-conventions` ins Skript.
+1. **F-044 → F-045** — direkt nach F-043, weil sie dieselbe Mechanik nutzen (`detect`,
+   `template-sync.sh`, `update-conventions`); F-044 erweitert die Erkennung um Sprachen
+   ohne Vorlage, F-045 holt die übrigen Vergleiche von `update-conventions` ins Skript.
 2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
 3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
@@ -153,6 +62,8 @@ sortiert):
    mit. F-026 ist in F-039 aufgegangen, sein Rest (Kit-Repo-Herkunft in `check-upstreams`)
    in F-032.
 7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+8. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+   Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
 Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
@@ -669,13 +580,13 @@ PR-Beschreibung. Nur Text, abgeschickt wird nichts.
 **Status:** BACKLOG
 
 **Problem:** Zwei Prüfungen in `update-conventions` macht heute das Sprachmodell selbst:
-den Abgleich der seed-Zonen (`section:NAME`, A2 Schritt 7) und die Prüfung der
-`mise.lock` auf Plattform-Einträge (`choose-stack` § Lock-Datei, A2 Schritt 11). Ein
-Testlauf in F-042d hat beides mit eigenem awk nachgebaut — nicht deterministisch, anders
-als Render, Merge und Erkennung. Dabei fiel zusätzlich auf: Die Kopfzone der
-Registry-Vorlage (`overrides-head`) nennt `<!-- override: reason -->` als Doku-Text; eine
-wörtliche Suche nach dem Marker hält die Zone deshalb für geschützt und würde sie nie
-aktualisieren.
+den Abgleich der seed-Zonen (`section:NAME`, A2 Schritt 7) und die Prüfung der `mise.lock`
+auf Plattform-Einträge (`choose-stack` § Lock-Datei, A2 Schritt 11). Ein Testlauf in
+F-042d hat beides mit eigenem awk nachgebaut — nicht deterministisch, anders als Render,
+Merge und Erkennung. In F-043c hat ein Lauf mit Sonnet 5.5 auf `medium` beide Prüfungen
+ganz ausgelassen. Dabei fiel zusätzlich auf: Die Kopfzone der Registry-Vorlage
+(`overrides-head`) nennt `<!-- override: reason -->` als Doku-Text; eine wörtliche Suche
+nach dem Marker hält die Zone deshalb für geschützt und würde sie nie aktualisieren.
 
 **Idee:** `template-sync.sh` bekommt einen Befehl für die seed-Zonen (je Zone: gleich,
 abweichend, fehlt, Override) und einen für die Lock-Datei (je Tool und Plattform aus
@@ -700,13 +611,74 @@ Kopfzone wird so umformuliert, dass sie keinen marker-ähnlichen Text mehr enth�
   heute ebenfalls von Hand) — dann ein gemeinsamer Befehl für Zonen und Fragmente.
 - Wie `lock-check` die CI-Plattform ermittelt (`runs-on` der Projekt-CI), ohne
   YAML-Parser.
+- Fund aus F-043c: Zwei Testläufe übergaben beim ersten `snapshot`-Aufruf alle Ziele als
+  ein einziges Argument (zsh teilt Variablen nicht in Wörter); das Skript meldete sie als
+  `removed`, ohne Wirkung. Ob `snapshot` ein Ziel abweist, das der Render nicht kennt,
+  oder auf Wunsch alle gerenderten Ziele selbst nimmt.
 
 **Abhängigkeiten:** keine (baut auf `template-sync.sh` aus F-041 auf, erledigt).
+
+### F-046 — Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
+
+**Status:** BACKLOG
+
+**Problem:** Niemand weiß, was die Kit-Skills im Betrieb verbrauchen und ob der Workflow
+(add-feature → prep-step → build-step → step-done, dazu update-conventions) gegenüber einer
+direkten Umsetzung ohne Kit nennenswert mehr Aufwand kostet. Nutzer haben keine
+Empfehlung, welches Modell und welcher Effort für welchen Lauf reichen. Die Testläufe aus
+F-043c lagen mit Opus 5.5 auf `xhigh` bei 0,79 bis 2,98 USD je Lauf, eine Migration von
+0.13.2 bei rund 3,70 USD.
+
+**Idee:** Wenn alle geplanten Features gebaut sind, eine komplette Analyse: jeder Skill
+über verschiedene Projekte und Lauftypen gemessen (Kosten, Tokens, Werkzeugaufrufe,
+Vollständigkeit der Schritte), dazu derselbe Auftrag einmal direkt umgesetzt, ohne
+Kit-Workflow. Daraus Empfehlungen zu Modell und Effort je Skill und Lauftyp mit
+Kostenschätzung — und erst dann der Abschnitt dazu in der README.
+
+**Lösungsskizze:**
+- Messaufbau wie in F-043c: `claude -p --output-format stream-json` an Wegwerf-Kopien;
+  Kosten aus `total_cost_usd`, Tokens getrennt nach Cache-Schreiben, Cache-Lesen und
+  Ausgabe, Werkzeugaufrufe, Abgleich, ob alle Pflichtschritte des Skills liefen.
+- Matrix aus Skills, Projekttypen (docs-only, ts-node, python, go …) und Einstellungen
+  (mindestens Opus und Sonnet, je auf `medium` und `high`); mehrere Läufe je Zelle, weil
+  ein einzelner Lauf streut.
+- `update-conventions` zusätzlich gesondert: Er läuft in jedem Projekt bei jedem Release
+  und ist der teuerste Pflege-Lauf. Je Projekttyp messen: `status`, Routine-Update,
+  Update mit Konflikten oder geschützten Fragmenten, Migration eines alten Stempels ohne
+  Snapshot, Modulwechsel über `choose-stack`.
+- Vergleich mit direkter Umsetzung: eine typische Aufgabe einmal über den Kit-Workflow,
+  einmal als direkter Auftrag; Kosten und Ergebnis (Tests, Review-Funde, Doku, Commits)
+  nebeneinander.
+- Ergebnis: Abschnitt in der README (unter „Tägliche Nutzung") mit Empfehlung je Lauftyp
+  und Kostenspanne, Messwerten mit Datum, Modell und Effort sowie der Messmethode zum
+  Nachmessen; das Rezept für Testläufe in `docs/skill-authoring.md`.
+- Wo die Messung Einsparungen zeigt, Folgeaufgaben über `/coding-kit:add-feature`
+  vorschlagen (z. B. mehr ins Skript, kürzere Skill-Texte, Effort im Frontmatter).
+
+**Ausgangsdaten** (F-043c, 2026-10-25, je ein Update desselben docs-only-Projekts):
+- Opus 5.5 auf `xhigh`: 1,67 USD, 29 Werkzeugaufrufe, alle Schritte.
+- Opus 5.5 auf `medium`: 1,19 USD, 18 Werkzeugaufrufe, alle Schritte.
+- Sonnet 5.5 auf `medium`: 0,31 USD, 7 Werkzeugaufrufe — ohne Zonen-Abgleich,
+  Lock-Prüfung und Prüfung entfernter Ziele; der Endstand stimmte nur, weil sich dort
+  nichts geändert hatte.
+- Cache-Lesen kostet bei Opus 5.5 und Sonnet 5.5 gleich viel; gespart wird vor allem
+  über weniger Werkzeugaufrufe, nicht über das Modell allein.
+
+**Noch zu analysieren:**
+- Messbudget und wie viele Läufe je Zelle für eine belastbare Aussage reichen.
+- Wie die direkte Umsetzung fair verglichen wird (gleiche Aufgabe, gleiche Abnahme).
+- Ob Kostenzahlen in der README stehen dürfen, obwohl das Repo statische Versionsstände
+  in Texten meidet — mit Datum und Messmethode oder nur als Größenordnung.
+- Ob Skills `effort:` oder `model:` im Frontmatter setzen sollen: Das überschreibt die
+  Wahl jedes Nutzers, und wie lange die Effort-Vorgabe gilt, lässt die Doku offen.
+
+**Abhängigkeiten:** alle übrigen Einträge der Empfohlenen Reihenfolge — gemessen wird der
+Endstand; besonders F-036 und F-045 verändern den Verbrauch.
 
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-046
+next-feature: F-047
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -749,7 +721,8 @@ F-039 Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0 (DONE)
 F-040 Globale CLAUDE.md mit dem Plugin ausliefern und abgleichen
 F-041 Projektzusätze in managed Dateien erhalten, Abweichungen früh erkennen (DONE)
 F-042 Neue Sprachen und Frameworks erkennen, Vorlagen nachziehen (DONE)
-F-043 Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen (PLANNED)
+F-043 Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen (DONE)
 F-044 Sprachen ohne Vorlage erkennen und dem Template vorschlagen
 F-045 Zonen-Abgleich und Lock-Prüfung ins Skript
+F-046 Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
 -->
