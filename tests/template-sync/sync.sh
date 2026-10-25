@@ -172,6 +172,41 @@ run_sync_cases() {
   check "snapshot: listing" row_is n drop.txt removed
   refute "snapshot: path outside the project refused" ts snapshot "$TMP/np" "$TMP/np.soll" ../x
 
+  # --- stand-ins: --registry and --snapshot instead of the files below .claude/ ---
+  put op/a.txt 'a\nb\nc\nP\n'
+  put op/k.txt 'a\nP\n'
+  put op.snap/a.txt.base 'a\nb\nc\n'
+  put op.snap/k.txt.base 'a\nb\n'
+  put op.soll/a.txt 'A\nb\nc\n'
+  put op.soll/k.txt 'a\nT\n'
+  put op.reg '## Files\n\n| Path | Kind | Reason | Since |\n|---|---|---|---|\n| `k.txt` | keep | project wins | 2026-10-25 |\n'
+  check "status with stand-ins runs" \
+    eval 'ts status --registry "$TMP/op.reg" --snapshot "$TMP/op.snap" "$TMP/op" > "$TMP/os.tsv"'
+  check "status: bases from the stand-in snapshot" row_is os a.txt deviates none "+1 -0"
+  check "status: kind from the stand-in registry" row_is os k.txt deviates keep
+  ts status "$TMP/op" > /dev/null 2>&1
+  check "status without stand-in: no snapshot, exit 3" test $? -eq 3
+  check "merge with stand-ins runs" \
+    eval 'ts merge --registry "$TMP/op.reg" --snapshot "$TMP/op.snap" "$TMP/op" "$TMP/op.soll" "$TMP/oo" > "$TMP/om.tsv"'
+  check "merge: stand-in base" row_is om a.txt merged 0
+  check "merge: keep row of the stand-in registry" row_is om k.txt kept 1 keep
+  check "snapshot into a stand-in folder" \
+    eval 'ts snapshot --snapshot "$TMP/op.snap2" "$TMP/op" "$TMP/op.soll" a.txt > /dev/null'
+  check "snapshot: base written to the stand-in" file_is op.snap2/a.txt.base 'A\nb\nc\n'
+  refute "snapshot: project left alone" test -e "$TMP/op/.claude"
+  tgit "$TMP/op" init -q
+  tgit "$TMP/op" add -A
+  tgit "$TMP/op" commit -q -m base
+  put op/a.txt 'a\nb\nc\nQ\n'
+  check "changed with stand-ins runs" \
+    eval 'ts changed --registry "$TMP/op.reg" --snapshot "$TMP/op.snap" "$TMP/op" > "$TMP/oc.tsv"'
+  check "changed: touched file against the stand-in base" row_is oc a.txt deviates none
+  refute "an option the command does not take is refused" \
+    ts render --registry "$TMP/op.reg" "$TEMPLATE" "$TMP/op.reg" "$TMP/ox"
+  refute "snapshot takes no --base" ts snapshot --base "$TMP/op.snap" "$TMP/op" "$TMP/op.soll" a.txt
+  refute "unknown option refused" ts status --nope "$TMP/op"
+  refute "--registry needs an existing file" ts status --registry "$TMP/none.md" "$TMP/op"
+
   # --- base-from-history (needs the full history of this checkout) ---------------
   if [ "$(git -C "$ROOT" rev-parse --is-shallow-repository 2> /dev/null)" = false ]; then
     for b_v in 0.11.2 0.13.2 1.0.0; do

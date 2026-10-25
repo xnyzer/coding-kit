@@ -40,9 +40,16 @@ managed Dateien nie selbst zusammenführen oder aus dem Template abschreiben.
   aufgelösten Pfad über `sh` aufrufen; sein Kopf beschreibt Befehle, Ausgabezeilen und
   Klassen. Render- und Merge-Ergebnisse gehören in ein frisches Temp-Verzeichnis
   (`mktemp -d`, im Folgenden `<tmp>`), nie ins Projekt.
-- Schreibzugriffe unter `.claude/` (Antworten, Snapshot, Registry, `.claude/README.md`)
-  stuft Claude Code als sensibel ein und fragt sie einzeln ab — das ist erwartet, nie
-  umgehen. Ohne Freigabe die Dateien in `<tmp>` vorbereiten und den Kopierbefehl nennen.
+- Schreibzugriffe unter `.claude/` (Antworten, Snapshot, Registry, Stempel,
+  `.claude/README.md`) stuft Claude Code als sensibel ein und fragt sie einzeln ab — das
+  ist erwartet, nie umgehen. Ohne Freigabe die Dateien in `<tmp>` vorbereiten und den
+  Kopierbefehl nennen.
+  Die folgenden Schritte rechnen dann mit dem vorbereiteten Stand: Die Skript-Befehle
+  nehmen ihn per Option — `--answers <tmp>/…` (`detect`; `render` bekommt den Pfad
+  ohnehin), `--registry <tmp>/…` und `--snapshot <tmp>/…` (Kopf des Skripts). Für den
+  Snapshot den vorhandenen Ordner erst nach `<tmp>` kopieren, dann `snapshot --snapshot`
+  dorthin schreiben lassen. Nie das Skript oder eine Kopie davon anpassen und keine
+  Spiegelkopie des Projekts bauen.
 
 ## Kontext-Recovery
 

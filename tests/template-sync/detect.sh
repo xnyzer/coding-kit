@@ -2,19 +2,29 @@
 # of both (put, tgit, answers, render). Projects are git repositories below $TMP and are
 # matched against the bundled template.
 
-# dt NAME [--changed] PROJECT [SIGNAL…] — output in $TMP/NAME.tsv, stderr in NAME.err.
+# dt NAME [--changed] [--answers FILE] [--registry FILE] PROJECT [SIGNAL…] — output in
+# $TMP/NAME.tsv, stderr in NAME.err.
 dt() {
   d_name=$1
   shift
-  d_flag=
-  if [ "$1" = --changed ]; then
-    d_flag=--changed
-    shift
-  fi
+  d_opts=
+  while :; do
+    case ${1:-} in
+      --changed)
+        d_opts="$d_opts $1"
+        shift
+        ;;
+      --answers | --registry)
+        d_opts="$d_opts $1 $2"
+        shift 2
+        ;;
+      *) break ;;
+    esac
+  done
   d_project=$TMP/$1
   shift
-  # $d_flag is empty or one word, so it stays unquoted.
-  $SH "$SCRIPT" detect $d_flag "$TEMPLATE" "$d_project" "$@" \
+  # The options are split on purpose; temp paths carry no spaces.
+  $SH "$SCRIPT" detect $d_opts "$TEMPLATE" "$d_project" "$@" \
     > "$TMP/$d_name.tsv" 2> "$TMP/$d_name.err"
 }
 
@@ -149,6 +159,17 @@ run_detect_cases() {
   refute "signal without value refused" dt x dp npm:
   refute "--changed with signals refused" dt x --changed dp npm:next
   refute "scan outside git refused" dt x plain
+
+  # --- stand-ins: answers and registry prepared outside .claude/ -----------------------
+  put do/mise.toml '[tools]\npython = "3.14"\n'
+  tgit "$TMP/do" init -q
+  answers "$TMP/do.answers" docs-only private
+  put do.reg '## Rules\n\n| Rule | Deviation | Reason | Since |\n|---|---|---|---|\n| `module:python` | tool language | stdlib scripts | 2026-10-25 |\n'
+  check "detect with stand-ins runs" dt o --answers "$TMP/do.answers" --registry "$TMP/do.reg" do
+  check "stand-ins: module check runs, decline read" hit_is o module python declined
+  check "without stand-ins: no answers, no module rows" dt o2 do
+  check "without stand-ins: module check skipped" no_hit o2 module python
+  refute "detect takes no --snapshot" ts detect --snapshot "$TMP/op.snap" "$TEMPLATE" "$TMP/do"
 
   # --- a fresh render detects only its own module ------------------------------------
   for f_m in ts-node python go docs-only; do

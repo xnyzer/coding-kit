@@ -13,6 +13,23 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 1.2.1 — unveröffentlicht
+
+Skills kommen weiter, wenn ein Schreibzugriff unter `.claude/` auf Freigabe wartet (Fund
+aus den Tests von F-042).
+
+- **`scripts/template-sync.sh`:** neue Optionen `--answers FILE` (`detect`),
+  `--registry FILE` (`status`, `changed`, `merge`, `detect`) und `--snapshot DIR`
+  (`status`, `changed`, `merge`; `snapshot` schreibt dorthin) — Stellvertreter für die
+  Dateien unter `.claude/`, die der Skill vorbereitet hat. Die Optionen liest eine
+  gemeinsame Stelle; ein Befehl weist eine Option ab, die er nicht nimmt.
+- **`update-conventions`:** Ohne Freigabe für `.claude/` rechnen die folgenden Schritte
+  per Option mit dem vorbereiteten Stand; das Skript anzupassen oder das Projekt zu
+  spiegeln, ist ausgeschlossen. Im Test hatte ein nicht-interaktiver Lauf dafür eine
+  Spiegelkopie mit angepasstem Skript gebaut.
+- **Authoring-Doku:** Hilfsskripte, die Projektdateien unter `.claude/` lesen, nehmen
+  Stellvertreter-Optionen.
+
 ## 1.2.0 — 2026-10-25
 
 Neue Sprachen und Frameworks fallen auf, auch wenn das Template seine Vorlagen erst später

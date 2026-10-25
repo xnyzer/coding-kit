@@ -16,6 +16,85 @@ zusammen:
 
 ---
 
+## F-042d — Test, Release, Gegenprobe (2026-10-25)
+
+Schließt F-042 ab (Neue Sprachen und Frameworks erkennen und Vorlagen nachziehen; F-042a–c
+siehe darunter).
+
+**Problem:** Erkennung, Skills und Doku waren gebaut und einzeln getestet, aber noch nicht
+an echten Projekten durchgespielt, nicht veröffentlicht und beim Nutzer nicht
+installiert.
+
+**Was entstanden ist (Release 1.2.0, dazu 1.2.1 unveröffentlicht):**
+
+- **Läufe an Kopien** (`claude -p --plugin-dir`, die Entscheidungen standen im Prompt):
+  - docs-only-Projekt (Stempel 1.1.0): Die Erkennung meldet `module python missing` über
+    `tool:python`; dauerhaft abgelehnt als Werkzeugsprache (Rules-Zeile
+    `module:python`), HOW-TO und Registry-Kopf übernommen, Stempel 1.2.0, `just check`
+    grün. Der folgende `status`-Lauf meldet `declined` ohne neuen Vorschlag.
+  - ts-node-Projekt (Stempel 0.13.2) mit zwei eingebauten Testsignalen
+    (`deploy/nginx/site.conf`, `tools/migrate/go.mod` — dort war sonst alles abgedeckt):
+    Migration samt Erkennung; `nginx` angehängt (`FRAGMENTS`, Slot, `covered`), `go`
+    diesmal nicht — der folgende `status`-Lauf bietet es wieder an und erkennt die
+    Platzhalter als solche. `just check` grün bis auf die Docker-abhängige `stack-check`.
+  - Schreibzugriffe unter `.claude/` blieben gesperrt; die vorbereiteten Dateien kopierte
+    der Tester stellvertretend für die Freigabe.
+- **Release 1.2.0:** CHANGELOG datiert (`46ef30b`), Push von fünf Commits nach
+  Personendaten-, gitleaks- und Versionsregel-Prüfung; CI grün (Validator und 424
+  Prüfungen unter Ubuntu, dash und bash). Plugin beim Nutzer auf 1.2.0, der Cache enthält
+  `detect` und ist mit dem Repo dateigleich.
+- **Gegenprobe:** `/coding-kit:update-conventions` am echten docs-only-Projekt: Der
+  Python-Treffer wurde gemeldet und als Werkzeugsprache abgelehnt (Rules-Zeile
+  `module:python`), HOW-TO und Registry-Kopf sind angekommen, Stempel 1.2.0, im Projekt
+  committet; `detect` meldet `declined`, `status` nur die drei `keep`-Dateien.
+- **Fund aus den Tests** (mit Freigabe mitgenommen, 1.2.1, unveröffentlicht): Ohne
+  Schreibrecht unter `.claude/` sahen `detect` und `merge` die vorbereiteten Antworten
+  und die Registry nicht; ein Testlauf baute dafür eine Spiegelkopie mit angepasstem
+  Skript. Jetzt nimmt `template-sync.sh` Stellvertreter: `--answers FILE` (`detect`),
+  `--registry FILE` (`status`, `changed`, `merge`, `detect`) und `--snapshot DIR`
+  (`status`, `changed`, `merge`; `snapshot` schreibt dorthin). Alle Optionen liest
+  `parse_opts`; ein Befehl weist eine fremde Option ab. `update-conventions` § 0
+  beschreibt den Weg und schließt Skript-Anpassung und Spiegelkopie aus; die Liste der
+  sensiblen Dateien nennt jetzt auch den Stempel. `docs/skill-authoring.md`
+  § Hilfsskripte führt das Muster. 21 neue Prüfungen je Shell (466 gesamt),
+  Fehlerinjektion mit vier eingebauten Fehlern (alle gefangen); ein Prüflauf an einer
+  Kopie auf 1.1.0 nutzte `--registry` und `--snapshot` ohne Spiegelkopie und kam zum
+  richtigen Endstand.
+
+**Planungsentscheidungen von F-042** (aus dem Elterneintrag):
+- Signale typisiert (`npm:`, `pypi:`, `go:`, `tool:`, `file:`); Modul-Signale als
+  `Signals:`-Zeile im `MODULE.md`, Stubs ohne.
+- Ein Fragment ist `covered`, wenn sein Marker im Slot steht; ein Modul nach `MODULE` der
+  Antworten.
+- Drei Aufrufarten: ganzer Baum (`update-conventions`), `--changed` (`step-done`),
+  übergebene Signale (`prep-step`).
+- Dauerhafte Ablehnung als Rules-Zeile `module:NAME`/`fragment:NAME`; „diesmal nicht"
+  wird nicht gespeichert.
+- Ein Modul je Projekt; eine Sprache ohne ihr Modul ist Werkzeugsprache. Die Aufteilung
+  der Sprachfragmente ist F-043.
+- Keine Dateiendungen als Signal, keine Leser für Cargo, Gemfile oder Maven.
+
+**Notable decisions:**
+- Testsignale in der ts-node-Kopie statt eines anderen Projekts: Dort war alles
+  abgedeckt, die drei Entscheidungswege brauchten Treffer.
+- Release 1.2.0 vor dem Abschluss-Eintrag (wie F-041e): Die Gegenprobe braucht das
+  installierte Plugin.
+- Stellvertreter-Optionen statt eines Umwegs im Skill: Alles Deterministische bleibt im
+  Skript, und der Skill rechnet mit den vorbereiteten Dateien weiter.
+
+**Im selben Commit:** F-045 (Zonen-Abgleich und Lock-Prüfung ins Skript) ins Backlog —
+zwei weitere Funde des Prüflaufs: Zonen-Abgleich und Lock-Prüfung baut das Modell heute
+selbst nach, und die Kopfzone der Registry-Vorlage enthält einen marker-ähnlichen Text.
+
+**Geänderte Dateien:** `plugins/coding-kit/CHANGELOG.md` (Release-Commit 1.2.0 und
+Eintrag 1.2.1), `plugins/coding-kit/.claude-plugin/plugin.json`,
+`plugins/coding-kit/scripts/template-sync.sh`,
+`plugins/coding-kit/skills/update-conventions/SKILL.md`, `tests/template-sync/sync.sh`,
+`tests/template-sync/detect.sh`, `docs/skill-authoring.md`, `PROGRESS.md`,
+`PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-042c — Skills und Doku (2026-10-25)
 
 Teil von F-042 (Neue Sprachen und Frameworks erkennen und Vorlagen nachziehen; F-042a–b

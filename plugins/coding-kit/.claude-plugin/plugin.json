@@ -1,6 +1,6 @@
 {
   "name": "coding-kit",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Der /new-project-Orchestrator samt Begleit-Skills (name-it, choose-license, choose-stack, define-requirements, refine-requirements), generischen Workflow-Skills (add-feature, prep-step, build-step, teach-step, step-done, audit-code), Pflege-Skills (update-conventions, check-upstreams, go-public) und Utility-Skills (refine-prompt, handoff) plus projekterkennender Stop-Hook und das Projekt-Template (Core, Stack-Module, Standards-Fragmente), aus dem /new-project Repos baut und das /update-conventions verteilt. Stack-agnostisch über just-Rezepte; Projektspezifika kommen aus der Projekt-CLAUDE.md.",
   "author": {
     "name": "xnyzer"

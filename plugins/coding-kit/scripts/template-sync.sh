@@ -9,29 +9,29 @@
 #       Line per file: <target> <managed|seed> <core|module>. Without --seeds only the
 #       managed targets; with --seeds the seed files follow as raw instantiation
 #       (template:adapt spots and the license text stay with the calling skill).
-#   status [--base DIR] PROJECT
+#   status [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT
 #       Compares every target of the base snapshot (.claude/template-base/<target>.base)
 #       with the project. Line: <target> <unchanged|deviates|missing> <registry> <+a -d>.
 #       --base takes the bases from a rendered DIR instead (no suffix) — for a project
 #       that has no snapshot yet; merge accepts it the same way.
-#   changed PROJECT
+#   changed [--registry FILE] [--snapshot DIR] PROJECT
 #       Like status, for the targets the working tree touches (against HEAD, plus
 #       untracked files) — the backstop of /step-done. Edits below the snapshot itself
 #       come out as <path> snapshot-edited.
-#   merge [--base DIR] PROJECT SOLL OUT
+#   merge [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SOLL OUT
 #       Three-way merge per target: base snapshot, project, rendered SOLL. Results go to
 #       OUT (missing or empty). Line: <target> <class> <conflicts> <registry>, classes:
 #       identical, template-only, project-only, merged, caught-up (the result equals
 #       the template although the project deviated — the template has caught up),
 #       conflict, kept (keep row: conflicts resolved to the project), two-way (no base),
 #       new, missing (project deleted it), removed (no longer rendered), skipped.
-#   snapshot PROJECT SOLL TARGET…
+#   snapshot [--snapshot DIR] PROJECT SOLL TARGET…
 #       Sets the base of each TARGET to its rendered version; a TARGET that SOLL no
 #       longer has loses its base. Line: <target> <set|removed>.
 #   base-from-history KIT VERSION OUT
 #       Exports the template of VERSION from the git history of a coding-kit checkout
 #       into OUT/template (missing or empty OUT). Line: <template dir> <commit>.
-#   detect [--changed] TEMPLATE PROJECT [SIGNAL…]
+#   detect [--changed] [--answers FILE] [--registry FILE] TEMPLATE PROJECT [SIGNAL…]
 #       Matches the signals of PROJECT against the stack modules and catalog fragments
 #       of TEMPLATE (MANIFEST § Detection). Without SIGNAL it reads the files git lists
 #       for the project; with --changed only the signals the working tree adds against
@@ -39,6 +39,13 @@
 #       only those. Line per hit: <module|fragment> <name> <covered|declined|missing>
 #       <signal (first path[ +more])>, … — modules first. Without
 #       .claude/template-answers the module check is skipped (note on stderr).
+#
+# Options name a stand-in for a file of PROJECT, so a skill can go on with files it
+# prepared in a temp folder while a write below .claude/ waits for approval:
+#   --answers FILE   instead of .claude/template-answers
+#   --registry FILE  instead of .claude/convention-overrides.md
+#   --snapshot DIR   instead of .claude/template-base (snapshot writes there)
+# Options come before the operands; a command refuses one it does not take.
 #
 # <registry> is the kind of the matching row in the Files table of
 # .claude/convention-overrides.md: skip, keep, adapt, registered (row without kind) or
@@ -60,7 +67,13 @@ ANSWERS_FILE=.claude/template-answers
 SIGNAL_TYPES='npm pypi go tool file'
 SLOT_OPEN='<!-- module:coding-standards -->'
 SLOT_CLOSE='<!-- /module:coding-standards -->'
+# Set by parse_opts.
 BASE_DIR=
+ANSWERS_OPT=
+REGISTRY_OPT=
+SNAPSHOT_OPT=
+CHANGED=0
+SEEDS=0
 
 die() {
   printf 'template-sync: %s\n' "$*" >&2
@@ -70,12 +83,12 @@ die() {
 usage() {
   cat >&2 << 'EOF'
 usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
-       sh template-sync.sh status [--base DIR] PROJECT
-       sh template-sync.sh changed PROJECT
-       sh template-sync.sh merge [--base DIR] PROJECT SOLL OUT
-       sh template-sync.sh snapshot PROJECT SOLL TARGET...
+       sh template-sync.sh status [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT
+       sh template-sync.sh changed [--registry FILE] [--snapshot DIR] PROJECT
+       sh template-sync.sh merge [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SOLL OUT
+       sh template-sync.sh snapshot [--snapshot DIR] PROJECT SOLL TARGET...
        sh template-sync.sh base-from-history KIT VERSION OUT
-       sh template-sync.sh detect [--changed] TEMPLATE PROJECT [SIGNAL...]
+       sh template-sync.sh detect [--changed] [--answers FILE] [--registry FILE] TEMPLATE PROJECT [SIGNAL...]
 EOF
   exit 2
 }
@@ -478,11 +491,7 @@ compose_slot() {
 }
 
 render() {
-  seeds=0
-  if [ "${1:-}" = "--seeds" ]; then
-    seeds=1
-    shift
-  fi
+  seeds=$SEEDS
   [ $# -eq 3 ] || usage
   TEMPLATE=$1 ANSWERS=$2 OUT=$3
   [ -f "$TEMPLATE/MANIFEST.md" ] || die "no MANIFEST.md in $TEMPLATE"
@@ -617,9 +626,9 @@ unmask() {  # IN SLOT OUT
 # Files table of the deviation registry → "path-or-glob<TAB>kind" lines in
 # $WORK/registry.tsv. A row lists one or more paths (comma-separated, backticks allowed);
 # its kind is skip, keep, adapt or empty ("registered").
-load_registry() {  # PROJECT
+load_registry() {
   : > "$WORK/registry.tsv"
-  [ -f "$1/$REGISTRY" ] || return 0
+  [ -f "$REG_PATH" ] || return 0
   awk '
     function fail(msg) { print "template-sync: " FILENAME ": " msg | "cat 1>&2"; bad = 1 }
     /^#+[ \t]/ { insec = ($0 ~ /^## Files[ \t]*$/); next }
@@ -638,8 +647,8 @@ load_registry() {  # PROJECT
         if (x != "") print x "\t" kind
       }
     }
-    END { close("cat 1>&2"); exit bad }' "$1/$REGISTRY" > "$WORK/registry.tsv" \
-    || die "invalid Files table in $1/$REGISTRY"
+    END { close("cat 1>&2"); exit bad }' "$REG_PATH" > "$WORK/registry.tsv" \
+    || die "invalid Files table in $REG_PATH"
 }
 
 # Kind of the first registry row whose path or glob matches TARGET; "none" without one.
@@ -657,17 +666,17 @@ kind_of() {  # TARGET
   printf 'none\n'
 }
 
-# Targets with a base in PROJECT's snapshot, sorted.
-snapshot_targets() {  # PROJECT
-  (cd "$1/$SNAP_DIR" && find . -type f -name '*.base') | sed 's|^\./||; s|\.base$||' | LC_ALL=C sort
+# Targets with a base in the snapshot, sorted.
+snapshot_targets() {
+  (cd "$SNAP_PATH" && find . -type f -name '*.base') | sed 's|^\./||; s|\.base$||' | LC_ALL=C sort
 }
 
-# Where the base of TARGET lives: the snapshot of $P, or $BASE_DIR when --base was given.
+# Where the base of TARGET lives: the snapshot, or $BASE_DIR when --base was given.
 base_of() {  # TARGET
   if [ -n "$BASE_DIR" ]; then
     printf '%s\n' "$BASE_DIR/$1"
   else
-    printf '%s\n' "$P/$SNAP_DIR/$1.base"
+    printf '%s\n' "$SNAP_PATH/$1.base"
   fi
 }
 
@@ -675,27 +684,73 @@ base_of() {  # TARGET
 base_targets() {
   if [ -n "$BASE_DIR" ]; then
     (cd "$BASE_DIR" && find . -type f) | sed 's|^\./||' | LC_ALL=C sort
-  elif [ -d "$P/$SNAP_DIR" ]; then
-    snapshot_targets "$P"
+  elif [ -d "$SNAP_PATH" ]; then
+    snapshot_targets
   fi
 }
 
-# Optional leading "--base DIR" of status and merge; sets BASE_DIR, ARGS_SHIFT.
-parse_base() {
-  BASE_DIR=
-  ARGS_SHIFT=0
-  if [ "${1:-}" = --base ]; then
-    [ $# -ge 2 ] || usage
-    [ -d "$2" ] || die "base directory not found: $2"
-    BASE_DIR=$2
-    ARGS_SHIFT=2
-  fi
+# Leading options of COMMAND (see the header) → BASE_DIR, ANSWERS_OPT, REGISTRY_OPT,
+# SNAPSHOT_OPT, CHANGED, SEEDS; OPTS_SHIFT counts the arguments they took.
+parse_opts() {  # COMMAND ARGS…
+  po_cmd=$1
+  shift
+  OPTS_SHIFT=0
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --seeds) po_for=render po_n=1 ;;
+      --changed) po_for=detect po_n=1 ;;
+      --base) po_for='status merge' po_n=2 ;;
+      --answers) po_for=detect po_n=2 ;;
+      --registry) po_for='status changed merge detect' po_n=2 ;;
+      --snapshot) po_for='status changed merge snapshot' po_n=2 ;;
+      --*)
+        printf 'template-sync: unknown option %s\n' "$1" >&2
+        usage
+        ;;
+      *) return 0 ;;
+    esac
+    case " $po_for " in
+      *" $po_cmd "*) ;;
+      *)
+        printf 'template-sync: %s takes no %s\n' "${po_cmd:-this command}" "$1" >&2
+        usage
+        ;;
+    esac
+    [ $# -ge "$po_n" ] || usage
+    case $1 in
+      --seeds) SEEDS=1 ;;
+      --changed) CHANGED=1 ;;
+      --base)
+        [ -d "$2" ] || die "base directory not found: $2"
+        BASE_DIR=$2
+        ;;
+      --answers)
+        [ -f "$2" ] || die "answers file not found: $2"
+        ANSWERS_OPT=$2
+        ;;
+      --registry)
+        [ -f "$2" ] || die "registry not found: $2"
+        REGISTRY_OPT=$2
+        ;;
+      --snapshot) SNAPSHOT_OPT=$2 ;;
+    esac
+    shift "$po_n"
+    OPTS_SHIFT=$((OPTS_SHIFT + po_n))
+  done
+}
+
+# Where PROJECT's answers, registry and snapshot are: their usual place, or the stand-in
+# an option names.
+set_paths() {  # PROJECT
+  ANS_PATH=${ANSWERS_OPT:-$1/$ANSWERS_FILE}
+  REG_PATH=${REGISTRY_OPT:-$1/$REGISTRY}
+  SNAP_PATH=${SNAPSHOT_OPT:-$1/$SNAP_DIR}
 }
 
 require_snapshot() {  # PROJECT
   [ -d "$1" ] || die "project not found: $1"
-  if [ ! -d "$1/$SNAP_DIR" ]; then
-    printf 'template-sync: no base snapshot in %s (%s)\n' "$1" "$SNAP_DIR" >&2
+  if [ ! -d "$SNAP_PATH" ]; then
+    printf 'template-sync: no base snapshot at %s\n' "$SNAP_PATH" >&2
     exit 3
   fi
 }
@@ -731,14 +786,13 @@ check_target() {  # TARGET — relative, inside the project
 # --- status, changed -----------------------------------------------------------
 
 status() {
-  parse_base "$@"
-  shift "$ARGS_SHIFT"
   [ $# -eq 1 ] || usage
   P=$1
+  set_paths "$P"
   if [ -z "$BASE_DIR" ]; then require_snapshot "$P"; fi
   [ -d "$P" ] || die "project not found: $P"
   setup_work
-  load_registry "$P"
+  load_registry
   base_targets > "$WORK/targets.lst"
   while IFS= read -r st_t; do
     compare_line "$st_t"
@@ -748,10 +802,10 @@ status() {
 changed() {
   [ $# -eq 1 ] || usage
   P=$1
-  BASE_DIR=
+  set_paths "$P"
   require_snapshot "$1"
   setup_work
-  load_registry "$1"
+  load_registry
   git -C "$1" rev-parse --git-dir > /dev/null 2>&1 || die "$1 is not a git repository"
   if git -C "$1" rev-parse --verify -q HEAD > /dev/null; then
     git -C "$1" -c core.quotePath=false diff --name-only --relative HEAD -- > "$WORK/touched"
@@ -767,7 +821,7 @@ changed() {
         continue
         ;;
     esac
-    if [ -f "$1/$SNAP_DIR/$ch_p.base" ]; then compare_line "$ch_p"; fi
+    if [ -f "$SNAP_PATH/$ch_p.base" ]; then compare_line "$ch_p"; fi
   done < "$WORK/touched.lst"
 }
 
@@ -858,15 +912,14 @@ merge_one() {  # TARGET
 }
 
 merge() {
-  parse_base "$@"
-  shift "$ARGS_SHIFT"
   [ $# -eq 3 ] || usage
   P=$1 SOLL=$2 OUT=$3
+  set_paths "$P"
   [ -d "$P" ] || die "project not found: $P"
   [ -d "$SOLL" ] || die "rendered template not found: $SOLL"
   check_out_dir "$OUT"
   setup_work
-  load_registry "$P"
+  load_registry
   ALGORITHM=$(merge_algorithm)
   {
     base_targets
@@ -884,11 +937,12 @@ snapshot() {
   [ $# -ge 3 ] || usage
   P=$1 SOLL=$2
   shift 2
+  set_paths "$P"
   [ -d "$P" ] || die "project not found: $P"
   [ -d "$SOLL" ] || die "rendered template not found: $SOLL"
   for sn_t in "$@"; do
     check_target "$sn_t"
-    sn_base=$P/$SNAP_DIR/$sn_t.base
+    sn_base=$SNAP_PATH/$sn_t.base
     if [ -f "$SOLL/$sn_t" ]; then
       mkdir -p "${sn_base%/*}"
       cp "$SOLL/$sn_t" "$sn_base"
@@ -1253,16 +1307,15 @@ given_signals() {  # SIGNAL…
   file_signals "$WORK/given.files"
 }
 
-# Rules rows of PROJECT's registry that decline a proposal → "module:NAME" or
-# "fragment:NAME".
-declined_rows() {  # PROJECT
-  [ -f "$1/$REGISTRY" ] || return 0
+# Rules rows of the registry that decline a proposal → "module:NAME" or "fragment:NAME".
+declined_rows() {
+  [ -f "$REG_PATH" ] || return 0
   awk '
     /^#+[ \t]/ { insec = ($0 ~ /^## Rules[ \t]*$/); next }
     insec && /^\|/ {
       split($0, c, "|"); r = c[2]; gsub(/[ \t`]/, "", r)
       if (r ~ /^(module|fragment):[a-z0-9][a-z0-9-]*$/) print r
-    }' "$1/$REGISTRY"
+    }' "$REG_PATH"
 }
 
 # Hits of $WORK/project.tsv against $WORK/declared.tsv with their state; MODULE empty =
@@ -1312,17 +1365,13 @@ report_hits() {  # MODULE
 }
 
 detect() {
-  dt_changed=0
-  if [ "${1:-}" = --changed ]; then
-    dt_changed=1
-    shift
-  fi
   [ $# -ge 2 ] || usage
   TEMPLATE=$1 P=$2
   shift 2
+  set_paths "$P"
   [ -f "$TEMPLATE/MANIFEST.md" ] || die "no MANIFEST.md in $TEMPLATE"
   [ -d "$P" ] || die "project not found: $P"
-  [ "$dt_changed" -eq 0 ] || [ $# -eq 0 ] || die "--changed reads the project, it takes no signals"
+  [ "$CHANGED" -eq 0 ] || [ $# -eq 0 ] || die "--changed reads the project, it takes no signals"
   setup_work
   declared_signals | typed_declarations > "$WORK/declared.tsv" \
     || die "invalid signal declarations in $TEMPLATE"
@@ -1332,7 +1381,7 @@ detect() {
   else
     git -C "$P" rev-parse --git-dir > /dev/null 2>&1 || die "$P is not a git repository"
     scan_signals "$P" worktree > "$WORK/project.tsv"
-    if [ "$dt_changed" -eq 1 ]; then
+    if [ "$CHANGED" -eq 1 ]; then
       if git -C "$P" rev-parse --verify -q HEAD > /dev/null; then
         scan_signals "$P" head > "$WORK/head.tsv"
       else
@@ -1345,12 +1394,11 @@ detect() {
   fi
 
   dt_module=
-  if [ -f "$P/$ANSWERS_FILE" ]; then
-    load_answers "$P/$ANSWERS_FILE" > "$WORK/values.tsv" \
-      || die "invalid answers file: $P/$ANSWERS_FILE"
+  if [ -f "$ANS_PATH" ]; then
+    load_answers "$ANS_PATH" > "$WORK/values.tsv" || die "invalid answers file: $ANS_PATH"
     dt_module=$(value_of MODULE) || die "answers: MODULE is missing"
   else
-    printf 'template-sync: no %s in %s — module check skipped\n' "$ANSWERS_FILE" "$P" >&2
+    printf 'template-sync: no answers file %s — module check skipped\n' "$ANS_PATH" >&2
   fi
   part_rows > "$WORK/parts.tsv"
   : > "$WORK/covered"
@@ -1359,12 +1407,14 @@ detect() {
     sed -n 's/^[[:space:]]*<!--[[:space:]]*fragment:\([a-z0-9-]*\)[[:space:]]*-->.*$/\1/p' \
       "$WORK/slot" > "$WORK/covered"
   fi
-  declined_rows "$P" > "$WORK/declined"
+  declined_rows > "$WORK/declined"
   report_hits "$dt_module"
 }
 
 cmd=${1:-}
 [ $# -eq 0 ] || shift
+parse_opts "$cmd" "$@"
+shift "$OPTS_SHIFT"
 case $cmd in
   render) render "$@" ;;
   status) status "$@" ;;

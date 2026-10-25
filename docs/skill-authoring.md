@@ -111,6 +111,11 @@ formulieren, Trigger-Situationen nennen.
   Validator prüft, dass es den Pfad gibt); in Shell-Befehlen den aufgelösten Pfad über
   `sh` aufrufen — die Variable gibt es dort nicht, und `sh` braucht kein Ausführungsrecht.
   Ergebnisse in ein frisches Temp-Verzeichnis, nie ungefragt ins Projekt.
+- **Stellvertreter für `.claude/`:** Schreibzugriffe dort fragt Claude Code einzeln ab.
+  Ein Skript, das Projektdateien unter `.claude/` liest oder schreibt, nimmt deshalb je
+  Datei eine Option mit einem anderen Pfad (Vorbild: `--answers`, `--registry`,
+  `--snapshot` in `template-sync.sh`) — so rechnet der Skill mit vorbereiteten Dateien in
+  `<tmp>` weiter, bis die Freigabe da ist, statt das Skript anzupassen.
 - **Form:** POSIX sh mit Standardwerkzeugen (git, awk, sed …), kein Python-Zwang. Der
   Kopfkommentar beschreibt Befehle, Ausgabezeilen (tabulatorgetrennt) und Exit-Codes;
   geschrieben wird nur in die genannten Ordner.
