@@ -1,6 +1,6 @@
 ---
 name: choose-stack
-description: Stack-Modul wählen oder nachrüsten. Modus Neuanlage empfiehlt ein Modul des mitgelieferten Templates aus der Short-Info (aktuelle Framework-Lage per Websuche verifiziert); Modus Bestandsprojekt rüstet EIN Modul nach bzw. wechselt es — mit Diff und Bestätigung je Datei. Laufende Modul-Updates macht /update-conventions, nicht dieser Skill.
+description: Stack-Modul wählen oder nachrüsten. Modus Neuanlage empfiehlt ein Modul des mitgelieferten Templates aus der Short-Info (aktuelle Framework-Lage per Websuche verifiziert); Modus Bestandsprojekt empfiehlt ein Modul aus den Signalen des Projekts und rüstet EIN Modul nach bzw. wechselt es — mit Diff und Bestätigung je Datei. Laufende Modul-Updates macht /update-conventions, nicht dieser Skill.
 disable-model-invocation: false
 ---
 
@@ -48,6 +48,11 @@ Kandidaten.
    `.claude/template-answers` oder `.claude/template-base/`** (Projekt vor dem
    Snapshot-Vertrag): zuerst die Migration über `/update-conventions` empfehlen und
    stoppen — der Modulwechsel braucht die Basis.
+   **Signale:** `sh <skript> detect <template> <projekt>` (Skript wie in Schritt 2,
+   `MANIFEST.md` § Detection) zeigt, welche Module und Fragmente die Dateien des Projekts
+   nahelegen. Steht das Modul nicht schon fest, auf dieser Grundlage **ein** Modul
+   empfehlen (wie Modus A Schritt 3, Stubs haben keine Signale); `declined`-Zeilen sind
+   frühere Entscheidungen des Projekts — nennen, nicht übergehen.
 2. **Plan zeigen:** Das Skript `${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh` (in
    Shell-Befehlen der aufgelöste Pfad, Aufruf über `sh`) wendet den Modul-Kontrakt an
    (MANIFEST § Module contract) — nie Teile selbst einsetzen. Eine Kopie der Antworten
@@ -84,7 +89,9 @@ Kandidaten.
 4. **Nachziehen:** `MODULE` in `.claude/template-answers` setzen (und `FRAGMENTS` laut
    § Begleithandlungen), dann `sh <skript> snapshot <projekt> <tmp>/soll <Ziele>` für jedes
    übernommene oder entfernte Ziel — sonst meldet der nächste Abgleich den Modulwechsel
-   als Abweichung.
+   als Abweichung. Lehnt die Rules-Tabelle der `.claude/convention-overrides.md` das neue
+   Modul ab (`module:NAME`, z. B. als Werkzeugsprache), die Zeile zum Austragen anbieten —
+   ebenso `keep`-Zeilen der handgebauten Toolchain, die das Modul jetzt liefert.
 5. **Verifikation:** `mise install && mise lock && just setup && just check` muss grün
    sein, danach die Prüfung aus § Lock-Datei erzeugen und prüfen — der Modulwechsel
    ändert die Tools, `mise lock` nimmt neue auf und entfernt gestrichene

@@ -16,6 +16,68 @@ zusammen:
 
 ---
 
+## F-042c — Skills und Doku (2026-10-25)
+
+Teil von F-042 (Neue Sprachen und Frameworks erkennen und Vorlagen nachziehen; F-042a–b
+siehe darunter, F-042d folgt).
+
+**Problem:** `detect` (F-042b) gab es, aber kein Skill rief es auf: prep-step und
+step-done glichen Dependencies weiter von Hand mit dem Katalog ab, und nur für
+Fragmente; update-conventions sah nie, wofür das Template inzwischen Vorlagen hat.
+
+**Was entstanden ist (1.2.0, unveröffentlicht):**
+
+- **prep-step § 2a** „Standards- und Modul-Abdeckung (Erkennung)": greift auch bei neuen
+  Sprachen und Toolchains und ohne Fragment-Slot. Die geplanten Dinge werden als
+  typisierte Signale benannt und mit `detect <template> <projekt> <Signal…>` geprüft.
+  Fragment `missing` → Anhängen samt Begleithandlung, `FRAGMENTS` und `keep`-Zeilen;
+  Modul `missing` → `/choose-stack` als eigener Schritt oder Werkzeugsprache mit
+  Rules-Zeile `module:NAME` und `keep`-Zeilen. Eigenschafts-Trigger hält das Modell
+  weiter selbst gegen die Aufgabe. Die Plan-Vorlage heißt „Standards- und
+  Modul-Abdeckung".
+- **step-done § 1a** über `detect --changed`: meldet nur, was der Schritt neu einführt;
+  Fragment- und Modul-Lücken mit denselben Wegen, dauerhaft ablehnen als Rules-Zeile, nie
+  blockierend; ohne Antworten-Datei Hinweis auf die Migration.
+- **update-conventions:** Erkennung als Block in Schritt 2 — nach den Antworten, vor dem
+  Rendern —, damit ein angenommenes Fragment in `FRAGMENTS` steht (sofern das Modul es
+  nicht selbst deklariert) und Schritt 6 es anhängt; ein fehlendes Modul wird an
+  `/choose-stack` verwiesen; dauerhaft ablehnen → Rules-Zeile, diesmal nicht → nichts
+  gespeichert. Migrationen laufen durch die Erkennung, `status` berichtet sie, die
+  Revision (Schritt 10) bietet Ablehnungen ohne Signale zum Austragen an.
+- **choose-stack Modus B:** Empfehlung aus den Signalen (`declined` als frühere
+  Entscheidung nennen); beim Wechsel eine Ablehnung des neuen Moduls und die
+  `keep`-Zeilen der handgebauten Toolchain zum Austragen anbieten.
+- **Doku:** Skill-Beschreibungen, README (Skill-Tabelle, Repo-Struktur), Template-HOW-TO
+  (Skill-Tabelle, Backstop in „What `/step-done` does"), CHANGELOG (Skills, `### Template`
+  für die HOW-TO); `docs/skill-authoring.md` nennt prep-step bei den Nutzern von
+  `template-sync.sh` (nicht im Plan genannt).
+
+**Verifikation:** Nicht-interaktiver Lauf von `update-conventions status` mit
+`claude -p --plugin-dir plugins/coding-kit` an einer Scratch-Kopie des
+docs-only-Projekts: Der Bericht zeigt „Modul `python`: `missing`, ausgelöst durch
+`tool:python` in `mise.toml`" und empfiehlt die Werkzeugsprache; Prüfsummen aller 77
+Dateien und `git status` der Kopie danach unverändert; Kopie und Temp-Ergebnisse
+gelöscht. Alle vier `detect`-Aufrufe der Skills passen zum Skript-Kopf. `just check` grün
+(424 Prüfungen).
+
+**Notable decisions:**
+- Die Erkennung ist in update-conventions ein Block von Schritt 2 statt eines neuen
+  Schritts: Andere Skills verweisen auf die Schrittnummern (`A2 Schritt 5` …).
+- Ein fehlendes Modul führt in update-conventions und step-done nur zu einer Empfehlung
+  für `/choose-stack` — Modulwechsel bleiben in einem Skill.
+
+**Im selben Commit:** F-044 (Sprachen ohne Vorlage erkennen und dem Template vorschlagen)
+ins Backlog, Reihenfolge F-042 → F-043 → F-044 — aus einer Frage beim Bau: Java und
+Swift sind Stubs ohne Signale, und Sprachen ohne Modul meldet heute kein Skill.
+
+**Geänderte Dateien:**
+`plugins/coding-kit/skills/{prep-step,step-done,update-conventions,choose-stack}/SKILL.md`,
+`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`, `README.md`,
+`docs/skill-authoring.md`, `plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`,
+`PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-042b — `detect` im Skript (2026-10-25)
 
 Teil von F-042 (Neue Sprachen und Frameworks erkennen und Vorlagen nachziehen; F-042a

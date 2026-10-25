@@ -27,6 +27,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-041e | Test, Release, Gegenprobe → **Migrationstests an Kopien eines docs-only- und eines ts-node-Projekts (Zusätze erhalten, Snapshot gesetzt, Prüfungen grün, `biome ci` mit Snapshot); Mischbasis und `.claude/`-Freigaben in `update-conventions`; Release 1.1.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe am echten docs-only-Projekt ohne unregistrierte Abweichung. F-041 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 | F-042a | Signal-Vertrag und Daten → **MANIFEST § Detection (Signal-Typen `npm:`, `pypi:`, `go:`, `tool:`, `file:`, Dateiliste aus git, Zustände `covered`/`declined`/`missing`, Werkzeugsprache); Ablehnung als Rules-Zeile `module:NAME`/`fragment:NAME`; Katalog typisiert (`docker` mit Compose-Varianten, `nginx` präzisiert, `api-design` auch für Python und Go); `Signals:`-Zeilen in den vollen Modulen; Validator prüft Typen, Katalog und Module; Version 1.2.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-042b | `detect` im Skript → **`template-sync.sh detect [--changed] TEMPLATE PROJECT [SIGNAL…]`: Leser für `package.json` (auch minifiziert), `pyproject.toml`, `requirements*.txt`, `go.mod`, `mise.toml` und Dateimuster über die git-Dateiliste ohne Snapshot; Zustände aus Antworten, Slot-Markern und Rules-Zeilen; `--changed` nur gegenüber HEAD neue Signale, übergebene Signale ohne Baum; 64 Tests je Shell inklusive frisch gerenderter Projekte; der Validator gleicht die Typliste des Skripts mit dem MANIFEST ab.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
+| F-042c | Skills und Doku → **prep-step § 2a prüft geplante Signale per `detect` (Fragment oder Modul fehlt → Anhängen, `/choose-stack` oder Werkzeugsprache); step-done § 1a über `detect --changed`; update-conventions erkennt in Schritt 2 vor dem Rendern (Fragment → `FRAGMENTS`, Modul → `/choose-stack`, dauerhaft ablehnen → Rules-Zeile), `status` berichtet, die Revision trägt Ablehnungen ohne Signale aus; choose-stack empfiehlt aus den Signalen; HOW-TO, README und CHANGELOG nachgezogen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 
 ---
 
@@ -100,32 +101,6 @@ immer erst nach Bestätigung.
 
 **Abhängigkeiten:** F-041 (erledigt). Vor F-043.
 
-#### F-042c — Skills und Doku
-
-**Was:** `prep-step` § 2a: auch neue Sprachen und Toolchains, `detect` mit den geplanten
-Signalen, Modul-Treffer → Verweis auf `/choose-stack`. `step-done` § 1a über
-`detect --changed`, nicht blockierend, Ablehnung als Rules-Zeile anbieten.
-`update-conventions`: Erkennungs-Schritt vor dem Rendern (Fragment anhängen samt
-`FRAGMENTS` und Begleithandlung; fehlendes Modul → `/choose-stack` nach dem Lauf;
-dauerhaft ablehnen → Rules-Zeile; diesmal nicht), Modus `status` als Bericht, die
-Revision listet die Ablehnungen („noch gültig?"). `choose-stack` Modus B: Signale für die
-Empfehlung. Template-HOW-TO, Skill-Tabelle im README und Skill-Beschreibungen;
-`/add-skill` läuft mit.
-
-**Dateien:**
-`plugins/coding-kit/skills/{prep-step,step-done,update-conventions,choose-stack}/SKILL.md`,
-`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`, `README.md`,
-`plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-042b.
-
-**Abnahmekriterien:**
-- [ ] Nicht-interaktiver Lauf von `update-conventions status` mit `--plugin-dir` an einer
-      Scratch-Kopie des docs-only-Projekts: Der Bericht zeigt den Modul-Treffer `python`,
-      ins Projekt wird nichts geschrieben.
-- [ ] Die Skills rufen `detect` nur mit den im Skript-Kopf beschriebenen Argumenten auf.
-- [ ] `just check` grün.
-
 #### F-042d — Test, Release, Gegenprobe
 
 **Was:** Nicht-interaktive Läufe mit `claude -p --plugin-dir plugins/coding-kit` an
@@ -155,9 +130,10 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 **Empfohlene Reihenfolge** (Stand 2026-10-25; die Einträge darunter bleiben nach Nummer
 sortiert):
 
-1. **F-042 → F-043** — direkt nach F-041, weil es dieselbe Mechanik nutzt (Antworten-Datei,
-   `choose-stack`, `template-sync.sh`); F-043 ist danach reiner Template-Inhalt, den
-   `detect` von selbst vorschlägt.
+1. **F-042 → F-043 → F-044** — direkt nach F-041, weil es dieselbe Mechanik nutzt
+   (Antworten-Datei, `choose-stack`, `template-sync.sh`); F-043 ist danach reiner
+   Template-Inhalt, den `detect` von selbst vorschlägt, F-044 erweitert dieselbe Erkennung
+   um Sprachen ohne Vorlage.
 2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
 3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
@@ -669,10 +645,52 @@ Modul von selbst vor — ohne Code-Änderung.
 
 **Abhängigkeiten:** F-042 (typisierte Signale im Katalog, `detect`).
 
+### F-044 — Sprachen ohne Vorlage erkennen und dem Template vorschlagen
+
+**Status:** BACKLOG
+
+**Problem:** `detect` (F-042) kennt nur Signale, die das Template deklariert. Nutzt ein
+Projekt eine Sprache, für die es kein volles Modul gibt — Rust, Ruby oder die Stubs `java`
+und `swift-ios` —, meldet kein Skill etwas: Das Projekt läuft still als docs-only mit
+handgebauter Toolchain, und das Template erfährt nie, dass eine Vorlage fehlt. Den
+Übernahme-Vorschlag fürs Template gibt es heute nur für projektlokale Fragmente, und er
+setzt eine Session im coding-kit-Repo oder einen `gh`-Aufruf voraus — Dritte, die das Kit
+nutzen, haben keinen passenden Weg.
+
+**Idee:** `detect` meldet Tools aus `[tools]` der `mise.toml`, die weder die Core-Vorlage
+noch ein Modul oder Fragment deklariert, mit eigenem Zustand (z. B. `unknown`). Die
+Skills schlagen dann vor — nie automatisch —, die Sprache dem Template zu melden. Der
+Übernahme-Vorschlag wird dafür allgemein: für Fragmente und Module, wählbar als
+kopierfertiger Prompt für eine Session im Kit-Repo, als Issue-Text oder als
+PR-Beschreibung. Nur Text, abgeschickt wird nichts.
+
+**Lösungsskizze:**
+- MANIFEST § Detection: Zustand für Tools ohne Vorlage; Vergleich gegen `[tools]` der
+  Core-`mise.toml` und alle deklarierten `tool:`-Signale, ohne hartcodierte Sprachliste.
+- `template-sync.sh detect`: neue Zeilenart, Tests.
+- Übernahme-Vorschlag neu fassen (heute in `update-conventions`, referenziert von
+  prep-step und step-done): Inhalt (was fehlt, Signale und Toolchain des Projekts als
+  Ausgangspunkt, generalisiert und personendatenfrei), drei Formate zur Auswahl (Prompt,
+  Issue-Titel und -Text, PR-Beschreibung mit Dateiliste), kein Absenden durch den Skill.
+  Ziel-Repo aus `homepage` in `plugin.json`.
+- Ablehnen wie bei F-042 über eine Rules-Zeile, damit der Vorschlag nicht wiederkommt.
+- Keine neuen Dependencies.
+
+**Noch zu analysieren:**
+- Tools ohne eigene Sprache (z. B. `terraform`, `npm:markdownlint-cli2`) als Fehlalarme:
+  Filter oder Ablehnung je Tool (Rules-Zeile `tool:NAME`?).
+- Ob Stubs doch eine `Signals:`-Zeile und einen eigenen Zustand `stub` bekommen, damit
+  „Template kennt die Sprache nur als Stub" sichtbar wird, oder ob `unknown` genügt —
+  Revision der Entscheidung aus F-042a.
+- Ob das Kit-Repo eine Issue-Vorlage oder einen Abschnitt in seiner `CONTRIBUTING.md` für
+  solche Vorschläge braucht.
+
+**Abhängigkeiten:** F-042 (`detect`, Ablehnung über die Rules-Tabelle).
+
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-044
+next-feature: F-045
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -716,4 +734,5 @@ F-040 Globale CLAUDE.md mit dem Plugin ausliefern und abgleichen
 F-041 Projektzusätze in managed Dateien erhalten, Abweichungen früh erkennen (DONE)
 F-042 Neue Sprachen und Frameworks erkennen, Vorlagen nachziehen (PLANNED)
 F-043 Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen
+F-044 Sprachen ohne Vorlage erkennen und dem Template vorschlagen
 -->

@@ -25,7 +25,20 @@ später bekommt (F-042, in Arbeit).
   ohne Snapshot. Eine Zeile je Treffer mit Zustand `covered`, `declined` oder `missing`
   und den auslösenden Signalen samt Fundort. `--changed` meldet nur, was der Arbeitsbaum
   gegenüber HEAD neu hat; mit Signalen als Argumenten prüft es geplante Dependencies,
-  ohne den Baum zu lesen. Noch ruft es kein Skill auf.
+  ohne den Baum zu lesen.
+- **`update-conventions`** gleicht bei jedem Lauf, vor dem Rendern, die Signale des
+  Projekts mit dem aktuellen Template ab: Ein fehlendes Fragment wird zum Anhängen
+  angeboten (samt `FRAGMENTS`), ein fehlendes Modul an `choose-stack` verwiesen. Wer
+  dauerhaft ablehnt, bekommt eine Rules-Zeile `module:NAME` oder `fragment:NAME` — bei
+  einer Werkzeugsprache mit `keep`-Zeilen für die handgebaute Toolchain; „diesmal nicht"
+  bietet der nächste Lauf wieder an. `status` berichtet die Erkennung, die Revision bietet
+  Ablehnungen ohne Signale zum Austragen an.
+- **`prep-step`** (§ 2a) prüft geplante Frameworks, Sprachen und Toolchains als Signale
+  per `detect` gegen Katalog und Module — ein fehlendes Modul führt zu `choose-stack` oder
+  zur Werkzeugsprache. **`step-done`** (§ 1a) nutzt `detect --changed`: gemeldet wird nur,
+  was der Schritt neu einführt, nie blockierend.
+- **`choose-stack`** empfiehlt im Bestandsprojekt das Modul aus den Signalen und bietet
+  beim Wechsel an, eine Ablehnung des neuen Moduls und ihre `keep`-Zeilen auszutragen.
 - **Kit:** Der Validator prüft die Signale: nur Typen aus MANIFEST § Detection, im
   Katalog nur typisierte Signale in Backticks oder ein Eigenschafts-Auslöser, jedes volle
   Modul mit `Signals:`-Zeile, Stubs ohne, und das Skript kennt genau diese Typen. Die
@@ -49,6 +62,10 @@ später bekommt (F-042, in Arbeit).
 - Abweichungs-Registry: Eine Rules-Zeile `module:NAME` oder `fragment:NAME` lehnt einen
   Erkennungs-Vorschlag dauerhaft ab — so steht es im MANIFEST und im Kopf der
   `.claude/convention-overrides.md` (Zone `overrides-head`).
+- HOW-TO: `/prep-step` prüft geplante Frameworks, Sprachen und Toolchains gegen Katalog
+  und Module, `/step-done` hat einen Erkennungs-Backstop für das, was ein Schritt neu
+  einführt, `/choose-stack` empfiehlt aus den Projektsignalen, `/update-conventions`
+  erkennt bei jedem Lauf, wofür das Template inzwischen Vorlagen hat.
 
 ## 1.1.0 — 2026-10-24
 

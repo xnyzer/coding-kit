@@ -1,6 +1,6 @@
 ---
 name: update-conventions
-description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME); Abweichungs-Registry mit den Arten skip, keep, adapt; Migration für Projekte ohne Snapshot; erkennt im Template entfernte/umbenannte Dateien. Ohne Argument nur das Projekt im aktuellen Ordner, alle Projekte nur mit `alle`; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente werden nie angefasst, aber mit einem manuell anstoßbaren Übernahme-Vorschlag fürs Template gemeldet. Nichts wird ungefragt überschrieben.
+description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME); Abweichungs-Registry mit den Arten skip, keep, adapt; erkennt bei jedem Lauf per Signal, wofür das Template inzwischen Module oder Fragmente hat (dauerhafte Ablehnung als Rules-Zeile); Migration für Projekte ohne Snapshot; erkennt im Template entfernte/umbenannte Dateien. Ohne Argument nur das Projekt im aktuellen Ordner, alle Projekte nur mit `alle`; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente werden nie angefasst, aber mit einem manuell anstoßbaren Übernahme-Vorschlag fürs Template gemeldet. Nichts wird ungefragt überschrieben.
 disable-model-invocation: true
 ---
 
@@ -35,7 +35,7 @@ managed Dateien nie selbst zusammenführen oder aus dem Template abschreiben.
   auf ein Kit-Update verweisen). Version (`${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`)
   und CHANGELOG (`${CLAUDE_PLUGIN_ROOT}/CHANGELOG.md`) merken.
 - MANIFEST §§ Answers, Base snapshot, Deviation registry, Standards fragments (mit dem
-  Fragment-Katalog `modules/standards/README.md`) und Seed sections lesen.
+  Fragment-Katalog `modules/standards/README.md`), Detection und Seed sections lesen.
 - **Skript:** `${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh`, in Shell-Befehlen mit dem
   aufgelösten Pfad über `sh` aufrufen; sein Kopf beschreibt Befehle, Ausgabezeilen und
   Klassen. Render- und Merge-Ergebnisse gehören in ein frisches Temp-Verzeichnis
@@ -83,6 +83,23 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
    Unterschiede zeigen und je Wert fragen, welcher gilt; die Antworten-Datei nur nach
    Bestätigung ändern. Die Prämisse eines Aufrufers rendert nur diesen Lauf, sie ändert
    die Datei nicht.
+
+   **Erkennung** (jeder Lauf, nach den Antworten, vor dem Rendern): `sh <skript> detect
+   <template> <projekt>` gleicht die Signale des Projekts mit den Modulen und dem
+   Fragment-Katalog des aktuellen Templates ab (`MANIFEST.md` § Detection) — so kommt
+   an, wofür das Template inzwischen Vorlagen hat, auch für längst Genutztes. `covered`
+   nur zählen, `declined` nur auflisten (Schritt 10). Je `missing`:
+   - **Fragment:** anhängen anbieten. Bei Zustimmung kommt es in `FRAGMENTS` der
+     Antworten, sofern das `MODULE.md` es nicht selbst deklariert, damit der Render es
+     enthält und Schritt 6 es anhängt — samt Begleithandlung (`/choose-stack`
+     § Begleithandlungen). **Dauerhaft ablehnen** →
+     Rules-Zeile `fragment:NAME` mit Grund; **diesmal nicht** → nichts speichern, der
+     nächste Lauf bietet wieder an.
+   - **Modul:** Module wechselt dieser Skill nicht — nach dem Lauf
+     `/coding-kit:choose-stack` empfehlen. **Als Werkzeugsprache dauerhaft ablehnen** →
+     Rules-Zeile `module:NAME` (was das Projekt stattdessen tut, mit Grund) und
+     `keep`-Zeilen für die managed Dateien der handgebauten Toolchain; **diesmal nicht**
+     → nichts speichern.
 3. **Soll rendern:** `sh <skript> render <template> <projekt>/.claude/template-answers
    <tmp>/soll`.
 4. **Mergen:** `sh <skript> merge <projekt> <tmp>/soll <tmp>/out` — die Tabelle zeigen
@@ -118,7 +135,8 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
    Template-Pendant → projektlokal: nie anfassen**; auflisten mit dem Hinweis, dass dieses
    Set im Template fehlt, und je Fragment einen **Übernahme-Vorschlag** ausgeben —
    anstoßen muss ihn der Nutzer. Deklariert das `MODULE.md` inzwischen Fragmente, die im
-   Projekt fehlen → Anhängen anbieten (Mechanik wie `/choose-stack`, idempotent);
+   Projekt fehlen, oder kam eines aus der Erkennung (Schritt 2) nach `FRAGMENTS` →
+   Anhängen anbieten (Mechanik wie `/choose-stack`, idempotent);
    bestehende in-place ersetzen, Neues ans Slot-Ende — nie umsortieren.
    **Begleithandlungen (auch bei unverändertem Text):** je Fragment im Slot prüfen, ob die
    dort formulierte Einbau-Anforderung im Projekt erfüllt ist (`/choose-stack`
@@ -152,7 +170,9 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
     - Zeile, deren Ziele alle `unchanged` sind (Abweichung verschwunden) oder die in
       Schritt 5 `caught-up` waren → **austragen** anbieten;
     - `deviates` ohne Zeile → Zeile mit Grund anbieten (Art leer, `keep` oder `adapt`);
-    - `skip`-Zeilen und die Rules-Tabelle nur auflisten („noch gültig?").
+    - `skip`-Zeilen und die Rules-Tabelle nur auflisten („noch gültig?"); eine Ablehnung
+      `module:NAME` oder `fragment:NAME`, für die die Erkennung (Schritt 2) keine Zeile
+      mehr meldet — das Projekt hat die Signale nicht mehr —, zum Austragen anbieten.
 
     Jede Änderung einzeln bestätigen. Sinngleiche Zeilen eines Alt-Formats übernimmt A3
     Schritt 3.
@@ -167,12 +187,15 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
 
 **Modus `status`:** Schritte 1–4 (ohne Snapshot über die Vorschau aus A3 Schritt 2) und
 die Tabelle aus `sh <skript> status <projekt>` (ohne Snapshot: `status --base
-<tmp>/base`); was Schritt 10 vorschlagen würde, als Hinweis. Antworten für die Vorschau
-nur in `<tmp>` anlegen. Nichts im Projekt schreiben.
+<tmp>/base`); die Erkennung aus Schritt 2 als Bericht (fehlende Module und Fragmente,
+Ablehnungen) und was Schritt 10 vorschlagen würde, als Hinweis. Ohne
+`.claude/template-answers` prüft das Skript keine Module — das im Bericht sagen.
+Antworten für die Vorschau nur in `<tmp>` anlegen. Nichts im Projekt schreiben.
 
 ### A3. Migration — Projekte ohne Snapshot oder Antworten
 
-Jede Migration ist ein eigener bestätigter Schritt; danach A2 ab Schritt 3.
+Jede Migration ist ein eigener bestätigter Schritt; danach die Erkennung aus A2 Schritt 2,
+dann A2 ab Schritt 3.
 
 1. **Antworten-Datei anlegen:** die Werte aus dem Projekt zurückgewinnen — Name (Repo
    bzw. Ordner), `OWNER` (`gh api user`), Beschreibung (Repo-Beschreibung, sonst README),

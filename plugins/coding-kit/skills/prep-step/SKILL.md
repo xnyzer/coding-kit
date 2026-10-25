@@ -1,6 +1,6 @@
 ---
 name: prep-step
-description: Aufgabe vor der Umsetzung vorbereiten. Hinterfragt die Lösungsskizze gegen den aktuellen Codestand, analysiert den Umfang, prüft die Standards-Abdeckung neu eingeführter Frameworks gegen den Fragment-Katalog, zerlegt bei Bedarf in Substeps und schreibt Plan + Status-Marker PLANNED nach Freigabe in die PROGRESS.md.
+description: Aufgabe vor der Umsetzung vorbereiten. Hinterfragt die Lösungsskizze gegen den aktuellen Codestand, analysiert den Umfang, prüft neu eingeführte Frameworks, Sprachen und Toolchains per Erkennungs-Skript gegen Fragment-Katalog und Stack-Module, zerlegt bei Bedarf in Substeps und schreibt Plan + Status-Marker PLANNED nach Freigabe in die PROGRESS.md.
 disable-model-invocation: true
 ---
 
@@ -50,34 +50,51 @@ nicht wiederholen, nichts raten.
   Bibliotheken)? Berührt es Auth-, Token- oder Consent-Pfade?
 - Grober Umfang: wie viele Zeilen Code/Config ungefähr?
 
-## 2a. Standards-Abdeckung prüfen (Fragment-Check)
+## 2a. Standards- und Modul-Abdeckung prüfen (Erkennung)
 
-Nur wenn die Analyse ergibt, dass die Aufgabe **neue Frameworks/Dependencies
-einführt**, und das Projekt einen Fragment-Slot hat (`<!-- module:coding-standards -->`
-in der `CODING-STANDARDS.md`) — sonst still überspringen:
+Nur wenn die Analyse ergibt, dass die Aufgabe **neue Frameworks, Dependencies, Sprachen
+oder Toolchains einführt** — sonst still überspringen. Template und Skript wie
+`/choose-stack` § 0: `${CLAUDE_PLUGIN_ROOT}/template` und
+`${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh`, in Shell-Befehlen die aufgelösten
+Pfade; Signale und Zustände beschreibt `MANIFEST.md` § Detection.
 
-1. Template auflösen (wie `/choose-stack` § 0) und das Trigger-Mapping aus
-   `modules/standards/README.md` lesen — zur Laufzeit, nichts hardcoden.
-2. **Beide Signaltypen matchen:** die neu eingeführten Frameworks/Dependencies gegen
-   die Dependency-Signale des Katalogs **und** die Aufgabenbeschreibung gegen die
-   `*characteristic:*`-Eigenschafts-Trigger (z. B. „service with user/admin
-   mutations").
-3. Treffer, aber kein `<!-- fragment:NAME -->`-Marker im Projekt → im Plan
-   vorschlagen, das Katalog-Fragment anzuhängen (Mechanik wie `/choose-stack`,
-   idempotent). Verlangt das Fragment eine **Begleithandlung** am Projekt
-   (`/choose-stack` § Begleithandlungen), im Vorschlag mitausweisen — sie gehört in
-   denselben Schritt, nicht in einen Folgeschritt. Ebenso ausweisen (gleiche Stelle):
-   den Eintrag des Fragments in `FRAGMENTS` der `.claude/template-answers` und je
-   managed Datei, die die Begleithandlung ändert, eine `keep`-Zeile in der Files-Tabelle
-   der `.claude/convention-overrides.md`.
-4. Treffer-Thema ganz ohne Katalog-Fragment → vorschlagen, ein **projektlokales**
+1. **Geplante Signale benennen** — typisiert, wie sie nach dem Bau im Projekt stünden:
+   `npm:`, `pypi:`, `go:` für Dependencies, `tool:` für ein Tool in `mise.toml`, `file:`
+   für eine geplante Datei (z. B. `npm:next`, `tool:python`, `file:Dockerfile`).
+2. **Abgleich per Skript:** `sh <skript> detect <template> <projekt> <Signal…>` prüft nur
+   diese Signale, ohne den Baum zu lesen. Zeilen `covered` und `declined` → nichts
+   vorschlagen. Fehlt `.claude/template-answers` (Projekt vor dem Snapshot-Vertrag),
+   prüft das Skript keine Module — dann auf die Migration per
+   `/coding-kit:update-conventions` hinweisen.
+3. **Eigenschafts-Trigger** (`*characteristic:*`-Zeilen in
+   `modules/standards/README.md`) zeigt keine Datei: die Aufgabenbeschreibung selbst
+   dagegen halten (z. B. „service with user/admin mutations"), Treffer wie ein Fragment
+   ohne `fragment:NAME`-Marker im Slot behandeln.
+4. **Fragment `missing`** → im Plan vorschlagen, das Katalog-Fragment anzuhängen
+   (Mechanik wie `/choose-stack`, idempotent; ohne Fragment-Slot
+   `<!-- module:coding-standards -->` in der `CODING-STANDARDS.md` nur melden). Verlangt
+   das Fragment eine **Begleithandlung** am Projekt (`/choose-stack`
+   § Begleithandlungen), im Vorschlag mitausweisen — sie gehört in denselben Schritt,
+   nicht in einen Folgeschritt. Ebenso ausweisen (gleiche Stelle): den Eintrag des
+   Fragments in `FRAGMENTS` der `.claude/template-answers` und je managed Datei, die die
+   Begleithandlung ändert, eine `keep`-Zeile in der Files-Tabelle der
+   `.claude/convention-overrides.md`.
+5. **Modul `missing`** → im Plan ausweisen und eine Richtung empfehlen: das Modul per
+   `/coding-kit:choose-stack` nachrüsten (eigener Schritt vor dem Bau) **oder** die
+   Sprache als Werkzeugsprache führen — dann gehören in denselben Schritt eine Zeile
+   `module:NAME` in der Rules-Tabelle der `.claude/convention-overrides.md` (was das
+   Projekt stattdessen tut, mit Grund) und `keep`-Zeilen für die managed Dateien, die
+   die Toolchain von Hand ändert (z. B. `mise.toml`, justfile).
+6. Treffer-Thema ganz ohne Katalog-Fragment → vorschlagen, ein **projektlokales**
    Fragment zu autoren (eigener `fragment:NAME`-Block im Slot). Direkt nach der
    Anlage den **Übernahme-Vorschlag** fürs Template ausgeben (kopierfertiger Prompt
    bzw. GitHub-Request — siehe `/coding-kit:update-conventions`
    § Übernahme-Vorschlag); die Aufnahme in den Katalog stößt der Nutzer manuell an,
    bis dahin bleibt das Fragment projektlokal.
-5. **Nur vorschlagen, nie still einbauen** — die Entscheidung fällt mit der
-   Plan-Freigabe (Schritte 4–6).
+7. **Nur vorschlagen, nie still einbauen** — die Entscheidung fällt mit der
+   Plan-Freigabe (Abschnitte 4–6 dieses Skills). Ein Vorschlag, den der Nutzer dauerhaft
+   ablehnt, wird zur Rules-Zeile `fragment:NAME` bzw. `module:NAME` — dann meldet ihn
+   kein Skill mehr.
 
 ## 3. Größe bewerten & ggf. zerlegen
 
@@ -105,9 +122,10 @@ vorschlägst — mit Begründung; entfällt, wenn der Eintrag keine Skizze hat]
 
 **Neue Endpunkte/Config/Dependencies:** [welche?]
 
-**Standards-Abdeckung:** [ok / Fragment `<name>` fehlt → Anhängen vorgeschlagen /
-kein Katalog-Fragment → Autoring + Promote vorgeschlagen; Zeile entfällt, wenn
-Schritt 2a übersprungen wurde]
+**Standards- und Modul-Abdeckung:** [ok / Fragment `<name>` fehlt → Anhängen
+vorgeschlagen / Modul `<name>` fehlt → `/choose-stack` oder Werkzeugsprache / kein
+Katalog-Fragment → Autoring + Promote vorgeschlagen; Zeile entfällt, wenn Schritt 2a
+übersprungen wurde]
 
 **Risiken / offene Fragen:**
 - …

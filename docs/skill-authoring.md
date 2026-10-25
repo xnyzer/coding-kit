@@ -106,7 +106,7 @@ formulieren, Trigger-Situationen nennen.
   dessen Fehler (eine vergessene Zeile) niemand sähe. Der Skill zeigt die Ausgabe, berät
   und führt den Dialog; was das Skript kann, baut er nie selbst nach. Vorbild:
   `scripts/template-sync.sh` hinter new-project, update-conventions, choose-stack,
-  choose-license und step-done.
+  choose-license, prep-step und step-done.
 - **Aufruf:** im Skill-Text als `${CLAUDE_PLUGIN_ROOT}/scripts/<name>.sh` nennen (der
   Validator prüft, dass es den Pfad gibt); in Shell-Befehlen den aufgelösten Pfad über
   `sh` aufrufen — die Variable gibt es dort nicht, und `sh` braucht kein Ausführungsrecht.

@@ -1,6 +1,6 @@
 ---
 name: step-done
-description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS, Checks über just, Standards-Abdeckungs-Backstop (neu eingeführte Frameworks ohne Fragment), Backstop für geänderte managed Dateien ohne Registry-Eintrag, Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Verbuchung und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), Graphiti-Update.
+description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS, Checks über just, Erkennungs-Backstop (neu eingeführte Frameworks ohne Fragment, Sprachen ohne Stack-Modul), Backstop für geänderte managed Dateien ohne Registry-Eintrag, Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Verbuchung und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), Graphiti-Update.
 disable-model-invocation: false
 ---
 
@@ -41,26 +41,38 @@ Punkt der Checkliste weitermachen — erledigte Arbeit nicht wiederholen.
 - **Write-then-Verify:** Nach jedem Edit die Datei re-lesen; nichts als erledigt melden,
   was nicht per Tool-Ausgabe belegt ist.
 
-## 1a. Standards-Abdeckung (Backstop)
+## 1a. Standards- und Modul-Abdeckung (Backstop)
 
-Nur wenn der Diff dieses Schritts **neue Dependencies in Paket-Manifesten oder neue
-Signal-Dateien** (z. B. `Dockerfile`, `nginx.conf`) einführt und das Projekt einen
-Fragment-Slot hat (`<!-- module:coding-standards -->` in der `CODING-STANDARDS.md`) —
-sonst still überspringen:
+Nur in Kit-Projekten (`.claude/template-answers` oder ein Fragment-Slot
+`<!-- module:coding-standards -->` in der `CODING-STANDARDS.md`), die ein Git-Repo sind —
+sonst still überspringen. Ein Schritt, der eine neue Sprache, ein Framework oder eine
+Signal-Datei (z. B. `Dockerfile`) einführt, soll das nicht ohne passende Vorlage tun.
 
-- Template auflösen (wie `/coding-kit:choose-stack` § 0) und das Trigger-Mapping aus
-  `modules/standards/README.md` lesen — zur Laufzeit, nichts hardcoden.
-- Die neu hinzugekommenen Dependencies/Dateien gegen die Dependency-Signale des
-  Katalogs matchen (`*characteristic:*`-Zeilen matchen diff-basiert naturgemäß
-  nicht — sie sind Planungsmaterie von prep-step 2a).
-- Treffer ohne `<!-- fragment:NAME -->`-Marker im Projekt → **Lücke melden** und das
-  Anhängen vorschlagen (Mechanik wie `/coding-kit:choose-stack`, idempotent) — inklusive
+- `sh <skript> detect --changed <template> <projekt>` ausführen — `<skript>` und
+  `<template>` sind `${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh` und
+  `${CLAUDE_PLUGIN_ROOT}/template` (wie `/coding-kit:choose-stack` § 0), in
+  Shell-Befehlen die aufgelösten Pfade. Es meldet nur Signale, die der Arbeitsbaum
+  gegenüber HEAD neu hat — vor dem Commit also die dieses Schritts — und je Treffer
+  `covered`, `declined` oder `missing` (`MANIFEST.md` § Detection). Keine Zeile oder nur
+  `covered`/`declined` → still weiter. Ohne `.claude/template-answers` prüft das Skript
+  keine Module; dann auf die Migration per `/coding-kit:update-conventions` hinweisen.
+- **Fragment `missing`** → **Lücke melden** und das Anhängen vorschlagen (Mechanik wie
+  `/coding-kit:choose-stack`, idempotent; ohne Fragment-Slot nur melden) — inklusive
   einer **Begleithandlung**, die das Fragment verlangt, dem Eintrag in `FRAGMENTS` der
   `.claude/template-answers` und den `keep`-Zeilen für managed Dateien, die die
   Begleithandlung ändert (alles `/coding-kit:choose-stack` § Begleithandlungen); das
-  gehört in denselben Schritt. Der
-  Abschluss wird dadurch **nicht blockiert**; lehnt der Nutzer ab, die offene Lücke
-  im Archiv-Eintrag (Schritt 4) vermerken, damit sie sichtbar bleibt.
+  gehört in denselben Schritt.
+- **Modul `missing`** → melden und anbieten: das Modul nach diesem Abschluss per
+  `/coding-kit:choose-stack` nachrüsten **oder** die Sprache als Werkzeugsprache
+  dauerhaft ablehnen — eine Zeile `module:NAME` in der Rules-Tabelle der
+  `.claude/convention-overrides.md` (was das Projekt stattdessen tut, mit Grund) und
+  `keep`-Zeilen für die managed Dateien, die die Toolchain von Hand ändert; beides gehört
+  in diesen Commit (sonst meldet 1b die Dateien).
+- **Dauerhaft ablehnen** geht auch für ein Fragment (Rules-Zeile `fragment:NAME`); danach
+  meldet kein Skill den Vorschlag mehr. `*characteristic:*`-Trigger erkennt kein Skript —
+  sie sind Planungsmaterie von prep-step 2a.
+- Der Abschluss wird dadurch **nicht blockiert**; lehnt der Nutzer nur für diesmal ab,
+  die offene Lücke im Archiv-Eintrag (Schritt 4) vermerken, damit sie sichtbar bleibt.
 - Enthält der Diff einen **neu angelegten projektlokalen Fragment-Block**
   (`fragment:NAME` ohne Katalog-Pendant) → den **Übernahme-Vorschlag** fürs Template
   ausgeben (kopierfertiger Prompt bzw. GitHub-Request — siehe
