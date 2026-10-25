@@ -30,8 +30,170 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
-`/coding-kit:prep-step` vorbereiten._
+### F-042 — Neue Sprachen und Frameworks erkennen und Vorlagen nachziehen
+
+**Status:** PLANNED
+
+**Problem:** Die Erkennung aus F-015, F-016 und F-017 deckt nur Standards-Fragmente ab
+und greift nur, wenn eine Aufgabe ein Framework neu einführt. Eine neue Sprache, für die
+das Template ein Stack-Modul hat, fällt durch: Ein docs-only-Projekt hat Python so von
+Hand in `mise.toml` und justfile eingebaut, ohne Modul. Bekommt das Template später ein
+Fragment oder ein Modul für etwas, das ein Projekt längst nutzt, zieht es außerdem niemand
+nach — `update-conventions` hängt nur Fragmente an, die das `MODULE.md` deklariert.
+
+**Idee:** Ein deterministischer Abgleich der Projektsignale (Paket-Manifeste,
+Signal-Dateien, Tools in `mise.toml`) mit den Auslösern des Fragment-Katalogs und mit neuen
+Modul-Signalen. Er läuft bei neuer Nutzung (prep-step, step-done) und beim Nachzug
+(`update-conventions`) und schlägt `/choose-stack` oder das Anhängen von Fragmenten vor —
+immer erst nach Bestätigung.
+
+**Entschieden (2026-10-25):**
+- Signale tragen einen Typ: `npm:`, `pypi:` und `go:` für Dependencies, `file:` für
+  Dateimuster, `tool:` für Einträge in `[tools]` der `mise.toml`. Die Auslöser-Spalte des
+  Katalogs mischt heute Paket- und Dateinamen, `nginx` ist mehrdeutig — ohne Typ gibt es
+  keinen deterministischen Abgleich.
+- Modul-Signale stehen als `Signals:`-Zeile im jeweiligen `MODULE.md`, nicht in
+  `modules/README.md`: Das Skript liest das `MODULE.md` ohnehin, das Modul bleibt in sich
+  vollständig. Stubs haben keine Zeile und werden nie vorgeschlagen; ein ausgebautes Modul
+  bringt seine Zeile mit, und `update-conventions` schlägt es Projekten vor, die die
+  Sprache schon nutzen.
+- Ein Fragment gilt als vorhanden, wenn sein `fragment:NAME`-Marker im Slot steht — nicht
+  nach `FRAGMENTS` der Antworten. Der Slot ist der tatsächliche Stand, und die Erkennung
+  läuft so auch in Projekten ohne Antworten-Datei. `MODULE` kommt aus den Antworten; ohne
+  sie entfällt nur die Modul-Prüfung.
+- Drei Aufrufarten: der ganze Baum (`update-conventions`), nur gegenüber HEAD neue Signale
+  (`--changed`, `step-done` — alte Lücken kehren dort nicht wieder) und nur übergebene
+  Signale (`prep-step`, für geplante Dependencies).
+- Dauerhafte Ablehnung als Zeile `module:NAME` bzw. `fragment:NAME` in der Rules-Tabelle
+  der `.claude/convention-overrides.md`, mit Grund und Datum: Die Tabelle gibt es in jedem
+  Projekt, und eine Ablehnung betrifft keine einzelne Datei. „Diesmal nicht" wird nicht
+  gespeichert — der nächste `update-conventions`-Lauf bietet wieder an.
+- Zweitsprachen: Der Modul-Kontrakt bleibt bei einem Modul je Projekt. Eine Sprache ohne
+  ihr Modul gilt als Werkzeugsprache — einmal gemeldet, dann Modul nachrüsten
+  (`/choose-stack`) oder mit Grund ablehnen; ihre Toolchain bleibt handgebaut und als
+  `keep` registriert. Das Sprachfragment des Moduls taugt nicht als Zweitfragment, weil es
+  an die Toolchain gebunden ist; die Aufteilung ist F-043.
+- Keine Dateiendungen als Signal (ein einzelnes Skript löst sie aus); keine Leser für
+  Cargo, Gemfile oder Maven, solange kein Template-Inhalt sie braucht.
+- In `update-conventions` läuft die Erkennung vor dem Rendern: Ein angenommenes Fragment
+  steht dann schon in `FRAGMENTS`, und der Fragment-Abgleich hängt es an.
+
+**Lösungsskizze** (Stand Planung 2026-10-25):
+- MANIFEST § Detection: Signal-Typen; Quellen (`package.json`: dependencies,
+  devDependencies, peerDependencies, optionalDependencies; `pyproject.toml`:
+  `[project]`-Dependencies, optional-dependencies, `[dependency-groups]`, Poetry;
+  `requirements*.txt`; `require` in `go.mod` ohne `// indirect`; `[tools]` der
+  `mise.toml`; Dateimuster auf den Dateinamen); Suchbereich `git ls-files` (getrackt plus
+  ungetrackt und nicht ignoriert, ohne `.claude/template-base/`); Bewertung; Ablehnung.
+  § Deviation registry: Rules-Zeilen `module:NAME`/`fragment:NAME` sind maschinenlesbar.
+- `template-sync.sh detect [--changed] PROJECT [SIGNAL…]`: eine Zeile je Treffer mit Art
+  (Modul oder Fragment), Name, Zustand (`covered`, `missing`, `declined`) und den
+  auslösenden Signalen samt Fundort. Aus Projektdateien wird nichts ausgeführt.
+- `prep-step` § 2a auch für neue Sprachen und Toolchains, mit `detect` über die geplanten
+  Signale; `step-done` § 1a über `detect --changed`; `update-conventions` mit eigenem
+  Schritt vor dem Rendern, im Modus `status` als Bericht; `choose-stack` Modus B nutzt die
+  Signale für die Empfehlung. Eigenschafts-Auslöser bleiben Planungsmaterie (`prep-step`,
+  `define-requirements`).
+- Keine neuen Dependencies (POSIX sh, awk, git).
+
+**Abhängigkeiten:** F-041 (erledigt). Vor F-043.
+
+#### F-042a — Signal-Vertrag und Daten
+
+**Was:** MANIFEST: neuer Abschnitt § Detection (Signal-Typen, Quellen, Suchbereich,
+Bewertung, Ablehnung); § Deviation registry: Rules-Zeilen `module:NAME`/`fragment:NAME`
+als maschinenlesbare Ablehnung; § Module contract: `Signals:`-Zeile im `MODULE.md`.
+Auslöser-Spalte des Katalogs auf typisierte Signale umstellen (`nginx` präzisieren,
+Compose-Varianten wie `compose.yaml` ergänzen); `Signals:`-Zeilen für `ts-node`, `python`
+und `go`, `docs-only` mit `(none)`. Kopfzone der Registry-Vorlage (`overrides-head`) um die
+Ablehnungszeilen ergänzen. Validator: nur bekannte Typen, jedes volle Modul mit Zeile,
+Stubs ohne. Version 1.2.0, CHANGELOG-Eintrag mit `### Template`.
+
+**Dateien:** `plugins/coding-kit/template/MANIFEST.md`,
+`plugins/coding-kit/template/modules/standards/README.md`,
+`plugins/coding-kit/template/modules/{ts-node,python,go,docs-only}/MODULE.md`,
+`plugins/coding-kit/template/core/.claude/convention-overrides.md`, `scripts/validate.py`,
+`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** keine.
+
+**Abnahmekriterien:**
+- [ ] Jede Dependency- und Datei-Zeile des Katalogs trägt typisierte Signale;
+      `*characteristic:*`-Zeilen bleiben unverändert.
+- [ ] Der Validator meldet einen unbekannten Signal-Typ, eine untypisierte Katalog-Zeile
+      und ein volles Modul ohne `Signals:`-Zeile (Gegenprobe an einer Scratch-Kopie).
+- [ ] `just check` grün.
+
+#### F-042b — `detect` im Skript
+
+**Was:** `template-sync.sh detect [--changed] PROJECT [SIGNAL…]` nach MANIFEST
+§ Detection: Signale aus dem Baum lesen (Leser für `package.json` mit einem Tokenizer, der
+auch minifiziertes JSON verarbeitet, für `pyproject.toml`, `requirements*.txt`, `go.mod`,
+`mise.toml` und Dateimuster); mit `--changed` nur Signale, die gegenüber HEAD neu sind; mit
+SIGNAL-Argumenten nur diese. Bewertung gegen `MODULE` der Antworten, die Marker im Slot und
+die Ablehnungen der Rules-Tabelle. Der Kopf des Skripts beschreibt Befehl und Ausgabe.
+Tests unter dash und bash.
+
+**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
+`tests/template-sync/detect.sh` (neu), `tests/template-sync/run.sh`,
+`plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** F-042a.
+
+**Abnahmekriterien:**
+- [ ] Tests grün unter dash und bash: je Leser Treffer und Nicht-Treffer (u. a.
+      minifiziertes JSON, mehrzeilige Arrays, Poetry, Kommentare, `// indirect`);
+      `--changed` meldet nur neue Signale; eine Ablehnungszeile ergibt `declined`; ohne
+      Antworten-Datei läuft nur die Fragment-Prüfung.
+- [ ] An einer Scratch-Kopie des docs-only-Projekts meldet `detect` das python-Modul über
+      `tool:python`; mit der Zeile `module:python` in Rules lautet der Zustand `declined`.
+- [ ] `just check` grün.
+
+#### F-042c — Skills und Doku
+
+**Was:** `prep-step` § 2a: auch neue Sprachen und Toolchains, `detect` mit den geplanten
+Signalen, Modul-Treffer → Verweis auf `/choose-stack`. `step-done` § 1a über
+`detect --changed`, nicht blockierend, Ablehnung als Rules-Zeile anbieten.
+`update-conventions`: Erkennungs-Schritt vor dem Rendern (Fragment anhängen samt
+`FRAGMENTS` und Begleithandlung; fehlendes Modul → `/choose-stack` nach dem Lauf;
+dauerhaft ablehnen → Rules-Zeile; diesmal nicht), Modus `status` als Bericht, die
+Revision listet die Ablehnungen („noch gültig?"). `choose-stack` Modus B: Signale für die
+Empfehlung. Template-HOW-TO, Skill-Tabelle im README und Skill-Beschreibungen;
+`/add-skill` läuft mit.
+
+**Dateien:**
+`plugins/coding-kit/skills/{prep-step,step-done,update-conventions,choose-stack}/SKILL.md`,
+`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`, `README.md`,
+`plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** F-042b.
+
+**Abnahmekriterien:**
+- [ ] Nicht-interaktiver Lauf von `update-conventions status` mit `--plugin-dir` an einer
+      Scratch-Kopie des docs-only-Projekts: Der Bericht zeigt den Modul-Treffer `python`,
+      ins Projekt wird nichts geschrieben.
+- [ ] Die Skills rufen `detect` nur mit den im Skript-Kopf beschriebenen Argumenten auf.
+- [ ] `just check` grün.
+
+#### F-042d — Test, Release, Gegenprobe
+
+**Was:** Nicht-interaktive Läufe mit `claude -p --plugin-dir plugins/coding-kit` an
+Scratch-Kopien des docs-only- und eines ts-node-Projekts: `update-conventions` mit
+Erkennung (ablehnen, anhängen, diesmal nicht), danach `status` ohne Vorschlag für
+Abgelehntes. Release 1.2.0: CHANGELOG datieren; Push nur auf ausdrückliche Bitte, vorher
+Personendaten-grep über Diff, Commit-Metadaten und Messages; Plugin aktualisieren und den
+Cache prüfen. Gegenprobe: `/update-conventions` am echten docs-only-Projekt — über den
+Python-Treffer entscheidet der Nutzer.
+
+**Abhängigkeiten:** F-042c.
+
+**Abnahmekriterien:**
+- [ ] Beide Kopien: Treffer wie erwartet, Ablehnung als Rules-Zeile, der folgende
+      `status`-Lauf ohne Vorschlag für Abgelehntes, `just check` grün (die ts-node-Kopie
+      braucht dafür laufendes Docker, sonst ist ihre `stack-check` unabhängig vom Kit rot).
+- [ ] Release 1.2.0 gepusht, CI grün, Plugin aktualisiert.
+- [ ] Gegenprobe am echten docs-only-Projekt: Python-Treffer gemeldet, die Entscheidung des
+      Nutzers umgesetzt.
 
 ---
 
@@ -39,11 +201,12 @@ _Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
 
 _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer._
 
-**Empfohlene Reihenfolge** (Stand 2026-10-24; die Einträge darunter bleiben nach Nummer
+**Empfohlene Reihenfolge** (Stand 2026-10-25; die Einträge darunter bleiben nach Nummer
 sortiert):
 
-1. **F-042** — direkt nach F-041, weil es dieselbe Mechanik nutzt (Antworten-Datei,
-   `choose-stack`, `template-sync.sh`).
+1. **F-042 → F-043** — direkt nach F-041, weil es dieselbe Mechanik nutzt (Antworten-Datei,
+   `choose-stack`, `template-sync.sh`); F-043 ist danach reiner Template-Inhalt, den
+   `detect` von selbst vorschlägt.
 2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
 3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
@@ -523,47 +686,42 @@ Kit gemeldet — die Vererbung bleibt abwärts wie bei den Konventionen (F-018).
 F-024, F-029 und F-030 — deren Änderungen an der Vorlage erreichen bestehende Rechner erst
 über den Abgleich.
 
-### F-042 — Neue Sprachen und Frameworks erkennen und Vorlagen nachziehen
+### F-043 — Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen
 
 **Status:** BACKLOG
 
-**Problem:** Die Erkennung aus F-015, F-016 und F-017 deckt nur Standards-Fragmente ab
-und greift nur, wenn eine Aufgabe ein Framework neu einführt. Eine neue Sprache, für die
-das Template ein Stack-Modul hat, fällt durch: Ein docs-only-Projekt hat Python so von
-Hand in `mise.toml` und justfile eingebaut, ohne Modul. Bekommt das Template später ein
-Fragment oder ein Modul für etwas, das ein Projekt längst nutzt, zieht es außerdem niemand
-nach — `update-conventions` hängt nur Fragmente an, die das `MODULE.md` deklariert.
+**Problem:** Das Sprachfragment eines Stack-Moduls mischt Regeln, die für jeden Code der
+Sprache gelten (Type Hints, sichere Aufrufe, Namensregeln, Lizenzen), mit Regeln, die nur
+mit der Toolchain des Moduls stimmen (bei python: uv, src-Layout, pyright, ruff, pytest).
+Ein Projekt, das eine Sprache ohne ihr Modul als Werkzeugsprache nutzt — etwa ein
+docs-only-Projekt mit Python-Skripten aus der Standardbibliothek und `unittest` —,
+bekommt deshalb gar keine Sprachregeln: Das ganze Fragment wäre dort zur Hälfte falsch.
 
-**Idee:** Ein deterministischer Abgleich der Projektsignale (Paket-Manifeste,
-Signal-Dateien, Tools in `mise.toml`) mit den Auslösern des Fragment-Katalogs und mit neuen
-Modul-Signalen. Er läuft bei neuer Nutzung (prep-step, step-done) und beim Nachzug
-(`update-conventions`) und schlägt `/choose-stack` oder das Anhängen von Fragmenten vor —
-immer erst nach Bestätigung.
+**Idee:** Je Sprache ein Katalog-Fragment mit den toolchain-unabhängigen Regeln (z. B.
+`python-lang`) und Signalen wie `tool:python` und `file:pyproject.toml`. Das Modul
+deklariert es unter `Standards fragments:`, sein eigenes Fragment behält nur die
+Toolchain-Regeln. `detect` aus F-042 schlägt das Sprachfragment dann in Projekten ohne
+Modul von selbst vor — ohne Code-Änderung.
 
 **Lösungsskizze:**
-- Modul-Signale in `modules/README.md` (z. B. `pyproject.toml` oder `python` in
-  `mise.toml` → `python`), analog zur Auslöser-Tabelle des Fragment-Katalogs.
-- Unterbefehl `detect` in `template-sync.sh`: Projektsignale gegen beide Tabellen,
-  abgeglichen mit `MODULE` und `FRAGMENTS` der Antworten-Datei; Ausgabe: fehlendes Modul,
-  fehlende Fragmente.
-- prep-step § 2a und step-done § 1a um die Modul-Erkennung ergänzen (Verweis auf
-  `/choose-stack`); `update-conventions` prüft bei jedem Lauf, ob das Template inzwischen
-  Vorlagen für bereits Genutztes hat.
-- Keine neuen Dependencies.
+- python, ts-node und go: die Regeln je Sprachfragment sortieren, den Sprachteil als
+  Katalog-Fragment mit Signalen anlegen, im `MODULE.md` deklarieren.
+- Bestandsprojekte mit Modul: `update-conventions` erneuert das Modul-Fragment und hängt
+  das Sprachfragment an; Reihenfolge im Slot prüfen.
+- Reiner Template-Inhalt plus Beispiele im MANIFEST; keine neuen Dependencies.
 
 **Noch zu analysieren:**
-- Projekte mit mehreren Sprachen: Der Modul-Kontrakt kennt nur ein Modul pro Projekt. Wie
-  wird eine Zweitsprache als Werkzeug behandelt, wie im docs-only-Projekt?
-- Welche Signale verlässlich sind (Manifeste, Dependencies, Dateiendungen) und wie
-  Fehlalarme gedämpft werden, etwa ein einmal abgelehnter Vorschlag.
+- Namensschema der Sprachfragmente; ob ein Modul-Fragment ohne Sprachteil noch für sich
+  lesbar ist.
+- Wie `update-conventions` ein geschrumpftes Fragment behandelt, das im Projekt ein
+  Inline-Override trägt (der Override schützt das ganze Fragment).
 
-**Abhängigkeiten:** F-041 (Antworten-Datei mit `MODULE` und `FRAGMENTS`, Fragment-Mechanik
-in `choose-stack`).
+**Abhängigkeiten:** F-042 (typisierte Signale im Katalog, `detect`).
 
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-043
+next-feature: F-044
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -605,5 +763,6 @@ F-038 Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature von Claude au
 F-039 Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0 (DONE)
 F-040 Globale CLAUDE.md mit dem Plugin ausliefern und abgleichen
 F-041 Projektzusätze in managed Dateien erhalten, Abweichungen früh erkennen (DONE)
-F-042 Neue Sprachen und Frameworks erkennen, Vorlagen nachziehen
+F-042 Neue Sprachen und Frameworks erkennen, Vorlagen nachziehen (PLANNED)
+F-043 Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen
 -->
