@@ -10,3 +10,6 @@ beyond the documented merge points).
 
 No `{{CODEQL_LANGUAGES}}`: `/new-project` removes the CodeQL workflow for docs-only
 projects regardless of visibility.
+
+**Signals:** (none) — nothing in a project points to docs-only; it is what a project
+has without a stack (MANIFEST § Detection).

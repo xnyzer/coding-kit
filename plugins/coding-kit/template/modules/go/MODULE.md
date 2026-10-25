@@ -21,6 +21,10 @@ locally and as an extra CI job. Go version = current stable via mise + `go.mod` 
 **Standards fragments:** (none) — this module contributes only its own `fragment:go` language
 fragment; it pulls no catalog fragments from `modules/standards/`.
 
+**Signals:** `file:go.mod`, `tool:go`
+— a project with one of them but another module gets this one proposed (MANIFEST
+§ Detection).
+
 ## File policies (files/)
 
 | File | Policy |

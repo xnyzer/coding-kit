@@ -17,6 +17,11 @@ updates treat it — the Kind column:
 to the Rules table. Inside a seed zone or a standards fragment, `<!-- override: reason -->`
 protects just that part.
 
+A Rules row with the Rule `module:NAME` or `fragment:NAME` declines a detection proposal
+for good: the skills stop offering that stack module or standards fragment. The Deviation
+column says what the project does instead — e.g. Python as a tool language with a
+hand-built toolchain instead of the python module.
+
 A deviation needs a reason — "we never got around to it" is drift, not a deviation.
 <!-- /section:overrides-head -->
 

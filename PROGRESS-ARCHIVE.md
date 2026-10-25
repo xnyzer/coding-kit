@@ -16,6 +16,76 @@ zusammen:
 
 ---
 
+## F-042a — Signal-Vertrag und Daten (2026-10-25)
+
+Teil von F-042 (Neue Sprachen und Frameworks erkennen und Vorlagen nachziehen; F-042b–d
+folgen).
+
+**Problem:** Die Auslöser des Fragment-Katalogs mischten Paket- und Dateinamen ohne Typ
+(`nginx` konnte Paket, Ordner oder Image meinen), und die Module nannten gar keine
+Signale. Ein Skript kann so nicht deterministisch abgleichen, und eine Sprache ohne ihr
+Modul fiel nie auf.
+
+**Was entstanden ist (1.2.0, unveröffentlicht):**
+
+- **MANIFEST § Detection (neu):** Signale als `type:value` — `npm:`, `pypi:` (normalisiert
+  verglichen), `go:` (auch mit Hauptversions-Suffix `/vN`), `tool:` für `[tools]` der
+  `mise.toml`, `file:` für Dateimuster (mit `/` gegen den Pfad ab Root). Quelle ist die
+  Dateiliste aus git (getrackt plus ungetrackt und nicht ignoriert, ohne
+  `.claude/template-base/`); Manifeste zählen in jeder Tiefe. Zustände `covered` (Modul
+  = `MODULE` der Antworten, Fragment-Marker im Slot), `declined` (Rules-Zeile) und
+  `missing`; ohne Antworten-Datei entfällt nur die Modul-Prüfung. Eine Sprache ohne ihr
+  Modul ist Werkzeugsprache: Modul mit Grund ablehnen, Toolchain als `keep`.
+- **MANIFEST § Deviation registry:** Rules-Zeilen `module:NAME`/`fragment:NAME` sind
+  maschinenlesbar und lehnen einen Erkennungs-Vorschlag dauerhaft ab; die Kopfzone der
+  Registry-Vorlage (`overrides-head`) erklärt das. § Module contract und § Standards
+  fragments verweisen auf § Detection.
+- **Fragment-Katalog:** alle Auslöser typisiert, `audit-logging` (Eigenschaft)
+  unverändert. `docker`: `file:Dockerfile*`, `file:*.Dockerfile` und Compose-Varianten
+  inklusive `compose.yaml`; `nginx`: `file:nginx*.conf` und `file:*nginx/*` statt des
+  mehrdeutigen `nginx`; `api-design`: `npm:@nestjs/core` statt `nestjs` (kein npm-Paket,
+  hätte nie getroffen).
+- **`api-design` für Python und Go** (Fund beim Bauen, mit Freigabe mitgenommen): Das
+  Fragment ist sprachunabhängig, wurde aber nur von npm-Frameworks ausgelöst. Neu sind
+  `pypi:fastapi`, `pypi:flask`, `pypi:django`, `pypi:litestar` und die Go-Frameworks Gin,
+  Echo, chi und Fiber — ohne Versions-Suffix, daher die `/vN`-Regel für `go:`.
+- **Module:** `Signals:`-Zeile im `MODULE.md` — `ts-node`: `file:package.json`,
+  `file:tsconfig.json`, `tool:node`; `python`: `file:pyproject.toml`,
+  `file:requirements*.txt`, `tool:python`; `go`: `file:go.mod`, `tool:go`; `docs-only`:
+  `(none)`. Stubs bleiben ohne. `modules/README.md` erklärt die Zeile (nicht im Plan
+  genannt, gehört zum selben Vertrag).
+- **Validator:** liest die Signal-Typen aus der Tabelle in § Detection; prüft die
+  Katalog-Zeilen (nur typisierte Signale in Backticks oder genau ein
+  Eigenschafts-Auslöser) und die Module (Status `full`/`stub` aus `modules/README.md`,
+  volle Module mit Zeile, Stubs ohne, Signale in Backticks).
+- **Version:** `plugin.json` 1.2.0, CHANGELOG-Eintrag mit `### Template`.
+
+**Verifikation:** `just check` grün (Validator, 296 Skript-Tests unter dash und bash).
+Fehlerinjektion an einer Scratch-Kopie: unbekannter Typ (`nmp:next`), untypisierte
+nginx-Zeile, go ohne `Signals:`-Zeile, java-Stub mit Zeile und ein Signal ohne Backticks
+— alle fünf gemeldet (sechs Funde, die nginx-Zeile hatte zwei Fehler).
+
+**Notable decisions:**
+- Die Signal-Typen stehen nur im MANIFEST; der Validator liest sie von dort, damit
+  Vertrag und Prüfung nicht auseinanderlaufen. `detect` (F-042b) muss genau diese Typen
+  kennen.
+- `go:` trifft jede Hauptversion des Modulpfads, damit Katalog-Signale ein Major-Release
+  überstehen.
+- Der Modul-Status kommt aus `modules/README.md` (`full`/`stub`), keine zweite
+  Markierung im `MODULE.md`.
+- prep-step § 2a, step-done § 1a und die Template-HOW-TO sprechen noch von
+  Dependency-Signalen; inhaltlich stimmt das weiter, umgestellt wird in F-042c.
+
+**Geänderte Dateien:** `plugins/coding-kit/template/MANIFEST.md`,
+`plugins/coding-kit/template/modules/standards/README.md`,
+`plugins/coding-kit/template/modules/README.md`,
+`plugins/coding-kit/template/modules/{ts-node,python,go,docs-only}/MODULE.md`,
+`plugins/coding-kit/template/core/.claude/convention-overrides.md`,
+`scripts/validate.py`, `plugins/coding-kit/.claude-plugin/plugin.json`,
+`plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
+
+---
+
 ## F-041e — Test, Release, Gegenprobe (2026-10-24)
 
 Schließt F-041 ab (Projektzusätze in managed Dateien erhalten und Abweichungen früh

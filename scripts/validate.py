@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Repo validation: file syntax, plugin/marketplace/skill contracts, privacy lint, and
 the bundled template (placeholder registry, paired fragment/section markers, the
-standards-fragment catalog, and the contract between skills and MANIFEST).
+standards-fragment catalog, detection signals, and the contract between skills and
+MANIFEST).
 
 Run via `just check` (uv provides PyYAML). Exits non-zero on any finding.
 """
@@ -90,6 +91,15 @@ MODULE_PART_ROW_RE = re.compile(r"^\|\s*`([^`]+)`\s*\|\s*`[^`]+`\s*\|", re.MULTI
 FILE_POLICY_ROW_RE = re.compile(r"^\|([^|]*)\|([^|]*)\|", re.MULTILINE)
 BACKTICKED_RE = re.compile(r"`([^`]+)`")
 FILE_POLICY_WORDS = {"managed", "seed"}
+# Detection signals (MANIFEST § Detection): the signal types come from its table; full
+# modules declare theirs on a `Signals:` line, catalog fragments in the trigger column.
+SIGNAL_TYPE_ROW_RE = re.compile(r"^\|\s*`([a-z]+):[A-Z]+`\s*\|", re.MULTILINE)
+SIGNAL_RE = re.compile(r"^([a-z]+):(\S+)$")
+SIGNALS_LINE_RE = re.compile(r"^\**Signals:\**(.*)$", re.MULTILINE)
+CHARACTERISTIC_MARK = "*characteristic:*"
+MODULES_README = TEMPLATE_ROOT / "modules" / "README.md"
+MODULE_STATUS_ROW_RE = re.compile(r"^\|\s*`([a-z0-9][a-z0-9-]*)`\s*\|\s*([a-z]*)", re.MULTILINE)
+MODULE_STATUSES = {"full", "stub"}
 # Deterministic helpers shipped with the plugin (POSIX sh, called with `sh <path>`).
 PLUGIN_SCRIPTS_DIR = PLUGIN_ROOT / "scripts"
 TEMPLATE_SYNC = PLUGIN_SCRIPTS_DIR / "template-sync.sh"
@@ -497,6 +507,85 @@ def check_module_file_policies(findings: list[str]) -> None:
             findings.append(f"{rel}: § File policies lists '{name}', which is not under files/")
 
 
+def check_signals(where: str, signals: list[str], types: set[str], findings: list[str]) -> None:
+    """Each signal is `type:value` with a type from MANIFEST § Detection."""
+    for signal in signals:
+        match = SIGNAL_RE.match(signal)
+        if not match:
+            findings.append(f"{where}: '{signal}' is not a typed signal (type:value)")
+        elif match.group(1) not in types:
+            findings.append(f"{where}: unknown signal type '{match.group(1)}' in '{signal}'")
+
+
+def check_catalog_signals(types: set[str], findings: list[str]) -> None:
+    """Every catalog row triggers by typed signals in backticks or by one characteristic —
+    `detect` reads the signals, so an untyped or unquoted trigger would never match."""
+    readme = CATALOG_DIR / "README.md"
+    if not readme.is_file():
+        return  # reported by check_catalog_table
+    rel = display_path(readme)
+    section = CATALOG_SECTION_RE.search(readme.read_text(encoding="utf-8"))
+    for line in (section.group(1) if section else "").splitlines():
+        if not CATALOG_ROW_RE.match(line):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        name, trigger = cells[0].strip("`"), cells[-1]
+        where = f"{rel}: catalog row '{name}'"
+        if CHARACTERISTIC_MARK in trigger:
+            if BACKTICKED_RE.search(trigger):
+                findings.append(f"{where}: mixes signals with a characteristic trigger")
+            continue
+        signals = BACKTICKED_RE.findall(trigger)
+        if not signals:
+            findings.append(f"{where}: no signal and no characteristic trigger")
+        if BACKTICKED_RE.sub("", trigger).replace(",", "").strip():
+            findings.append(f"{where}: trigger text outside backticks (signals only)")
+        check_signals(where, signals, types, findings)
+
+
+def check_module_signals(types: set[str], findings: list[str]) -> None:
+    """A full module (status in modules/README.md) declares its signals on one `Signals:`
+    line, `(none)` allowed; a stub carries none, so detection never proposes it."""
+    rel_readme = display_path(MODULES_README)
+    if not MODULES_README.is_file():
+        findings.append(f"{rel_readme}: module overview is missing")
+        return
+    statuses = dict(MODULE_STATUS_ROW_RE.findall(MODULES_README.read_text(encoding="utf-8")))
+    for module_doc in sorted(TEMPLATE_ROOT.glob("modules/*/MODULE.md")):
+        name = module_doc.parent.name
+        rel = display_path(module_doc)
+        status = statuses.get(name)
+        if status not in MODULE_STATUSES:
+            findings.append(f"{rel_readme}: module '{name}' needs a row with status full or stub")
+            continue
+        match = SIGNALS_LINE_RE.search(module_doc.read_text(encoding="utf-8"))
+        if status == "stub":
+            if match:
+                findings.append(f"{rel}: stub module carries a Signals: line")
+            continue
+        head = re.split(r"\s[—–]\s", match.group(1).strip())[0].strip() if match else ""
+        if not head:
+            findings.append(f"{rel}: full module has no Signals: line (MANIFEST § Detection)")
+            continue
+        if head.lower() in ("(none)", "none"):
+            continue
+        items = [item.strip() for item in head.split(",")]
+        for item in items:
+            if not (len(item) > 2 and item.startswith("`") and item.endswith("`")):
+                findings.append(f"{rel}: signal '{item}' is not in backticks")
+        check_signals(f"{rel}: Signals", [item.strip("`") for item in items], types, findings)
+
+
+def check_detection(text: str, findings: list[str]) -> None:
+    """MANIFEST § Detection defines the signal types; catalog and modules use only those."""
+    types = set(SIGNAL_TYPE_ROW_RE.findall(manifest_section(text, "Detection") or ""))
+    if not types:
+        findings.append(f"{display_path(MANIFEST_PATH)}: § Detection defines no signal types")
+        return
+    check_catalog_signals(types, findings)
+    check_module_signals(types, findings)
+
+
 def check_snapshot_contract(text: str, findings: list[str]) -> None:
     """MANIFEST declares the base snapshot and the deviation registry; the registry template
     carries both tables with the headers the script and the skills read; the template's
@@ -568,6 +657,7 @@ def check_template_contract(findings: list[str]) -> None:
     check_module_parts_known(text, findings)
     check_module_file_policies(findings)
     check_snapshot_contract(text, findings)
+    check_detection(text, findings)
 
 
 def parse_frontmatter(path: Path, findings: list[str]) -> dict | None:

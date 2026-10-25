@@ -25,6 +25,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-041c | Vertrag und update-conventions → **`manifest-format: 2` mit Basis-Snapshot und Abweichungs-Registry (Files/Rules, Arten `skip`/`keep`/`adapt`); Template-Inhalt nachgezogen (Registry-Vorlage, `.gitattributes`, `.claude/README.md`, HOW-TO, `nextjs`/`astro`); `update-conventions` mergt dreiwegig, ohne Argument nur das aktuelle Projekt, Modi `status`/`revise`, Migration mit Basis aus der Template-Historie; Skript mit `--base`.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 | F-041d | Übrige Skills → **`new-project` instanziiert über den Renderer (Antworten und Snapshot im Erst-Commit); `choose-stack` wechselt Module über Render und Merge; `step-done` meldet geänderte managed Dateien ohne Registry-Zeile (Schritt 1b); Fragment-Einbau mit `FRAGMENTS` und `keep`-Zeilen; `choose-license` und `go-public` ziehen die Antworten nach; Baustein „Hilfsskripte".** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
 | F-041e | Test, Release, Gegenprobe → **Migrationstests an Kopien eines docs-only- und eines ts-node-Projekts (Zusätze erhalten, Snapshot gesetzt, Prüfungen grün, `biome ci` mit Snapshot); Mischbasis und `.claude/`-Freigaben in `update-conventions`; Release 1.1.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe am echten docs-only-Projekt ohne unregistrierte Abweichung. F-041 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-24 |
+| F-042a | Signal-Vertrag und Daten → **MANIFEST § Detection (Signal-Typen `npm:`, `pypi:`, `go:`, `tool:`, `file:`, Dateiliste aus git, Zustände `covered`/`declined`/`missing`, Werkzeugsprache); Ablehnung als Rules-Zeile `module:NAME`/`fragment:NAME`; Katalog typisiert (`docker` mit Compose-Varianten, `nginx` präzisiert, `api-design` auch für Python und Go); `Signals:`-Zeilen in den vollen Modulen; Validator prüft Typen, Katalog und Module; Version 1.2.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 
 ---
 
@@ -98,32 +99,6 @@ immer erst nach Bestätigung.
 
 **Abhängigkeiten:** F-041 (erledigt). Vor F-043.
 
-#### F-042a — Signal-Vertrag und Daten
-
-**Was:** MANIFEST: neuer Abschnitt § Detection (Signal-Typen, Quellen, Suchbereich,
-Bewertung, Ablehnung); § Deviation registry: Rules-Zeilen `module:NAME`/`fragment:NAME`
-als maschinenlesbare Ablehnung; § Module contract: `Signals:`-Zeile im `MODULE.md`.
-Auslöser-Spalte des Katalogs auf typisierte Signale umstellen (`nginx` präzisieren,
-Compose-Varianten wie `compose.yaml` ergänzen); `Signals:`-Zeilen für `ts-node`, `python`
-und `go`, `docs-only` mit `(none)`. Kopfzone der Registry-Vorlage (`overrides-head`) um die
-Ablehnungszeilen ergänzen. Validator: nur bekannte Typen, jedes volle Modul mit Zeile,
-Stubs ohne. Version 1.2.0, CHANGELOG-Eintrag mit `### Template`.
-
-**Dateien:** `plugins/coding-kit/template/MANIFEST.md`,
-`plugins/coding-kit/template/modules/standards/README.md`,
-`plugins/coding-kit/template/modules/{ts-node,python,go,docs-only}/MODULE.md`,
-`plugins/coding-kit/template/core/.claude/convention-overrides.md`, `scripts/validate.py`,
-`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** keine.
-
-**Abnahmekriterien:**
-- [ ] Jede Dependency- und Datei-Zeile des Katalogs trägt typisierte Signale;
-      `*characteristic:*`-Zeilen bleiben unverändert.
-- [ ] Der Validator meldet einen unbekannten Signal-Typ, eine untypisierte Katalog-Zeile
-      und ein volles Modul ohne `Signals:`-Zeile (Gegenprobe an einer Scratch-Kopie).
-- [ ] `just check` grün.
-
 #### F-042b — `detect` im Skript
 
 **Was:** `template-sync.sh detect [--changed] PROJECT [SIGNAL…]` nach MANIFEST
@@ -142,7 +117,8 @@ Tests unter dash und bash.
 
 **Abnahmekriterien:**
 - [ ] Tests grün unter dash und bash: je Leser Treffer und Nicht-Treffer (u. a.
-      minifiziertes JSON, mehrzeilige Arrays, Poetry, Kommentare, `// indirect`);
+      minifiziertes JSON, mehrzeilige Arrays, Poetry, Kommentare, `// indirect`, ein
+      `go:`-Pfad mit Hauptversions-Suffix);
       `--changed` meldet nur neue Signale; eine Ablehnungszeile ergibt `declined`; ohne
       Antworten-Datei läuft nur die Fragment-Prüfung.
 - [ ] An einer Scratch-Kopie des docs-only-Projekts meldet `detect` das python-Modul über

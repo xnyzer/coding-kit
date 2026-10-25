@@ -14,6 +14,10 @@ modules are handled by `/update-conventions`, not by `/choose-stack`.
 | `swift-ios` | stub — documented, not implemented | — |
 | `java` | stub — documented, not implemented | — |
 
+A full module names the signals that point to it on a `Signals:` line in its `MODULE.md`,
+so detection can propose it to projects that use the language without it (MANIFEST
+§ Detection); stubs carry no line and are never proposed.
+
 `standards/` is not a stack module but the cross-cutting catalog of reusable
 CODING-STANDARDS fragments a module declares or a project pulls — see
 [`standards/README.md`](standards/README.md).

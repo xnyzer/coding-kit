@@ -115,7 +115,10 @@ deviates, in two tables after the zone:
 - **`## Files`** — machine-read: `| Path | Kind | Reason | Since |`, one row per path or
   glob (several comma-separated paths allowed; `*` also matches `/`, as in `.github/**`).
 - **`## Rules`** — `| Rule | Deviation | Reason | Since |`, for deviations that are not
-  about one file (e.g. a different rule for living docs); read by people only.
+  about one file (e.g. a different rule for living docs); read by people — except a row
+  whose Rule cell is `module:NAME` or `fragment:NAME` (backticks allowed): it declines
+  that detection proposal for good (§ Detection), and its Deviation cell says what the
+  project does instead.
 
 The kind decides how updates treat a file:
 
@@ -188,7 +191,7 @@ Each `modules/<name>/` may provide (all optional except `MODULE.md`):
 
 | Part | Target | Mechanics | Policy |
 |------|--------|-----------|--------|
-| `MODULE.md` | — (not copied) | documents the module, its tools, per-file policies | — |
+| `MODULE.md` | — (not copied) | documents the module, its tools, per-file policies and the signals that point to it (§ Detection) | — |
 | `justfile` | `justfile` | **replaces** the core justfile; must implement the standard recipe set | managed |
 | `mise.part.toml` | `mise.toml` | `[tools]` entries merged into the core file | managed |
 | `gitignore.part` | `.gitignore` | appended below the `# module:gitignore` marker | managed |
@@ -224,10 +227,9 @@ can be pulled by any module that needs it. Each fragment is a self-contained fil
 `<!-- /fragment:<name> -->` and **appended** inside the `<!-- module:coding-standards -->` slot
 of a project's `CODING-STANDARDS.md`.
 
-- **Catalog** — `modules/standards/README.md` lists every fragment and the trigger→fragment
-  mapping (dependency/framework signals and project-characteristic triggers). `/prep-step`
-  matches both trigger types to detect a newly introduced framework or characteristic whose
-  fragment is not yet present.
+- **Catalog** — `modules/standards/README.md` lists every fragment and its triggers: typed
+  signals (§ Detection) or a project characteristic. Signals are found by script;
+  characteristics no file shows, so `/prep-step` and `/define-requirements` ask for them.
 - **Declaration** — a stack module contributes its own language fragment (its
   `CODING-STANDARDS.part.md`, wrapped as `fragment:<module>`) implicitly, and declares any
   additional catalog fragments — in order — via a `Standards fragments:` line in its `MODULE.md`
@@ -239,6 +241,54 @@ of a project's `CODING-STANDARDS.md`.
   manually triggerable adoption proposal for the template (see § Sync direction).
 - **Assembly** — appending the fragments at instantiation / `/choose-stack` is coding-kit logic;
   this manifest defines only the contract and the data.
+
+## Detection
+
+`scripts/template-sync.sh detect` in the plugin compares what a project uses with what the
+template has conventions for — the stack modules and the catalog fragments. Skills only
+propose what it finds; nothing is applied without confirmation. `/prep-step` checks the
+signals a task plans, `/step-done` the signals a step adds, `/update-conventions` the
+whole project.
+
+A **signal** is written `type:value`:
+
+| Signal | Matches | Read from |
+|--------|---------|-----------|
+| `npm:NAME` | dependency `NAME` | `package.json`: `dependencies`, `devDependencies`, `peerDependencies`, `optionalDependencies` |
+| `pypi:NAME` | dependency `NAME`, compared normalized (lowercase, each run of `-`, `_`, `.` as one `-`) | `pyproject.toml`: `dependencies` of `[project]`, `[project.optional-dependencies]`, `[dependency-groups]`, `[tool.poetry.dependencies]`, `[tool.poetry.group.*.dependencies]`; `requirements*.txt` |
+| `go:PATH` | required module `PATH`, also with a major-version suffix (`PATH/v2` …) | `go.mod`: `require`, except lines marked `// indirect` |
+| `tool:NAME` | tool `NAME` | `[tools]` of `mise.toml` and `.mise.toml` |
+| `file:GLOB` | a file whose name matches `GLOB` (sh pattern); a `GLOB` with `/` matches the path from the project root, and its `*` also matches `/` | the file list |
+
+The **file list** is what git lists for the project — tracked files plus untracked ones
+that are not ignored — without `.claude/template-base/`. Manifests count wherever they
+appear in it, by file name. Detection only reads; nothing in a project file is executed.
+
+**Declared in:**
+
+- **Modules** — the `Signals:` line of `MODULE.md`: the signals comma-separated in
+  backticks, all on that one line; `(none)` for a module nothing points to (`docs-only`).
+  Stub modules carry no line and are never proposed — a module gets its line when it is
+  built out.
+- **Fragments** — the trigger column of the catalog (`modules/standards/README.md`), as
+  signals in backticks. A *characteristic:* trigger has none.
+
+**Evaluation.** A module or fragment with at least one matching signal is a hit, in one of
+three states:
+
+| State | Module | Fragment |
+|-------|--------|----------|
+| `covered` | it is `MODULE` in the answers (§ Answers) | its `fragment:NAME` marker is in the standards slot of `CODING-STANDARDS.md` |
+| `declined` | the Rules table of the registry has the row `module:NAME` | the Rules table has the row `fragment:NAME` |
+| `missing` | otherwise | otherwise |
+
+Without an answers file only the module check is skipped. A missing module is proposed
+via `/choose-stack`; a missing fragment is appended like any other (§ Standards fragments)
+and goes into `FRAGMENTS`. A permanent "no" is a Rules row (§ Deviation registry); "not
+this time" is not recorded. A project keeps one stack module: a language whose module the
+project does not have — next to another module, or in a `docs-only` project — is a tool
+language. Its module is declined with a reason, and the hand-built toolchain is registered
+as `keep`.
 
 ## Seed sections
 

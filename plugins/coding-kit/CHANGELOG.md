@@ -13,6 +13,34 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 1.2.0 — unveröffentlicht
+
+Neue Sprachen und Frameworks sollen auffallen, auch wenn das Template seine Vorlagen erst
+später bekommt (F-042, in Arbeit).
+
+- **Kit:** Der Validator prüft die Signale: nur Typen aus MANIFEST § Detection, im
+  Katalog nur typisierte Signale in Backticks oder ein Eigenschafts-Auslöser, jedes volle
+  Modul mit `Signals:`-Zeile, Stubs ohne.
+
+### Template
+
+- MANIFEST: neuer Abschnitt `## Detection`. Signale haben einen Typ — `npm:`, `pypi:`,
+  `go:` für Dependencies, `tool:` für `[tools]` der `mise.toml`, `file:` für Dateimuster —
+  und werden aus den Dateien gelesen, die git für das Projekt listet. Ein Modul oder
+  Fragment mit Treffer ist `covered`, `declined` oder `missing`; eine Sprache ohne ihr
+  Modul gilt als Werkzeugsprache.
+- Fragment-Katalog: Die Auslöser-Spalte nennt typisierte Signale (`npm:react`,
+  `file:Dockerfile*` …). `docker` erkennt auch `compose.yaml` und Varianten wie
+  `Dockerfile.prod`, `nginx` Konfigurationsdateien und `nginx/`-Ordner statt des
+  mehrdeutigen `nginx`. `api-design` erkennt NestJS über `@nestjs/core` und gilt jetzt
+  auch für Python (FastAPI, Flask, Django, Litestar) und Go (Gin, Echo, chi, Fiber);
+  `go:`-Signale treffen jede Hauptversion des Modulpfads.
+- Module: `ts-node`, `python` und `go` nennen ihre Signale auf einer `Signals:`-Zeile im
+  `MODULE.md`, `docs-only` hat `(none)`; Stubs bleiben ohne.
+- Abweichungs-Registry: Eine Rules-Zeile `module:NAME` oder `fragment:NAME` lehnt einen
+  Erkennungs-Vorschlag dauerhaft ab — so steht es im MANIFEST und im Kopf der
+  `.claude/convention-overrides.md` (Zone `overrides-head`).
+
 ## 1.1.0 — 2026-10-24
 
 Projektzusätze in managed Dateien überstehen Template-Updates, und Abweichungen fallen

@@ -20,6 +20,10 @@ enforces the floor. Build backend: `uv_build`.
 **Standards fragments:** (none) — this module contributes only its own `fragment:python`
 language fragment; it pulls no catalog fragments from `modules/standards/`.
 
+**Signals:** `file:pyproject.toml`, `file:requirements*.txt`, `tool:python`
+— a project with one of them but another module gets this one proposed (MANIFEST
+§ Detection).
+
 ## File policies (files/)
 
 | File | Policy |

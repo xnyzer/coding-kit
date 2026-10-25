@@ -21,6 +21,10 @@ bundler-free Node ESM), **Biome** as formatter + linter (warnings fail the gate)
 **Standards fragments:** (none) — this module contributes only its own `fragment:ts-node`
 language fragment; it pulls no catalog fragments from `modules/standards/`.
 
+**Signals:** `file:package.json`, `file:tsconfig.json`, `tool:node`
+— a project with one of them but another module gets this one proposed (MANIFEST
+§ Detection).
+
 ## File policies (files/)
 
 | File | Policy |

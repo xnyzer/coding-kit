@@ -11,23 +11,24 @@ Each fragment is a self-contained file `<name>.md` whose body is wrapped in
 
 ## Catalog
 
-Every fragment plus the trigger→fragment mapping. Most triggers are dependency/framework
-signals; a fragment without any dependency signal declares a **project characteristic**
-instead (marked *characteristic:*). `/prep-step` matches **both** trigger types when a task
-introduces new frameworks or dependencies. Characteristic triggers are additionally asked
-in the requirements interview (`/define-requirements`) and can be retrofitted via
-`/choose-stack` (confirmed before appending). Evaluating triggers is coding-kit logic;
-this catalog defines only the mapping.
+Every fragment plus the trigger→fragment mapping. Most triggers are **signals**, typed as
+`npm:`, `pypi:`, `go:`, `tool:` or `file:` ([MANIFEST § Detection](../../MANIFEST.md)), which
+the plugin's `template-sync.sh detect` finds in a project. A fragment without any signal
+declares a **project characteristic** instead (marked *characteristic:*), which no file
+shows: `/prep-step` asks it for a planned task, the requirements interview
+(`/define-requirements`) asks it up front, and `/choose-stack` can retrofit it (confirmed
+before appending). Evaluating triggers is coding-kit logic; this catalog defines only the
+mapping.
 
-| Fragment | Covers | Trigger — dependency signal / project characteristic |
+| Fragment | Covers | Trigger — signals / project characteristic |
 |----------|--------|------------------------------------------------------|
-| `react` | React components, styling/theming, i18n, a11y, performance | `react`, `react-dom` |
-| `nextjs` | App Router boundaries, routing & caching, assets, build, configuration | `next` |
-| `astro` | Static-first sites: islands, strict CSP, build & quality gate, images | `astro` |
-| `prisma` | Prisma data access, schema & migrations | `prisma`, `@prisma/client` |
-| `api-design` | REST API design, request/response validation, web security boundary | `express`, `fastify`, `koa`, `hono`, `nestjs` |
-| `docker` | Container images, compose, entrypoint & startup | `Dockerfile`, `docker-compose.yml` |
-| `nginx` | Reverse proxy: headers, caching, SPA serving, WebSocket | `nginx.conf`, `nginx` |
+| `react` | React components, styling/theming, i18n, a11y, performance | `npm:react`, `npm:react-dom` |
+| `nextjs` | App Router boundaries, routing & caching, assets, build, configuration | `npm:next` |
+| `astro` | Static-first sites: islands, strict CSP, build & quality gate, images | `npm:astro` |
+| `prisma` | Prisma data access, schema & migrations | `npm:prisma`, `npm:@prisma/client` |
+| `api-design` | REST API design, request/response validation, web security boundary | `npm:express`, `npm:fastify`, `npm:koa`, `npm:hono`, `npm:@nestjs/core`, `pypi:fastapi`, `pypi:flask`, `pypi:django`, `pypi:litestar`, `go:github.com/gin-gonic/gin`, `go:github.com/labstack/echo`, `go:github.com/go-chi/chi`, `go:github.com/gofiber/fiber` |
+| `docker` | Container images, compose, entrypoint & startup | `file:Dockerfile*`, `file:*.Dockerfile`, `file:docker-compose*.y*ml`, `file:compose.y*ml`, `file:compose.*.y*ml` |
+| `nginx` | Reverse proxy: headers, caching, SPA serving, WebSocket | `file:nginx*.conf`, `file:*nginx/*` |
 | `audit-logging` | Accountability trail for mutating/admin actions: scope, entry contents, properties, retention | *characteristic:* service with user/admin mutations |
 
 ## How a module pulls fragments
