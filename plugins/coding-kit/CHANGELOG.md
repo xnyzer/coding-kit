@@ -13,10 +13,9 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 1.4.0 — unveröffentlicht
+## 1.4.0 — 2026-10-25
 
-Tools ohne Vorlage werden erkannt und können dem Template vorgeschlagen werden (F-044, in
-Arbeit).
+Tools ohne Vorlage werden erkannt und können dem Template vorgeschlagen werden (F-044).
 
 - **`scripts/template-sync.sh detect`:** meldet nach Modulen und Fragmenten jedes Tool aus
   `[tools]` der `mise.toml`, für das das Template keine Konvention hat — Zeile
