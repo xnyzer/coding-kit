@@ -177,6 +177,10 @@ Download-URL für die Plattform des Runners. `mise install` schreibt diese Eintr
   Fehlt die Einstellung (Projekt vor dem Template-Stand mit `lockfile_platforms`), kein
   Flag als Ersatz setzen, sondern auf `/update-conventions` verweisen — die
   `mise.toml` ist managed und bringt die Einstellung mit.
+- **Vertrauen:** Bricht mise ab, weil die Konfiguration des Projekts nicht vertraut ist,
+  den Nutzer fragen, ob er `mise trust` ausführen will — nie ungefragt vertrauen: Danach
+  führt mise Teile der Projektkonfiguration aus (Umgebung, Hooks). Einzige Ausnahme:
+  `/new-project` vertraut der `mise.toml`, die es gerade aus der Vorlage gerendert hat.
 - **Prüfen:** `sh <skript> lock-check <projekt>` (`<skript>` =
   `${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh`, in Shell-Befehlen der aufgelöste
   Pfad) gleicht jeden Eintrag der `mise.lock` mit `lockfile_platforms` und der Plattform

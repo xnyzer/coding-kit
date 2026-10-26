@@ -49,6 +49,10 @@ Zonen, Fragmente und Lock-Datei prüft das Skript statt des Modells (F-045, in A
   Bestätigung entfernt); „ein Fragment anhängen" heißt in allen Skills: Name in
   `FRAGMENTS`, `render --seeds`, `zones` mit dem Namen. Kein Skill vergleicht Zonen,
   Fragmente oder die Lock-Datei mehr selbst.
+- **Fund aus dem Testlauf:** `choose-stack` § Lock-Datei fragt, bevor ein Skill
+  `mise trust` für ein Projekt ausführt, statt selbst zu vertrauen — mise führt danach
+  Teile der Projektkonfiguration aus. `/new-project` vertraut weiter der `mise.toml`, die
+  es gerade aus der Vorlage gerendert hat.
 - **Kit:** Der Validator verlangt, dass Zonen- und Fragment-Marker im Template allein auf
   ihrer Zeile stehen; Skript-Tests für alle Zustände, das Einsetzen, die Auswahl per Name
   und frische Renders (docs-only mit und ohne Graphiti, ts-node); `lock-check`-Tests mit
