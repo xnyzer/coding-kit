@@ -160,6 +160,63 @@ das Graphiti-Lernprofil bleibt.
 
 ---
 
+### F-048 — Frontmatter-Pflichtfelder für Skills und Übersicht der erlaubten Felder
+
+**Status:** PLANNED
+
+**Problem:** Ob ein Skill nur vom Nutzer oder auch von Claude gestartet wird und ob er
+einen Slash-Command hat, steht nicht überall ausdrücklich im Frontmatter: 18 von 19
+Plugin-Skills setzen `disable-model-invocation`, `user-invocable` setzt nur
+`propose-to-template`. Weder `docs/skill-authoring.md` noch `/add-skill` noch der
+Validator verlangen die Felder — `explain-level` (F-040b) entstand zunächst ohne die
+Zeile. Welche weiteren Felder Claude Code für Skills kennt, ist im Kit nirgends geprüft
+festgehalten.
+
+**Idee:** `disable-model-invocation` und `user-invocable` werden in jedem Skill Pflicht
+und stehen ausdrücklich da, auch wo sie dem Standard entsprechen; der Validator prüft das.
+Eine Übersicht aller Frontmatter-Felder, die Claude Code für Skills erlaubt, wird mit dem
+Nutzer besprochen; was das Kit nutzen will, kommt in die Authoring-Doku.
+
+**Entschieden (2026-10-26):**
+- Pflicht in jedem Skill (Plugin und `.claude/skills/`): `name`, `description`,
+  `disable-model-invocation` und `user-invocable` — die beiden Flags ausdrücklich und
+  wörtlich `true` oder `false`; `user-invocable: false` nie zusammen mit
+  `disable-model-invocation: true`.
+- Der Validator lässt nur die 20 Felder zu, die die Claude-Code-Doku für Skills nennt —
+  unbekannte ignoriert Claude Code still, auch Tippfehler —, und prüft die Grenze von
+  1536 Zeichen für `description` plus `when_to_use`, über der Claude Code die
+  Beschreibung in der Skill-Liste kürzt.
+- `argument-hint` für jeden Skill, der ein Argument nimmt.
+- `default-enabled` gibt es für Skills nicht (es ist ein Feld des Plugin-Manifests) und
+  fliegt aus der Authoring-Doku.
+- Nicht jetzt: `when_to_use`, `allowed-tools`, `hooks`, `paths`, `arguments`, `metadata`,
+  `license`, `compatibility`. Über `model` und `effort` entscheidet F-046; `context: fork`
+  geht als Hinweis an F-037, `shell` an F-027.
+
+**Lösungsskizze** (Stand Planung 2026-10-26):
+- Alle Skills: beide Flags ausdrücklich, ohne Änderung am Startverhalten;
+  `argument-hint`, wo ein Argument erwartet wird.
+- `scripts/validate.py`: Pflichtfelder, wörtliche Booleans, verbotene Kombination,
+  Feldliste und Längengrenze — für Plugin- und repo-lokale Skills.
+- `docs/skill-authoring.md` § Frontmatter: Pflichtfelder samt Bedeutung und Kontextkosten
+  (`disable-model-invocation: true` hält die Beschreibung aus dem Kontext), die
+  Feldübersicht mit den Entscheidungen und ein Verweis auf die Claude-Code-Doku; dazu ein
+  Punkt in der Checkliste von `/add-skill`.
+- Je eine Zeile „Noch zu analysieren" in F-037 und F-027 (mit Vorschau).
+- CHANGELOG unter 1.6.0 (unveröffentlicht, ohne `### Template`).
+
+**Abnahmekriterien:**
+- [ ] Jeder Skill setzt beide Flags ausdrücklich. Der Validator meldet ein fehlendes
+      Flag, `yes` statt `true`, die verbotene Kombination, ein unbekanntes Feld und eine
+      zu lange Beschreibung (Fehlerprobe).
+- [ ] Kein Skill ändert sein Startverhalten: Die Werte vorher und nachher sind gleich, per
+      Skript verglichen.
+- [ ] `just check` grün.
+
+**Abhängigkeiten:** keine. Berührt F-046, F-037 und F-027.
+
+---
+
 ## Feature-Ideen (Backlog)
 
 _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer._
@@ -679,46 +736,6 @@ Endstand; besonders F-036 und F-045 verändern den Verbrauch.
 
 ---
 
-### F-048 — Frontmatter-Pflichtfelder für Skills und Übersicht der erlaubten Felder
-
-**Status:** BACKLOG
-
-**Problem:** Ob ein Skill nur vom Nutzer oder auch von Claude gestartet wird und ob er
-einen Slash-Command hat, steht nicht überall ausdrücklich im Frontmatter: 18 von 19
-Plugin-Skills setzen `disable-model-invocation`, `user-invocable` setzt nur
-`propose-to-template`. Weder `docs/skill-authoring.md` noch `/add-skill` noch der
-Validator verlangen die Felder — `explain-level` (F-040b) entstand zunächst ohne die
-Zeile. Welche weiteren Felder Claude Code für Skills kennt, ist im Kit nirgends geprüft
-festgehalten.
-
-**Idee:** `disable-model-invocation` und `user-invocable` werden in jedem Skill Pflicht
-und stehen ausdrücklich da, auch wo sie dem Standard entsprechen; der Validator prüft das.
-Eine Übersicht aller Frontmatter-Felder, die Claude Code für Skills erlaubt, wird mit dem
-Nutzer besprochen; was das Kit nutzen will, kommt in die Authoring-Doku.
-
-**Lösungsskizze:**
-- Regel in `docs/skill-authoring.md` § Frontmatter (beide Felder Pflicht, Bedeutung je
-  Wert) und ein Punkt in der Checkliste von `/add-skill`.
-- Validator: beide Felder in jedem Plugin-Skill und jedem repo-lokalen Skill, als `true`
-  oder `false`; dazu `user-invocable: false` nie zusammen mit
-  `disable-model-invocation: true` — einen solchen Skill könnte niemand starten.
-- Alle vorhandenen Skills nachziehen (Plugin und `.claude/skills/`), ohne ihr Verhalten
-  zu ändern; als Plugin-Änderung mit Version und CHANGELOG.
-- Die erlaubten Felder zur Laufzeit gegen die aktuelle Claude-Code-Doku ermitteln, auch
-  die schon in der Authoring-Doku genannten (`disallowed-tools`, `default-enabled`), und
-  je Feld vorlegen: was es bewirkt, ob ein Kit-Skill es braucht.
-
-**Noch zu analysieren:**
-- Welche weiteren Felder das Kit festlegt; über `effort` und `model` entscheidet F-046
-  anhand der Messungen, hier werden sie nur aufgelistet.
-- Ob die Übersicht als Tabelle in der Authoring-Doku steht oder auf die Claude-Code-Doku
-  verweist, damit sie nicht veraltet.
-
-**Abhängigkeiten:** keine. Berührt F-046 (Frage nach `effort:` und `model:` im
-Frontmatter).
-
----
-
 ### F-049 — Neue Zonen erkennen und anbieten
 
 **Status:** BACKLOG
@@ -817,6 +834,6 @@ F-044 Sprachen ohne Vorlage erkennen und dem Template vorschlagen (DONE)
 F-045 Zonen-Abgleich und Lock-Prüfung ins Skript (DONE)
 F-046 Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
 F-047 Skript-Tests zusätzlich mit mawk (DONE)
-F-048 Frontmatter-Pflichtfelder für Skills und Übersicht der erlaubten Felder
+F-048 Frontmatter-Pflichtfelder für Skills und Übersicht der erlaubten Felder (PLANNED)
 F-049 Neue Zonen erkennen und anbieten
 -->
