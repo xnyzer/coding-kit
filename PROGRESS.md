@@ -37,6 +37,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-044c | Skills anbinden, Testlauf, Release → **update-conventions, step-done und prep-step bieten je Tool ohne Vorlage den Vorschlag fürs Template (`propose-to-template`) oder die Ablehnung `tool:NAME` an, choose-stack rät dafür kein Modul; der alte Abschnitt „Übernahme-Vorschlag" entfällt; Funde aus zwei Testläufen mitgenommen (Material getrennt nach Projekt und Vorschlag, Prompt als Entwurfsauftrag mit Recherche, festes Issue-Gerüst, keine verschachtelten Backticks, Datumsformat der Spalte Since); Release 1.4.0 gepusht (CI grün), Plugin aktualisiert. F-044 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-045a | `zones` und die Override-Regel → **`template-sync.sh zones` vergleicht seed-Zonen und Fragmente im Slot mit dem Render (Zustände von `identical` bis `broken`) und schreibt das Ergebnis mit eingesetzten Blöcken nach `OUT` — alle oder per Name, neue Fragmente an ihrer Stelle aus dem Render; Marker gelten nur allein auf einer Zeile (MANIFEST, `detect`, Validator); Kopfzone der Registry ohne Marker-Text; `snapshot` weist unbekannte Ziele ab; Version 1.5.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-045b | `lock-check` → **`template-sync.sh lock-check` prüft die `mise.lock` gegen `lockfile_platforms` und die CI-Plattform aus `runs-on` (Runner-Labels von GitHub) und meldet je Lock-Eintrag `complete`, `gaps`, `ci-gap`, `no-url`, `unlocked` oder `stale`; Backends ohne Download-URL (laut mise-Doku, z. B. npm, cargo) sind nie eine Lücke; Gegenprobe mit echtem `mise lock`; Known-limitation-Nachtrag zu pnpm.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
+| F-045c | Skills anbinden → **update-conventions gleicht Fragmente und seed-Zonen über `zones` ab (nach dem Kopieren der Merge-Ergebnisse, teilweise Zustimmung per zweitem Lauf) und prüft die Lock-Datei über `lock-check`; choose-stack wertet `lock-check` aus und setzt Fragmente in Modus B über `zones` ein; „ein Fragment anhängen" für alle Skills festgelegt; Authoring-Doku: Einsetzen im Skript, mawk-Tests.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 
 ---
 
@@ -110,28 +111,6 @@ enthält.
 - Keine neuen Dependencies.
 
 **Abhängigkeiten:** keine (baut auf `template-sync.sh` aus F-041 auf, erledigt).
-
-#### F-045c — Skills anbinden
-
-**Was:** update-conventions A2 Schritte 6 und 7 über `zones` — ausdrücklich nach dem
-Kopieren der Merge-Ergebnisse aus Schritt 5, sonst überschreibt das Zonen-Ergebnis den
-Merge der `CODING-STANDARDS.md`; Schritt 11 und A3 Schritt 4 über `lock-check`; der Modus
-`status` berichtet beides. choose-stack § Lock-Datei über `lock-check` (new-project 4d
-verweist dorthin) und der Fragment-Einbau in Modus B über `zones` (Tausch des
-Modul-Fragments = `new` plus bestätigtes Entfernen des alten Blocks). README und HOW-TO
-nur, wo sie den Vergleich beschreiben; `/add-skill` läuft mit.
-
-**Dateien:** `plugins/coding-kit/skills/{update-conventions,choose-stack}/SKILL.md`, bei
-Bedarf `plugins/coding-kit/skills/new-project/SKILL.md`, `README.md`,
-`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`,
-`plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-045a, F-045b.
-
-**Abnahmekriterien:**
-- [ ] Kein Skill vergleicht Zonen, Fragmente oder die Lock-Datei mehr von Hand (grep nach
-      den alten Formulierungen).
-- [ ] `just check` grün.
 
 #### F-045d — Testlauf, Release, Gegenprobe
 

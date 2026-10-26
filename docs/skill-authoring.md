@@ -107,6 +107,10 @@ formulieren, Trigger-Situationen nennen.
   und führt den Dialog; was das Skript kann, baut er nie selbst nach. Vorbild:
   `scripts/template-sync.sh` hinter new-project, update-conventions, choose-stack,
   choose-license, prep-step und step-done.
+- **Auch das Einsetzen gehört ins Skript:** Ändert ein Ergebnis Teile einer Datei (Zonen,
+  Fragmente), schreibt das Skript die fertige Datei in den Ausgabeordner, und der Skill
+  kopiert sie. Nimmt der Nutzer nur einen Teil an, läuft das Skript ein zweites Mal mit
+  den Namen der angenommenen Teile — nie von Hand einsetzen (Vorbild: `zones`).
 - **Aufruf:** im Skill-Text als `${CLAUDE_PLUGIN_ROOT}/scripts/<name>.sh` nennen (der
   Validator prüft, dass es den Pfad gibt); in Shell-Befehlen den aufgelösten Pfad über
   `sh` aufrufen — die Variable gibt es dort nicht, und `sh` braucht kein Ausführungsrecht.
@@ -120,9 +124,12 @@ formulieren, Trigger-Situationen nennen.
   Kopfkommentar beschreibt Befehle, Ausgabezeilen (tabulatorgetrennt) und Exit-Codes;
   geschrieben wird nur in die genannten Ordner.
 - **Tests:** unter `tests/<name>/`, laufen unter dash und bash in `just check` (der
-  Pre-Commit-Hook nur, wenn Skript, Template oder Tests sich ändern). Der Validator prüft
-  `sh -n` und das Ausführungsrecht; die Versionsregel zählt `plugins/coding-kit/scripts/`
-  zum Plugin-Inhalt.
+  Pre-Commit-Hook nur, wenn Skript, Template oder Tests sich ändern). Neues awk vor dem
+  Commit zusätzlich mit mawk testen, dem Standard-awk auf Ubuntu und in der CI — etwa mit
+  einem Link `awk → mawk` vorn im `PATH`. Das macOS-awk nimmt mehr hin (z. B. ein Array
+  namens `NF`), und die CI läuft erst beim Push. Der Validator prüft `sh -n` und das
+  Ausführungsrecht; die Versionsregel zählt `plugins/coding-kit/scripts/` zum
+  Plugin-Inhalt.
 
 ## Versionierung & Test
 

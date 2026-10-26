@@ -16,6 +16,67 @@ zusammen:
 
 ---
 
+## F-045c — Skills anbinden (2026-10-26)
+
+Teil von F-045 (Zonen-Abgleich und Lock-Prüfung ins Skript; F-045a–b siehe darunter,
+F-045d folgt).
+
+**Problem:** update-conventions und choose-stack beschrieben den Abgleich von Fragmenten
+und seed-Zonen und die Prüfung der Lock-Datei als Arbeit des Modells; die Befehle `zones`
+und `lock-check` aus F-045a–b nutzte noch kein Skill.
+
+**Was entstanden ist (1.5.0, unveröffentlicht):**
+
+- **update-conventions:**
+  - Grundsatz: Auch Zonen, Fragmente und die Lock-Datei vergleicht und setzt das Skript;
+    der Skill setzt nie selbst etwas ein.
+  - A2 Schritt 6: `render --seeds` und `zones` — ausdrücklich erst nach dem Kopieren der
+    Merge-Ergebnisse aus Schritt 5. Diffs kommen aus den Blockdateien unter `.zones/`.
+    Übernehmen heißt, das Ergebnis zu kopieren; bei teilweiser Zustimmung läuft `zones`
+    ein zweites Mal mit den angenommenen Namen. Je Fragment-Zustand eine Handlung:
+    `local` mit Katalog-Prüfung vor `propose-to-template`, `override` mit Info-Diff aus
+    der Basis.
+  - A2 Schritt 7: die seed-Zonen aus demselben Lauf, je Zustand eine Handlung; die
+    Sonderregel für `claude-graphiti` entfällt, weil das Skript eine Zone ohne beide
+    Seiten nicht meldet.
+  - Schritt 11, A3 Schritt 4 und der Modus `status` prüfen die Lock-Datei über
+    `lock-check`; die Marker-Migration nutzt die Template-Blöcke aus `zones`.
+- **choose-stack:**
+  - § Lock-Datei: `lock-check` mit einer Handlung je Zeile — `ci-gap` blockiert, `gaps`
+    gegen „Known limitation", `ci unknown` → nach der Plattform des Runners fragen,
+    `ci none` blockiert nicht, `lockfile missing`/`unlocked`/`stale` → `mise lock`,
+    `no-url` → nichts zu tun.
+  - Modus B: Fragmente über `zones` — der Plan zeigt `new` und `local`, eingesetzt wird
+    nach dem Kopieren der Merge-Ergebnisse mit den bestätigten Namen. Tausch des
+    Modul-Fragments: das neue als `new`, der alte Block nach Bestätigung entfernt.
+  - „Ein Fragment anhängen" heißt für alle Skills: Name in `FRAGMENTS`, `render --seeds`,
+    `zones` mit dem Namen, Ergebnis kopieren.
+- **README:** Die Zeilen zu update-conventions und choose-stack nennen das Skript.
+- **`docs/skill-authoring.md`** § Hilfsskripte: Auch das Einsetzen gehört ins Skript,
+  teilweise Zustimmung über einen zweiten Lauf; neues awk vor dem Commit zusätzlich mit
+  mawk testen.
+- **CHANGELOG:** Punkt „Skills angebunden".
+
+**Verifikation:** `just check` grün (Validator, 780 Skript-Tests); Versionsregel gegen
+`origin/main` grün; grep nach den alten Formulierungen (Fragment gegen sein
+Template-Pendant diffen, Zone gegen die gleichnamige Zone diffen, Inline-Override,
+Plattform-Tabellen von Hand zählen, Stelle aus `<tmp>/soll`, `runs-on` von Hand ableiten,
+Platzhaltertext von Hand entfernen) ohne Treffer in Skills, README und HOW-TO.
+
+**Notable decisions:**
+- Die Schrittnummern von update-conventions bleiben (6 Fragmente, 7 Zonen), obwohl ein
+  `zones`-Lauf beide bedient — andere Skills und die Doku verweisen auf sie.
+- new-project bleibt unverändert: Es verweist auf choose-stack § Lock-Datei und bekommt
+  die Änderung darüber.
+- Die HOW-TO im Template bleibt unverändert; sie beschreibt das Verhalten aus
+  Nutzersicht, das gleich bleibt. F-045c ändert damit keinen Template-Inhalt.
+- Die geänderten Skill-Texte testet erst der Lauf in F-045d mit `--plugin-dir`.
+
+**Geänderte Dateien:** `plugins/coding-kit/skills/update-conventions/SKILL.md`,
+`plugins/coding-kit/skills/choose-stack/SKILL.md`, `README.md`,
+`docs/skill-authoring.md`, `plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`,
+`PROGRESS-ARCHIVE.md`.
+
 ## F-045b — `lock-check` (2026-10-26)
 
 Teil von F-045 (Zonen-Abgleich und Lock-Prüfung ins Skript; F-045a siehe darunter,

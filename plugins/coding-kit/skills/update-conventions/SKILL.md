@@ -10,9 +10,10 @@ disable-model-invocation: true
 zuerst in der Vorlage geändert und von dort verteilt; dieser Skill schreibt nie ins
 Template. Nichts ungefragt überschreiben, nie automatisch committen. Seed-Dateien
 (lebende Doku) werden **nie als Ganzes** ersetzt — nur markierte `section:NAME`-Zonen
-(A2 Schritt 7). **Rendern, Mergen, Vergleichen und den Snapshot setzt das Skript**
-deterministisch; du zeigst die Ergebnisse, berätst bei Konflikten und führst den Dialog —
-managed Dateien nie selbst zusammenführen oder aus dem Template abschreiben.
+(A2 Schritt 7). **Rendern, Mergen, Vergleichen — auch von Zonen, Fragmenten und
+Lock-Datei — und den Snapshot setzt das Skript** deterministisch; du zeigst die
+Ergebnisse, berätst bei Konflikten und führst den Dialog — managed Dateien, Zonen und
+Fragmente nie selbst zusammenführen, einsetzen oder aus dem Template abschreiben.
 
 **Argumente** (optional, kombinierbar):
 
@@ -140,36 +141,55 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
 
    Nach dem Übernehmen geänderte JSON-Dateien auf Gültigkeit prüfen (Schritt 11 prüft
    ohnehin `just check`).
-6. **Fragment-Abgleich (CODING-STANDARDS-Slot, je Fragment):** die
-   `fragment:NAME`-Blöcke im Slot einzeln gegen ihr Template-Pendant diffen — das
-   Modul-Fragment gegen `CODING-STANDARDS.part.md` des Moduls, Katalog-Fragmente (auch
-   das Sprachfragment `<sprache>-lang`) gegen `modules/standards/<name>.md`. Je Fragment
-   **übernehmen** / **diesmal nicht**. Ein Inline-`<!-- override: … -->` im Block schützt
-   genau dieses Fragment — nicht anbieten; hat es sich aber zwischen Basis-Snapshot
-   (`CODING-STANDARDS.md.base`) und Render geändert, den Diff Basis → Render **zur Info**
-   zeigen (ohne Snapshot: Projekt → Template), übernommen wird von Hand. **Ohne
-   Template-Pendant → projektlokal: nie anfassen**; auflisten mit dem Hinweis, dass dieses
-   Set im Template fehlt, und je Fragment anbieten, es dem Template vorzuschlagen
-   (`propose-to-template` mit dem Fund starten). Deklariert das `MODULE.md` inzwischen
-   Fragmente, die im Projekt fehlen, oder kam eines aus der Erkennung (Schritt 2) nach
-   `FRAGMENTS` →
-   Anhängen anbieten (Mechanik wie `/choose-stack`, idempotent). Bestehende in-place
-   ersetzen, Neues an seine **Stelle aus dem Render**: hinter den nächsten Vorgänger aus
-   `<tmp>/soll`, der im Slot steht, ohne Vorgänger an den Slot-Anfang — nie umsortieren.
+6. **Blöcke abgleichen — Fragmente im Slot.** Erst nach dem Kopieren aus Schritt 5, sonst
+   überschreibt das Ergebnis den Merge der `CODING-STANDARDS.md`:
+   `sh <skript> render --seeds <template> <projekt>/.claude/template-answers <tmp>/seeds`,
+   dann `sh <skript> zones <projekt> <tmp>/seeds <tmp>/zones` (bei der Migration mit
+   `--base <tmp>/base`, Stellvertreter wie § 0). Das Skript vergleicht die
+   `fragment:NAME`-Blöcke im Slot (dieser Schritt) und die seed-Zonen (Schritt 7) mit dem
+   Render und wertet Marker, Override-Zeilen und die Stelle neuer Fragmente selbst aus.
+   Diffs zeigen aus `<tmp>/zones/.zones/<Art>/<Name>.project` → `.template`; nie selbst
+   Blöcke herausschneiden, einsetzen oder abschreiben. **Übernehmen:** Sind alle
+   angebotenen Blöcke einer Datei angenommen, `<tmp>/zones/<Ziel>` ins Projekt kopieren;
+   sonst `zones` mit den Namen der angenommenen Blöcke in ein frisches `<tmp>/zones-ok`
+   laufen lassen und dieses Ergebnis kopieren. Je Fragment-Zeile:
+   - `differs` → Diff zeigen; **übernehmen** / **diesmal nicht**.
+   - `new` → das `MODULE.md` deklariert es inzwischen, oder es kam aus der Erkennung
+     (Schritt 2) nach `FRAGMENTS`: Anhängen anbieten. Das Skript setzt es hinter seinen
+     nächsten Vorgänger aus dem Render bzw. anstelle des Platzhaltertexts — nie
+     umsortieren.
+   - `override` → eine Override-Zeile schützt das Fragment: nicht anbieten. Steht statt
+     `-` eine Zählung, hat das Template den Block seit dem letzten Sync geändert: den Diff
+     `.base` → `.template` **zur Info** zeigen; übernommen wird von Hand.
+   - `local` → kein Template-Pendant, **nie anfassen**. Steht der Name im Katalog
+     (`modules/standards/<name>.md`), fehlt er nur in `FRAGMENTS` (Schritt 2); sonst
+     auflisten mit dem Hinweis, dass dieses Set im Template fehlt, und anbieten, es dem
+     Template vorzuschlagen (`propose-to-template` mit dem Fund starten, Block aus
+     `.project`).
+   - `unmarked` (kein Slot) oder `broken` (Marker kaputt) → melden und die Reparatur von
+     Hand anbieten; `identical` und `skipped` nur zählen.
+
    **Begleithandlungen (auch bei unverändertem Text):** je Fragment im Slot prüfen, ob die
    dort formulierte Einbau-Anforderung im Projekt erfüllt ist (`/choose-stack`
    § Begleithandlungen), und offene Fälle mit Diff zur Bestätigung anbieten. Dieser Pfad
    ist der einzige, der **Bestandsprojekte** erreicht: wer ein Fragment bekam, bevor es
    seine Anforderung enthielt, wird sonst von keinem Skill je eingeholt.
-7. **seed-Abgleich (je `section:NAME`-Zone):** die Zonen aus dem Render nehmen —
-   `sh <skript> render --seeds <template> <projekt>/.claude/template-answers <tmp>/seeds` —
-   und einzeln gegen die gleichnamige Zone des Projekts diffen; je Zone **übernehmen** /
-   **diesmal nicht**; ein Inline-`<!-- override: … -->` in der Zone schützt genau diese
-   Zone. **Nie die ganze Datei ersetzen oder neu anlegen.** **Fehlendes Markerpaar =
-   dauerhafter Opt-out:** nur informativ auflisten, Marker nie ungefragt wiederherstellen.
-   Die Zone `claude-graphiti` liegt im `template:optional:graphiti`-Block — ohne Graphiti
-   fehlt sie legitim. Fehlen einer Datei **alle** Markerpaare (Projekt vor dem
-   Zonen-Vertrag): die Marker-Migration aus A3 Schritt 4 anbieten.
+7. **seed-Zonen** (Zeilen `section` aus dem `zones`-Lauf von Schritt 6, übernommen wie
+   dort). **Nie die ganze Datei ersetzen oder neu anlegen** — das Ergebnis des Skripts
+   ändert nur die Zonen. Je Zeile:
+   - `differs` → Diff zeigen; **übernehmen** / **diesmal nicht**.
+   - `override` → eine Override-Zeile schützt die Zone; nur auflisten.
+   - `opted-out` → fehlendes Markerpaar = **dauerhafter Opt-out**: nur informativ
+     auflisten, Marker nie ungefragt wiederherstellen.
+   - `unmarked` → der Datei fehlen alle Markerpaare (Projekt vor dem Zonen-Vertrag): die
+     Marker-Migration aus A3 Schritt 4 anbieten.
+   - `local` → der Render kennt die Zone nicht, z. B. `claude-graphiti`, obwohl `OPTIONAL`
+     kein `graphiti` enthält: melden und mit Schritt 2 abgleichen, nicht anfassen.
+   - `no-file` → die seed-Datei fehlt (z. B. eine aufgelöste `REQUIREMENTS.md`): nur
+     melden. `broken` → melden; `identical` und `skipped` nur zählen.
+
+   Eine Zone, die weder Projekt noch Render haben (`claude-graphiti` ohne Graphiti),
+   meldet das Skript nicht.
 8. **Im Template entfernte/umbenannte Dateien:** aus MANIFEST § Removed and renamed
    targets die Zeilen mit einer Version über dem Stempel nehmen (Version, altes Ziel, neues
    Ziel bzw. `removed`, frühere Policy) — nichts erraten. Liegt das alte Ziel nicht (mehr)
@@ -195,11 +215,11 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
 
     Jede Änderung einzeln bestätigen. Sinngleiche Zeilen eines Alt-Formats übernimmt A3
     Schritt 3.
-11. **Abschluss:** **Lock-Abgleich** — die Prüfung aus `/choose-stack` § Lock-Datei
-    erzeugen und prüfen; hat sich die `mise.toml` geändert, die Prüfung Lücken gezeigt
-    oder fehlt die Lock-Datei: `mise install && mise lock` anbieten, danach erneut
-    prüfen. Stempel auf die aktuelle Version setzen, `just check` muss grün sein
-    (Write-then-Verify), Commit-Vorschlag (z. B.
+11. **Abschluss:** **Lock-Abgleich** — `sh <skript> lock-check <projekt>`, ausgewertet
+    wie `/choose-stack` § Lock-Datei; meldet es `lockfile missing`, `unlocked` oder
+    `stale` (die `mise.toml` hat sich geändert) oder eine Lücke:
+    `mise install && mise lock` anbieten, danach erneut prüfen. Stempel auf die aktuelle
+    Version setzen, `just check` muss grün sein (Write-then-Verify), Commit-Vorschlag (z. B.
     `chore: sync template conventions <alt> -> <neu>`) — **nur nach OK**, dann Push-Frage.
     Fehlt der Languages-Block in der Projekt-CLAUDE.md: die Migration aus A3 Schritt 4
     anbieten — CLAUDE.md ist `seed` und wird nie automatisch angefasst.
@@ -207,7 +227,8 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
 **Modus `status`:** Schritte 1–4 (ohne Snapshot über die Vorschau aus A3 Schritt 2) und
 die Tabelle aus `sh <skript> status <projekt>` (ohne Snapshot: `status --base
 <tmp>/base`); die Erkennung aus Schritt 2 als Bericht (fehlende Module und Fragmente,
-Tools ohne Vorlage, Ablehnungen) und was Schritt 10 vorschlagen würde, als Hinweis. Ohne
+Tools ohne Vorlage, Ablehnungen), die Zeilen aus `zones` (Schritt 6, nichts kopieren)
+und `lock-check` (Schritt 11) und was Schritt 10 vorschlagen würde, als Hinweis. Ohne
 `.claude/template-answers` prüft das Skript keine Module — das im Bericht sagen.
 Antworten für die Vorschau nur in `<tmp>` anlegen. Nichts im Projekt schreiben.
 
@@ -253,8 +274,8 @@ dann A2 ab Schritt 3.
    einzeln in die Tabellen `## Files` (eine Datei bzw. ein Glob; „nie anlegen/anbieten" →
    `skip`, „Projekt behält seine Fassung" → `keep`, konkretisierte `template:adapt`-Stellen
    → `adapt`, sonst Art leer) oder `## Rules` überführen, jeweils bestätigt; den Kopf
-   bringt der Zonen-Abgleich (A2 Schritt 7). Inline-`<!-- override: … -->` in managed
-   Dateien (außerhalb von Zonen und Fragmenten) → `keep`-Zeile anbieten; der Marker darf
+   bringt der Zonen-Abgleich (A2 Schritt 7). Override-Kommentare in managed Dateien
+   (außerhalb von Zonen und Fragmenten) → `keep`-Zeile anbieten; der Kommentar darf
    bleiben, er wirkt dort nicht mehr.
 4. **Altprojekte** (ohne Stempel oder vor dem jeweiligen Vertrag), je Punkt bestätigt:
    - `.claude/instructions.md` (bzw. Legacy-Orte) → in die Root-CLAUDE.md überführen
@@ -265,12 +286,15 @@ dann A2 ab Schritt 3.
    - Renovate: `renovate.json` mit `"extends": ["github>OWNER/coding-kit"]` (OWNER zur
      Laufzeit); die Freigabe der Renovate-App ist eine manuelle Nutzeraktion.
    - Tooling (`mise.toml`, justfile, `lefthook.yml`) kommt über den Merge; danach
-     `mise install && mise lock && just setup && just check` und die Prüfung aus
-     `/choose-stack` § Lock-Datei.
+     `mise install && mise lock && just setup && just check` und
+     `sh <skript> lock-check <projekt>` (Auswertung wie `/choose-stack` § Lock-Datei).
    - **Languages-Block:** trägt die CLAUDE.md noch die einzeilige Alt-Sprachkonvention,
      die Migration zum Languages-Block anbieten — bisherige Doku-Sprache behalten, übrige
      Dimensionen englisch (bzw. Preset nach Wunsch); **prospektiv**: Bestandsinhalte
      werden nicht übersetzt, Struktur-Überschriften auf Wunsch.
-   - **section-Marker:** fehlen seed-Dateien die `section:NAME`-Markerpaare, je Datei
-     anbieten, sie aus dem MANIFEST-Inventar um die wiedererkennbaren Zonen zu setzen —
-     reine Wrapper, Inhalt unverändert; nicht Wiederauffindbares auslassen (Opt-out).
+   - **section-Marker:** fehlen seed-Dateien die `section:NAME`-Markerpaare (in A2 meldet
+     `zones` sie als `unmarked`, den Template-Inhalt jeder Zone liefert
+     `<tmp>/zones/.zones/section/<Name>.template`), je Datei anbieten, sie aus dem
+     MANIFEST-Inventar um die wiedererkennbaren Zonen zu setzen — jeder Marker allein auf
+     seiner Zeile, reine Wrapper, Inhalt unverändert; nicht Wiederauffindbares auslassen
+     (Opt-out).

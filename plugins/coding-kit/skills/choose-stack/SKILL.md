@@ -42,9 +42,10 @@ Kandidaten.
 
 1. **Projektkontext:** Projekt-CLAUDE.md lesen; die Files-Tabelle der
    `.claude/convention-overrides.md` (Arten laut MANIFEST § Deviation registry — `skip`
-   gilt) und Inline-`<!-- override: … -->` in Fragmenten erfassen. Prüfen, ob schon ein
-   Modul eingebaut ist (`MODULE` in `.claude/template-answers`, justfile-Kopf): Gleiches
-   Modul aktualisieren wollen → an `/update-conventions` verweisen und stoppen. **Fehlen
+   gilt) und geschützte Fragmente erfassen (Override-Zeile im Block; `zones` in Schritt 2
+   meldet sie als `override`). Prüfen, ob schon ein Modul eingebaut ist (`MODULE` in
+   `.claude/template-answers`, justfile-Kopf): Gleiches Modul aktualisieren wollen → an
+   `/update-conventions` verweisen und stoppen. **Fehlen
    `.claude/template-answers` oder `.claude/template-base/`** (Projekt vor dem
    Snapshot-Vertrag): zuerst die Migration über `/update-conventions` empfehlen und
    stoppen — der Modulwechsel braucht die Basis.
@@ -69,30 +70,38 @@ Kandidaten.
    (`files/**` mit Policy seed, z. B. Paket-Manifest und Beispielcode) liefert
    `sh <skript> render --seeds <template> <tmp>/answers <tmp>/seeds` — nur anlegen, was
    es im Projekt noch nicht gibt, nie überschreiben.
-   - **Standards-Fragmente** (der Slot ist im Merge ausgeblendet, er läuft hier) → im
-     Slot `<!-- module:coding-standards -->` **anhängen**, nie ersetzen. Fragmentliste in
-     Reihenfolge: das Modul-Fragment (`CODING-STANDARDS.part.md`), dann die
-     Katalog-Fragmente (`modules/standards/<name>.md`, das Sprachfragment zuerst) laut
-     `Standards fragments:`-Zeile des `MODULE.md` — tolerant lesen (fett/plain;
-     `(none)`, leer oder fehlend = keine). Die Quell-Dateien tragen ihre
-     `<!-- fragment:NAME -->`-Marker bereits: unverändert an ihre Stelle aus dem Render
-     einfügen — hinter den nächsten Vorgänger aus `<tmp>/soll`, der im Slot steht, ohne
-     Vorgänger direkt hinter `<!-- module:coding-standards -->`. **Idempotent:** ist
-     `fragment:NAME` im Projekt schon vorhanden → überspringen — nie doppelt einbauen,
-     nie erneuern (Erneuern macht `/update-conventions`); die **Begleithandlung** des
-     Fragments wird davon unabhängig geprüft (§ Begleithandlungen). Beim Erst-Einbau den
-     Platzhaltertext im Slot entfernen. **Eigenschafts-Fragmente**
+   - **Standards-Fragmente** (der Slot ist im Merge ausgeblendet, er läuft hier) werden im
+     Slot `<!-- module:coding-standards -->` **angehängt**, nie ersetzt — immer über
+     `sh <skript> zones`, nie von Hand. Der Render in `<tmp>/seeds` enthält das
+     Modul-Fragment (`CODING-STANDARDS.part.md`), die Katalog-Fragmente laut
+     `Standards fragments:`-Zeile des `MODULE.md` (das Sprachfragment zuerst) und
+     `FRAGMENTS`. Für den Plan zeigt `sh <skript> zones <projekt> <tmp>/seeds
+     <tmp>/zones`, welche davon im Slot fehlen (`new`) und welche nur das Projekt hat
+     (`local`, z. B. das Modul-Fragment des Alt-Moduls). **Eingesetzt wird in Schritt 3**,
+     nach dem Kopieren der Merge-Ergebnisse, mit einem frischen Lauf und den Namen der
+     bestätigten Fragmente: `sh <skript> zones <projekt> <tmp>/seeds <tmp>/zones-ok
+     <Name…>`. Das Skript setzt jedes an seine Stelle aus dem Render — hinter den nächsten
+     Vorgänger, der im Slot steht, ohne Vorgänger an den Slot-Anfang — und ersetzt beim
+     Erst-Einbau den Platzhaltertext. **Idempotent:** Ein Fragment, das schon im Slot
+     steht, ist nie `new` — nie doppelt einbauen, nie erneuern (`differs` erneuert
+     `/update-conventions`); die **Begleithandlung** des Fragments wird davon unabhängig
+     geprüft (§ Begleithandlungen). **Eigenschafts-Fragmente**
      (`*characteristic:*`-Zeilen des Katalogs) sind in keinem `MODULE.md`
      deklariert: je Trigger fragen, ob die Eigenschaft auf das Projekt zutrifft
-     _(Default: nein)_ — Anhängen nur nach Bestätigung, gleiche Mechanik.
+     _(Default: nein)_ — bei Ja kommt das Fragment vor dem Render in `FRAGMENTS` der
+     Antworten-Kopie, dann gleiche Mechanik. **Ein Fragment anhängen** heißt überall so
+     (auch für prep-step, step-done und update-conventions): Name in `FRAGMENTS` der
+     Antworten bzw. ihrer Kopie in `<tmp>`, `render --seeds`, `zones` mit dem Namen,
+     Ergebnis kopieren.
 3. **Je Datei Diff zeigen und einzeln bestätigen lassen** — dieselben Entscheidungen wie
    `/update-conventions` A2 Schritt 5 (übernehmen heißt, das Ergebnis aus `<tmp>/out`
    kopieren). Beim **Wechsel** auch das Entfernen der `removed`-Dateien des Alt-Moduls
-   bestätigen lassen. Das Modul-Fragment des Alt-Moduls wird an seiner Stelle gegen das
-   neue getauscht; vorhandene Katalog-Fragmente bleiben stehen und werden nur aufgelistet
-   („noch aktuell?") — auch das Sprachfragment des Alt-Moduls, das weiter gilt, wenn die
-   Sprache als Werkzeugsprache bleibt. Entfernen ist eine Projektentscheidung, kein
-   Automatismus.
+   bestätigen lassen. Danach die Fragmente einsetzen (Schritt 2, zweiter `zones`-Lauf):
+   Das neue Modul-Fragment kommt als `new` an den Slot-Anfang; den Block des Alt-Moduls
+   (`local`) nach Bestätigung samt Markern entfernen — so ist es getauscht. Vorhandene
+   Katalog-Fragmente bleiben stehen und werden nur aufgelistet („noch aktuell?") — auch
+   das Sprachfragment des Alt-Moduls, das weiter gilt, wenn die Sprache als
+   Werkzeugsprache bleibt. Entfernen ist eine Projektentscheidung, kein Automatismus.
 4. **Nachziehen:** `MODULE` in `.claude/template-answers` setzen und `FRAGMENTS` laut
    § Begleithandlungen nachführen, in beide Richtungen: Was das neue Modul selbst
    deklariert, kommt heraus (z. B. sein Sprachfragment, das dort als Werkzeugsprache
@@ -168,14 +177,25 @@ Download-URL für die Plattform des Runners. `mise install` schreibt diese Eintr
   Fehlt die Einstellung (Projekt vor dem Template-Stand mit `lockfile_platforms`), kein
   Flag als Ersatz setzen, sondern auf `/update-conventions` verweisen — die
   `mise.toml` ist managed und bringt die Einstellung mit.
-- **Prüfen:** jedes Tool in der `mise.lock` (`[[tools.<tool>]]`) hat einen Eintrag
-  `[tools.<tool>."platforms.<p>"]` für jede Plattform `<p>` aus `lockfile_platforms`.
-  - **Lücke auf der Plattform des CI-Runners** (aus `runs-on` der Projekt-CI ableiten,
-    z. B. `ubuntu-*` → `linux-x64`) → blockiert den Commit; die CI wäre rot. Ursache
-    klären (Netz, Tool-Version ohne Release für die Plattform), nicht übergehen.
-  - **Übrige Lücken** → melden und gegen die „Known limitation"-Einträge im
+- **Prüfen:** `sh <skript> lock-check <projekt>` (`<skript>` =
+  `${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh`, in Shell-Befehlen der aufgelöste
+  Pfad) gleicht jeden Eintrag der `mise.lock` mit `lockfile_platforms` und der Plattform
+  des CI-Runners ab (`runs-on` der Workflows mit `jdx/mise-action`) — nie selbst
+  nachzählen. Je Zeile:
+  - `ci-gap` (**Lücke auf der Plattform des CI-Runners**) → blockiert den Commit; die CI
+    wäre rot. Ursache klären (Netz, Tool-Version ohne Release für die Plattform), nicht
+    übergehen.
+  - `gaps` (**übrige Lücken**) → melden und gegen die „Known limitation"-Einträge im
     `${CLAUDE_PLUGIN_ROOT}/CHANGELOG.md` abgleichen; dort dokumentierte Upstream-Lücken
     sind bekannt und blockieren nicht.
+  - `ci unknown` (ein Ausdruck wie `matrix.os` oder ein self-hosted Runner) → nach der
+    Plattform des Runners fragen und die `gaps` darauf prüfen; `ci none` → keine CI mit
+    mise, Lücken blockieren nicht.
+  - `lockfile missing`, `unlocked` oder `stale` → die Lock-Datei passt nicht zur
+    `mise.toml`: `mise lock` (nach `mise install`), dann erneut prüfen;
+    `platforms missing` → wie unter **Erzeugen**.
+  - `no-url` → nichts zu tun: Backends wie `npm` oder `cargo` zeichnen keine
+    Download-URL auf, `--locked` braucht keine. `complete` → in Ordnung.
 - Die `mise.lock` wird mitcommittet — sie ist Projektdatei, nie Template-Inhalt.
 
 ## Rückgabe an den Aufrufer

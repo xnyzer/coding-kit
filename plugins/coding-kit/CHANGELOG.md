@@ -39,6 +39,16 @@ Zonen, Fragmente und Lock-Datei prüft das Skript statt des Modells (F-045, in A
   etwas schreibt. Mehrere Ziele in einem Argument (zsh teilt Variablen nicht in Wörter)
   liefen bisher still als `removed` durch (Fund aus F-043c).
 - **`detect`** zählt einen Fragment-Marker nur, wenn er allein auf seiner Zeile steht.
+- **Skills angebunden:** `update-conventions` gleicht Fragmente (Schritt 6) und
+  seed-Zonen (Schritt 7) über `zones` ab — ausdrücklich erst nach dem Kopieren der
+  Merge-Ergebnisse — und übernimmt das Ergebnis des Skripts, bei teilweiser Zustimmung
+  über einen zweiten Lauf mit den angenommenen Namen; die Lock-Prüfung (Schritt 11,
+  Migration, Modus `status`) läuft über `lock-check`. `choose-stack` wertet in
+  § Lock-Datei die Zeilen von `lock-check` aus und setzt Fragmente in Modus B über
+  `zones` ein (Tausch des Modul-Fragments: das neue als `new`, das alte `local` nach
+  Bestätigung entfernt); „ein Fragment anhängen" heißt in allen Skills: Name in
+  `FRAGMENTS`, `render --seeds`, `zones` mit dem Namen. Kein Skill vergleicht Zonen,
+  Fragmente oder die Lock-Datei mehr selbst.
 - **Kit:** Der Validator verlangt, dass Zonen- und Fragment-Marker im Template allein auf
   ihrer Zeile stehen; Skript-Tests für alle Zustände, das Einsetzen, die Auswahl per Name
   und frische Renders (docs-only mit und ohne Graphiti, ts-node); `lock-check`-Tests mit
