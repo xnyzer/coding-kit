@@ -607,28 +607,34 @@ Endstand; besonders F-036 und F-045 verändern den Verbrauch.
 
 ### F-047 — Skript-Tests zusätzlich mit mawk
 
-**Status:** BACKLOG
+**Status:** PLANNED
 
 **Problem:** `just check` testet `template-sync.sh` nur mit dem awk des Rechners. Auf
 macOS nimmt das mehr hin als mawk, das Standard-awk auf Ubuntu und in der CI. In F-045a
 fiel ein awk-Array namens `NF` deshalb erst unter mawk auf — lokal grün, in der CI wäre
 es rot gewesen, und die CI läuft erst beim Push.
 
-**Idee:** Ist mawk installiert und nicht schon das Standard-awk, laufen die Skript-Tests
-in `just check` ein zweites Mal mit mawk als `awk`. Ohne mawk läuft `just check` wie
-bisher, mit einem kurzen Hinweis.
+**Idee:** Sind mawk oder gawk installiert und nicht schon das Standard-awk, laufen die
+Skript-Tests in `just check` zusätzlich mit ihnen als `awk`. Ohne sie läuft `just check`
+wie bisher, mit einem kurzen Hinweis.
 
-**Lösungsskizze:**
-- Ein zusätzlicher Durchgang mit einem Link `awk → mawk` in einem Temp-Ordner vorn im
-  `PATH`, nur unter einer Shell — die Unterschiede liegen im awk. Kostet rund 20 Sekunden
-  zu den heutigen gut 40.
-- In der CI ist mawk schon das Standard-awk; der Durchgang erkennt das (`awk -W version`)
-  und entfällt.
+**Lösungsskizze** (Stand Planung 2026-10-26):
+- `tests/template-sync/run.sh` hängt nach den Durchgängen unter dash und bash je einen
+  Durchgang mit mawk und mit gawk an — für jedes, das installiert und nicht das
+  Standard-awk ist —, unter einer Shell, mit einem Link `awk → <awk>` in einem
+  Temp-Ordner vorn im `PATH`. Das Standard-awk erkennt `awk -W version` (mawk, GNU Awk;
+  das macOS-awk nennt dort keine Version). Kostet rund 20 Sekunden je zusätzlichem awk zu
+  den heutigen gut 40. `just check`, Pre-Commit-Hook und CI bekommen das ohne eigene
+  Änderung.
+- Die Zusammenfassung nennt die geprüften awks; so zeigt auch das CI-Log, welches awk der
+  Runner nutzt. Ist es nicht mawk, wird noch in F-047 entschieden, ob die CI mawk
+  nachinstalliert.
 - `docs/skill-authoring.md` § Hilfsskripte: Aus „vor dem Commit von Hand mit mawk testen"
-  wird der Hinweis auf den automatischen Durchgang; README bzw. CONTRIBUTING nennen mawk
-  als optionales Werkzeug für die Kit-Entwicklung.
+  wird der Hinweis auf die automatischen Durchgänge; die README (Repo-Struktur,
+  Entwicklung) nennt mawk und gawk als optionale Werkzeuge; der Kommentar des
+  `test`-Rezepts im justfile zieht nach.
 - Nur Kit-Repo (Tests, justfile, Doku), kein Plugin-Inhalt, keine Versionsänderung. mawk
-  bleibt außerhalb der Toolchain (GPL-2.0).
+  und gawk bleiben außerhalb der Toolchain (GPL).
 
 **Abhängigkeiten:** keine.
 
@@ -682,5 +688,5 @@ F-043 Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen (DONE)
 F-044 Sprachen ohne Vorlage erkennen und dem Template vorschlagen (DONE)
 F-045 Zonen-Abgleich und Lock-Prüfung ins Skript (DONE)
 F-046 Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
-F-047 Skript-Tests zusätzlich mit mawk
+F-047 Skript-Tests zusätzlich mit mawk (PLANNED)
 -->
