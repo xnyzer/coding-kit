@@ -41,9 +41,10 @@ an, und wer die Kit-Regeln nicht einrichtet, merkt vom Update nichts.
 - **`/coding-kit:update-conventions global` (Teil G):** richtet die Kit-Regeln auf dem
   Rechner ein und gleicht sie je Abschnitt über `zones` ab, auch außerhalb eines Projekts;
   jeder andere Lauf prüft sie einmal mit, sobald sie eingerichtet sind. Fehlen Werte,
-  startet er `explain-level`. Eine alte Kit-Kopie in `~/.claude/CLAUDE.md` (erkannt an der
-  Kopfzeile der früheren Vorlage) migriert er in einem Schritt mit der Einrichtung: Die
-  Kit-Abschnitte gehen hinaus, Persönliches bleibt, unklare Zeilen legt er einzeln vor.
+  startet er `explain-level`; die env-Datei selbst gibt er nicht aus. Eine alte Kit-Kopie
+  in `~/.claude/CLAUDE.md` (erkannt an der Kopfzeile der früheren Vorlage) migriert er in
+  einem Schritt mit der Einrichtung: Die Kit-Abschnitte gehen hinaus, Persönliches bleibt,
+  unklare Zeilen legt er einzeln vor.
   Eine selbst angelegte CLAUDE.md schreibt er nie, er meldet nur Widersprüche zu den
   Kit-Regeln. Der Stand des letzten Abgleichs liegt als Basis im Datenordner des Plugins
   (`snapshot --snapshot`); `global <ordner>` arbeitet mit einem Stellvertreter-Ordner.

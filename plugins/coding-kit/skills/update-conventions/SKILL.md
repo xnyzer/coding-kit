@@ -340,7 +340,8 @@ nichts schreiben — weder Werte noch Regeln noch Basis.
   angelegt** → nur G5.
 - **Werte:** `sh <skript> render-global <kit> <config>/coding-kit.env <tmp>/global` — die
   `key`-Zeilen zeigen, was gesetzt (`set`), bewusst leer (`empty`) oder noch nie
-  festgelegt ist (`missing`).
+  festgelegt ist (`missing`). Die env-Datei nicht ausgeben, die `key`-Zeilen von
+  `render-global` genügen — sie enthält auch Identitätswerte.
 
 ### G2. Werte ergänzen
 
