@@ -41,6 +41,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-045d | Testlauf, Release, Gegenprobe → **Lauf von update-conventions mit `--plugin-dir` an einem Projekt aus Template 1.4.0 (0,91 USD): Zonen, Fragmente und Lock-Datei nur über `zones` und `lock-check`, teilweise Zustimmung per zweitem Lauf, Endstand per Skript geprüft; Fund mitgenommen: vor `mise trust` fragen; Release 1.5.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe an einem Downstream-Projekt ohne Fund (0,56 USD). F-045 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-047 | Skript-Tests zusätzlich mit mawk → **`run.sh` hängt je einen Durchgang mit mawk und gawk an, wenn installiert und nicht das Standard-awk (erkannt über `awk -W version`); die Zusammenfassung nennt die geprüften awks; ein eingeschleustes `NF`-Array fällt nur im mawk-Durchgang auf; Doku nachgezogen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-040a | Kit-Datei, Werte, Render → **die globalen Regeln liegen als `global/coding-kit.md` im Plugin (fünf Zonen, Kennung, Sprachregel der Vorlage, Artifact-Regel, Erklär-Niveau mit vier Stufen und Notiz); `template-sync.sh render-global` rendert sie mit den Werten der Personal-Config, ohne die Datei auszuführen, und `zones` gleicht das Ergebnis mit einem Config-Ordner ab; `claudeMdExcludes` hält die Template-CLAUDE.md aus Sessions im Kit-Repo; Validator, Versionsregel und Tests nachgezogen; Version 1.6.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
+| F-040b | Interview-Skill `explain-level` → **neuer Skill `/coding-kit:explain-level`: Interview zu Antwortsprache und Erklär-Niveau (Programmieren, Shell, Git, Frameworks, Projekt-Werkzeuge, Code mitlesen), Vorschlag für Stufe und Notiz mit dem Stufentext der Kit-Datei, einzige Stelle, die die Werte abfragt; `template-sync.sh set-global` schreibt die Werte in eine Kopie der Personal-Config (erste Zuweisung ersetzt, spätere entfernt, Rest unverändert, für die Shell wörtlich maskiert); README, plugin.json, CHANGELOG.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 
 ---
 
@@ -134,31 +135,6 @@ und übernimmt nur Bestätigtes; eine selbst angelegte CLAUDE.md fasst das Kit n
 — deren Änderungen an den Kit-Regeln erreichen bestehende Rechner erst über den Abgleich.
 Übernimmt aus F-033 das Lernprofil von teach-step.
 
-#### F-040b — Interview-Skill `explain-level`
-
-**Was:** Neuer Skill (über `/add-skill`): fragt die Antwortsprache und ermittelt in einem
-kurzen Interview — eine Frage pro Antwort, mit empfohlener Antwort — die Erfahrung mit
-Programmieren, Shell, Git, Frameworks und Projekt-Werkzeugen und wie viel Code der Nutzer
-mitliest. Daraus schlägt er Stufe und Notiz vor und zeigt den Stufentext aus der
-Kit-Datei; der Nutzer kann beides ändern. Erneut aufrufbar, vorhandene Werte sind die
-Vorauswahl. Neuer Skript-Befehl `set-global`: schreibt die drei Schlüssel samt Kommentar
-aus der Kit-Datei in eine Kopie der env-Datei unter `OUT`, ersetzt vorhandene Zuweisungen
-und lässt alle anderen Zeilen stehen; der Skill kopiert nach Freigabe und prüft vorher per
-`render-global`. README-Skill-Tabelle, plugin.json-Beschreibung, CHANGELOG.
-
-**Dateien:** `plugins/coding-kit/skills/explain-level/SKILL.md` (neu),
-`plugins/coding-kit/scripts/template-sync.sh`, `tests/template-sync/global.sh`,
-`README.md`, `plugins/coding-kit/.claude-plugin/plugin.json`,
-`plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-040a.
-
-**Abnahmekriterien:**
-- [ ] Tests für `set-global`: neue Schlüssel angehängt, vorhandene ersetzt (auch hinter
-      `export`), andere Zeilen und Kommentare unverändert, ungültige Stufe abgelehnt.
-- [ ] Der Skill schreibt die env-Datei nie von Hand, nur über `set-global`.
-- [ ] `just check` grün.
-
 #### F-040c — Abgleich in update-conventions, Niveau in den Skills
 
 **Was:** `update-conventions` bekommt den globalen Teil: Argument `global`, Mitprüfung im
@@ -247,18 +223,20 @@ sortiert):
 1. **F-040** — unabhängig von F-036; die globale CLAUDE.md driftet schon (siehe
    Eintrag), und jede Session lädt sie. Vor den Strängen Graphiti und Host, deren
    Änderungen an den Kit-Regeln sonst bestehende Rechner nicht erreichen.
-2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
+2. **F-048** — klein; vor F-036, damit die folgenden Umbauten an Skills schon mit den
+   Pflichtfeldern arbeiten. Fertig vor F-040e, geht es mit Release 1.6.0 hinaus.
+3. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
-3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
-4. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-5. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
+4. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
+5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+6. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
    mit. F-026 ist in F-039 aufgegangen, sein Rest (Kit-Repo-Herkunft in `check-upstreams`)
    in F-032.
-6. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
-7. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+8. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
-Strang 4 und 5 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
@@ -751,8 +729,48 @@ Endstand; besonders F-036 und F-045 verändern den Verbrauch.
 
 ---
 
+### F-048 — Frontmatter-Pflichtfelder für Skills und Übersicht der erlaubten Felder
+
+**Status:** BACKLOG
+
+**Problem:** Ob ein Skill nur vom Nutzer oder auch von Claude gestartet wird und ob er
+einen Slash-Command hat, steht nicht überall ausdrücklich im Frontmatter: 18 von 19
+Plugin-Skills setzen `disable-model-invocation`, `user-invocable` setzt nur
+`propose-to-template`. Weder `docs/skill-authoring.md` noch `/add-skill` noch der
+Validator verlangen die Felder — `explain-level` (F-040b) entstand zunächst ohne die
+Zeile. Welche weiteren Felder Claude Code für Skills kennt, ist im Kit nirgends geprüft
+festgehalten.
+
+**Idee:** `disable-model-invocation` und `user-invocable` werden in jedem Skill Pflicht
+und stehen ausdrücklich da, auch wo sie dem Standard entsprechen; der Validator prüft das.
+Eine Übersicht aller Frontmatter-Felder, die Claude Code für Skills erlaubt, wird mit dem
+Nutzer besprochen; was das Kit nutzen will, kommt in die Authoring-Doku.
+
+**Lösungsskizze:**
+- Regel in `docs/skill-authoring.md` § Frontmatter (beide Felder Pflicht, Bedeutung je
+  Wert) und ein Punkt in der Checkliste von `/add-skill`.
+- Validator: beide Felder in jedem Plugin-Skill und jedem repo-lokalen Skill, als `true`
+  oder `false`; dazu `user-invocable: false` nie zusammen mit
+  `disable-model-invocation: true` — einen solchen Skill könnte niemand starten.
+- Alle vorhandenen Skills nachziehen (Plugin und `.claude/skills/`), ohne ihr Verhalten
+  zu ändern; als Plugin-Änderung mit Version und CHANGELOG.
+- Die erlaubten Felder zur Laufzeit gegen die aktuelle Claude-Code-Doku ermitteln, auch
+  die schon in der Authoring-Doku genannten (`disallowed-tools`, `default-enabled`), und
+  je Feld vorlegen: was es bewirkt, ob ein Kit-Skill es braucht.
+
+**Noch zu analysieren:**
+- Welche weiteren Felder das Kit festlegt; über `effort` und `model` entscheidet F-046
+  anhand der Messungen, hier werden sie nur aufgelistet.
+- Ob die Übersicht als Tabelle in der Authoring-Doku steht oder auf die Claude-Code-Doku
+  verweist, damit sie nicht veraltet.
+
+**Abhängigkeiten:** keine. Berührt F-046 (Frage nach `effort:` und `model:` im
+Frontmatter).
+
+---
+
 <!-- FEATURE-INDEX
-next-feature: F-048
+next-feature: F-049
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -800,4 +818,5 @@ F-044 Sprachen ohne Vorlage erkennen und dem Template vorschlagen (DONE)
 F-045 Zonen-Abgleich und Lock-Prüfung ins Skript (DONE)
 F-046 Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
 F-047 Skript-Tests zusätzlich mit mawk (DONE)
+F-048 Frontmatter-Pflichtfelder für Skills und Übersicht der erlaubten Felder
 -->

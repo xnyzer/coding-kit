@@ -20,6 +20,16 @@
 #       CODING_KIT_EXPLAIN_LEVEL is NAME (a level without a block is refused),
 #       explain-note without CODING_KIT_EXPLAIN_NOTE, explain without level and note.
 #       zones then takes OUT as SEEDS and the config folder as PROJECT.
+#   set-global KIT ENV OUT NAME=value…
+#       Writes the personal config ENV (a missing file counts as empty) with the given
+#       values into OUT/coding-kit.env (OUT missing or empty; mode 600). NAME is a
+#       CODING_KIT_ key the global rules read; its line becomes NAME="value" followed by
+#       the comment of that key in KIT. The first assignment of a key (also behind
+#       export) is replaced in place and later ones are dropped, a key the file lacks is
+#       appended; every other line stays as it is (a missing final newline is added).
+#       Lines: set <NAME> <replaced|added>, then written coding-kit.env. Refused: an
+#       unknown or repeated NAME, a tab, line break or {{ in a value, a level without a
+#       block in KIT.
 #   status [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT
 #       Compares every target of the base snapshot (.claude/template-base/<target>.base)
 #       with the project. Line: <target> <unchanged|deviates|missing> <registry> <+a -d>.
@@ -128,6 +138,7 @@ usage() {
   cat >&2 << 'EOF'
 usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh render-global KIT ENV OUT
+       sh template-sync.sh set-global KIT ENV OUT NAME=value...
        sh template-sync.sh status [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT
        sh template-sync.sh changed [--registry FILE] [--snapshot DIR] PROJECT
        sh template-sync.sh merge [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SOLL OUT
@@ -1374,6 +1385,43 @@ load_env() {  # ENV
     }' "$1"
 }
 
+# The level blocks of KIT as KIT_LEVELS (" einsteiger junior …", the list of levels);
+# dies on a block render-global does not know.
+kit_levels() {  # KIT
+  sed -n 's/^[[:space:]]*<!--[[:space:]]*template:optional:\([a-z0-9-]*\)[[:space:]]*-->[[:space:]]*$/\1/p' \
+    "$1" > "$WORK/blocks"
+  KIT_LEVELS=
+  while IFS= read -r kl_block; do
+    case $kl_block in
+      reply-language | explain | explain-note) ;;
+      level-?*) KIT_LEVELS="$KIT_LEVELS ${kl_block#level-}" ;;
+      *) die "$1: unknown block template:optional:$kl_block" ;;
+    esac
+  done < "$WORK/blocks"
+}
+
+check_level() {  # LEVEL — one of KIT_LEVELS, or die
+  case " $KIT_LEVELS " in
+    *" $1 "*) ;;
+    *) die "CODING_KIT_EXPLAIN_LEVEL: unknown level '$1' (known:$KIT_LEVELS)" ;;
+  esac
+}
+
+# The comment of KEY in the key comment of KIT (the text behind # on its KEY= line);
+# status 1 when KIT has no such line.
+kit_comment() {  # KIT KEY
+  awk -v k="$2" '
+    { sub(/\r$/, "") }
+    index($0, k "=") == 1 && index($0, "#") {
+      c = substr($0, index($0, "#") + 1)
+      sub(/^[ \t]+/, "", c)
+      print c
+      found = 1
+      exit
+    }
+    END { exit !found }' "$1"
+}
+
 # Value of NAME (without the prefix) in the parsed personal config; status 1 when unset.
 env_value() {  # NAME
   awk -F "$TAB" -v k="$1" '
@@ -1412,24 +1460,11 @@ render_global() {
   rg_lang=$(value_of REPLY_LANGUAGE) || rg_lang=
   rg_level=$(value_of EXPLAIN_LEVEL) || rg_level=
   rg_note=$(value_of EXPLAIN_NOTE) || rg_note=
-  # The level blocks of the kit file are the list of levels.
-  sed -n 's/^[[:space:]]*<!--[[:space:]]*template:optional:\([a-z0-9-]*\)[[:space:]]*-->[[:space:]]*$/\1/p' \
-    "$RG_KIT" > "$WORK/blocks"
-  rg_levels=
-  while IFS= read -r rg_block; do
-    case $rg_block in
-      reply-language | explain | explain-note) ;;
-      level-?*) rg_levels="$rg_levels ${rg_block#level-}" ;;
-      *) die "$RG_KIT: unknown block template:optional:$rg_block" ;;
-    esac
-  done < "$WORK/blocks"
+  kit_levels "$RG_KIT"
   OPTIONAL=
   if [ -n "$rg_lang" ]; then OPTIONAL="$OPTIONAL reply-language"; fi
   if [ -n "$rg_level" ]; then
-    case " $rg_levels " in
-      *" $rg_level "*) ;;
-      *) die "CODING_KIT_EXPLAIN_LEVEL: unknown level '$rg_level' (known:$rg_levels)" ;;
-    esac
+    check_level "$rg_level"
     OPTIONAL="$OPTIONAL level-$rg_level"
   fi
   if [ -n "$rg_note" ]; then OPTIONAL="$OPTIONAL explain-note"; fi
@@ -1440,6 +1475,93 @@ render_global() {
   mv "$WORK/global.md" "$RG_OUT/$GLOBAL_TARGET"
   cat "$WORK/keys.tsv"
   printf 'rendered\t%s\n' "$GLOBAL_TARGET"
+}
+
+set_global() {
+  [ $# -ge 4 ] || usage
+  SG_KIT=$1 SG_ENV=$2 SG_OUT=$3
+  shift 3
+  [ -f "$SG_KIT" ] || die "kit rules not found: $SG_KIT"
+  check_out_dir "$SG_OUT"
+  setup_work
+  kit_levels "$SG_KIT"
+  sg_nl='
+'
+  : > "$WORK/given"
+  : > "$WORK/lines.given"
+  for sg_arg in "$@"; do
+    case $sg_arg in
+      CODING_KIT_*=*) ;;
+      *) die "expected CODING_KIT_NAME=value, not '$sg_arg'" ;;
+    esac
+    sg_key=${sg_arg%%=*}
+    sg_val=${sg_arg#*=}
+    sg_name=${sg_key#CODING_KIT_}
+    case " $GLOBAL_KEYS " in
+      *" $sg_name "*) ;;
+      *) die "$sg_key: not a value of the global rules" ;;
+    esac
+    if grep -qxF -- "$sg_name" "$WORK/given"; then die "$sg_key: given twice"; fi
+    printf '%s\n' "$sg_name" >> "$WORK/given"
+    case $sg_val in
+      *"$TAB"* | *"$sg_nl"* | *'{{'*) die "$sg_key: value contains a tab, a line break or {{" ;;
+    esac
+    if [ "$sg_name" = EXPLAIN_LEVEL ] && [ -n "$sg_val" ]; then check_level "$sg_val"; fi
+    sg_comment=$(kit_comment "$SG_KIT" "$sg_key") || die "$SG_KIT: no key comment for $sg_key"
+    # Inside double quotes the shell would expand $ and ` and read \ and " as escapes.
+    sg_quoted=$(printf '%s' "$sg_val" | sed 's/[\\"$`]/\\&/g')
+    printf '%s\t%s="%s"  # %s\n' "$sg_name" "$sg_key" "$sg_quoted" "$sg_comment" >> "$WORK/lines.given"
+  done
+  # The new lines in the order of GLOBAL_KEYS (word splitting of the list is intended).
+  : > "$WORK/lines.tsv"
+  for sg_name in $GLOBAL_KEYS; do
+    awk -F "$TAB" -v k="$sg_name" '$1 == k' "$WORK/lines.given" >> "$WORK/lines.tsv"
+  done
+  : > "$WORK/env.in"
+  if [ -f "$SG_ENV" ]; then cp "$SG_ENV" "$WORK/env.in"; fi
+  : > "$WORK/status"
+  # Replaces the first assignment of each given key in place and drops later ones (they
+  # would win in the shell), appends the keys the file lacks behind a blank line; every
+  # other line goes through unchanged. A file with CRLF line ends gets CRLF lines.
+  awk -F "$TAB" -v status="$WORK/status" '
+    FILENAME == ARGV[1] { line[$1] = substr($0, length($1) + 2); order[++n] = $1; next }
+    FNR == 1 { crlf = ($0 ~ /\r$/) }
+    {
+      t = $0
+      sub(/\r$/, "", t)
+      last = t
+      lines++
+      sub(/^[ \t]+/, "", t)
+      sub(/^export[ \t]+/, "", t)
+      if (match(t, /^CODING_KIT_[A-Z0-9_]+=/)) {
+        name = substr(t, 12, RLENGTH - 12)
+        if (name in line) {
+          if (!(name in done)) {
+            print line[name] (crlf ? "\r" : "")
+            print "set\tCODING_KIT_" name "\treplaced" > status
+            done[name] = 1
+          }
+          next
+        }
+      }
+      print
+    }
+    END {
+      for (i = 1; i <= n; i++) {
+        name = order[i]
+        if (name in done) continue
+        if (!separated && lines && last != "") { print (crlf ? "\r" : ""); separated = 1 }
+        print line[name] (crlf ? "\r" : "")
+        print "set\tCODING_KIT_" name "\tadded" > status
+      }
+    }' "$WORK/lines.tsv" "$WORK/env.in" > "$WORK/coding-kit.env"
+  mkdir -p "$SG_OUT"
+  mv "$WORK/coding-kit.env" "$SG_OUT/coding-kit.env"
+  chmod 600 "$SG_OUT/coding-kit.env"
+  for sg_name in $GLOBAL_KEYS; do
+    grep "^set${TAB}CODING_KIT_$sg_name$TAB" "$WORK/status" || true
+  done
+  printf 'written\tcoding-kit.env\n'
 }
 
 # --- lock-check -----------------------------------------------------------------
@@ -2052,6 +2174,7 @@ shift "$OPTS_SHIFT"
 case $cmd in
   render) render "$@" ;;
   render-global) render_global "$@" ;;
+  set-global) set_global "$@" ;;
   status) status "$@" ;;
   changed) changed "$@" ;;
   merge) merge "$@" ;;

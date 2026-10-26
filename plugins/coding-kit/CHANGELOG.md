@@ -35,6 +35,18 @@ Arbeit).
   als Shell-Syntax, ohne sie auszuführen (Kommentare hinter Werten erlaubt); es meldet je
   Wert `set`, `empty` oder `missing` und lehnt eine Stufe ohne Block ab. `zones`
   vergleicht das Ergebnis mit dem Claude-Config-Ordner wie mit einem Projekt.
+- **`/coding-kit:explain-level` (neu):** legt Antwortsprache und Erklär-Niveau fest. Ein
+  kurzes Interview (Programmieren, Shell, Git, Frameworks, Projekt-Werkzeuge, wie viel
+  Code der Nutzer mitliest) führt zu einem Vorschlag für Stufe und Notiz samt Stufentext
+  aus der Kit-Datei; nach Freigabe schreibt der Skill die Werte in die Personal-Config.
+  Er ist die einzige Stelle, die diese Werte abfragt, und jederzeit erneut aufrufbar.
+- **`scripts/template-sync.sh set-global` (neu):** schreibt die Werte der globalen Regeln
+  in eine Kopie der Personal-Config unter `OUT` (Modus 600): je Schlüssel eine Zeile
+  `NAME="Wert"` mit dem Kommentar aus der Kit-Datei, so maskiert, dass die Shell den Wert
+  wörtlich liest. Die erste Zuweisung (auch hinter `export`) wird ersetzt, spätere
+  desselben Schlüssels fallen weg, fehlende kommen ans Ende; alle anderen Zeilen bleiben.
+  Eine Stufe ohne Block, andere Schlüssel und Tab, Zeilenumbruch oder `{{` in einem Wert
+  lehnt es ab.
 - **`finalize`** (Platzhalter und optionale Blöcke) erkennt seine Wertetabelle nicht mehr
   an `NR == FNR`: Mit einer leeren Tabelle hätte es die ganze Datei als Werte gelesen.
   `render` hat nie eine leere Tabelle, für Projekte ändert sich nichts.
@@ -43,7 +55,8 @@ Arbeit).
   Schlüssel-Kommentar gleich den Stufenblöcken) und die `claudeMdExcludes`-Zeile in
   `.claude/settings.json` des Repos, die `template/core/CLAUDE.md` aus Sessions im
   Kit-Repo heraushält. Die Versionsregel zählt `global/` zum Plugin-Inhalt; Skript-Tests
-  für `render-global` und für `zones` auf einem Stellvertreter-Config-Ordner.
+  für `render-global`, `set-global` (samt Gegenprobe, dass die Shell die geschriebenen
+  Werte wörtlich liest) und `zones` auf einem Stellvertreter-Config-Ordner.
 
 ## 1.5.0 — 2026-10-26
 

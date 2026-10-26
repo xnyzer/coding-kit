@@ -16,6 +16,75 @@ zusammen:
 
 ---
 
+## F-040b — Interview-Skill `explain-level` (2026-10-26)
+
+Teil von F-040 (Globale Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau;
+F-040a siehe darunter, F-040c–e folgen).
+
+**Problem:** Die Werte für Antwortsprache und Erklär-Niveau aus F-040a brauchten eine
+Stelle, die sie abfragt und in die Personal-Config schreibt. Eine Stufe aus dem Stand zu
+wählen fällt schwer; die Einordnung soll aus wenigen Fragen zur eigenen Erfahrung
+entstehen und für alle Nutzer gleich ablaufen.
+
+**Was entstanden ist (1.6.0, unveröffentlicht):**
+
+- **`plugins/coding-kit/skills/explain-level/SKILL.md` (neu):** liest die env-Datei und
+  die Kit-Datei. Nennt der Nutzer den Wert schon, entfällt das Interview; sonst bis zu
+  sieben Fragen (Antwortsprache, Programmieren, Shell, Git, Frameworks,
+  Projekt-Werkzeuge, Code mitlesen), je mit Antwortoptionen und Empfehlung, und keine
+  weitere, sobald die Einordnung eindeutig ist. Der Vorschlag wählt die Stufe nach der
+  Programmiererfahrung und legt Lücken bei Werkzeugen in die Notiz, zitiert den
+  Stufentext aus der Kit-Datei und fragt einmal: übernehmen, Stufe ändern oder Notiz
+  ändern. Geschrieben wird über `set-global` nach `<tmp>`, geprüft mit `render-global`,
+  gezeigt als Diff der drei Schlüssel und nach Freigabe kopiert; ohne Freigabe gibt der
+  Skill die Datei in `<tmp>` an den Aufrufer zurück. Die Werte stehen nur in der
+  env-Datei, nicht in Graphiti, Projektdateien oder im Gedächtnis von Claude Code.
+  `disable-model-invocation: false`: Claude startet den Skill auf Zuruf und aus
+  `update-conventions global`.
+- **`template-sync.sh set-global KIT ENV OUT NAME=value…` (neu):** schreibt
+  `OUT/coding-kit.env` (Modus 600). Je Schlüssel eine Zeile `NAME="Wert"` mit dem
+  Kommentar aus der Kit-Datei; `\`, `"`, `$` und `` ` `` werden maskiert, sodass die
+  Shell den Wert wörtlich liest. Die erste Zuweisung (auch hinter `export`) wird an ihrer
+  Stelle ersetzt, spätere desselben Schlüssels fallen weg, fehlende kommen in der
+  Reihenfolge der Schlüssel hinter einer Leerzeile ans Ende. Alle anderen Zeilen bleiben;
+  CRLF bleibt CRLF, eine fehlende letzte Zeilenendung wird ergänzt. Abgelehnt werden
+  andere und doppelte Schlüssel, Namen ohne Präfix, Tab, Zeilenumbruch oder `{{` in einem
+  Wert und eine Stufe ohne Block. Ausgabe: `set <Name> <replaced|added>`, dann
+  `written coding-kit.env`.
+- **Gemeinsame Stufenprüfung:** `kit_levels` und `check_level` nutzen `render-global` und
+  `set-global` gleichermaßen.
+- **Begleit-Änderungen über `/add-skill`:** Zeile in der README-Skill-Tabelle,
+  plugin.json-Beschreibung (explain-level, globale Kit-Regeln), CHANGELOG.
+- **Tests:** in `tests/template-sync/global.sh` 33 Fälle je Durchgang für `set-global`:
+  ganze Datei gegen die Erwartung (ersetzt hinter `export`, Duplikat entfernt, fremde
+  Zeilen und Kommentare gleich, neue Schlüssel angehängt), Modus 600, die Shell liest die
+  Werte wörtlich, `render-global` liest die Datei, neue Datei, leerer Wert, CRLF, fehlende
+  letzte Zeilenendung, Leerzeile am Ende und alle Ablehnungen.
+
+**Verifikation:** `just check` grün mit 1524 Checks unter dash, bash und mawk (99 davon
+neu). Der Validator hielt den ersten Entwurf des Skills an, weil er
+`template:optional:level-NAME` nannte — einen Block, den das Projekt-Template nicht hat;
+die Stelle nennt jetzt nur `level-<Stufe>`. Secrets- und Privacy-Scan ohne Fund.
+
+**Notable decisions:**
+- Die Stufe folgt der Programmiererfahrung, Werkzeuglücken gehören in die Notiz: Eine
+  niedrigere Stufe ließe Claude auch erklären, was der Nutzer schon kann.
+- `set-global` entfernt spätere Zuweisungen desselben Schlüssels, weil in der Shell sonst
+  die spätere Zeile gewönne.
+- Der Kommentar einer Zeile kommt bei jedem Schreiben aus der Kit-Datei, damit die
+  Optionen aktuell bleiben; ein eigener Kommentar hinter einer ersetzten Zeile geht dabei
+  verloren.
+- Die HOW-TO des Templates bleibt unverändert: Der Skill stellt den Rechner ein, nicht
+  ein Projekt.
+- `disable-model-invocation` fehlte zunächst (Standard `false`) und ist nachgezogen;
+  daraus entstand F-048.
+- Der echte Lauf mit `--plugin-dir` folgt in F-040e.
+
+**Geänderte Dateien:** `plugins/coding-kit/skills/explain-level/SKILL.md` (neu),
+`plugins/coding-kit/scripts/template-sync.sh`, `tests/template-sync/global.sh`,
+`README.md`, `plugins/coding-kit/.claude-plugin/plugin.json`,
+`plugins/coding-kit/CHANGELOG.md`; dazu `PROGRESS.md` mit dem Backlog-Eintrag F-048.
+
 ## F-040a — Kit-Datei, Werte, Render (2026-10-26)
 
 Teil von F-040 (Globale Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau;

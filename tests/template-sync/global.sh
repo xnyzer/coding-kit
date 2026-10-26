@@ -35,6 +35,30 @@ only_target() {  # NAME — OUT holds the rules file and nothing else
   [ "$(cd "$TMP/$1" && find . -type f)" = "./$G" ]
 }
 
+# sglobal NAME ARG… — set-global with $TMP/NAME.env (no file = empty) into $TMP/NAME;
+# listing in $TMP/NAME.tsv, stderr in $TMP/NAME.err.
+sglobal() {
+  sg_name=$1
+  shift
+  ts set-global "$KIT" "$TMP/$sg_name.env" "$TMP/$sg_name" "$@" \
+    > "$TMP/$sg_name.tsv" 2> "$TMP/$sg_name.err"
+}
+
+# The comment of KEY in the key comment of the kit file, read independently of the script.
+kit_c() {  # KEY
+  sed -n "s/^$1=\"\" *# //p" "$KIT"
+}
+
+set_is() {  # NAME KEY STATE
+  grep -qxF -- "set${TABC}CODING_KIT_$2${TABC}$3" "$TMP/$1.tsv"
+}
+
+# The values the shell sees when it reads the written file: reply|level|note.
+sourced_values() {  # NAME
+  $SH -c '. "$1"; printf "%s|%s|%s" "$CODING_KIT_REPLY_LANGUAGE" "$CODING_KIT_EXPLAIN_LEVEL" "$CODING_KIT_EXPLAIN_NOTE"' \
+    sh "$TMP/$1/coding-kit.env"
+}
+
 # copy_rules FROM TO — the rendered rules of FROM as the installed file of config folder TO.
 copy_rules() {
   mkdir -p "$TMP/$2/rules"
@@ -162,6 +186,75 @@ run_global_cases() {
   refute "render-global: missing kit file is refused" rglobal gm "$TMP/no-such-kit.md"
   refute "render-global: missing operand is refused" ts render-global "$KIT" "$TMP/ga.env"
   refute "render-global takes no options" ts render-global --seeds "$KIT" "$TMP/ga.env" "$TMP/gz"
+
+  # --- set-global -------------------------------------------------------------------
+  NLC='
+'
+  NOTE='a "b" $c \d `e`'
+  envfile gsa '# personal config' 'CODING_KIT_GITHUB_LOGIN="octo"' \
+    'export CODING_KIT_EXPLAIN_LEVEL=senior # mine' 'NOT_OURS="x"  # stays' \
+    'CODING_KIT_EXPLAIN_LEVEL=einsteiger'
+  check "set-global runs" sglobal gsa CODING_KIT_EXPLAIN_LEVEL=junior \
+    "CODING_KIT_EXPLAIN_NOTE=$NOTE" CODING_KIT_REPLY_LANGUAGE=Deutsch
+  check "set-global: missing key added" set_is gsa REPLY_LANGUAGE added
+  check "set-global: key behind export replaced" set_is gsa EXPLAIN_LEVEL replaced
+  check "set-global: missing note added" set_is gsa EXPLAIN_NOTE added
+  check "set-global: lines in key order, then written" \
+    test "$(cut -f2 "$TMP/gsa.tsv" | tr '\n' ' ')" = \
+    "CODING_KIT_REPLY_LANGUAGE CODING_KIT_EXPLAIN_LEVEL CODING_KIT_EXPLAIN_NOTE coding-kit.env "
+  printf '%s\n' '# personal config' 'CODING_KIT_GITHUB_LOGIN="octo"' \
+    "CODING_KIT_EXPLAIN_LEVEL=\"junior\"  # $(kit_c CODING_KIT_EXPLAIN_LEVEL)" \
+    'NOT_OURS="x"  # stays' '' \
+    "CODING_KIT_REPLY_LANGUAGE=\"Deutsch\"  # $(kit_c CODING_KIT_REPLY_LANGUAGE)" \
+    "CODING_KIT_EXPLAIN_NOTE=\"a \\\"b\\\" \\\$c \\\\d \\\`e\\\`\"  # $(kit_c CODING_KIT_EXPLAIN_NOTE)" \
+    > "$TMP/gsa.expected"
+  check "set-global: replaced in place, later duplicate dropped, rest unchanged, new keys appended" \
+    cmp -s "$TMP/gsa/coding-kit.env" "$TMP/gsa.expected"
+  check "set-global: the file is private" \
+    test "$(ls -l "$TMP/gsa/coding-kit.env" | cut -c1-10)" = '-rw-------'
+  check "set-global: the shell reads the values literally" \
+    test "$(sourced_values gsa)" = "Deutsch|junior|$NOTE"
+  check "set-global: render-global reads the written file" \
+    eval 'ts render-global "$KIT" "$TMP/gsa/coding-kit.env" "$TMP/gsar" > /dev/null'
+  check "set-global: the note survives the round trip" contains "gsar/$G" "  „$NOTE\""
+  check "set-global: the level survives the round trip" one_level gsar junior
+
+  check "set-global without a personal config" sglobal gsn CODING_KIT_EXPLAIN_LEVEL=senior
+  printf '%s\n' "CODING_KIT_EXPLAIN_LEVEL=\"senior\"  # $(kit_c CODING_KIT_EXPLAIN_LEVEL)" > "$TMP/gsn.expected"
+  check "set-global: a new file holds only the new line" cmp -s "$TMP/gsn/coding-kit.env" "$TMP/gsn.expected"
+  check "set-global: an empty value is written" \
+    eval 'sglobal gse CODING_KIT_EXPLAIN_NOTE= && grep -q "^CODING_KIT_EXPLAIN_NOTE=\"\"  # " "$TMP/gse/coding-kit.env"'
+  put gsc.env 'CODING_KIT_GITHUB_LOGIN="octo"\r\n'
+  check "set-global with CRLF line ends" sglobal gsc CODING_KIT_REPLY_LANGUAGE=English
+  printf 'CODING_KIT_GITHUB_LOGIN="octo"\r\n\r\nCODING_KIT_REPLY_LANGUAGE="English"  # %s\r\n' \
+    "$(kit_c CODING_KIT_REPLY_LANGUAGE)" > "$TMP/gsc.expected"
+  check "set-global: CRLF file gets CRLF lines" cmp -s "$TMP/gsc/coding-kit.env" "$TMP/gsc.expected"
+  put gsm.env 'A=1'
+  check "set-global without a final newline" sglobal gsm CODING_KIT_REPLY_LANGUAGE=x
+  printf 'A=1\n\nCODING_KIT_REPLY_LANGUAGE="x"  # %s\n' "$(kit_c CODING_KIT_REPLY_LANGUAGE)" > "$TMP/gsm.expected"
+  check "set-global: final newline added, blank line before new keys" \
+    cmp -s "$TMP/gsm/coding-kit.env" "$TMP/gsm.expected"
+  envfile gsb 'A=1' ''
+  check "set-global behind a blank last line" sglobal gsb CODING_KIT_REPLY_LANGUAGE=x
+  check "set-global: no second blank line" cmp -s "$TMP/gsb/coding-kit.env" "$TMP/gsm.expected"
+
+  refute "set-global: unknown level is refused" sglobal gsl CODING_KIT_EXPLAIN_LEVEL=pro
+  check "set-global: unknown level names the known ones" \
+    err_mentions gsl "unknown level 'pro' (known: einsteiger junior fortgeschritten senior)"
+  check "set-global: nothing written for a refused value" test ! -e "$TMP/gsl"
+  refute "set-global: other personal keys are refused" sglobal gsk CODING_KIT_PROJECTS_DIR=/x
+  check "set-global: other personal keys are named" err_mentions gsk 'not a value of the global rules'
+  refute "set-global: a repeated key is refused" sglobal gsr CODING_KIT_REPLY_LANGUAGE=a \
+    CODING_KIT_REPLY_LANGUAGE=b
+  refute "set-global: a name without prefix is refused" sglobal gsx REPLY_LANGUAGE=x
+  refute "set-global: a tab in a value is refused" sglobal gst "CODING_KIT_EXPLAIN_NOTE=a${TABC}b"
+  refute "set-global: a line break in a value is refused" sglobal gsw "CODING_KIT_EXPLAIN_NOTE=a${NLC}b"
+  refute "set-global: {{ in a value is refused" sglobal gsp "CODING_KIT_EXPLAIN_NOTE=${TOK}X}}"
+  refute "set-global: no value is a usage error" sglobal gsu
+  put gso/x 'taken\n'
+  refute "set-global: non-empty OUT is refused" sglobal gso CODING_KIT_REPLY_LANGUAGE=x
+  refute "set-global: missing kit file is refused" \
+    ts set-global "$TMP/no-such-kit.md" "$TMP/gsa.env" "$TMP/gsz" CODING_KIT_REPLY_LANGUAGE=x
 
   # --- zones on a stand-in config folder --------------------------------------------
   copy_rules ga gzc
