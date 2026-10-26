@@ -1,7 +1,9 @@
 ---
 name: add-feature
 description: Neue Aufgabe auf die Roadmap setzen. Analysiert die Idee, prüft Überschneidungen mit der PROGRESS.md, formuliert sie aus und trägt sie nach Freigabe mit Status-Marker BACKLOG ein. Startet der Nutzer per Slash-Command oder Claude selbst, wenn im Gespräch oder beim Bauen eine neue Aufgabe entsteht — eingetragen wird immer erst nach ausdrücklichem OK.
+argument-hint: "[Kurzbeschreibung]"
 disable-model-invocation: false
+user-invocable: true
 ---
 
 # Aufgabe aufnehmen

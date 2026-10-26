@@ -1,6 +1,7 @@
 ---
 name: propose-to-template
 description: Übernahme-Vorschlag fürs Template (Projekt → coding-kit) aus einem Fund erzeugen — ein Tool ohne Vorlage (detect meldet `unknown`), ein projektlokales Fragment ohne Katalog-Pendant, eine Abweichung an einer managed Datei, die allen Projekten nützt, oder eine globale Regel (aus der persönlichen CLAUDE.md oder einer auf dem Rechner geänderten Zone der Kit-Regeln) für die Kit-Datei global/coding-kit.md. Gibt generalisierten, personendatenfreien Text kopierfertig aus — als Issue (Standard) oder als Prompt für eine Session im Kit-Repo bzw. einem Fork —, sendet nichts ab und schreibt weder ins Template noch ins Projekt. Claude startet ihn bei einem solchen Fund aus update-conventions, step-done, prep-step oder choose-stack, oder wenn der Nutzer etwas dem Template vorschlagen will.
+disable-model-invocation: false
 user-invocable: false
 ---
 

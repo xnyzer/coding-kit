@@ -2,6 +2,7 @@
 name: explain-level
 description: Antwortsprache und Erklär-Niveau festlegen. Kurzes Interview (Programmieren, Shell, Git, Frameworks, Projekt-Werkzeuge, wie viel Code der Nutzer mitliest), dann ein Vorschlag für Stufe (einsteiger, junior, fortgeschritten, senior) und Notiz mit dem Stufentext der Kit-Regeln; schreibt die Werte nach Freigabe über template-sync.sh set-global in die Personal-Config ~/.claude/coding-kit.env. Starten, wenn der Nutzer Antwortsprache oder Erklärtiefe festlegen oder neu einordnen lassen will („erklär mir mehr", „das ist mir zu ausführlich", „ich kann inzwischen Git"), und aus /coding-kit:update-conventions global, wenn die Werte fehlen. Jederzeit erneut aufrufbar; vorhandene Werte sind die Vorauswahl.
 disable-model-invocation: false
+user-invocable: true
 ---
 
 # Antwortsprache und Erklär-Niveau

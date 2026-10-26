@@ -22,14 +22,18 @@ prüfen, dann bauen.
 
 ## Frontmatter
 
-Pflicht: `name`, `description`. Relevant außerdem:
+**Pflicht in jedem Skill** (Plugin und repo-lokal): `name`, `description`,
+`disable-model-invocation` und `user-invocable`. Die beiden Flags stehen immer
+ausdrücklich da, auch wo sie dem Standard entsprechen, und wörtlich als `true` oder
+`false` — Claude Code nähme auch `yes` oder `on`, das Kit nicht. Der Validator prüft das.
 
-| Feld | Wann |
-|------|------|
-| `disable-model-invocation: true` | Skills, die nur der Nutzer bewusst startet (z. B. prep-step, audit-code) — verhindert Auto-Aufruf durch das Modell. |
-| `user-invocable: false` | Reine Hintergrund-Skills ohne Slash-Command, die Claude aus anderen Skills oder dem Gespräch startet (z. B. propose-to-template). Andere Skills nennen sie ohne Slash und ohne „der Nutzer ruft auf"; die README führt sie mit dem Zusatz *(Hintergrund)*. |
-| `disallowed-tools` | Wenn ein Skill bestimmte Tools nie braucht/nutzen darf. |
-| `default-enabled` | Nur setzen, wenn ein Skill opt-in sein soll. |
+| Flag | `true` | `false` |
+|------|--------|---------|
+| `disable-model-invocation` | Nur der Nutzer startet den Skill (z. B. prep-step, audit-code). Die Beschreibung steht nicht im Kontext. | Auch Claude startet ihn. Die Beschreibung steht in jeder Runde im Kontext. |
+| `user-invocable` | Slash-Command `/coding-kit:<name>`. | Hintergrund-Skill ohne Slash-Command, den Claude aus anderen Skills oder dem Gespräch startet (z. B. propose-to-template). Andere Skills nennen ihn ohne Slash und ohne „der Nutzer ruft auf"; die README führt ihn mit dem Zusatz *(Hintergrund)*. |
+
+`user-invocable: false` zusammen mit `disable-model-invocation: true` ist verboten — einen
+solchen Skill könnte niemand starten.
 
 Ohne `disable-model-invocation: true` darf Claude den Skill selbst starten. Der Skill-Text
 darf dem nicht widersprechen: nicht „der Nutzer hat …" oder „vorschlagen, den Skill
@@ -37,7 +41,25 @@ aufzurufen" formulieren, wenn Claude ihn direkt starten soll — sonst hält das
 für nur manuell startbar.
 
 Die `description` entscheidet, wann das Modell den Skill von sich aus zieht — präzise
-formulieren, Trigger-Situationen nennen.
+formulieren, den wichtigsten Anwendungsfall zuerst, dann die Trigger-Situationen. Mit
+`when_to_use` zusammen höchstens 1536 Zeichen: Darüber kürzt Claude Code sie in der
+Skill-Liste (der Validator prüft die Grenze).
+
+**Weitere Felder:** Claude Code kennt für Skills nur die Felder seiner
+[Skill-Doku](https://code.claude.com/docs/en/skills.md) und ignoriert jedes andere ohne
+Meldung, auch einen Tippfehler. Der Validator lässt deshalb nur diese zu (`SKILL_FIELDS` in
+`scripts/validate.py`); bringt Claude Code ein neues Feld, kommt es dort dazu. Im Kit:
+
+| Feld | Nutzung |
+|------|---------|
+| `argument-hint` | Pflicht, wenn der Skill ein Argument nimmt — in Anführungszeichen, z. B. `argument-hint: "[F-Nummer]"`; ohne sie wäre `[…]` eine YAML-Liste. |
+| `disallowed-tools` | Wenn ein Skill bestimmte Tools nie nutzen darf (teach-step, handoff). |
+| `model`, `effort` | Noch nicht — die Entscheidung hängt an der Verbrauchsmessung (F-046). |
+| `context`, `agent`, `background` | Noch nicht — `context: fork` (Skill im Subagenten) prüft das unabhängige Review (F-037). |
+| `shell` | Noch nicht — prüft der Windows-Betrieb (F-027). |
+| `when_to_use`, `allowed-tools`, `hooks`, `paths`, `arguments`, `metadata`, `license`, `compatibility` | Nicht genutzt. |
+
+`default-enabled` ist kein Skill-Feld; es gibt nur `defaultEnabled` im Plugin-Manifest.
 
 ## Sprache
 

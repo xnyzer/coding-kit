@@ -1,7 +1,9 @@
 ---
 name: handoff
 description: Schreibt am Kontextlimit einen kopierfertigen Handoff-Prompt für einen frischen Chat. Stellt die Orientierung voran (zuletzt, Stand, als Nächstes inkl. Reihenfolge-Vorgabe der Aufgabenliste) und übergibt sonst nur, was aus der Session noch nicht dokumentiert ist (Entscheidungen, Fallstricke, Absprachen, Offenes); für alles andere verweist er auf die Quelldateien. Baut und ändert nichts, projektunabhängig. Nur manuell per /coding-kit:handoff aufrufbar.
+argument-hint: "[Fokus]"
 disable-model-invocation: true
+user-invocable: true
 disallowed-tools: Write, Edit, NotebookEdit
 ---
 

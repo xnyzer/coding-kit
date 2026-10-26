@@ -16,7 +16,7 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
 ## 1.6.0 — unveröffentlicht
 
 Globale Kit-Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau (F-040, in
-Arbeit).
+Arbeit); Frontmatter-Pflichtfelder für alle Skills (F-048).
 
 **Nach dem Update:** Wer die frühere Kit-Vorlage in `~/.claude/CLAUDE.md` hat, bekommt
 beim nächsten Session-Start einen Hinweis. `/coding-kit:update-conventions global`
@@ -90,6 +90,15 @@ an, und wer die Kit-Regeln nicht einrichtet, merkt vom Update nichts.
   desselben Schlüssels fallen weg, fehlende kommen ans Ende; alle anderen Zeilen bleiben.
   Eine Stufe ohne Block, andere Schlüssel und Tab, Zeilenumbruch oder `{{` in einem Wert
   lehnt es ab.
+- **Skill-Frontmatter (F-048):** Jeder Skill setzt `disable-model-invocation` und
+  `user-invocable` ausdrücklich; zwölf Skills mit Argument zeigen beim Tippen ein
+  `argument-hint` (z. B. `[F-Nummer]`). Kein Skill startet anders als zuvor. Der
+  Validator verlangt beide Flags wörtlich als `true` oder `false`, lehnt einen Skill ab,
+  den niemand starten könnte, lässt nur die Felder zu, die Claude Code für Skills kennt —
+  ein Tippfehler bliebe sonst ohne Meldung wirkungslos —, und prüft die Grenze von 1536
+  Zeichen, über der Claude Code die Beschreibung kürzt. Die Authoring-Doku listet die
+  Felder mit dem, was das Kit davon nutzt; `default-enabled` war nie ein Skill-Feld und ist
+  gestrichen.
 - **`finalize`** (Platzhalter und optionale Blöcke) erkennt seine Wertetabelle nicht mehr
   an `NR == FNR`: Mit einer leeren Tabelle hätte es die ganze Datei als Werte gelesen.
   `render` hat nie eine leere Tabelle, für Projekte ändert sich nichts.

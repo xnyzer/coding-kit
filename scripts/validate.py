@@ -134,6 +134,21 @@ PLUGIN_PATH_RE = re.compile(re.escape(PLUGIN_ROOT_VAR) + r"/([^\s`'\"),;]+)")
 
 MUST_BE_EXECUTABLE = ("install.sh",)
 
+# Skill frontmatter (docs/skill-authoring.md § Frontmatter). The fields Claude Code
+# documents for skills (code.claude.com/docs/en/skills.md): it ignores any other field
+# without a word, so a typo would go unnoticed. Extend the set when Claude Code adds one.
+SKILL_FIELDS = {
+    "name", "description", "when_to_use", "argument-hint", "arguments",
+    "disable-model-invocation", "user-invocable", "allowed-tools", "disallowed-tools",
+    "model", "effort", "context", "agent", "background", "hooks", "paths", "shell",
+    "metadata", "license", "compatibility",
+}
+# Required in every skill, as the literal true or false.
+SKILL_FLAGS = ("disable-model-invocation", "user-invocable")
+# Claude Code truncates description plus when_to_use in the skill listing above this.
+SKILL_LISTING_CAP = 1536
+REPO_SKILLS_DIR = REPO_ROOT / ".claude" / "skills"
+
 
 def iter_files() -> list[Path]:
     files = []
@@ -839,6 +854,55 @@ def parse_frontmatter(path: Path, findings: list[str]) -> dict | None:
     return data
 
 
+def check_skill_frontmatter(skill_md: Path, fm: dict, findings: list[str]) -> None:
+    """Required fields, both start flags as literal booleans, no skill nobody can start,
+    only fields Claude Code knows, and a description that fits the skill listing."""
+    rel = display_path(skill_md)
+    for field in ("name", "description", *SKILL_FLAGS):
+        if fm.get(field) in (None, ""):
+            findings.append(f"{rel}: frontmatter missing '{field}'")
+    text = skill_md.read_text(encoding="utf-8")
+    raw = text[4 : text.find("\n---", 4)]
+    for flag in SKILL_FLAGS:
+        if flag in fm and not re.search(rf"^{flag}:[ \t]*(true|false)[ \t]*$", raw, re.M):
+            findings.append(f"{rel}: '{flag}' must be the literal true or false")
+    if fm.get("user-invocable") is False and fm.get("disable-model-invocation") is True:
+        findings.append(
+            f"{rel}: user-invocable false with disable-model-invocation true — "
+            "nobody could start this skill"
+        )
+    for field in fm:
+        if field not in SKILL_FIELDS:
+            findings.append(
+                f"{rel}: unknown frontmatter field '{field}' — Claude Code ignores it "
+                "without a word (typo?)"
+            )
+    listing = len(str(fm.get("description") or "")) + len(str(fm.get("when_to_use") or ""))
+    if listing > SKILL_LISTING_CAP:
+        findings.append(
+            f"{rel}: description and when_to_use have {listing} characters; Claude Code "
+            f"truncates the skill listing at {SKILL_LISTING_CAP}"
+        )
+
+
+def check_skills_dir(skills_dir: Path, findings: list[str]) -> None:
+    """One SKILL.md per directory, its name equal to the directory, valid frontmatter."""
+    for skill_dir in sorted(p for p in skills_dir.iterdir() if p.is_dir()):
+        skill_md = skill_dir / "SKILL.md"
+        rel = display_path(skill_md)
+        if not skill_md.is_file():
+            findings.append(f"{rel}: missing")
+            continue
+        fm = parse_frontmatter(skill_md, findings)
+        if fm is None:
+            continue
+        check_skill_frontmatter(skill_md, fm, findings)
+        if fm.get("name") and fm["name"] != skill_dir.name:
+            findings.append(
+                f"{rel}: frontmatter name '{fm['name']}' != directory '{skill_dir.name}'"
+            )
+
+
 def check_plugin_contracts(findings: list[str]) -> None:
     # marketplace.json: name/owner/plugins present, every relative source exists
     marketplace_path = REPO_ROOT / ".claude-plugin" / "marketplace.json"
@@ -873,25 +937,11 @@ def check_plugin_contracts(findings: list[str]) -> None:
     except (OSError, json.JSONDecodeError):
         findings.append("plugins/coding-kit/.claude-plugin/plugin.json: missing or unparseable")
 
-    # skills: SKILL.md per directory, frontmatter name matches directory
-    skills_dir = PLUGIN_ROOT / "skills"
-    if skills_dir.is_dir():
-        for skill_dir in sorted(p for p in skills_dir.iterdir() if p.is_dir()):
-            skill_md = skill_dir / "SKILL.md"
-            rel = display_path(skill_md)
-            if not skill_md.is_file():
-                findings.append(f"{rel}: missing")
-                continue
-            fm = parse_frontmatter(skill_md, findings)
-            if fm is None:
-                continue
-            for field in ("name", "description"):
-                if not fm.get(field):
-                    findings.append(f"{rel}: frontmatter missing '{field}'")
-            if fm.get("name") and fm["name"] != skill_dir.name:
-                findings.append(
-                    f"{rel}: frontmatter name '{fm['name']}' != directory '{skill_dir.name}'"
-                )
+    # skills: SKILL.md per directory, frontmatter per § Frontmatter of the authoring doc —
+    # the plugin's skills and the repo-local ones alike
+    for skills_dir in (PLUGIN_ROOT / "skills", REPO_SKILLS_DIR):
+        if skills_dir.is_dir():
+            check_skills_dir(skills_dir, findings)
 
     # hooks.json: known event names, referenced scripts exist and are executable
     hooks_path = PLUGIN_ROOT / "hooks" / "hooks.json"

@@ -1,7 +1,9 @@
 ---
 name: check-upstreams
 description: Watchliste externer Vorbild-Repos prüfen. Fasst Neuerungen seit dem zuletzt geprüften Ref zusammen (Commits, Releases), macht Übernahme-Vorschläge fürs Kit/Template und persistiert den neuen Ref in upstreams.json. Übernahmen nur auf Nutzerentscheidung.
+argument-hint: "[Watchlist-Eintrag]"
 disable-model-invocation: true
+user-invocable: true
 ---
 
 # Upstreams prüfen

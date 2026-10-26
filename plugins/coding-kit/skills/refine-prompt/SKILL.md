@@ -1,7 +1,9 @@
 ---
 name: refine-prompt
 description: Analysiert einen übergebenen Prompt, deckt Schwachstellen und Lücken auf, formuliert ihn nach Best Practices des Prompt-Engineerings neu und führt den verbesserten Prompt anschließend aus. Nur manuell per /coding-kit:refine-prompt aufrufbar.
+argument-hint: "[Prompt]"
 disable-model-invocation: true
+user-invocable: true
 ---
 
 # Prompt verfeinern (/coding-kit:refine-prompt)

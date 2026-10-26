@@ -1,7 +1,9 @@
 ---
 name: audit-code
 description: Vollaudit des Projekts. Code, Architektur, Security, Secrets, Dependencies, Deployment-Config. Schreibt AUDIT-RESULTS.md, fixt nichts. Optional auf einen Bereich eingrenzbar.
+argument-hint: "[Bereich oder Pfad]"
 disable-model-invocation: true
+user-invocable: true
 ---
 
 # Code- & Stack-Audit

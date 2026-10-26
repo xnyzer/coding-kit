@@ -1,7 +1,9 @@
 ---
 name: name-it
 description: Projektnamen finden. Erzeugt aus der Short-Info Kandidaten nach klaren Kriterien, prüft Verfügbarkeit (GitHub, npm, PyPI, optional Domain) zur Laufzeit und gibt den gewählten Namen an den Aufrufer zurück. Einzeln nutzbar und von /new-project aufrufbar.
+argument-hint: "[Short-Info]"
 disable-model-invocation: false
+user-invocable: true
 ---
 
 # Projektnamen finden

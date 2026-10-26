@@ -2,6 +2,7 @@
 name: add-skill
 description: Skill im coding-kit anlegen oder ändern — Plugin-Skill (plugins/coding-kit/skills/) oder repo-lokaler Skill (.claude/skills/). Führt durch die Authoring-Konvention, die leicht vergessenen Begleit-Änderungen (Plugin — plugin.json-Version und -Description, CHANGELOG, README; repo-lokal — kein Bump) und den Abschluss inkl. PROGRESS/ARCHIVE-Pflege. Immer nutzen, wenn in diesem Repo ein Skill entstehen oder sich ändern soll. Claude darf ihn selbst starten; PROGRESS-Einträge entstehen nur nach Freigabe.
 disable-model-invocation: false
+user-invocable: true
 ---
 
 # Skill anlegen oder ändern
@@ -47,7 +48,9 @@ Auftrag schon klar ist:
 3. Name (lowercase-kebab, identisch mit Ordner- und Frontmatter-Name) und Kategorie
    (Orchestrator / Begleit / Workflow / Pflege / Utility)?
 4. Zweck und Trigger-Situationen — daraus entsteht die `description`.
-5. Frontmatter-Flags: `disable-model-invocation` (nur bewusster Nutzer-Start)?
+5. Frontmatter: `disable-model-invocation` (nur bewusster Nutzer-Start?) und
+   `user-invocable` (Slash-Command oder Hintergrund-Skill?) — beide werden immer
+   ausdrücklich gesetzt. Nimmt der Skill ein Argument → `argument-hint`.
    `disallowed-tools` (Tools, die der Skill nie nutzen darf)?
 6. Welche Pflicht-Bausteine greifen? (Workflow-Skill → Projektkontext-Schritt + M4;
    Skill braucht Eingaben → M1; Skill schreibt in die PROGRESS → Freigabe-Gate;
@@ -65,6 +68,13 @@ Auftrag schon klar ist:
 - **Write-then-Verify:** nach jedem Edit re-lesen.
 
 ## 3. Begleit-Änderungen (Vollständigkeits-Checkliste — hier wird am meisten vergessen)
+
+**Beide Arten:**
+
+- [ ] Frontmatter nach `docs/skill-authoring.md` § Frontmatter: `disable-model-invocation`
+      und `user-invocable` ausdrücklich als `true`/`false`, `argument-hint` bei einem
+      Argument, nur bekannte Felder, Beschreibung höchstens 1536 Zeichen (der Validator
+      prüft alles außer `argument-hint`).
 
 **Plugin-Skill:**
 

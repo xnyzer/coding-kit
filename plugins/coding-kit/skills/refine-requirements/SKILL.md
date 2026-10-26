@@ -2,6 +2,7 @@
 name: refine-requirements
 description: Zurück zur Spec. M2-Diagnose-Einstieg („Was führt dich zurück zur Spec?") mit drei Pfaden — Umfeld geändert, Implementierung zeigte Lücken, Grundsatz-Challenge. Darf Features splitten, schreibt datierte Decision-Log-Einträge, verwaltet den Auflöse-Trigger der REQUIREMENTS.md mit.
 disable-model-invocation: false
+user-invocable: true
 ---
 
 # Anforderungen verfeinern

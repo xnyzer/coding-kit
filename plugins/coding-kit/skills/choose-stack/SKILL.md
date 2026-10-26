@@ -2,6 +2,7 @@
 name: choose-stack
 description: Stack-Modul wählen oder nachrüsten. Modus Neuanlage empfiehlt ein Modul des mitgelieferten Templates aus der Short-Info (aktuelle Framework-Lage per Websuche verifiziert); Modus Bestandsprojekt empfiehlt ein Modul aus den Signalen des Projekts und rüstet EIN Modul nach bzw. wechselt es — mit Diff und Bestätigung je Datei. Laufende Modul-Updates macht /update-conventions, nicht dieser Skill.
 disable-model-invocation: false
+user-invocable: true
 ---
 
 # Stack-Modul wählen / nachrüsten

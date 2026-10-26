@@ -2,6 +2,7 @@
 name: choose-license
 description: Lizenz für ein Projekt wählen. Wenige Fragen (Sichtbarkeit, Copyleft-Toleranz, kommerzielle Nutzung, Dependency-Lizenzen), dann Empfehlung mit Begründung — Default Apache-2.0, „TBD" ist gültig. Einzeln nutzbar und von /new-project aufrufbar.
 disable-model-invocation: false
+user-invocable: true
 ---
 
 # Lizenz wählen

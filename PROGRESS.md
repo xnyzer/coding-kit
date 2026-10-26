@@ -44,6 +44,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-040b | Interview-Skill `explain-level` → **neuer Skill `/coding-kit:explain-level`: Interview zu Antwortsprache und Erklär-Niveau (Programmieren, Shell, Git, Frameworks, Projekt-Werkzeuge, Code mitlesen), Vorschlag für Stufe und Notiz mit dem Stufentext der Kit-Datei, einzige Stelle, die die Werte abfragt; `template-sync.sh set-global` schreibt die Werte in eine Kopie der Personal-Config (erste Zuweisung ersetzt, spätere entfernt, Rest unverändert, für die Shell wörtlich maskiert); README, plugin.json, CHANGELOG.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-040c | Abgleich in update-conventions, Niveau in den Skills → **`update-conventions global` (Teil G) richtet die globalen Kit-Regeln ein und gleicht sie je Zone über `zones` ab, jeder andere Lauf prüft sie einmal mit; fehlende Werte über `explain-level`, Migration einer alten Kit-Kopie in einem Schritt mit der Einrichtung, eine selbst angelegte CLAUDE.md nur mit Widerspruchs-Hinweis; Stand als Basis im Plugin-Datenordner; teach-step ohne Graphiti-Lernprofil; `propose-to-template` mit der Fund-Art globale Regel; Authoring-Regel zum Erklärstil; HOW-TO nennt `global`.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-040d | Session-Hinweis, Installer, Nutzer-Doku → **SessionStart-Hook meldet eine alte Kit-Kopie, geänderte Kit-Regeln oder Werte und eine unlesbare Personal-Config (Render gegen die Basis, schreibt nie, endet immer ohne Fehler); `install.sh` schreibt nichts Globales mehr und verweist auf `update-conventions global`; `templates/` und der `curl`-Weg entfallen; README mit Warnkasten, Werten, Abweichungen, den Aufrufen von `update-conventions` und dem Session-Hinweis; der Validator gleicht die Stufen im README ab; Verweise in F-024, F-029, F-030 und F-033 nachgezogen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
+| F-048 | Frontmatter-Pflichtfelder für Skills → **alle 20 Skills setzen `disable-model-invocation` und `user-invocable` ausdrücklich (Startverhalten unverändert, per Skript verglichen), zwölf mit Argument zeigen ein `argument-hint`; der Validator verlangt beide Flags als `true`/`false`, lehnt einen Skill ab, den niemand starten könnte, lässt nur die 20 dokumentierten Felder zu und prüft die Grenze von 1536 Zeichen; Authoring-Doku mit Feldübersicht, `default-enabled` gestrichen; Hinweise in F-027 und F-037.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 
 ---
 
@@ -160,63 +161,6 @@ das Graphiti-Lernprofil bleibt.
 
 ---
 
-### F-048 — Frontmatter-Pflichtfelder für Skills und Übersicht der erlaubten Felder
-
-**Status:** PLANNED
-
-**Problem:** Ob ein Skill nur vom Nutzer oder auch von Claude gestartet wird und ob er
-einen Slash-Command hat, steht nicht überall ausdrücklich im Frontmatter: 18 von 19
-Plugin-Skills setzen `disable-model-invocation`, `user-invocable` setzt nur
-`propose-to-template`. Weder `docs/skill-authoring.md` noch `/add-skill` noch der
-Validator verlangen die Felder — `explain-level` (F-040b) entstand zunächst ohne die
-Zeile. Welche weiteren Felder Claude Code für Skills kennt, ist im Kit nirgends geprüft
-festgehalten.
-
-**Idee:** `disable-model-invocation` und `user-invocable` werden in jedem Skill Pflicht
-und stehen ausdrücklich da, auch wo sie dem Standard entsprechen; der Validator prüft das.
-Eine Übersicht aller Frontmatter-Felder, die Claude Code für Skills erlaubt, wird mit dem
-Nutzer besprochen; was das Kit nutzen will, kommt in die Authoring-Doku.
-
-**Entschieden (2026-10-26):**
-- Pflicht in jedem Skill (Plugin und `.claude/skills/`): `name`, `description`,
-  `disable-model-invocation` und `user-invocable` — die beiden Flags ausdrücklich und
-  wörtlich `true` oder `false`; `user-invocable: false` nie zusammen mit
-  `disable-model-invocation: true`.
-- Der Validator lässt nur die 20 Felder zu, die die Claude-Code-Doku für Skills nennt —
-  unbekannte ignoriert Claude Code still, auch Tippfehler —, und prüft die Grenze von
-  1536 Zeichen für `description` plus `when_to_use`, über der Claude Code die
-  Beschreibung in der Skill-Liste kürzt.
-- `argument-hint` für jeden Skill, der ein Argument nimmt.
-- `default-enabled` gibt es für Skills nicht (es ist ein Feld des Plugin-Manifests) und
-  fliegt aus der Authoring-Doku.
-- Nicht jetzt: `when_to_use`, `allowed-tools`, `hooks`, `paths`, `arguments`, `metadata`,
-  `license`, `compatibility`. Über `model` und `effort` entscheidet F-046; `context: fork`
-  geht als Hinweis an F-037, `shell` an F-027.
-
-**Lösungsskizze** (Stand Planung 2026-10-26):
-- Alle Skills: beide Flags ausdrücklich, ohne Änderung am Startverhalten;
-  `argument-hint`, wo ein Argument erwartet wird.
-- `scripts/validate.py`: Pflichtfelder, wörtliche Booleans, verbotene Kombination,
-  Feldliste und Längengrenze — für Plugin- und repo-lokale Skills.
-- `docs/skill-authoring.md` § Frontmatter: Pflichtfelder samt Bedeutung und Kontextkosten
-  (`disable-model-invocation: true` hält die Beschreibung aus dem Kontext), die
-  Feldübersicht mit den Entscheidungen und ein Verweis auf die Claude-Code-Doku; dazu ein
-  Punkt in der Checkliste von `/add-skill`.
-- Je eine Zeile „Noch zu analysieren" in F-037 und F-027 (mit Vorschau).
-- CHANGELOG unter 1.6.0 (unveröffentlicht, ohne `### Template`).
-
-**Abnahmekriterien:**
-- [ ] Jeder Skill setzt beide Flags ausdrücklich. Der Validator meldet ein fehlendes
-      Flag, `yes` statt `true`, die verbotene Kombination, ein unbekanntes Feld und eine
-      zu lange Beschreibung (Fehlerprobe).
-- [ ] Kein Skill ändert sein Startverhalten: Die Werte vorher und nachher sind gleich, per
-      Skript verglichen.
-- [ ] `just check` grün.
-
-**Abhängigkeiten:** keine. Berührt F-046, F-037 und F-027.
-
----
-
 ## Feature-Ideen (Backlog)
 
 _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer._
@@ -227,22 +171,20 @@ sortiert):
 1. **F-040** — unabhängig von F-036; die globale CLAUDE.md driftet schon (siehe
    Eintrag), und jede Session lädt sie. Vor den Strängen Graphiti und Host, deren
    Änderungen an den Kit-Regeln sonst bestehende Rechner nicht erreichen.
-2. **F-048** — klein; vor F-036, damit die folgenden Umbauten an Skills schon mit den
-   Pflichtfeldern arbeiten. Fertig vor F-040e, geht es mit Release 1.6.0 hinaus.
-3. **F-049** — vor F-036, dessen neue seed-Zonen bestehende Projekte sonst nicht
+2. **F-049** — vor F-036, dessen neue seed-Zonen bestehende Projekte sonst nicht
    erreichen.
-4. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
+3. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
-5. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
-6. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-7. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
+4. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
+5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+6. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
    mit. F-026 ist in F-039 aufgegangen, sein Rest (Kit-Repo-Herkunft in `check-upstreams`)
    in F-032.
-8. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
-9. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+8. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
-Strang 6 und 7 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
@@ -340,6 +282,12 @@ zu scheitern.
   wird.
 - Verifikation gehört auf einen echten Windows-Rechner; auf macOS und Linux ist nur
   Nicht-Regression prüfbar.
+
+**Noch zu analysieren:**
+- Seit F-040d startet auch der Session-Hinweis (`hooks/session-start.sh`) über `bash`; die
+  Lösung muss beide Hooks abdecken. Für Befehle in Skill-Texten gibt es das
+  Frontmatter-Feld `shell` (`bash` oder `powershell`, siehe F-048) — prüfen, ob ein Skill
+  es braucht.
 
 **Abhängigkeiten:** keine. Thematische Nähe zu F-025 (Plattform-Abdeckung), aber anderer
 Gegenstand: Plugin-Inhalt statt Installer.
@@ -669,6 +617,11 @@ dazu Security und Lesbarkeit.
 - Nach Größe staffeln: Klein ein oder kein Reviewer, Mittel/Groß zwei parallel
   (Korrektheit gegen Spec; Security + Lesbarkeit). Token-Kosten im Blick behalten.
 
+**Noch zu analysieren:**
+- Ob der Reviewer als Skill mit `context: fork` läuft (Subagent mit frischem Kontext,
+  dazu `agent` und `background`; Frontmatter-Übersicht aus F-048) statt als eigene
+  Agent-Definition.
+
 **Abhängigkeiten:** F-036 (Feature-Spec als Prüfgrundlage; ohne sie nur Prüfung gegen
 den PROGRESS-Eintrag). Zusammen mit F-034 umsetzen — dessen Review-Kriterien
 (verständlich, einfach, Secure Coding) sind der Prüfmaßstab des Reviewers.
@@ -834,6 +787,6 @@ F-044 Sprachen ohne Vorlage erkennen und dem Template vorschlagen (DONE)
 F-045 Zonen-Abgleich und Lock-Prüfung ins Skript (DONE)
 F-046 Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
 F-047 Skript-Tests zusätzlich mit mawk (DONE)
-F-048 Frontmatter-Pflichtfelder für Skills und Übersicht der erlaubten Felder (PLANNED)
+F-048 Frontmatter-Pflichtfelder für Skills und Übersicht der erlaubten Felder (DONE)
 F-049 Neue Zonen erkennen und anbieten
 -->

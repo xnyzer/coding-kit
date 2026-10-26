@@ -2,6 +2,7 @@
 name: go-public
 description: Projekt nachträglich public machen — geführter Übergang mit blockierendem Preflight-Audit (Secrets über die volle Git-Historie, Privacy-Scan des committeten Baums, Lizenz, private/-Hygiene), Datei-Nachzug VOR dem Umstellen (via /update-conventions mit Sichtbarkeits-Prämisse) und Abschluss-Check. Drei Startfälle — privates GitHub-Repo, nur lokales Projekt, schon public. Nichts passiert ohne explizite Bestätigung; online geht das Repo erst, wenn es vollständig ist.
 disable-model-invocation: true
+user-invocable: true
 ---
 
 # Projekt public machen (geführter Übergang)

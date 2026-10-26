@@ -1,7 +1,9 @@
 ---
 name: define-requirements
 description: Anforderungen erheben. M1-Interview aus der Short-Info (Ziele, Kern-Features, Nicht-Ziele, Constraints, Eigenschafts-Trigger des Fragment-Katalogs) → REQUIREMENTS.md als Übergangs-Artefakt → initiale PROGRESS.md mit einer F-Nummer je Anforderung. Verwaltet auch den Auflöse-Trigger der REQUIREMENTS.md. Einzeln nutzbar und von /new-project aufrufbar.
+argument-hint: "[Short-Info]"
 disable-model-invocation: false
+user-invocable: true
 ---
 
 # Anforderungen erheben

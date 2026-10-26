@@ -1,7 +1,9 @@
 ---
 name: build-step
 description: Vorbereitete Aufgabe (F-Nummer) diszipliniert umsetzen — liest den prep-step-Plan, arbeitet Substeps mit Verifikation je Schritt ab. Interaktiv endet jeder Substep mit einer step-done-Empfehlung (du prüfst und schließt selbst ab); nur im autonomen /goal-Lauf läuft step-done je Substep automatisch. Mit Argument „autonom" wird nicht gebaut, sondern ein /goal-Lauf vorbereitet (Regeln laden, Freigabe für Verbuchen und Commits einholen, fertige Goal-Zeile ausgeben). Nur manuell per /coding-kit:build-step aufrufbar.
+argument-hint: "[F-Nummer] [autonom]"
 disable-model-invocation: true
+user-invocable: true
 ---
 
 # Aufgabe umsetzen (Bau-Modus)

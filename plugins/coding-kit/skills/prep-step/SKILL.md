@@ -1,7 +1,9 @@
 ---
 name: prep-step
 description: Aufgabe vor der Umsetzung vorbereiten. Hinterfragt die Lösungsskizze gegen den aktuellen Codestand, analysiert den Umfang, prüft neu eingeführte Frameworks, Sprachen und Toolchains per Erkennungs-Skript gegen Fragment-Katalog und Stack-Module, zerlegt bei Bedarf in Substeps und schreibt Plan + Status-Marker PLANNED nach Freigabe in die PROGRESS.md.
+argument-hint: "[F-Nummer]"
 disable-model-invocation: true
+user-invocable: true
 ---
 
 # Aufgabe vorbereiten

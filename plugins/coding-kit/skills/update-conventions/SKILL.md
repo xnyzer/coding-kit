@@ -1,7 +1,9 @@
 ---
 name: update-conventions
 description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME); Abweichungs-Registry mit den Arten skip, keep, adapt; erkennt bei jedem Lauf per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt (dauerhafte Ablehnung als Rules-Zeile); Migration für Projekte ohne Snapshot; erkennt im Template entfernte/umbenannte Dateien. Ohne Argument nur das Projekt im aktuellen Ordner, alle Projekte nur mit `alle`; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente werden nie angefasst; sie und Tools ohne Vorlage meldet er mit dem Angebot, sie dem Template vorzuschlagen (Hintergrund-Skill propose-to-template). Mit `global` — und einmal in jedem anderen Lauf, sobald sie eingerichtet sind — gleicht er auch die globalen Kit-Regeln auf dem Rechner ab (`~/.claude/rules/coding-kit.md`, aus der Kit-Datei und den Werten der Personal-Config gerendert) — Ersteinrichtung, Diff und Bestätigung je Abschnitt, Migration einer alten Kit-Kopie in `~/.claude/CLAUDE.md`; eine selbst angelegte CLAUDE.md fasst er nie an. Nichts wird ungefragt überschrieben.
+argument-hint: "[Projekt | alle | global [Ordner]] [status | revise]"
 disable-model-invocation: true
+user-invocable: true
 ---
 
 # Konventions-Sync (Template → Projekte)

@@ -1,7 +1,9 @@
 ---
 name: teach-step
 description: Feature geführt selbst umsetzen. Leitet als Coding-Lehrer sokratisch durch die Umsetzung einer Aufgabe — der Nutzer schreibt allen Code selbst; der Skill liest Code, gibt gestufte Hinweise, prüft Änderungen und lässt Tests laufen. Schreibt nie Code oder Dateien. Nur manuell per /coding-kit:teach-step aufrufbar.
+argument-hint: "[F-Nummer]"
 disable-model-invocation: true
+user-invocable: true
 disallowed-tools: Write, Edit, NotebookEdit
 ---
 
