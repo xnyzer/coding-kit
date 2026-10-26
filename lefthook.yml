@@ -5,12 +5,13 @@ pre-commit:
       run: gitleaks git --pre-commit --staged --redact
     - name: validate
       run: just validate
-    # The script tests take several seconds; they run when the script, the template it
-    # renders or the tests change. CI and `just check` always run them.
+    # The script tests take several seconds; they run when the script, the template or
+    # global rules it renders or the tests change. CI and `just check` always run them.
     - name: script-tests
       run: just test
       glob:
         - "plugins/coding-kit/scripts/*"
+        - "plugins/coding-kit/global/*"
         - "plugins/coding-kit/template/*"
         - "plugins/coding-kit/template/**/*"
         - "tests/template-sync/*"

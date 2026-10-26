@@ -16,6 +16,88 @@ zusammen:
 
 ---
 
+## F-040a — Kit-Datei, Werte, Render (2026-10-26)
+
+Teil von F-040 (Globale Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau;
+F-040b–e folgen).
+
+**Problem:** Die globalen Regeln lagen als `templates/global-CLAUDE.md` im Repo-Root,
+außerhalb des Plugins, und kamen nur über `install.sh` einmal auf einen Rechner. Für den
+Abgleich brauchte es eine Quelle im Plugin, die persönliche Werte aufnimmt, und einen
+deterministischen Render.
+
+**Was entstanden ist (1.6.0, unveröffentlicht):**
+
+- **`plugins/coding-kit/global/coding-kit.md` (neu):** Kennung
+  `<!-- coding-kit:global-rules -->` in der ersten Zeile, ein HTML-Kommentar für Menschen
+  (wem die Datei gehört, die drei Schlüssel samt Optionen, wie man abweicht) und fünf
+  `section:`-Zonen: `global-language`, `global-explain`, `global-git`, `global-graphiti`,
+  `global-workflow`. Git und Graphiti sind wortgleich mit der Vorlage, Arbeitsweise trägt
+  zusätzlich die Artifact-Regel wortgleich aus der installierten Fassung, Sprache & Stil
+  die Languages-Block-Regel der Vorlage. Die Antwortsprache kommt aus
+  `{{REPLY_LANGUAGE}}`, „Direkt und präzise" steht für sich. Neu ist der Abschnitt
+  Erklär-Niveau: Geltungsbereich, vier Stufenblöcke (`einsteiger`, `junior`,
+  `fortgeschritten`, `senior`) und die Notiz `{{EXPLAIN_NOTE}}`.
+- **Stufentexte:** nach einer Einordnung im Gespräch ergänzt. `junior` nennt bei mehreren
+  üblichen Wegen die Optionen und empfiehlt einen; `einsteiger` und `junior` sagen bei
+  größeren Änderungen, was sich geändert hat und welche Stellen sich zu lesen lohnen.
+- **`template-sync.sh render-global KIT ENV OUT` (neu):** liest die Personal-Config als
+  Shell-Syntax, ohne sie auszuführen (`NAME="…"`, `'…'`, nacktes Wort, `export`,
+  Kommentar dahinter, nur die Escapes `\"`, `\\`, `\$` und `` \` ``; eine spätere
+  Zuweisung gewinnt), meldet je Wert `key <Name> <set|empty|missing>` und schreibt
+  `OUT/rules/coding-kit.md`. Ein leerer Wert entfernt seinen Block. Eine Stufe ohne
+  Block, ein unbekannter Block, ein offener Platzhalter und ein Tab oder `{{` in einem
+  Wert brechen mit Exit 1 ab, ohne etwas zu schreiben. Die Einsetzregeln kommen aus
+  `finalize`, wie bei `render`.
+- **`finalize`** erkennt die Wertetabelle an `FILENAME == ARGV[1]` statt an
+  `NR == FNR`: Mit leerer Tabelle hätte es die ganze Kit-Datei als Werte gelesen.
+- **Repo:** `.claude/settings.json` (neu) mit `claudeMdExcludes` für
+  `**/plugins/coding-kit/template/**`; Begründung und eine Strukturregel zu `global/` in
+  der `CLAUDE.md`. `lefthook.yml` lässt die Skript-Tests auch bei Änderungen unter
+  `global/` laufen.
+- **Validator:** Kennung, Zonen, flache und bekannte Blöcke, Platzhalter nur aus
+  `GLOBAL_KEYS` des Skripts, ein Schlüssel-Kommentar je Wert, Stufenliste im Kommentar
+  gleich den Stufenblöcken, die `claudeMdExcludes`-Zeile. Markdown-Doku außerhalb des
+  Templates darf die Werte-Platzhalter nennen. Die Versionsregel zählt `global/` zum
+  Plugin-Inhalt.
+- **Tests:** `tests/template-sync/global.sh` (neu): alle Werte, keine, leere, nur Notiz,
+  nur Stufe, jede Stufe; Syntax der Personal-Config (spätere Zuweisung, einfache
+  Anführungszeichen, CRLF, offenes Anführungszeichen, Text hinter dem Wert, Leerzeichen
+  nach `=`, Tab, `{{`); unbekannte Stufe; Kit-Vertrag (unbekannter Block, offener
+  Platzhalter, Verschachtelung) und Fehlerfälle der Operanden. Dazu `zones` auf
+  Stellvertreter-Config-Ordnern: `identical`, `differs`, `override`, `opted-out`, ein
+  geänderter Wert, eine fremde Datei (`unmarked`, nie umgeschrieben) und keine Datei
+  (`no-file`).
+- **Version:** `plugin.json` 1.6.0, CHANGELOG-Eintrag ohne `### Template` (Projekte
+  betrifft der Schritt nicht).
+
+**Verifikation:** `just check` grün mit 1425 Checks unter dash, bash und mawk (255 davon
+neu); gawk ist lokal nicht installiert. Die übernommenen Abschnitte per Diff gegen Vorlage
+und installierte Fassung geprüft. Fehlerinjektion im Validator: falsche Stufenliste,
+unbekannter Block, Verschachtelung, fehlende Kennung, fremder Platzhalter, fehlender
+Schlüssel-Kommentar, fehlende oder leere `claudeMdExcludes` — alle gemeldet, die echte
+Datei sauber. Versionsregel mit temporärem Index: schlägt ohne Bump bei
+`global/coding-kit.md` an.
+
+**Notable decisions:**
+- Flache statt verschachtelter Blöcke: So bleibt `finalize` die eine Umsetzung der
+  Einsetzregeln. Der Abschnitt Erklär-Niveau hat dafür eigene Blöcke für Überschrift,
+  Stufen und Notiz.
+- Ohne Werte bleibt die Erklär-Zone als leeres Markerpaar stehen. Kommen Werte dazu,
+  meldet `zones` sie als `differs` statt als `local`.
+- Die Schlüssel stehen samt Kommentar im HTML-Kommentar der Kit-Datei: Claude Code
+  entfernt solche Kommentare vor dem Laden, und der Abgleich übernimmt die Zeilen von dort
+  (eine Quelle).
+- `render-global` liest nur `CODING_KIT_*`-Zeilen und führt die Datei nie aus; eine Notiz
+  mit `$` bleibt wörtlich.
+- „Antwortsprache: X" statt „Antworte auf X", damit jeder Sprachname passt.
+
+**Geänderte Dateien:** `plugins/coding-kit/global/coding-kit.md` (neu),
+`plugins/coding-kit/scripts/template-sync.sh`, `tests/template-sync/global.sh` (neu),
+`tests/template-sync/run.sh`, `scripts/validate.py`, `scripts/version-rule.py`,
+`.claude/settings.json` (neu), `CLAUDE.md`, `lefthook.yml`,
+`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`.
+
 ## F-047 — Skript-Tests zusätzlich mit mawk (2026-10-26)
 
 **Problem:** `just check` testete `template-sync.sh` nur mit dem awk des Rechners. Auf

@@ -9,6 +9,17 @@
 #       Line per file: <target> <managed|seed> <core|module>. Without --seeds only the
 #       managed targets; with --seeds the seed files follow as raw instantiation
 #       (template:adapt spots and the license text stay with the calling skill).
+#   render-global KIT ENV OUT
+#       Renders the kit's global rules KIT (global/coding-kit.md of the plugin) with the
+#       personal values of ENV (the personal config ~/.claude/coding-kit.env, shell
+#       syntax — read, never executed; a missing file has no values) into
+#       OUT/rules/coding-kit.md (OUT missing or empty), its path below the Claude config
+#       folder. Lines: key <CODING_KIT_NAME> <set|empty|missing> per value the rules read,
+#       then rendered <target>. An empty or missing value drops its template:optional
+#       block: reply-language without CODING_KIT_REPLY_LANGUAGE, level-NAME unless
+#       CODING_KIT_EXPLAIN_LEVEL is NAME (a level without a block is refused),
+#       explain-note without CODING_KIT_EXPLAIN_NOTE, explain without level and note.
+#       zones then takes OUT as SEEDS and the config folder as PROJECT.
 #   status [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT
 #       Compares every target of the base snapshot (.claude/template-base/<target>.base)
 #       with the project. Line: <target> <unchanged|deviates|missing> <registry> <+a -d>.
@@ -116,6 +127,7 @@ die() {
 usage() {
   cat >&2 << 'EOF'
 usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
+       sh template-sync.sh render-global KIT ENV OUT
        sh template-sync.sh status [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT
        sh template-sync.sh changed [--registry FILE] [--snapshot DIR] PROJECT
        sh template-sync.sh merge [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SOLL OUT
@@ -407,7 +419,8 @@ finalize() {  # SRC DST
       while ((i = index(s, t)) > 0) { o = o substr(s, 1, i - 1) r; s = substr(s, i + length(t)) }
       return o s
     }
-    NR == FNR { tok["{{" $1 "}}"] = substr($0, length($1) + 2); next }
+    # Not NR == FNR: the values table may be empty (render-global without values).
+    FILENAME == ARGV[1] { tok["{{" $1 "}}"] = substr($0, length($1) + 2); next }
     { t = $0; gsub(/^[ \t]+|[ \t]+$/, "", t) }
     t ~ /^<!--[ \t]*template:optional:[a-z0-9-]+[ \t]*-->$/ {
       if (name != "") exit 7
@@ -1302,6 +1315,133 @@ zones() {
   done
 }
 
+# --- render-global --------------------------------------------------------------
+
+# Values of the personal config the global rules read, without the CODING_KIT_ prefix;
+# the validator compares the list with the placeholders of the kit file.
+GLOBAL_KEYS='REPLY_LANGUAGE EXPLAIN_LEVEL EXPLAIN_NOTE'
+GLOBAL_TARGET=rules/coding-kit.md
+
+# ENV → "NAME<TAB>value" per CODING_KIT_NAME assignment, NAME without the prefix. Reads
+# the shell syntax of the personal config — NAME="value", 'value' or a bare word, also
+# behind export and followed by a # comment — without executing anything: no expansion,
+# only the escapes \" \\ \$ \` inside double quotes. A later assignment wins, as in the
+# shell; other lines are ignored.
+load_env() {  # ENV
+  awk '
+    function fail(msg) { print "template-sync: " FILENAME " line " FNR ": " msg | "cat 1>&2"; bad = 1 }
+    { sub(/\r$/, "") }
+    /^[ \t]*(#|$)/ { next }
+    {
+      line = $0
+      sub(/^[ \t]+/, "", line)
+      sub(/^export[ \t]+/, "", line)
+      if (line !~ /^CODING_KIT_[A-Z0-9_]+=/) next
+      eq = index(line, "=")
+      name = substr(line, 12, eq - 12)
+      rest = substr(line, eq + 1)
+      q = substr(rest, 1, 1)
+      if (q == "\"") {
+        val = ""; closed = 0
+        for (i = 2; i <= length(rest); i++) {
+          c = substr(rest, i, 1)
+          if (c == "\\" && i < length(rest) && index("\"\\$`", substr(rest, i + 1, 1))) {
+            i++; val = val substr(rest, i, 1); continue
+          }
+          if (c == "\"") { closed = 1; break }
+          val = val c
+        }
+        tail = substr(rest, i + 1)
+      } else if (q == "\047") {
+        quote_at = index(substr(rest, 2), "\047")
+        closed = quote_at > 0
+        val = substr(rest, 2, quote_at - 1); tail = substr(rest, quote_at + 2)
+      } else {
+        closed = 1
+        match(rest, /^[^ \t]*/)
+        val = substr(rest, 1, RLENGTH); tail = substr(rest, RLENGTH + 1)
+      }
+      key = "CODING_KIT_" name
+      if (!closed) { fail(key ": unterminated quote"); next }
+      if (tail !~ /^([ \t]+(#.*)?)?$/) { fail(key ": unexpected text after the value"); next }
+      if (index(val, "\t") || index(val, "{{")) { fail(key ": value contains a tab or {{"); next }
+      value[name] = val
+    }
+    END {
+      for (n in value) print n "\t" value[n]
+      close("cat 1>&2")
+      exit bad
+    }' "$1"
+}
+
+# Value of NAME (without the prefix) in the parsed personal config; status 1 when unset.
+env_value() {  # NAME
+  awk -F "$TAB" -v k="$1" '
+    $1 == k { print substr($0, length(k) + 2); found = 1 }
+    END { exit !found }' "$WORK/env.tsv"
+}
+
+render_global() {
+  [ $# -eq 3 ] || usage
+  RG_KIT=$1 RG_ENV=$2 RG_OUT=$3
+  [ -f "$RG_KIT" ] || die "kit rules not found: $RG_KIT"
+  check_out_dir "$RG_OUT"
+  setup_work
+  : > "$WORK/env.tsv"
+  if [ -f "$RG_ENV" ]; then
+    load_env "$RG_ENV" > "$WORK/env.tsv" || die "invalid personal config: $RG_ENV"
+  fi
+  # Only values that are set go into the table finalize substitutes from; an empty one
+  # drops its block instead.
+  : > "$WORK/values.tsv"
+  : > "$WORK/keys.tsv"
+  # Word splitting of the key list is intended.
+  for rg_name in $GLOBAL_KEYS; do
+    if rg_val=$(env_value "$rg_name"); then
+      if [ -n "$rg_val" ]; then
+        add_value "$rg_name" "$rg_val"
+        rg_state=set
+      else
+        rg_state=empty
+      fi
+    else
+      rg_state=missing
+    fi
+    printf 'key\tCODING_KIT_%s\t%s\n' "$rg_name" "$rg_state" >> "$WORK/keys.tsv"
+  done
+  rg_lang=$(value_of REPLY_LANGUAGE) || rg_lang=
+  rg_level=$(value_of EXPLAIN_LEVEL) || rg_level=
+  rg_note=$(value_of EXPLAIN_NOTE) || rg_note=
+  # The level blocks of the kit file are the list of levels.
+  sed -n 's/^[[:space:]]*<!--[[:space:]]*template:optional:\([a-z0-9-]*\)[[:space:]]*-->[[:space:]]*$/\1/p' \
+    "$RG_KIT" > "$WORK/blocks"
+  rg_levels=
+  while IFS= read -r rg_block; do
+    case $rg_block in
+      reply-language | explain | explain-note) ;;
+      level-?*) rg_levels="$rg_levels ${rg_block#level-}" ;;
+      *) die "$RG_KIT: unknown block template:optional:$rg_block" ;;
+    esac
+  done < "$WORK/blocks"
+  OPTIONAL=
+  if [ -n "$rg_lang" ]; then OPTIONAL="$OPTIONAL reply-language"; fi
+  if [ -n "$rg_level" ]; then
+    case " $rg_levels " in
+      *" $rg_level "*) ;;
+      *) die "CODING_KIT_EXPLAIN_LEVEL: unknown level '$rg_level' (known:$rg_levels)" ;;
+    esac
+    OPTIONAL="$OPTIONAL level-$rg_level"
+  fi
+  if [ -n "$rg_note" ]; then OPTIONAL="$OPTIONAL explain-note"; fi
+  if [ -n "$rg_level$rg_note" ]; then OPTIONAL="$OPTIONAL explain"; fi
+  finalize "$RG_KIT" "$WORK/global.md" || die "$RG_KIT: unbalanced or nested template:optional block"
+  [ ! -s "$WORK/missing" ] || die "$RG_KIT: unresolved placeholder: $(missing_tokens)"
+  mkdir -p "$RG_OUT/${GLOBAL_TARGET%/*}"
+  mv "$WORK/global.md" "$RG_OUT/$GLOBAL_TARGET"
+  cat "$WORK/keys.tsv"
+  printf 'rendered\t%s\n' "$GLOBAL_TARGET"
+}
+
 # --- lock-check -----------------------------------------------------------------
 
 # Backends whose lock entries record no download URL, so `mise install --locked` needs
@@ -1911,6 +2051,7 @@ parse_opts "$cmd" "$@"
 shift "$OPTS_SHIFT"
 case $cmd in
   render) render "$@" ;;
+  render-global) render_global "$@" ;;
   status) status "$@" ;;
   changed) changed "$@" ;;
   merge) merge "$@" ;;

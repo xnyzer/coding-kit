@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Repo validation: file syntax, plugin/marketplace/skill contracts, privacy lint, and
-the bundled template (placeholder registry, paired fragment/section markers, the
+"""Repo validation: file syntax, plugin/marketplace/skill contracts, privacy lint, the
+bundled template (placeholder registry, paired fragment/section markers, the
 standards-fragment catalog, detection signals, and the contract between skills and
-MANIFEST).
+MANIFEST), the kit's global rules, and the repo setting that keeps the template's
+CLAUDE.md out of sessions in this repo.
 
 Run via `just check` (uv provides PyYAML). Exits non-zero on any finding.
 """
@@ -104,6 +105,20 @@ SCRIPT_SIGNAL_TYPES_RE = re.compile(r"^SIGNAL_TYPES='([a-z ]*)'", re.MULTILINE)
 # Deterministic helpers shipped with the plugin (POSIX sh, called with `sh <path>`).
 PLUGIN_SCRIPTS_DIR = PLUGIN_ROOT / "scripts"
 TEMPLATE_SYNC = PLUGIN_SCRIPTS_DIR / "template-sync.sh"
+# The kit's global rules, rendered by `template-sync.sh render-global` into
+# ~/.claude/rules/coding-kit.md. Their placeholders are the personal values GLOBAL_KEYS of
+# the script reads, not the MANIFEST registry; their blocks are flat and known to the
+# renderer; the level options in the key comment are the level blocks.
+GLOBAL_RULES = PLUGIN_ROOT / "global" / "coding-kit.md"
+GLOBAL_RULES_ID = "<!-- coding-kit:global-rules -->"
+SCRIPT_GLOBAL_KEYS_RE = re.compile(r"^GLOBAL_KEYS='([A-Z_ ]*)'", re.MULTILINE)
+GLOBAL_FIXED_BLOCKS = {"reply-language", "explain", "explain-note"}
+OPTIONAL_LINE_RE = re.compile(r"^\s*<!--\s*(/?)template:optional:([a-z0-9][a-z0-9-]*)\s*-->\s*$")
+LEVEL_OPTIONS_RE = re.compile(r"^CODING_KIT_EXPLAIN_LEVEL=\S*\s+#\s*([^;\n]*)", re.MULTILINE)
+# claudeMdExcludes in the repo's .claude/settings.json: without it Claude Code loads the
+# template's CLAUDE.md as soon as a file next to it is read (reason in CLAUDE.md).
+REPO_SETTINGS = REPO_ROOT / ".claude" / "settings.json"
+TEMPLATE_EXCLUDE = "**/plugins/coding-kit/template/**"
 # Base snapshot and deviation registry (MANIFEST format 2): the tables template-sync.sh and
 # the skills read, and the attribute that collapses the snapshot in diffs.
 REGISTRY_TEMPLATE = TEMPLATE_ROOT / "core" / ".claude" / "convention-overrides.md"
@@ -179,9 +194,21 @@ def load_placeholder_registry(findings: list[str]) -> set[str]:
     return tokens
 
 
-def check_placeholders(path: Path, text: str, findings: list[str], registry: set[str]) -> None:
+def check_placeholders(
+    path: Path, text: str, findings: list[str], registry: set[str], global_keys: set[str]
+) -> None:
     rel = display_path(path)
+    if path == GLOBAL_RULES:
+        for match in PLACEHOLDER_RE.finditer(text):
+            if match.group(1) not in global_keys:
+                findings.append(
+                    f"{rel}: unknown placeholder {match.group(0)!r} — the global rules use "
+                    "only the personal values in GLOBAL_KEYS of template-sync.sh"
+                )
+        return
     may_use_registry = in_template(path) or path.suffix == ".md"
+    # Markdown docs outside the template may also name the personal values.
+    known = registry if in_template(path) else registry | global_keys
     for match in PLACEHOLDER_RE.finditer(text):
         token = match.group(1)
         if not may_use_registry:
@@ -189,7 +216,7 @@ def check_placeholders(path: Path, text: str, findings: list[str], registry: set
                 f"{rel}: stray placeholder {match.group(0)!r} — only template content and "
                 "Markdown docs may use registered placeholders"
             )
-        elif token not in registry:
+        elif token not in known:
             findings.append(
                 f"{rel}: unknown placeholder {{{{{token}}}}} — register it in "
                 "plugins/coding-kit/template/MANIFEST.md (## Placeholders)"
@@ -663,6 +690,92 @@ def check_plugin_scripts(findings: list[str]) -> None:
             findings.append(f"{rel}: sh -n failed — {result.stderr.strip()}")
 
 
+def load_global_keys(findings: list[str]) -> set[str]:
+    """GLOBAL_KEYS of template-sync.sh: the personal values render-global reads."""
+    if not TEMPLATE_SYNC.is_file():
+        return set()  # reported by check_module_parts_known
+    match = SCRIPT_GLOBAL_KEYS_RE.search(TEMPLATE_SYNC.read_text(encoding="utf-8"))
+    if not match:
+        findings.append(f"{display_path(TEMPLATE_SYNC)}: GLOBAL_KEYS not found")
+        return set()
+    return set(match.group(1).split())
+
+
+def check_global_rules(findings: list[str], global_keys: set[str]) -> None:
+    """The kit's global rules: the identifier on the first line, paired zone markers, flat
+    template:optional blocks that render-global knows, a key comment for every value, and
+    level options in that comment equal to the level blocks."""
+    rel = display_path(GLOBAL_RULES)
+    if not GLOBAL_RULES.is_file():
+        findings.append(f"{rel}: missing")
+        return
+    text = GLOBAL_RULES.read_text(encoding="utf-8")
+    if text.split("\n", 1)[0] != GLOBAL_RULES_ID:
+        findings.append(f"{rel}: the first line must be {GLOBAL_RULES_ID}")
+    check_paired_markers(GLOBAL_RULES, text, findings)
+    open_block: str | None = None
+    levels: list[str] = []
+    for number, line in enumerate(text.splitlines(), 1):
+        if "template:optional:" not in line:
+            continue
+        match = OPTIONAL_LINE_RE.match(line)
+        where = f"{rel}:{number}"
+        if not match:
+            findings.append(f"{where}: template:optional marker must stand on a line of its own")
+            continue
+        closing, name = match.group(1), match.group(2)
+        if closing:
+            if name != open_block:
+                findings.append(
+                    f"{where}: closing '{name}' does not match the open block {open_block!r}"
+                )
+            open_block = None
+            continue
+        if open_block:
+            findings.append(
+                f"{where}: block '{name}' opens inside '{open_block}' (blocks are flat)"
+            )
+        open_block = name
+        if name.startswith("level-") and name != "level-":
+            levels.append(name.removeprefix("level-"))
+        elif name not in GLOBAL_FIXED_BLOCKS:
+            findings.append(
+                f"{rel}:{number}: unknown block '{name}' — render-global knows "
+                f"{', '.join(sorted(GLOBAL_FIXED_BLOCKS))} and level-NAME"
+            )
+    if open_block:
+        findings.append(f"{rel}: block '{open_block}' is opened but never closed")
+    for key in sorted(global_keys):
+        if f"CODING_KIT_{key}=" not in text:
+            findings.append(f"{rel}: the key comment lacks CODING_KIT_{key}")
+    match = LEVEL_OPTIONS_RE.search(text)
+    options = [option.strip() for option in match.group(1).split("|")] if match else []
+    if options != levels:
+        findings.append(
+            f"{rel}: level options in the key comment {options} differ from the level "
+            f"blocks {levels}"
+        )
+
+
+def check_template_excluded(findings: list[str]) -> None:
+    """The repo's .claude/settings.json excludes the template's instruction files —
+    otherwise Claude Code loads template/core/CLAUDE.md as soon as a file next to it is
+    read (reason in CLAUDE.md § Strukturregeln)."""
+    rel = display_path(REPO_SETTINGS)
+    if not REPO_SETTINGS.is_file():
+        findings.append(f"{rel}: missing — needs claudeMdExcludes with {TEMPLATE_EXCLUDE!r}")
+        return
+    try:
+        settings = json.loads(REPO_SETTINGS.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return  # reported by check_syntax
+    excludes = settings.get("claudeMdExcludes", []) if isinstance(settings, dict) else []
+    if TEMPLATE_EXCLUDE not in excludes:
+        findings.append(
+            f"{rel}: claudeMdExcludes lacks {TEMPLATE_EXCLUDE!r} (see CLAUDE.md § Strukturregeln)"
+        )
+
+
 def check_plugin_paths(skills: list[Path], findings: list[str]) -> None:
     """Every `${CLAUDE_PLUGIN_ROOT}/<path>` a skill names exists in the plugin."""
     for skill in skills:
@@ -796,6 +909,7 @@ def check_plugin_contracts(findings: list[str]) -> None:
 def main() -> int:
     findings: list[str] = []
     registry = load_placeholder_registry(findings)
+    global_keys = load_global_keys(findings)
     blocklist = load_blocklist()
     for path in iter_files():
         try:
@@ -803,12 +917,14 @@ def main() -> int:
         except UnicodeDecodeError:
             continue  # binary file
         check_syntax(path, text, findings)
-        check_placeholders(path, text, findings, registry)
+        check_placeholders(path, text, findings, registry, global_keys)
         check_privacy(path, text, findings)
         check_blocklist(path, text, findings, blocklist)
         if in_template(path):
             check_paired_markers(path, text, findings)
     check_plugin_contracts(findings)
+    check_global_rules(findings, global_keys)
+    check_template_excluded(findings)
     check_template_contract(findings)
     check_fragment_declarations(findings)
     check_catalog(CATALOG_DIR, findings)

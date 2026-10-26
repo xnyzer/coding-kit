@@ -28,6 +28,16 @@ Details: `README.md`.
   `modules/`) — nur innerhalb des Plugins landet es im Plugin-Cache. Skills lesen es
   ausschließlich über `${CLAUDE_PLUGIN_ROOT}/template`; `MANIFEST.md` ist der Vertrag
   zwischen Skills und Template, `just check` prüft ihn mechanisch.
+- **Template-Anweisungen nie als Repo-Regeln laden:** `.claude/settings.json` schließt per
+  `claudeMdExcludes` alle Anweisungsdateien unter `plugins/coding-kit/template/` aus.
+  Sonst lädt Claude Code `template/core/CLAUDE.md` (Platzhalter, Regeln für ein
+  Downstream-Projekt) als Regel fürs Kit, sobald eine Datei in dem Ordner gelesen wird.
+  Die Begründung steht hier, weil JSON keine Kommentare kennt; der Validator prüft die
+  Zeile.
+- **Globale Regeln** unter `plugins/coding-kit/global/` (`coding-kit.md`): kommen mit
+  dem Plugin auf den Rechner und werden nach `~/.claude/rules/coding-kit.md` gerendert
+  (`template-sync.sh render-global`) — kein Projektinhalt, deshalb nicht in `template/`,
+  und deutsch.
 - **Sprachgrenze:** Kit-Inhalte (README, Doku, Skill-Texte, CHANGELOG) Deutsch. Englisch
   ist nur, was in Projekte gelangt oder dort wirkt: der Template-Inhalt
   (`plugins/coding-kit/template/**`), Governance-Doku dieses Repos, Commit-Messages,

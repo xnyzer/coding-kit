@@ -13,6 +13,38 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 1.6.0 — unveröffentlicht
+
+Globale Kit-Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau (F-040, in
+Arbeit).
+
+- **`global/coding-kit.md` (neu):** die globalen Regeln des Kits. Bisher lagen sie als
+  Vorlage `templates/global-CLAUDE.md` im Repo-Root, die nur `install.sh` einmal nach
+  `~/.claude/CLAUDE.md` kopierte. Jetzt kommen sie mit dem Plugin auf den Rechner und
+  werden nach `~/.claude/rules/coding-kit.md` gerendert, das Claude Code in jeder Session
+  lädt; `~/.claude/CLAUDE.md` bleibt allein dem Nutzer. Die Abschnitte sind
+  `section:`-Zonen (`global-language`, `global-explain`, `global-git`, `global-graphiti`,
+  `global-workflow`). Inhalt wie die Vorlage plus die Regel, nichts ohne ausdrückliche
+  Erlaubnis als Artifact zu veröffentlichen; neu ist der Abschnitt Erklär-Niveau mit den
+  Stufen `einsteiger`, `junior`, `fortgeschritten` und `senior` und einer freien Notiz.
+  Antwortsprache, Stufe und Notiz kommen aus der Personal-Config
+  (`CODING_KIT_REPLY_LANGUAGE`, `CODING_KIT_EXPLAIN_LEVEL`, `CODING_KIT_EXPLAIN_NOTE`);
+  ohne Wert entfällt die Zeile. Noch richtet kein Skill die Datei ein.
+- **`scripts/template-sync.sh render-global` (neu):** rendert die Kit-Regeln mit den
+  Werten der Personal-Config nach `OUT/rules/coding-kit.md`. Die Datei liest das Skript
+  als Shell-Syntax, ohne sie auszuführen (Kommentare hinter Werten erlaubt); es meldet je
+  Wert `set`, `empty` oder `missing` und lehnt eine Stufe ohne Block ab. `zones`
+  vergleicht das Ergebnis mit dem Claude-Config-Ordner wie mit einem Projekt.
+- **`finalize`** (Platzhalter und optionale Blöcke) erkennt seine Wertetabelle nicht mehr
+  an `NR == FNR`: Mit einer leeren Tabelle hätte es die ganze Datei als Werte gelesen.
+  `render` hat nie eine leere Tabelle, für Projekte ändert sich nichts.
+- **Kit:** Der Validator prüft die Kit-Regeln (Kennung in der ersten Zeile, Zonen, flache
+  Blöcke, Platzhalter nur aus `GLOBAL_KEYS` des Skripts, Stufenliste im
+  Schlüssel-Kommentar gleich den Stufenblöcken) und die `claudeMdExcludes`-Zeile in
+  `.claude/settings.json` des Repos, die `template/core/CLAUDE.md` aus Sessions im
+  Kit-Repo heraushält. Die Versionsregel zählt `global/` zum Plugin-Inhalt; Skript-Tests
+  für `render-global` und für `zones` auf einem Stellvertreter-Config-Ordner.
+
 ## 1.5.0 — 2026-10-26
 
 Zonen, Fragmente und Lock-Datei prüft das Skript statt des Modells (F-045).

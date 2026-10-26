@@ -40,6 +40,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-045c | Skills anbinden → **update-conventions gleicht Fragmente und seed-Zonen über `zones` ab (nach dem Kopieren der Merge-Ergebnisse, teilweise Zustimmung per zweitem Lauf) und prüft die Lock-Datei über `lock-check`; choose-stack wertet `lock-check` aus und setzt Fragmente in Modus B über `zones` ein; „ein Fragment anhängen" für alle Skills festgelegt; Authoring-Doku: Einsetzen im Skript, mawk-Tests.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-045d | Testlauf, Release, Gegenprobe → **Lauf von update-conventions mit `--plugin-dir` an einem Projekt aus Template 1.4.0 (0,91 USD): Zonen, Fragmente und Lock-Datei nur über `zones` und `lock-check`, teilweise Zustimmung per zweitem Lauf, Endstand per Skript geprüft; Fund mitgenommen: vor `mise trust` fragen; Release 1.5.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe an einem Downstream-Projekt ohne Fund (0,56 USD). F-045 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-047 | Skript-Tests zusätzlich mit mawk → **`run.sh` hängt je einen Durchgang mit mawk und gawk an, wenn installiert und nicht das Standard-awk (erkannt über `awk -W version`); die Zusammenfassung nennt die geprüften awks; ein eingeschleustes `NF`-Array fällt nur im mawk-Durchgang auf; Doku nachgezogen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
+| F-040a | Kit-Datei, Werte, Render → **die globalen Regeln liegen als `global/coding-kit.md` im Plugin (fünf Zonen, Kennung, Sprachregel der Vorlage, Artifact-Regel, Erklär-Niveau mit vier Stufen und Notiz); `template-sync.sh render-global` rendert sie mit den Werten der Personal-Config, ohne die Datei auszuführen, und `zones` gleicht das Ergebnis mit einem Config-Ordner ab; `claudeMdExcludes` hält die Template-CLAUDE.md aus Sessions im Kit-Repo; Validator, Versionsregel und Tests nachgezogen; Version 1.6.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 
 ---
 
@@ -94,7 +95,8 @@ und übernimmt nur Bestätigtes; eine selbst angelegte CLAUDE.md fasst das Kit n
   leer, entfällt seine Zeile. Claude Code setzt in Anweisungsdateien keine Variablen ein:
   Der Abgleich rendert die Kit-Datei, die Regeldatei ist erzeugt. Nur die env-Datei zu
   ändern reicht deshalb nicht — erst der Abgleich übernimmt. Gefragt werden die Werte nur
-  im Abgleich (erreicht auch bestehende Nutzer), `install.sh` fragt nicht. Stufenliste und
+  im Interview-Skill `explain-level`; der Abgleich startet ihn, wenn Werte fehlen, und der
+  Nutzer kann ihn jederzeit erneut aufrufen. `install.sh` fragt nicht. Stufenliste und
   Schlüssel-Kommentare stehen technisch nur in der Kit-Datei.
 - **Erklär-Niveau:** gilt für Antworten, Rückfragen, Pläne, Zusammenfassungen und
   Fehlerberichte — nicht für Code, Kommentare, Commits und Doku-Inhalte im Projekt, nicht
@@ -132,43 +134,37 @@ und übernimmt nur Bestätigtes; eine selbst angelegte CLAUDE.md fasst das Kit n
 — deren Änderungen an den Kit-Regeln erreichen bestehende Rechner erst über den Abgleich.
 Übernimmt aus F-033 das Lernprofil von teach-step.
 
-#### F-040a — Kit-Datei, Werte, Render
+#### F-040b — Interview-Skill `explain-level`
 
-**Was:** Kit-Datei `plugins/coding-kit/global/coding-kit.md` aus der Vorlage plus
-Artifact-Regel: `section:`-Zonen je Abschnitt, Kennung, ein HTML-Kommentar für Menschen
-(gehört dem Kit, so weichst du ab, die Schlüssel samt Kommentar), Platzhalter und
-Stufenblöcke in der Syntax des Templates. Neuer Befehl in `template-sync.sh`, der die
-Kit-Datei mit den Werten der env-Datei rendert: liest nur die `CODING_KIT_*`-Zeilen, führt
-die Datei nie aus, erlaubt Kommentare hinter Werten, lehnt eine unbekannte Stufe ab.
-`version-rule.py` zählt `global/` als Plugin-Inhalt; der Validator prüft die Marker der
-Kit-Datei, ihre Stufenliste gegen die Stufenblöcke und die `claudeMdExcludes`-Zeile.
-`.claude/settings.json` mit `claudeMdExcludes`, Begründung in der Repo-CLAUDE.md. Version
-1.6.0 (unveröffentlicht), CHANGELOG.
+**Was:** Neuer Skill (über `/add-skill`): fragt die Antwortsprache und ermittelt in einem
+kurzen Interview — eine Frage pro Antwort, mit empfohlener Antwort — die Erfahrung mit
+Programmieren, Shell, Git, Frameworks und Projekt-Werkzeugen und wie viel Code der Nutzer
+mitliest. Daraus schlägt er Stufe und Notiz vor und zeigt den Stufentext aus der
+Kit-Datei; der Nutzer kann beides ändern. Erneut aufrufbar, vorhandene Werte sind die
+Vorauswahl. Neuer Skript-Befehl `set-global`: schreibt die drei Schlüssel samt Kommentar
+aus der Kit-Datei in eine Kopie der env-Datei unter `OUT`, ersetzt vorhandene Zuweisungen
+und lässt alle anderen Zeilen stehen; der Skill kopiert nach Freigabe und prüft vorher per
+`render-global`. README-Skill-Tabelle, plugin.json-Beschreibung, CHANGELOG.
 
-**Dateien:** `plugins/coding-kit/global/coding-kit.md` (neu),
-`plugins/coding-kit/scripts/template-sync.sh`, `tests/template-sync/global.sh` (neu),
-`tests/template-sync/run.sh`, `scripts/validate.py`, `scripts/version-rule.py`,
-`.claude/settings.json` (neu), `CLAUDE.md`,
-`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`.
+**Dateien:** `plugins/coding-kit/skills/explain-level/SKILL.md` (neu),
+`plugins/coding-kit/scripts/template-sync.sh`, `tests/template-sync/global.sh`,
+`README.md`, `plugins/coding-kit/.claude-plugin/plugin.json`,
+`plugins/coding-kit/CHANGELOG.md`.
 
-**Abhängigkeiten:** keine.
+**Abhängigkeiten:** F-040a.
 
 **Abnahmekriterien:**
-- [ ] Tests unter dash und bash (plus mawk und gawk): alle Werte gesetzt, einzelne leer
-      oder fehlend, Kommentar hinter dem Wert, unbekannte Stufe; `zones` auf einem
-      Stellvertreter-Config-Ordner mit `identical`, `differs`, `override`, `opted-out` und
-      einer fremden Datei ohne Marker.
-- [ ] Die gerenderte Kit-Datei enthält beide aufgelösten Unterschiede (Sprachregel der
-      Vorlage, Artifact-Regel).
+- [ ] Tests für `set-global`: neue Schlüssel angehängt, vorhandene ersetzt (auch hinter
+      `export`), andere Zeilen und Kommentare unverändert, ungültige Stufe abgelehnt.
+- [ ] Der Skill schreibt die env-Datei nie von Hand, nur über `set-global`.
 - [ ] `just check` grün.
 
-#### F-040b — Abgleich in update-conventions, Niveau in den Skills
+#### F-040c — Abgleich in update-conventions, Niveau in den Skills
 
 **Was:** `update-conventions` bekommt den globalen Teil: Argument `global`, Mitprüfung im
 normalen Lauf, bei `alle` und `status`. Ablauf: Config-Ordner bestimmen (prüfen:
-`$CLAUDE_CONFIG_DIR`, sonst `~/.claude`), fehlende Werte erfragen und die Schlüssel samt
-Kommentar aus der Kit-Datei in die env-Datei schreiben (nach Freigabe), rendern, per
-`zones` je Abschnitt abgleichen, Ergebnis kopieren, Stand in `${CLAUDE_PLUGIN_DATA}`
+`$CLAUDE_CONFIG_DIR`, sonst `~/.claude`), fehlen Werte, `explain-level` starten, rendern,
+per `zones` je Abschnitt abgleichen, Ergebnis kopieren, Stand in `${CLAUDE_PLUGIN_DATA}`
 merken. Migration einer alten Kit-Kopie: Kit-Abschnitte heraus, Persönliches bleibt,
 unklare Zeilen einzeln vorlegen, Löschen anbieten. Für eine fremde CLAUDE.md nur der
 Widerspruchs-Hinweis. Allgemein nützliche Regeln über `propose-to-template` (neue
@@ -182,14 +178,14 @@ CHANGELOG). `/add-skill` läuft mit.
 `docs/skill-authoring.md`, `plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`,
 `plugins/coding-kit/CHANGELOG.md`.
 
-**Abhängigkeiten:** F-040a.
+**Abhängigkeiten:** F-040b.
 
 **Abnahmekriterien:**
 - [ ] Kein Skill liest oder schreibt mehr ein Lernprofil in Graphiti (grep).
 - [ ] Kein Skill setzt Kit-Regeln von Hand ein; Render und Vergleich nur über das Skript.
 - [ ] `just check` grün.
 
-#### F-040c — Session-Hinweis, Installer, Nutzer-Doku
+#### F-040d — Session-Hinweis, Installer, Nutzer-Doku
 
 **Was:** SessionStart-Hook (Bash wie der Stop-Hook) mit den drei Hinweisen aus
 „Entschieden", Eintrag in `hooks.json`. `install.sh` Schritt 4 schreibt nichts Globales
@@ -207,7 +203,7 @@ und F-030 nachziehen (mit Vorschau).
 `install.sh`, `templates/global-CLAUDE.md` (entfällt), `README.md`, `scripts/validate.py`,
 `plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`.
 
-**Abhängigkeiten:** F-040b.
+**Abhängigkeiten:** F-040c.
 
 **Abnahmekriterien:**
 - [ ] Hook-Tests: alte Kopie, Kit geändert, Werte geändert, Änderung abgelehnt (still),
@@ -218,11 +214,12 @@ und F-030 nachziehen (mit Vorschau).
       und CHANGELOG).
 - [ ] `just check` grün.
 
-#### F-040d — Testlauf, Release, erster echter Abgleich
+#### F-040e — Testlauf, Release, erster echter Abgleich
 
 **Was:** Testläufe mit `claude -p --plugin-dir plugins/coding-kit` an
 Stellvertreter-Ordnern: Neueinrichtung, alte Kit-Kopie mit persönlicher Ergänzung, eigene
-CLAUDE.md ohne Kit. Kosten nennen. Release 1.6.0 nach dem bekannten Ablauf; Push nur auf
+CLAUDE.md ohne Kit; dazu ein Interview-Lauf von `explain-level` mit vorgegebenen Antworten
+im Prompt. Kosten nennen. Release 1.6.0 nach dem bekannten Ablauf; Push nur auf
 ausdrückliche Bitte, vorher Personendaten-grep. Danach der erste echte Abgleich auf dem
 Rechner des Nutzers: Werte setzen (das Graphiti-Lernprofil wird zu Niveau und Notiz),
 beide Unterschiede übernehmen, die alte CLAUDE.md bereinigen oder löschen; entscheiden, ob
@@ -230,10 +227,10 @@ das Graphiti-Lernprofil bleibt.
 
 **Dateien:** `plugins/coding-kit/CHANGELOG.md`, dazu Funde aus den Läufen.
 
-**Abhängigkeiten:** F-040c.
+**Abhängigkeiten:** F-040d.
 
 **Abnahmekriterien:**
-- [ ] Drei Testläufe wie beschrieben, Endstand per Skript geprüft, Kosten genannt.
+- [ ] Vier Testläufe wie beschrieben, Endstand per Skript geprüft, Kosten genannt.
 - [ ] Release 1.6.0 gepusht, CI grün, Plugin aktualisiert, Cache geprüft.
 - [ ] Gegenprobe in einer neuen Session: Kit-Regeln einmal geladen, keine doppelte
       Sprachregel, `template/core/CLAUDE.md` im Kit-Repo nicht geladen.
