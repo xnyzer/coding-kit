@@ -13,9 +13,9 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 1.5.0 — unveröffentlicht
+## 1.5.0 — 2026-10-26
 
-Zonen, Fragmente und Lock-Datei prüft das Skript statt des Modells (F-045, in Arbeit).
+Zonen, Fragmente und Lock-Datei prüft das Skript statt des Modells (F-045).
 
 - **`scripts/template-sync.sh zones` (neu):** vergleicht die markierten Blöcke eines
   Projekts mit dem Render (`render --seeds`) — die `section:NAME`-Zonen der seed-Dateien
