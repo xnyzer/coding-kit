@@ -44,10 +44,10 @@ Durchgang dash/mawk); Versionsregel grün (kein Plugin-Inhalt). Ein eingeschleus
 awk-Array `NF` scheitert in 49 Checks, alle im Durchgang `dash/mawk`; ohne mawk im `PATH`
 laufen 780 Checks wie bisher, mit „not installed: mawk gawk".
 
-**CI:** Das Software-Verzeichnis des Ubuntu-24.04-Runner-Images führt weder gawk noch
-mawk eigens auf; damit gilt Ubuntus Standard, mawk. Die Zusammenfassung im CI-Log zeigt
-es nach dem Push. Nennt sie ein anderes awk, wird die mawk-Installation in der CI eine
-eigene Aufgabe.
+**CI:** Das CI-Log nach dem Push (Lauf 40359892425) zeigt `awk: gawk, mawk`: Der
+Ubuntu-Runner hat gawk als Standard-awk und mawk zusätzlich installiert. Die CI prüft
+damit beide; mawk war dort vor F-047 nicht abgedeckt. Eine Installation in der CI ist
+nicht nötig.
 
 **Notable decisions:**
 - Die Durchgänge stehen in `run.sh`, nicht im justfile — eine Stelle für `just check`,
@@ -58,8 +58,8 @@ eigene Aufgabe.
   die ersten beiden Durchgänge ab.
 - Kosten: gut 30 Sekunden je zusätzlichem awk statt der geschätzten 20; `just check`
   dauert damit rund 75 statt 42 Sekunden.
-- Die Entscheidung zur CI fällt nach dem Push statt in F-047: Das Runner-Image spricht
-  für mawk, das Log bestätigt es.
+- Die Frage zur CI klärte das Log nach dem Push: gawk ist dort Standard, mawk läuft als
+  zusätzlicher Durchgang.
 - Der justfile-Kommentar ist einzeilig, weil `just --list` nur die letzte Kommentarzeile
   zeigt.
 
@@ -95,7 +95,7 @@ wirklich nutzt und nichts mehr von Hand einsetzt, zeigt erst ein echter Lauf.
   new-project vertraut weiter der frisch gerenderten `mise.toml` (eigener `fix:`-Commit
   vor dem Release).
 - **Release 1.5.0:** CHANGELOG datiert; gepusht nach Personendaten-grep über Diff,
-  Commit-Metadaten und Messages sowie Blocklist-Abgleich; CI grün (Ubuntu, also mawk);
+  Commit-Metadaten und Messages sowie Blocklist-Abgleich; CI grün;
   Plugin aktualisiert, Cache dateigleich mit dem Arbeitsstand.
 - **Gegenprobe** an einem Downstream-Projekt (docs-only, Stempel 1.3.0) mit dem
   installierten 1.5.0 (0,56 USD, 7 Turns, 40 s): Update-Fenster 1.4.0 und 1.5.0;
