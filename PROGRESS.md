@@ -38,99 +38,14 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-045a | `zones` und die Override-Regel → **`template-sync.sh zones` vergleicht seed-Zonen und Fragmente im Slot mit dem Render (Zustände von `identical` bis `broken`) und schreibt das Ergebnis mit eingesetzten Blöcken nach `OUT` — alle oder per Name, neue Fragmente an ihrer Stelle aus dem Render; Marker gelten nur allein auf einer Zeile (MANIFEST, `detect`, Validator); Kopfzone der Registry ohne Marker-Text; `snapshot` weist unbekannte Ziele ab; Version 1.5.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-045b | `lock-check` → **`template-sync.sh lock-check` prüft die `mise.lock` gegen `lockfile_platforms` und die CI-Plattform aus `runs-on` (Runner-Labels von GitHub) und meldet je Lock-Eintrag `complete`, `gaps`, `ci-gap`, `no-url`, `unlocked` oder `stale`; Backends ohne Download-URL (laut mise-Doku, z. B. npm, cargo) sind nie eine Lücke; Gegenprobe mit echtem `mise lock`; Known-limitation-Nachtrag zu pnpm.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-045c | Skills anbinden → **update-conventions gleicht Fragmente und seed-Zonen über `zones` ab (nach dem Kopieren der Merge-Ergebnisse, teilweise Zustimmung per zweitem Lauf) und prüft die Lock-Datei über `lock-check`; choose-stack wertet `lock-check` aus und setzt Fragmente in Modus B über `zones` ein; „ein Fragment anhängen" für alle Skills festgelegt; Authoring-Doku: Einsetzen im Skript, mawk-Tests.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
+| F-045d | Testlauf, Release, Gegenprobe → **Lauf von update-conventions mit `--plugin-dir` an einem Projekt aus Template 1.4.0 (0,91 USD): Zonen, Fragmente und Lock-Datei nur über `zones` und `lock-check`, teilweise Zustimmung per zweitem Lauf, Endstand per Skript geprüft; Fund mitgenommen: vor `mise trust` fragen; Release 1.5.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe an einem Downstream-Projekt ohne Fund (0,56 USD). F-045 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 
 ---
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-### F-045 — Zonen-Abgleich und Lock-Prüfung ins Skript
-
-**Status:** PLANNED
-
-**Problem:** Zwei Prüfungen in `update-conventions` macht heute das Sprachmodell selbst:
-den Abgleich der seed-Zonen (`section:NAME`, A2 Schritt 7) und die Prüfung der `mise.lock`
-auf Plattform-Einträge (`choose-stack` § Lock-Datei, A2 Schritt 11). Ein Testlauf in
-F-042d hat beides mit eigenem awk nachgebaut — nicht deterministisch, anders als Render,
-Merge und Erkennung. In F-043c hat ein Lauf mit Sonnet 5.5 auf `medium` beide Prüfungen
-ganz ausgelassen. Dabei fiel zusätzlich auf: Die Kopfzone der Registry-Vorlage
-(`overrides-head`) nennt `<!-- override: reason -->` als Doku-Text; eine wörtliche Suche
-nach dem Marker hält die Zone deshalb für geschützt und würde sie nie aktualisieren.
-
-**Idee:** `template-sync.sh` bekommt einen Befehl für die markierten Blöcke — seed-Zonen
-und Fragmente im Slot (je Block: gleich, abweichend, neu, Override, …) —, der das
-Ergebnis wie `merge` in einen Ausgabeordner schreibt, und einen für die Lock-Datei (je
-Tool: vollständig oder welche Plattformen aus `lockfile_platforms` fehlen, die
-CI-Plattform markiert). Marker erkennt das Skript nur als eigene Zeile, nicht als Text in
-einer Zeile. Die Kopfzone wird so umformuliert, dass sie keinen marker-ähnlichen Text mehr
-enthält.
-
-**Entschieden (2026-10-26):**
-- Ein Befehl `zones` für seed-Zonen (`section:NAME`) und Fragmente im Slot
-  (`fragment:NAME`): Beides sind markierte Blöcke, die gegen den Render verglichen werden,
-  mit derselben Override-Regel. Damit kommt auch A2 Schritt 6 ins Skript, nicht nur
-  Schritt 7.
-- `zones` schreibt das Ergebnis wie `merge` nach `OUT/<Ziel>`: alle abweichenden und neuen
-  Blöcke eingesetzt, mit `NAME…` nur die genannten — lehnt der Nutzer einzelne ab, folgt
-  ein zweiter Aufruf. Neue Fragmente kommen an ihre Stelle aus dem Render. Der Skill zeigt
-  die Diffs und kopiert, er setzt nichts von Hand ein.
-- Block- und Override-Marker gelten nur allein auf einer Zeile. Ein Override mitten in
-  einer Textzeile schützt nicht mehr: dazu nur ein Hinweis im CHANGELOG unter
-  `### Template`, keine Sonderbehandlung — eine Warnung im Skript träfe genau den alten
-  Text der Kopfzone.
-- Fehlt ein Block in Projekt und Render (z. B. `claude-graphiti` ohne Graphiti), gibt es
-  keine Zeile; die Sonderregel im Skill entfällt.
-- `local` heißt nur „nicht im Render". Ob ein solches Fragment im Katalog steht (dann
-  fehlt es nur in `FRAGMENTS`), prüft der Skill vor `propose-to-template`; das Skript
-  bekommt dafür kein Template-Argument.
-- `lock-check` gibt eine Zeile je Lock-Eintrag aus (Tool und Version), nicht je
-  Plattform. Den Abgleich mit den „Known limitation"-Einträgen im CHANGELOG macht weiter
-  der Skill — das ist Prosa.
-- Die CI-Plattform kommt aus den `runs-on`-Zeilen der Workflows, die `jdx/mise-action`
-  nutzen, ohne YAML-Parser; Ausdrücke und self-hosted Runner ergeben `unknown`, dann fragt
-  der Skill.
-- `snapshot` weist ein Ziel ab, das weder gerendert ist noch eine Basis hat (Fund aus
-  F-043c: alle Ziele als ein Argument). Kein `--all`: Schritt 9 nimmt bewusst Ziele aus.
-- A2 Schritt 8 (entfernte Ziele) bleibt beim Modell: Dort wird eine Tabelle gelesen,
-  nichts verglichen.
-
-**Lösungsskizze** (Stand Planung 2026-10-26):
-- Skript: `zones [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SEEDS OUT [NAME…]`
-  (SEEDS = Render mit `--seeds`), Zeile `<Ziel> <section|fragment> <Name> <Zustand> <+a -d>`,
-  Zustände `identical`, `differs`, `override` (bei Fragmenten mit Hinweis, ob sich das
-  Template seit der Basis geändert hat), `new`, `opted-out`, `local`, `unmarked`, `broken`.
-  `lock-check PROJECT` mit Kopfzeilen (Plattformen, CI-Plattform, fehlende Lock-Datei oder
-  Einstellung) und je Lock-Eintrag `complete`, `gaps`, `ci-gap`, `no-url`, `unlocked`
-  oder `stale` samt fehlenden Plattformen. Tests unter dash und bash.
-- MANIFEST §§ Markers, Seed sections, Standards fragments: Marker allein auf einer Zeile;
-  die Auswertung macht das Skript. Der Validator prüft das für den Template-Inhalt.
-- Template: Kopfzone der `convention-overrides.md`-Vorlage ohne marker-ähnlichen Text
-  (kommt per `zones` in die Projekte).
-- Skills: update-conventions A2 Schritte 6, 7 und 11, A3 Schritt 4 und Modus `status`;
-  choose-stack § Lock-Datei (erreicht auch new-project 4d) und der Fragment-Einbau in
-  Modus B.
-- Keine neuen Dependencies.
-
-**Abhängigkeiten:** keine (baut auf `template-sync.sh` aus F-041 auf, erledigt).
-
-#### F-045d — Testlauf, Release, Gegenprobe
-
-**Was:** Testlauf mit `claude -p --plugin-dir plugins/coding-kit` (Opus auf `medium`,
-`Skill` in `--allowedTools`) an einer Wegwerf-Kopie mit abweichender Zone,
-Override-Fragment, neuem Fragment und Lücke in der Lock-Datei: update-conventions ruft
-`zones` und `lock-check` auf und setzt nichts von Hand ein. Kosten nennen (rund 1,10 USD je
-Lauf). Release 1.5.0: CHANGELOG datieren; Push nur auf ausdrückliche Bitte, vorher
-Personendaten-grep; Plugin aktualisieren, Cache prüfen; Gegenprobe an einem
-Downstream-Projekt.
-
-**Dateien:** `plugins/coding-kit/CHANGELOG.md`, dazu Funde aus dem Lauf.
-
-**Abhängigkeiten:** F-045c.
-
-**Abnahmekriterien:**
-- [ ] Testlauf wie beschrieben, Endstand per Skript geprüft (`zones` ohne `differs` für
-      übernommene Blöcke, `lock-check` ohne `ci-gap`), Kosten genannt.
-- [ ] Release 1.5.0 gepusht, CI grün, Plugin aktualisiert; Funde der Gegenprobe
-      entschieden.
+_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
+`/coding-kit:prep-step` vorbereiten._
 
 ---
 
@@ -138,26 +53,23 @@ Downstream-Projekt.
 
 _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer._
 
-**Empfohlene Reihenfolge** (Stand 2026-10-25; die Einträge darunter bleiben nach Nummer
+**Empfohlene Reihenfolge** (Stand 2026-10-26; die Einträge darunter bleiben nach Nummer
 sortiert):
 
-1. **F-045** — direkt nach F-044, weil es dieselbe Mechanik nutzt (`template-sync.sh`,
-   `update-conventions`): holt die übrigen Vergleiche von `update-conventions` ins
-   Skript.
-2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
+1. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
-3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
-4. **F-040** — vor den Strängen Graphiti und Host, deren Änderungen an der globalen
+2. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
+3. **F-040** — vor den Strängen Graphiti und Host, deren Änderungen an der globalen
    Vorlage sonst bestehende Rechner nicht erreichen.
-5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-6. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
+4. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+5. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
    mit. F-026 ist in F-039 aufgegangen, sein Rest (Kit-Repo-Herkunft in `check-upstreams`)
    in F-032.
-7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
-8. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+6. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+7. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
-Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 4 und 5 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
@@ -739,6 +651,6 @@ F-041 Projektzusätze in managed Dateien erhalten, Abweichungen früh erkennen (
 F-042 Neue Sprachen und Frameworks erkennen, Vorlagen nachziehen (DONE)
 F-043 Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen (DONE)
 F-044 Sprachen ohne Vorlage erkennen und dem Template vorschlagen (DONE)
-F-045 Zonen-Abgleich und Lock-Prüfung ins Skript (PLANNED)
+F-045 Zonen-Abgleich und Lock-Prüfung ins Skript (DONE)
 F-046 Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
 -->

@@ -16,6 +16,67 @@ zusammen:
 
 ---
 
+## F-045d — Testlauf, Release, Gegenprobe (2026-10-26)
+
+Schließt F-045 ab (Zonen-Abgleich und Lock-Prüfung ins Skript; F-045a–c siehe darunter).
+
+**Problem:** Die Befehle `zones` und `lock-check` und ihre Anbindung in update-conventions
+und choose-stack (F-045a–c) waren nur durch Skript-Tests belegt. Ob ein Modell-Lauf sie
+wirklich nutzt und nichts mehr von Hand einsetzt, zeigt erst ein echter Lauf.
+
+**Was entstanden ist (Release 1.5.0):**
+
+- **Testlauf** (`claude -p --plugin-dir`, Opus auf `medium`, Budget-Cap 4 USD; 0,91 USD,
+  17 Turns, 105 s, 15 Werkzeugaufrufe) an einem docs-only-Projekt, gerendert aus Template
+  1.4.0 (`base-from-history`) mit Stempel 1.4.0: zwei abweichende Zonen in `CLAUDE.md`,
+  eine Override-Zeile in `python-lang`, ein `Dockerfile` (die Erkennung schlägt `docker`
+  vor) und eine Lücke für `just` auf linux-x64 in der `mise.lock`. Vorgabe im Prompt:
+  `claude-workflow` diesmal nicht, alles andere übernehmen.
+  - Der Lauf nahm `docker` in `FRAGMENTS` auf, ließ `zones` laufen, zeigte die Diffs aus
+    `.zones/` und setzte nach der teilweisen Zustimmung mit einem zweiten Lauf nur
+    `overrides-head`, `claude-startup` und `docker` ein — nichts von Hand.
+  - `lock-check` zeigte `ci-gap` für `just`, nach `mise lock` `complete`.
+  - Endstand per Skript (die vorbereiteten Dateien unter `.claude/` vom Tester kopiert):
+    angenommene Blöcke `identical`, `claude-workflow` weiter `differs`, `python-lang`
+    `override`; `lock-check` ohne `ci-gap`; `status` ohne Abweichung; `docker`
+    `covered`; Stempel 1.5.0.
+- **Fund mitgenommen:** Der Lauf führte `mise trust` selbst aus, weil `mise install` im
+  nicht vertrauten Projekt abbrach. choose-stack § Lock-Datei fragt jetzt vorher;
+  new-project vertraut weiter der frisch gerenderten `mise.toml` (eigener `fix:`-Commit
+  vor dem Release).
+- **Release 1.5.0:** CHANGELOG datiert; gepusht nach Personendaten-grep über Diff,
+  Commit-Metadaten und Messages sowie Blocklist-Abgleich; CI grün (Ubuntu, also mawk);
+  Plugin aktualisiert, Cache dateigleich mit dem Arbeitsstand.
+- **Gegenprobe** an einem Downstream-Projekt (docs-only, Stempel 1.3.0) mit dem
+  installierten 1.5.0 (0,56 USD, 7 Turns, 40 s): Update-Fenster 1.4.0 und 1.5.0;
+  `HOW-TO-CODE-WITH-CLAUDE.md` `template-only`, die Kopfzone der Registry über `zones`,
+  die aufgelöste `REQUIREMENTS.md` als `no-file` richtig übergangen; `lock-check` alles
+  `complete`, `ci none`; die Registry-Revision ohne Vorschlag. Kein Fund. Den Sync
+  übernimmt der Nutzer selbst; das Projekt ist wieder im Ausgangszustand.
+
+**Planungsentscheidungen von F-045** (aus dem Elterneintrag):
+- Ein Befehl `zones` für seed-Zonen und Fragmente im Slot; er schreibt das Ergebnis wie
+  `merge`, teilweise Zustimmung über einen zweiten Lauf mit Namen.
+- Marker gelten nur allein auf einer Zeile; ein Override mitten in einer Zeile schützt
+  nicht mehr (Hinweis im CHANGELOG, keine Sonderbehandlung).
+- Ein Block, den keine Seite hat, bekommt keine Zeile; `local` heißt nur „nicht im
+  Render", den Katalog prüft der Skill.
+- `lock-check` mit einer Zeile je Lock-Eintrag und der CI-Plattform aus `runs-on` ohne
+  YAML-Parser; der Abgleich mit „Known limitation" bleibt beim Skill.
+- `snapshot` weist unbekannte Ziele ab, kein `--all`; A2 Schritt 8 bleibt beim Modell.
+
+**Notable decisions:**
+- Testprojekt aus der Historie (Template 1.4.0) statt aus dem aktuellen Template: So ist
+  die alte Kopfzone der Registry ein echter Update-Fall.
+- Kein zweiter Testlauf für den `mise trust`-Fund: Es ist eine reine Textregel, und ein
+  `claude -p`-Lauf kann den Nutzer nicht fragen.
+- Die Gegenprobe prüfte nur den Ablauf und wurde zurückgesetzt; den Sync des
+  Downstream-Projekts macht der Nutzer selbst.
+
+**Geänderte Dateien:** `plugins/coding-kit/skills/choose-stack/SKILL.md`,
+`plugins/coding-kit/CHANGELOG.md` (Fund und Release), `PROGRESS.md`,
+`PROGRESS-ARCHIVE.md`.
+
 ## F-045c — Skills anbinden (2026-10-26)
 
 Teil von F-045 (Zonen-Abgleich und Lock-Prüfung ins Skript; F-045a–b siehe darunter,
