@@ -56,20 +56,22 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 **Empfohlene Reihenfolge** (Stand 2026-10-26; die Einträge darunter bleiben nach Nummer
 sortiert):
 
-1. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
+1. **F-047** — klein und sofort nützlich, bevor wieder viel awk entsteht.
+2. **F-040** — unabhängig von F-036 und mittelgroß; die globale CLAUDE.md driftet schon
+   (siehe Eintrag), und jede Session lädt sie. Vor den Strängen Graphiti und Host, deren
+   Änderungen an der globalen Vorlage sonst bestehende Rechner nicht erreichen.
+3. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
-2. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
-3. **F-040** — vor den Strängen Graphiti und Host, deren Änderungen an der globalen
-   Vorlage sonst bestehende Rechner nicht erreichen.
-4. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-5. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
+4. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
+5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+6. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
    mit. F-026 ist in F-039 aufgegangen, sein Rest (Kit-Repo-Herkunft in `check-upstreams`)
    in F-032.
-6. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
-7. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+8. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
-Strang 4 und 5 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
@@ -603,10 +605,37 @@ Kostenschätzung — und erst dann der Abschnitt dazu in der README.
 **Abhängigkeiten:** alle übrigen Einträge der Empfohlenen Reihenfolge — gemessen wird der
 Endstand; besonders F-036 und F-045 verändern den Verbrauch.
 
+### F-047 — Skript-Tests zusätzlich mit mawk
+
+**Status:** BACKLOG
+
+**Problem:** `just check` testet `template-sync.sh` nur mit dem awk des Rechners. Auf
+macOS nimmt das mehr hin als mawk, das Standard-awk auf Ubuntu und in der CI. In F-045a
+fiel ein awk-Array namens `NF` deshalb erst unter mawk auf — lokal grün, in der CI wäre
+es rot gewesen, und die CI läuft erst beim Push.
+
+**Idee:** Ist mawk installiert und nicht schon das Standard-awk, laufen die Skript-Tests
+in `just check` ein zweites Mal mit mawk als `awk`. Ohne mawk läuft `just check` wie
+bisher, mit einem kurzen Hinweis.
+
+**Lösungsskizze:**
+- Ein zusätzlicher Durchgang mit einem Link `awk → mawk` in einem Temp-Ordner vorn im
+  `PATH`, nur unter einer Shell — die Unterschiede liegen im awk. Kostet rund 20 Sekunden
+  zu den heutigen gut 40.
+- In der CI ist mawk schon das Standard-awk; der Durchgang erkennt das (`awk -W version`)
+  und entfällt.
+- `docs/skill-authoring.md` § Hilfsskripte: Aus „vor dem Commit von Hand mit mawk testen"
+  wird der Hinweis auf den automatischen Durchgang; README bzw. CONTRIBUTING nennen mawk
+  als optionales Werkzeug für die Kit-Entwicklung.
+- Nur Kit-Repo (Tests, justfile, Doku), kein Plugin-Inhalt, keine Versionsänderung. mawk
+  bleibt außerhalb der Toolchain (GPL-2.0).
+
+**Abhängigkeiten:** keine.
+
 ---
 
 <!-- FEATURE-INDEX
-next-feature: F-047
+next-feature: F-048
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -653,4 +682,5 @@ F-043 Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen (DONE)
 F-044 Sprachen ohne Vorlage erkennen und dem Template vorschlagen (DONE)
 F-045 Zonen-Abgleich und Lock-Prüfung ins Skript (DONE)
 F-046 Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
+F-047 Skript-Tests zusätzlich mit mawk
 -->
