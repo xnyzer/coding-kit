@@ -40,8 +40,168 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
-`/coding-kit:prep-step` vorbereiten._
+### F-045 — Zonen-Abgleich und Lock-Prüfung ins Skript
+
+**Status:** PLANNED
+
+**Problem:** Zwei Prüfungen in `update-conventions` macht heute das Sprachmodell selbst:
+den Abgleich der seed-Zonen (`section:NAME`, A2 Schritt 7) und die Prüfung der `mise.lock`
+auf Plattform-Einträge (`choose-stack` § Lock-Datei, A2 Schritt 11). Ein Testlauf in
+F-042d hat beides mit eigenem awk nachgebaut — nicht deterministisch, anders als Render,
+Merge und Erkennung. In F-043c hat ein Lauf mit Sonnet 5.5 auf `medium` beide Prüfungen
+ganz ausgelassen. Dabei fiel zusätzlich auf: Die Kopfzone der Registry-Vorlage
+(`overrides-head`) nennt `<!-- override: reason -->` als Doku-Text; eine wörtliche Suche
+nach dem Marker hält die Zone deshalb für geschützt und würde sie nie aktualisieren.
+
+**Idee:** `template-sync.sh` bekommt einen Befehl für die markierten Blöcke — seed-Zonen
+und Fragmente im Slot (je Block: gleich, abweichend, neu, Override, …) —, der das
+Ergebnis wie `merge` in einen Ausgabeordner schreibt, und einen für die Lock-Datei (je
+Tool: vollständig oder welche Plattformen aus `lockfile_platforms` fehlen, die
+CI-Plattform markiert). Marker erkennt das Skript nur als eigene Zeile, nicht als Text in
+einer Zeile. Die Kopfzone wird so umformuliert, dass sie keinen marker-ähnlichen Text mehr
+enthält.
+
+**Entschieden (2026-10-26):**
+- Ein Befehl `zones` für seed-Zonen (`section:NAME`) und Fragmente im Slot
+  (`fragment:NAME`): Beides sind markierte Blöcke, die gegen den Render verglichen werden,
+  mit derselben Override-Regel. Damit kommt auch A2 Schritt 6 ins Skript, nicht nur
+  Schritt 7.
+- `zones` schreibt das Ergebnis wie `merge` nach `OUT/<Ziel>`: alle abweichenden und neuen
+  Blöcke eingesetzt, mit `NAME…` nur die genannten — lehnt der Nutzer einzelne ab, folgt
+  ein zweiter Aufruf. Neue Fragmente kommen an ihre Stelle aus dem Render. Der Skill zeigt
+  die Diffs und kopiert, er setzt nichts von Hand ein.
+- Block- und Override-Marker gelten nur allein auf einer Zeile. Ein Override mitten in
+  einer Textzeile schützt nicht mehr: dazu nur ein Hinweis im CHANGELOG unter
+  `### Template`, keine Sonderbehandlung — eine Warnung im Skript träfe genau den alten
+  Text der Kopfzone.
+- Fehlt ein Block in Projekt und Render (z. B. `claude-graphiti` ohne Graphiti), gibt es
+  keine Zeile; die Sonderregel im Skill entfällt.
+- `local` heißt nur „nicht im Render". Ob ein solches Fragment im Katalog steht (dann
+  fehlt es nur in `FRAGMENTS`), prüft der Skill vor `propose-to-template`; das Skript
+  bekommt dafür kein Template-Argument.
+- `lock-check` gibt eine Zeile je Tool aus, nicht je Tool und Plattform. Den Abgleich mit
+  den „Known limitation"-Einträgen im CHANGELOG macht weiter der Skill — das ist Prosa.
+- Die CI-Plattform kommt aus den `runs-on`-Zeilen der Workflows, die `jdx/mise-action`
+  nutzen, ohne YAML-Parser; Ausdrücke und self-hosted Runner ergeben `unknown`, dann fragt
+  der Skill.
+- `snapshot` weist ein Ziel ab, das weder gerendert ist noch eine Basis hat (Fund aus
+  F-043c: alle Ziele als ein Argument). Kein `--all`: Schritt 9 nimmt bewusst Ziele aus.
+- A2 Schritt 8 (entfernte Ziele) bleibt beim Modell: Dort wird eine Tabelle gelesen,
+  nichts verglichen.
+
+**Lösungsskizze** (Stand Planung 2026-10-26):
+- Skript: `zones [--snapshot DIR] PROJECT SEEDS OUT [NAME…]` (SEEDS = Render mit
+  `--seeds`), Zeile `<Ziel> <section|fragment> <Name> <Zustand> <+a -d>`, Zustände
+  `identical`, `differs`, `override` (bei Fragmenten mit Hinweis, ob sich das Template
+  seit der Basis geändert hat), `new`, `opted-out`, `local`, `unmarked`, `broken`.
+  `lock-check PROJECT` mit Kopfzeilen (Plattformen, CI-Plattform, fehlende Lock-Datei oder
+  Einstellung) und je Tool `complete`, `gaps`, `ci-gap`, `unlocked` oder `stale` samt
+  fehlenden Plattformen. Tests unter dash und bash.
+- MANIFEST §§ Markers, Seed sections, Standards fragments: Marker allein auf einer Zeile;
+  die Auswertung macht das Skript. Der Validator prüft das für den Template-Inhalt.
+- Template: Kopfzone der `convention-overrides.md`-Vorlage ohne marker-ähnlichen Text
+  (kommt per `zones` in die Projekte).
+- Skills: update-conventions A2 Schritte 6, 7 und 11, A3 Schritt 4 und Modus `status`;
+  choose-stack § Lock-Datei (erreicht auch new-project 4d) und der Fragment-Einbau in
+  Modus B.
+- Keine neuen Dependencies.
+
+**Abhängigkeiten:** keine (baut auf `template-sync.sh` aus F-041 auf, erledigt).
+
+#### F-045a — `zones` und die Override-Regel
+
+**Was:** Befehl `zones` im Skript samt Kopf-Doku: Blöcke aus den seed-Dateien des Renders
+und aus dem Slot der `CODING-STANDARDS.md`, Vergleich normalisiert wie bei `status`,
+Ergebnis nach `OUT/<Ziel>` (alle `differs` und `new` bzw. die genannten); `--snapshot` für
+den Hinweis bei Override-Fragmenten. `snapshot` weist unbekannte Ziele ab. MANIFEST
+§§ Markers, Seed sections und Standards fragments; der Validator prüft, dass Block-Marker
+im Template allein auf ihrer Zeile stehen. Kopfzone `overrides-head` umformuliert.
+Version 1.5.0 (unveröffentlicht), CHANGELOG-Eintrag mit `### Template` samt Hinweis zur
+strengeren Override-Regel.
+
+**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
+`tests/template-sync/zones.sh` (neu), `tests/template-sync/run.sh`,
+`tests/template-sync/sync.sh` (`snapshot`), `plugins/coding-kit/template/MANIFEST.md`,
+`plugins/coding-kit/template/core/.claude/convention-overrides.md`, `scripts/validate.py`,
+`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** keine.
+
+**Abnahmekriterien:**
+- [ ] Tests unter dash und bash: alle Zustände, Einsetzen an der Stelle aus dem Render,
+      Auswahl per `NAME`, `--snapshot`, Fehlerfälle von `snapshot` (Ziele als ein
+      Argument).
+- [ ] Ein Override mitten in einer Zeile schützt nicht; die alte Kopfzone ergibt
+      `differs`, nicht `override`.
+- [ ] `just check` grün.
+
+#### F-045b — `lock-check`
+
+**Was:** Befehl `lock-check PROJECT`: `lockfile_platforms` aus `[settings]` der
+`mise.toml` (ein- und mehrzeilig), Tools und Plattform-Einträge der `mise.lock` (auch
+Schlüssel in Anführungszeichen), Tools der `mise.toml` ohne Lock-Eintrag (`unlocked`) und
+umgekehrt (`stale`), CI-Plattform aus `runs-on` (`ubuntu-*` → `linux-x64`, `*-arm` →
+arm64, `macos-*` → `macos-arm64`, `macos-13` und `*-intel` → `macos-x64`, `windows-*` →
+`windows-x64`, sonst `unknown`). Einmal von Hand an einem Wegwerf-Projekt mit echtem
+`mise lock` gegenprüfen (mit `MISE_TRUSTED_CONFIG_PATHS`, ohne neue Trust-Einträge) und
+dabei klären, ob Backend-Tools (`npm:…`) Plattform-Einträge bekommen — wenn nicht, ein
+eigener Zustand statt eines Fehlalarms.
+
+**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
+`tests/template-sync/lock.sh` (neu, mit Fixtures für Lock- und Workflow-Dateien),
+`tests/template-sync/run.sh`, `plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** keine (unabhängig von F-045a, dieselbe Version).
+
+**Abnahmekriterien:**
+- [ ] Tests unter dash und bash, ohne Netz und ohne mise: Lücke auf der CI-Plattform,
+      übrige Lücke, `unlocked`, `stale`, keine Lock-Datei, keine Einstellung,
+      CI-Plattform `unknown`.
+- [ ] Die Gegenprobe mit echtem `mise lock` stimmt mit dem Skript überein; das Verhalten
+      der Backend-Tools ist festgehalten.
+- [ ] `just check` grün.
+
+#### F-045c — Skills anbinden
+
+**Was:** update-conventions A2 Schritte 6 und 7 über `zones` — ausdrücklich nach dem
+Kopieren der Merge-Ergebnisse aus Schritt 5, sonst überschreibt das Zonen-Ergebnis den
+Merge der `CODING-STANDARDS.md`; Schritt 11 und A3 Schritt 4 über `lock-check`; der Modus
+`status` berichtet beides. choose-stack § Lock-Datei über `lock-check` (new-project 4d
+verweist dorthin) und der Fragment-Einbau in Modus B über `zones` (Tausch des
+Modul-Fragments = `new` plus bestätigtes Entfernen des alten Blocks). README und HOW-TO
+nur, wo sie den Vergleich beschreiben; `/add-skill` läuft mit.
+
+**Dateien:** `plugins/coding-kit/skills/{update-conventions,choose-stack}/SKILL.md`, bei
+Bedarf `plugins/coding-kit/skills/new-project/SKILL.md`, `README.md`,
+`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`,
+`plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** F-045a, F-045b.
+
+**Abnahmekriterien:**
+- [ ] Kein Skill vergleicht Zonen, Fragmente oder die Lock-Datei mehr von Hand (grep nach
+      den alten Formulierungen).
+- [ ] `just check` grün.
+
+#### F-045d — Testlauf, Release, Gegenprobe
+
+**Was:** Testlauf mit `claude -p --plugin-dir plugins/coding-kit` (Opus auf `medium`,
+`Skill` in `--allowedTools`) an einer Wegwerf-Kopie mit abweichender Zone,
+Override-Fragment, neuem Fragment und Lücke in der Lock-Datei: update-conventions ruft
+`zones` und `lock-check` auf und setzt nichts von Hand ein. Kosten nennen (rund 1,10 USD je
+Lauf). Release 1.5.0: CHANGELOG datieren; Push nur auf ausdrückliche Bitte, vorher
+Personendaten-grep; Plugin aktualisieren, Cache prüfen; Gegenprobe an einem
+Downstream-Projekt.
+
+**Dateien:** `plugins/coding-kit/CHANGELOG.md`, dazu Funde aus dem Lauf.
+
+**Abhängigkeiten:** F-045c.
+
+**Abnahmekriterien:**
+- [ ] Testlauf wie beschrieben, Endstand per Skript geprüft (`zones` ohne `differs` für
+      übernommene Blöcke, `lock-check` ohne `ci-gap`), Kosten genannt.
+- [ ] Release 1.5.0 gepusht, CI grün, Plugin aktualisiert; Funde der Gegenprobe
+      entschieden.
 
 ---
 
@@ -536,49 +696,6 @@ Kit gemeldet — die Vererbung bleibt abwärts wie bei den Konventionen (F-018).
 F-024, F-029 und F-030 — deren Änderungen an der Vorlage erreichen bestehende Rechner erst
 über den Abgleich.
 
-### F-045 — Zonen-Abgleich und Lock-Prüfung ins Skript
-
-**Status:** BACKLOG
-
-**Problem:** Zwei Prüfungen in `update-conventions` macht heute das Sprachmodell selbst:
-den Abgleich der seed-Zonen (`section:NAME`, A2 Schritt 7) und die Prüfung der `mise.lock`
-auf Plattform-Einträge (`choose-stack` § Lock-Datei, A2 Schritt 11). Ein Testlauf in
-F-042d hat beides mit eigenem awk nachgebaut — nicht deterministisch, anders als Render,
-Merge und Erkennung. In F-043c hat ein Lauf mit Sonnet 5.5 auf `medium` beide Prüfungen
-ganz ausgelassen. Dabei fiel zusätzlich auf: Die Kopfzone der Registry-Vorlage
-(`overrides-head`) nennt `<!-- override: reason -->` als Doku-Text; eine wörtliche Suche
-nach dem Marker hält die Zone deshalb für geschützt und würde sie nie aktualisieren.
-
-**Idee:** `template-sync.sh` bekommt einen Befehl für die seed-Zonen (je Zone: gleich,
-abweichend, fehlt, Override) und einen für die Lock-Datei (je Tool und Plattform aus
-`lockfile_platforms`: vorhanden oder fehlt, die CI-Plattform markiert). Einen Override
-erkennt das Skript nur als eigene Marker-Zeile, nicht als Text in einer Zeile. Die
-Kopfzone wird so umformuliert, dass sie keinen marker-ähnlichen Text mehr enthält.
-
-**Lösungsskizze:**
-- `template-sync.sh zones PROJECT SEEDS` (Render mit `--seeds` als Eingabe) und
-  `lock-check PROJECT`; Ausgabe tabulatorgetrennt wie die übrigen Befehle, Tests unter
-  dash und bash.
-- Override-Regel im MANIFEST präzisieren (§ Markers, § Seed sections): Der Marker steht
-  allein auf einer Zeile.
-- `update-conventions` A2 Schritte 7 und 11 und `choose-stack` § Lock-Datei rufen die
-  Befehle auf, statt selbst zu vergleichen.
-- Kopf der `convention-overrides.md`-Vorlage umformulieren (Template-Inhalt, kommt per
-  Zonen-Abgleich in die Projekte).
-- Keine neuen Dependencies.
-
-**Noch zu analysieren:**
-- Ob derselbe Befehl auch die Fragmente im Slot abdeckt (A2 Schritt 6 vergleicht sie
-  heute ebenfalls von Hand) — dann ein gemeinsamer Befehl für Zonen und Fragmente.
-- Wie `lock-check` die CI-Plattform ermittelt (`runs-on` der Projekt-CI), ohne
-  YAML-Parser.
-- Fund aus F-043c: Zwei Testläufe übergaben beim ersten `snapshot`-Aufruf alle Ziele als
-  ein einziges Argument (zsh teilt Variablen nicht in Wörter); das Skript meldete sie als
-  `removed`, ohne Wirkung. Ob `snapshot` ein Ziel abweist, das der Render nicht kennt,
-  oder auf Wunsch alle gerenderten Ziele selbst nimmt.
-
-**Abhängigkeiten:** keine (baut auf `template-sync.sh` aus F-041 auf, erledigt).
-
 ### F-046 — Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
 
 **Status:** BACKLOG
@@ -684,6 +801,6 @@ F-041 Projektzusätze in managed Dateien erhalten, Abweichungen früh erkennen (
 F-042 Neue Sprachen und Frameworks erkennen, Vorlagen nachziehen (DONE)
 F-043 Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen (DONE)
 F-044 Sprachen ohne Vorlage erkennen und dem Template vorschlagen (DONE)
-F-045 Zonen-Abgleich und Lock-Prüfung ins Skript
+F-045 Zonen-Abgleich und Lock-Prüfung ins Skript (PLANNED)
 F-046 Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
 -->
