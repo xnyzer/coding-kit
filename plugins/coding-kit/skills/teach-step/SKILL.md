@@ -36,10 +36,10 @@ Lies die **Projekt-CLAUDE.md**: Zweck/Scope, Sprache der lebenden Doku, Verweise
 `CODING-STANDARDS.md` / `REQUIREMENTS.md` / `THREAT-MODEL.md`, Graphiti-group_id
 (Graphiti optional — ohne MCP still überspringen). Nichts davon hardcoden.
 
-**Lernprofil (optional, Graphiti):** in der persönlichen group_id laut globaler
-CLAUDE.md (Konvention: `main`) nach einem Lernprofil des Nutzers suchen
-(`search_nodes`, z. B. „Lernprofil Coding") und Erfahrungslevel/bekannte Themen still
-berücksichtigen.
+**Erklär-Niveau:** Stufe und Notiz des Nutzers stehen im Abschnitt Erklär-Niveau der
+globalen Kit-Regeln, die in jeder Session geladen sind (`/coding-kit:explain-level` legt
+sie fest). Sie sind der Ausgangspunkt dieses Skills — ein eigenes Lernprofil gibt es
+nicht, auch nicht in Graphiti. Fehlen sie, gelten die Vorauswahlen des Interviews.
 
 ## Kontext-Recovery
 
@@ -58,19 +58,23 @@ nichts wiederholen.
 
 ## 2. Lern-Interview (M1)
 
-**Eine** Frage pro Antwort, immer mit empfohlenem Default; entfällt, soweit das
-Lernprofil die Antwort schon kennt:
+**Eine** Frage pro Antwort, immer mit empfohlenem Default. Beide Fragen gelten dieser
+Aufgabe — in einem fremden Stack weiß man weniger als sonst —, die Vorauswahl kommt aus
+Stufe und Notiz:
 
-1. **Wie vertraut bist du mit Sprache/Stack dieser Aufgabe?** Die Optionen nennen
-   immer auch, was sie bewirken:
+1. **Wie vertraut bist du mit Sprache/Stack dieser Aufgabe?** Vorauswahl aus der Stufe:
+   `einsteiger` → *Neuland*, `junior` → *Grundlagen*, ab `fortgeschritten` →
+   *Routiniert*; ohne Stufe *Grundlagen*. Nennt die Notiz diesen Stack, gilt sie vor der
+   Stufe. Die Optionen nennen immer auch, was sie bewirken:
    - *Neuland* — kaum/nie damit gearbeitet → jedes Konzept wird eingeführt, auch
      Syntax erklärt, sehr kleine Häppchen.
-   - *Grundlagen* (Default) — schon Kleineres geschrieben, aber oft Nachschlagen
+   - *Grundlagen* — schon Kleineres geschrieben, aber oft Nachschlagen
      nötig → Idiome und Zusammenhänge erklären, Syntax nur auf Nachfrage.
    - *Routiniert* — regelmäßige Praxis → nur Neues/Spezielles erklären, größere
      Häppchen, mehr Anspruch.
-2. **Was willst du bei dieser Aufgabe vor allem lernen?**
-   - *Struktur & Verdrahtung* (Default) — „Ich kann Logik schreiben, aber mir fehlt,
+2. **Was willst du bei dieser Aufgabe vor allem lernen?** Vorauswahl: was die Notiz als
+   Lücke nennt, sonst *Struktur & Verdrahtung*.
+   - *Struktur & Verdrahtung* — „Ich kann Logik schreiben, aber mir fehlt,
      wie eine Anwendung zusammenhängt" → erklärt, welche Datei wohin gehört, welche
      Schicht was macht und wie die Teile verbunden werden (Imports, Config, Routing,
      Einstiegspunkte); Framework-Konzepte werden eingeführt, bevor sie benutzt werden.
@@ -127,7 +131,9 @@ Dann das nächste Häppchen, bis die Aufgabe die Abnahmekriterien erfüllt.
 
 - **Lern-Résumé:** was umgesetzt wurde, welche Konzepte behandelt, was gut lief, was
   sich zu üben lohnt.
-- **Lernprofil aktualisieren (optional, Graphiti):** Level/Themen per `add_memory` in
-  der persönlichen group_id fortschreiben; Veraltetes ersetzen.
+- **Erklär-Niveau nachziehen (optional):** Passen Stufe oder Notiz nach dieser Aufgabe
+  nicht mehr (z. B. ist der Stack jetzt vertraut), einen neuen Notiz-Text vorschlagen und
+  auf `/coding-kit:explain-level` verweisen — dieser Skill schreibt die Personal-Config
+  nicht.
 - PROGRESS-Pflege, Scans und Commit-Frage übernimmt `/coding-kit:step-done` — den
   startet der Nutzer; dieser Skill schreibt keine Doku und committet nie.

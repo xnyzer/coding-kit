@@ -1,14 +1,14 @@
 ---
 name: update-conventions
-description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME); Abweichungs-Registry mit den Arten skip, keep, adapt; erkennt bei jedem Lauf per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt (dauerhafte Ablehnung als Rules-Zeile); Migration für Projekte ohne Snapshot; erkennt im Template entfernte/umbenannte Dateien. Ohne Argument nur das Projekt im aktuellen Ordner, alle Projekte nur mit `alle`; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente werden nie angefasst; sie und Tools ohne Vorlage meldet er mit dem Angebot, sie dem Template vorzuschlagen (Hintergrund-Skill propose-to-template). Nichts wird ungefragt überschrieben.
+description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME); Abweichungs-Registry mit den Arten skip, keep, adapt; erkennt bei jedem Lauf per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt (dauerhafte Ablehnung als Rules-Zeile); Migration für Projekte ohne Snapshot; erkennt im Template entfernte/umbenannte Dateien. Ohne Argument nur das Projekt im aktuellen Ordner, alle Projekte nur mit `alle`; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente werden nie angefasst; sie und Tools ohne Vorlage meldet er mit dem Angebot, sie dem Template vorzuschlagen (Hintergrund-Skill propose-to-template). Mit `global` — und einmal in jedem anderen Lauf, sobald sie eingerichtet sind — gleicht er auch die globalen Kit-Regeln auf dem Rechner ab (`~/.claude/rules/coding-kit.md`, aus der Kit-Datei und den Werten der Personal-Config gerendert) — Ersteinrichtung, Diff und Bestätigung je Abschnitt, Migration einer alten Kit-Kopie in `~/.claude/CLAUDE.md`; eine selbst angelegte CLAUDE.md fasst er nie an. Nichts wird ungefragt überschrieben.
 disable-model-invocation: true
 ---
 
 # Konventions-Sync (Template → Projekte)
 
 **Grundsätze:** Vererbung fließt **ausschließlich abwärts** — Konventionen werden immer
-zuerst in der Vorlage geändert und von dort verteilt; dieser Skill schreibt nie ins
-Template. Nichts ungefragt überschreiben, nie automatisch committen. Seed-Dateien
+zuerst in der Vorlage geändert und von dort verteilt, in die Projekte wie auf den Rechner
+(Teil G); dieser Skill schreibt nie ins Template und nie in die Kit-Datei. Nichts ungefragt überschreiben, nie automatisch committen. Seed-Dateien
 (lebende Doku) werden **nie als Ganzes** ersetzt — nur markierte `section:NAME`-Zonen
 (A2 Schritt 7). **Rendern, Mergen, Vergleichen — auch von Zonen, Fragmenten und
 Lock-Datei — und den Snapshot setzt das Skript** deterministisch; du zeigst die
@@ -19,11 +19,14 @@ Fragmente nie selbst zusammenführen, einsetzen oder aus dem Template abschreibe
 
 - **ohne Projektangabe:** nur das Projekt im aktuellen Arbeitsverzeichnis (Kit-Projekt =
   `.claude/template-version` oder `PROGRESS.md` mit FEATURE-INDEX). Ist es keins: fragen
-  (Pfad oder `alle`) — nie von selbst Projektordner durchsuchen.
+  (Pfad, `alle` oder `global`) — nie von selbst Projektordner durchsuchen.
 - **Projektpfad oder -name:** genau dieses Projekt.
 - **`alle`:** alle Projekte (A1).
+- **`global`:** nur die globalen Kit-Regeln auf diesem Rechner (Teil G), auch außerhalb
+  eines Projekts; richtet sie beim ersten Mal ein. Folgt ein Ordner (`global <ordner>`),
+  gilt er als Claude-Config-Ordner — für Tests, das echte `~/.claude` bleibt unberührt.
 - **`status`:** nur Bericht — nichts im Projekt schreiben (keine Antworten, kein
-  Snapshot, keine Registry, kein Stempel).
+  Snapshot, keine Registry, kein Stempel) und nichts im Config-Ordner.
 - **`revise`:** nur die Registry-Revision (A2 Schritt 10).
 - Ein Aufrufer kann eine **Sichtbarkeits-Prämisse** übergeben (z. B.
   `/coding-kit:go-public` vor dem Übergang: „behandle als public") — sie gilt für diesen
@@ -39,7 +42,11 @@ Fragmente nie selbst zusammenführen, einsetzen oder aus dem Template abschreibe
   Fragment-Katalog `modules/standards/README.md`), Detection und Seed sections lesen.
 - **Skript:** `${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh`, in Shell-Befehlen mit dem
   aufgelösten Pfad über `sh` aufrufen; sein Kopf beschreibt Befehle, Ausgabezeilen und
-  Klassen. Render- und Merge-Ergebnisse gehören in ein frisches Temp-Verzeichnis
+  Klassen.
+- **Globale Regeln (Teil G):** Kit-Datei `${CLAUDE_PLUGIN_ROOT}/global/coding-kit.md`;
+  der Stand des letzten Abgleichs liegt als Basis unter
+  `${CLAUDE_PLUGIN_DATA}/global-base` (Claude Code setzt den Pfad im Skill-Text ein; in
+  Shell-Befehlen den aufgelösten Pfad verwenden). Render- und Merge-Ergebnisse gehören in ein frisches Temp-Verzeichnis
   (`mktemp -d`, im Folgenden `<tmp>`), nie ins Projekt.
 - Schreibzugriffe unter `.claude/` (Antworten, Snapshot, Registry, Stempel,
   `.claude/README.md`) stuft Claude Code als sensibel ein und fragt sie einzeln ab — das
@@ -56,7 +63,7 @@ Fragmente nie selbst zusammenführen, einsetzen oder aus dem Template abschreibe
 
 Bei Wiederaufnahme: bereits behandelte Projekte und Dateien aus dem Verlauf übernehmen,
 `git status` im Projekt prüfen; ist `<tmp>` weg, ab Schritt 3 neu rendern und mergen —
-das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
+das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weitermachen.
 
 ---
 
@@ -72,6 +79,8 @@ das Ergebnis ist dasselbe. Beim nächsten offenen Punkt weitermachen.
   Checkouts bearbeiten (fehlt einer: klonen anbieten).
 - Je Projekt: Liegen `.claude/template-answers` **und** `.claude/template-base/` vor →
   A2. Sonst zuerst A3 (Migration), dann A2.
+- **Nach dem letzten Projekt:** Teil G, sofern die globalen Kit-Regeln eingerichtet sind
+  oder eine alte Kit-Kopie da ist (G1); sonst kein Wort dazu. `revise` lässt G aus.
 
 ### A2. Abgleich
 
@@ -298,3 +307,106 @@ dann A2 ab Schritt 3.
      MANIFEST-Inventar um die wiedererkennbaren Zonen zu setzen — jeder Marker allein auf
      seiner Zeile, reine Wrapper, Inhalt unverändert; nicht Wiederauffindbares auslassen
      (Opt-out).
+
+---
+
+## Teil G — Globale Kit-Regeln (Kit → Rechner)
+
+Die globalen Kit-Regeln liegen als `rules/coding-kit.md` im Claude-Config-Ordner; Claude
+Code lädt sie in jeder Session wie die CLAUDE.md. Sie entstehen aus der Kit-Datei und den
+Werten der Personal-Config (Antwortsprache, Erklär-Niveau, Notiz). Die `CLAUDE.md` im
+selben Ordner gehört allein dem Nutzer.
+
+**Wann:** mit `global` immer; in jedem anderen Lauf außer `revise` einmal nach dem letzten
+Projekt, aber nur, wenn `rules/coding-kit.md` existiert oder G1 eine alte Kit-Kopie
+findet. Im Modus `status` nur berichten (G1, die Zeilen aus G3, Hinweise aus G5) und
+nichts schreiben — weder Werte noch Regeln noch Basis.
+
+### G1. Stand
+
+- **Config-Ordner** `<config>`: der Ordner hinter `global`, sonst `$CLAUDE_CONFIG_DIR`,
+  sonst `~/.claude` (in der Shell: `printf '%s\n' "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"`).
+  Darin `rules/coding-kit.md` (Kit-Regeln), `CLAUDE.md` (persönlich) und
+  `coding-kit.env` (Personal-Config). Mit `global <ordner>` liegt auch die Basis im
+  Stellvertreter-Ordner (`<ordner>/.global-base` statt `${CLAUDE_PLUGIN_DATA}/global-base`).
+- **Kit-Regeln:** Gibt es `<config>/rules/coding-kit.md` und steht in der ersten Zeile
+  `<!-- coding-kit:global-rules -->`? Ohne diese Kennung ist die Datei **fremd**: nie
+  anfassen, melden und Teil G beenden.
+- **Alte Kit-Kopie:** Enthält `<config>/CLAUDE.md` die Kopfzeile der früheren Vorlage
+  („Gepflegt als Vorlage im coding-kit …"), ist sie eine Kopie aus der Zeit, als das Kit
+  die CLAUDE.md selbst setzte → G4. Ohne diese Zeile ist die CLAUDE.md **selbst
+  angelegt** → nur G5.
+- **Werte:** `sh <skript> render-global <kit> <config>/coding-kit.env <tmp>/global` — die
+  `key`-Zeilen zeigen, was gesetzt (`set`), bewusst leer (`empty`) oder noch nie
+  festgelegt ist (`missing`).
+
+### G2. Werte ergänzen
+
+Fehlt einer der Werte (`missing`), den Skill `explain-level` mit `<config>/coding-kit.env`
+als Personal-Config starten; er fragt nur, was offen ist, und gibt den Pfad der Datei mit
+den Werten zurück — die echte oder, solange das Kopieren nicht freigegeben ist, eine in
+`<tmp>`. Danach `<tmp>/global` löschen und mit genau dieser Datei neu rendern. `empty`
+ist eine bewusste Wahl: nicht nachfragen. Werte nie selbst in die env-Datei schreiben.
+
+### G3. Abgleich
+
+- **Erstmals einrichten** (keine `rules/coding-kit.md`, keine alte Kopie): die gerenderte
+  Datei `<tmp>/global/rules/coding-kit.md` zeigen, auf Widersprüche zur CLAUDE.md hinweisen
+  (G5) und nach Freigabe nach `<config>/rules/coding-kit.md` kopieren (den Ordner `rules/`
+  bei Bedarf anlegen).
+- **Vorhanden:** `sh <skript> zones --snapshot <basis> <config> <tmp>/global <tmp>/gzones`
+  (`<basis>` wie G1). Je Zeile (Ziel `rules/coding-kit.md`, Art `section`):
+  - `differs` → Diff `<tmp>/gzones/.zones/section/<Name>.project` → `.template` zeigen,
+    mit dem Grund, wenn er erkennbar ist (neue Kit-Fassung laut CHANGELOG oder geänderter
+    Wert); **übernehmen** / **diesmal nicht**.
+  - `override` → der Nutzer hat die Zone geschützt: nur auflisten, den Diff auf Wunsch zur
+    Info.
+  - `opted-out` → fehlendes Markerpaar = dauerhafter Opt-out: nur auflisten.
+  - `local` → die Kit-Datei kennt die Zone nicht (mehr): melden, nicht anfassen.
+  - `unmarked` → die Datei hat keine Zonen mehr: mit Kennung hat der Nutzer alle
+    abgewählt (nur melden), ohne Kennung ist sie fremd (G1).
+  - `broken` → melden und die Reparatur von Hand anbieten; `identical` nur zählen.
+
+  **Übernehmen** wie in A2 Schritt 6: Sind alle angebotenen Zonen angenommen,
+  `<tmp>/gzones/rules/coding-kit.md` nach `<config>/rules/coding-kit.md` kopieren; sonst
+  `zones` mit den Namen der angenommenen Zonen in ein frisches `<tmp>/gzones-ok` laufen
+  lassen und dieses Ergebnis kopieren. Nie selbst Zonen einsetzen oder abschreiben.
+- Ist eine Zone `differs`, weil der Nutzer sie auf dem Rechner geändert hat, und nützt
+  die Änderung allen: anbieten, sie dem Kit vorzuschlagen (`propose-to-template`, Art
+  globale Regel).
+
+### G4. Migration einer alten Kit-Kopie
+
+Die alte `CLAUDE.md` enthält die Kit-Regeln von damals; daneben die neuen einzurichten
+hieße, sie doppelt und teils widersprüchlich zu laden. Deshalb beides in einem Schritt:
+
+1. **Regeln vorbereiten** wie G3 „Erstmals einrichten", noch nicht schreiben.
+2. **CLAUDE.md bereinigen:** einen Entwurf `<tmp>/CLAUDE.md` ohne Titel und Kopfzeile der
+   alten Vorlage und ohne die Abschnitte, die die Kit-Datei abdeckt (Sprache & Stil,
+   Git & Commits, Graphiti Memory, Arbeitsweise). Zeilen in diesen Abschnitten, die nicht
+   wörtlich in der gerenderten Kit-Datei stehen, einzeln vorlegen: **persönlich
+   behalten** (bleibt in der CLAUDE.md) / **dem Kit vorschlagen** (`propose-to-template`,
+   Art globale Regel) / **streichen** (eine frühere Kit-Fassung, z. B. die alte
+   Sprachregel). Alles außerhalb dieser Abschnitte bleibt unverändert.
+3. **Vorschau:** die neue Regeldatei und den Diff alte → neue CLAUDE.md. Nach Freigabe
+   erst die Regeldatei, dann die CLAUDE.md schreiben. Bleibt in der CLAUDE.md nichts
+   Persönliches, stattdessen das Löschen anbieten. Lehnt der Nutzer die Bereinigung ab,
+   auch die Regeldatei nicht schreiben und den Grund nennen.
+
+### G5. Selbst angelegte CLAUDE.md
+
+Nie schreiben. Sie lesen und gegen die gerenderte Kit-Datei halten: Widerspricht eine
+Regel einer Kit-Regel (z. B. eine andere Antwortsprache oder Commit-Regel), das melden —
+bei Widersprüchen folgt Claude beliebig einer Seite. Lösungen anbieten, nicht selbst
+umsetzen: den Wert ändern (`explain-level`), die Kit-Zone ändern und mit einer
+Override-Zeile schützen, ihr Markerpaar löschen (Opt-out) oder die eigene Regel
+streichen. Eine allgemein nützliche eigene Regel → `propose-to-template` anbieten (Art
+globale Regel).
+
+### G6. Stand merken
+
+Nach dem Dialog — auch wenn der Nutzer Änderungen abgelehnt hat — und nur, wenn die
+Kit-Regeln jetzt eingerichtet sind: `sh <skript> snapshot --snapshot <basis> <config>
+<tmp>/global rules/coding-kit.md`. Der Hinweis beim Session-Start vergleicht den Render
+mit dieser Basis; abgelehnte Änderungen meldet er erst wieder, wenn sich Kit oder Werte
+erneut ändern. Danach sagen, dass die neuen Regeln ab der nächsten Session gelten.

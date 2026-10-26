@@ -42,6 +42,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-047 | Skript-Tests zusätzlich mit mawk → **`run.sh` hängt je einen Durchgang mit mawk und gawk an, wenn installiert und nicht das Standard-awk (erkannt über `awk -W version`); die Zusammenfassung nennt die geprüften awks; ein eingeschleustes `NF`-Array fällt nur im mawk-Durchgang auf; Doku nachgezogen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-040a | Kit-Datei, Werte, Render → **die globalen Regeln liegen als `global/coding-kit.md` im Plugin (fünf Zonen, Kennung, Sprachregel der Vorlage, Artifact-Regel, Erklär-Niveau mit vier Stufen und Notiz); `template-sync.sh render-global` rendert sie mit den Werten der Personal-Config, ohne die Datei auszuführen, und `zones` gleicht das Ergebnis mit einem Config-Ordner ab; `claudeMdExcludes` hält die Template-CLAUDE.md aus Sessions im Kit-Repo; Validator, Versionsregel und Tests nachgezogen; Version 1.6.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-040b | Interview-Skill `explain-level` → **neuer Skill `/coding-kit:explain-level`: Interview zu Antwortsprache und Erklär-Niveau (Programmieren, Shell, Git, Frameworks, Projekt-Werkzeuge, Code mitlesen), Vorschlag für Stufe und Notiz mit dem Stufentext der Kit-Datei, einzige Stelle, die die Werte abfragt; `template-sync.sh set-global` schreibt die Werte in eine Kopie der Personal-Config (erste Zuweisung ersetzt, spätere entfernt, Rest unverändert, für die Shell wörtlich maskiert); README, plugin.json, CHANGELOG.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
+| F-040c | Abgleich in update-conventions, Niveau in den Skills → **`update-conventions global` (Teil G) richtet die globalen Kit-Regeln ein und gleicht sie je Zone über `zones` ab, jeder andere Lauf prüft sie einmal mit; fehlende Werte über `explain-level`, Migration einer alten Kit-Kopie in einem Schritt mit der Einrichtung, eine selbst angelegte CLAUDE.md nur mit Widerspruchs-Hinweis; Stand als Basis im Plugin-Datenordner; teach-step ohne Graphiti-Lernprofil; `propose-to-template` mit der Fund-Art globale Regel; Authoring-Regel zum Erklärstil; HOW-TO nennt `global`.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 
 ---
 
@@ -135,32 +136,6 @@ und übernimmt nur Bestätigtes; eine selbst angelegte CLAUDE.md fasst das Kit n
 — deren Änderungen an den Kit-Regeln erreichen bestehende Rechner erst über den Abgleich.
 Übernimmt aus F-033 das Lernprofil von teach-step.
 
-#### F-040c — Abgleich in update-conventions, Niveau in den Skills
-
-**Was:** `update-conventions` bekommt den globalen Teil: Argument `global`, Mitprüfung im
-normalen Lauf, bei `alle` und `status`. Ablauf: Config-Ordner bestimmen (prüfen:
-`$CLAUDE_CONFIG_DIR`, sonst `~/.claude`), fehlen Werte, `explain-level` starten, rendern,
-per `zones` je Abschnitt abgleichen, Ergebnis kopieren, Stand in `${CLAUDE_PLUGIN_DATA}`
-merken. Migration einer alten Kit-Kopie: Kit-Abschnitte heraus, Persönliches bleibt,
-unklare Zeilen einzeln vorlegen, Löschen anbieten. Für eine fremde CLAUDE.md nur der
-Widerspruchs-Hinweis. Allgemein nützliche Regeln über `propose-to-template` (neue
-Fund-Art). Ein Stellvertreter-Ordner als Argument macht den Teil testbar, ohne das echte
-`~/.claude` anzufassen. teach-step ohne Graphiti-Lernprofil, Vorauswahl aus dem Niveau.
-Authoring-Regel zum Erklärstil. Die HOW-TO des Templates nennt `global` (`### Template` im
-CHANGELOG). `/add-skill` läuft mit.
-
-**Dateien:**
-`plugins/coding-kit/skills/{update-conventions,teach-step,propose-to-template}/SKILL.md`,
-`docs/skill-authoring.md`, `plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`,
-`plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-040b.
-
-**Abnahmekriterien:**
-- [ ] Kein Skill liest oder schreibt mehr ein Lernprofil in Graphiti (grep).
-- [ ] Kein Skill setzt Kit-Regeln von Hand ein; Render und Vergleich nur über das Skript.
-- [ ] `just check` grün.
-
 #### F-040d — Session-Hinweis, Installer, Nutzer-Doku
 
 **Was:** SessionStart-Hook (Bash wie der Stop-Hook) mit den drei Hinweisen aus
@@ -225,18 +200,20 @@ sortiert):
    Änderungen an den Kit-Regeln sonst bestehende Rechner nicht erreichen.
 2. **F-048** — klein; vor F-036, damit die folgenden Umbauten an Skills schon mit den
    Pflichtfeldern arbeiten. Fertig vor F-040e, geht es mit Release 1.6.0 hinaus.
-3. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
+3. **F-049** — vor F-036, dessen neue seed-Zonen bestehende Projekte sonst nicht
+   erreichen.
+4. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
-4. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
-5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-6. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
+5. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
+6. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+7. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
    mit. F-026 ist in F-039 aufgegangen, sein Rest (Kit-Repo-Herkunft in `check-upstreams`)
    in F-032.
-7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
-8. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+8. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+9. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
-Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 6 und 7 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
@@ -769,8 +746,57 @@ Frontmatter).
 
 ---
 
+### F-049 — Neue Zonen erkennen und anbieten
+
+**Status:** BACKLOG
+
+**Problem:** `zones` kann eine Zone, die im Render steht und der Datei fehlt, nicht von
+einer abgewählten unterscheiden: Beide heißen `opted-out`, und angeboten wird nichts. So
+erreicht eine neue Zone keine bestehende Installation — in den seed-Dateien der Projekte,
+in den globalen Kit-Regeln auf dem Rechner (F-040) und bei einer umbenannten Zone (die
+alte gilt als `local`, die neue als `opted-out`). Dasselbe gilt für eine Zone in einem
+`template:optional`-Block, den ein Projekt später einschaltet (z. B. `claude-graphiti`).
+Fragmente haben das Problem nicht, sie kennen den Zustand `new`.
+
+**Idee:** `zones` unterscheidet über eine Basis, den Render beim letzten Abgleich: Fehlt
+eine Zone auch dort, ist sie neu (`new`) und wird an ihrer Stelle aus dem Render
+eingesetzt, wie heute ein neues Fragment; steht sie in der Basis, hat der Nutzer sie
+abgewählt. Die globalen Regeln haben diese Basis schon (F-040c), für seed-Dateien fehlt
+sie bisher.
+
+**Lösungsskizze:**
+- Zustand `new` für Zonen im Skript, eingesetzt hinter der nächsten vorangehenden Zone in
+  der Reihenfolge des Renders; Tests für alle vier Fälle.
+- Eine Basis für seed-Zonen. Seed-Dateien stehen heute bewusst nicht im Snapshot, sonst
+  würden `status` und `merge` sie wie managed Dateien behandeln.
+- Umbenannte und entfernte Zonen: eine Tabelle im MANIFEST wie
+  `Removed and renamed targets`, damit der Abgleich den Umzug anbietet, statt `local` und
+  `opted-out` zu melden.
+- Skills und Vertrag: update-conventions (A2 Schritt 7, Teil G, Migration), MANIFEST
+  §§ Seed sections und Base snapshot; Plugin- und Template-Änderung mit Version und
+  CHANGELOG `### Template`.
+
+**Noch zu analysieren:**
+- Woher die Basis für seed-Zonen kommt: eine eigene Ablage unter `.claude/template-base/`,
+  die `status` und `merge` nicht als managed Dateien lesen, oder stattdessen eine Liste
+  der Zonen mit der Version, seit der es sie gibt, verglichen mit dem Stempel. Die Liste
+  erkennt aber keine Zone, die erst durch ein eingeschaltetes `template:optional` in den
+  Render kommt.
+- Wo eine neue Zone ohne Vorgänger hinkommt, denn zwischen den Zonen steht Text des
+  Projekts.
+- Was mit einer Zone geschieht, die das Template entfernt; heute bleibt sie als `local`
+  stehen.
+- Projekte ohne Basis (Migration, zweiwegig): ob dort weiter `opted-out` gemeldet oder
+  nachgefragt wird.
+
+**Abhängigkeiten:** keine. Sinnvoll vor F-036, das die seed-Zonen umbaut — dessen neue
+Zonen erreichen bestehende Projekte sonst nicht. Ergänzt F-040: Teil G und der
+Session-Hinweis melden eine neue Kit-Zone, angeboten wird sie erst mit F-049.
+
+---
+
 <!-- FEATURE-INDEX
-next-feature: F-049
+next-feature: F-050
 F-001 Kit-Grundgerüst (DONE)
 F-002 Begleit-Skills (DONE)
 F-003 /new-project-Orchestrator (DONE)
@@ -819,4 +845,5 @@ F-045 Zonen-Abgleich und Lock-Prüfung ins Skript (DONE)
 F-046 Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
 F-047 Skript-Tests zusätzlich mit mawk (DONE)
 F-048 Frontmatter-Pflichtfelder für Skills und Übersicht der erlaubten Felder
+F-049 Neue Zonen erkennen und anbieten
 -->

@@ -72,6 +72,13 @@ formulieren, Trigger-Situationen nennen.
   ermitteln — nie einen Stack raten.
 - **M1 — Interview-Muster:** wenn ein Skill Eingaben braucht: **eine** Frage pro Antwort,
   immer mit empfohlenem Default; erst relevante Dateien lesen, dann fragen.
+- **Erklärstil:** Wie ausführlich Claude erklärt, regelt das Erklär-Niveau der globalen
+  Kit-Regeln (`/coding-kit:explain-level`). Skills schreiben deshalb keinen eigenen
+  Erklärstil vor („für Einsteiger erklären", „knapp halten"); feste Ausgabeformate
+  (Plan-Gerüst, Vorschau, Commit-Frage) bleiben, die Sprache darin folgt dem Niveau.
+  Braucht ein Skill den Kenntnisstand (wie teach-step), nimmt er Stufe und Notiz als
+  Vorauswahl und legt kein eigenes Profil an. Die Personal-Config schreibt ein Skill nur
+  über `template-sync.sh set-global`.
 - **M4 — Kontext-Recovery-Block** in jedem Skill, der über mehrere Schritte arbeitet:
   Spec/PROGRESS re-lesen, `git status` + `git diff`, weitermachen ohne Doppelarbeit.
 - **F-Nummern-Toleranz:** Alt-Formate (F-9, F9, „1.2") lesen, Neues ausschließlich als

@@ -1,6 +1,6 @@
 ---
 name: propose-to-template
-description: Übernahme-Vorschlag fürs Template (Projekt → coding-kit) aus einem Fund erzeugen — ein Tool ohne Vorlage (detect meldet `unknown`), ein projektlokales Fragment ohne Katalog-Pendant oder eine Abweichung an einer managed Datei, die allen Projekten nützt. Gibt generalisierten, personendatenfreien Text kopierfertig aus — als Issue (Standard) oder als Prompt für eine Session im Kit-Repo bzw. einem Fork —, sendet nichts ab und schreibt weder ins Template noch ins Projekt. Claude startet ihn bei einem solchen Fund aus update-conventions, step-done, prep-step oder choose-stack, oder wenn der Nutzer etwas dem Template vorschlagen will.
+description: Übernahme-Vorschlag fürs Template (Projekt → coding-kit) aus einem Fund erzeugen — ein Tool ohne Vorlage (detect meldet `unknown`), ein projektlokales Fragment ohne Katalog-Pendant, eine Abweichung an einer managed Datei, die allen Projekten nützt, oder eine globale Regel (aus der persönlichen CLAUDE.md oder einer auf dem Rechner geänderten Zone der Kit-Regeln) für die Kit-Datei global/coding-kit.md. Gibt generalisierten, personendatenfreien Text kopierfertig aus — als Issue (Standard) oder als Prompt für eine Session im Kit-Repo bzw. einem Fork —, sendet nichts ab und schreibt weder ins Template noch ins Projekt. Claude startet ihn bei einem solchen Fund aus update-conventions, step-done, prep-step oder choose-stack, oder wenn der Nutzer etwas dem Template vorschlagen will.
 user-invocable: false
 ---
 
@@ -22,10 +22,15 @@ ins Projekt, ruft kein `gh` auf und pusht nichts.
   Katalog-Pendant (projektlokal).
 - **Managed Datei** — eine Abweichung an einer Datei aus dem Template, die allen
   Projekten nützt (Pfad, Diff gegen den Basis-Snapshot).
+- **Globale Regel** — eine Regel aus der persönlichen `CLAUDE.md` im Claude-Config-Ordner
+  oder eine auf dem Rechner geänderte Zone der Kit-Regeln (`rules/coding-kit.md`), die
+  allen Kit-Nutzern nützt. Ziel ist nicht das Template, sondern die Kit-Datei
+  `${CLAUDE_PLUGIN_ROOT}/global/coding-kit.md`; meist übergibt sie
+  `/coding-kit:update-conventions` (Teil G).
 
 Fehlt die Übergabe, den Fund aus dem Gespräch nehmen. Ist er dort nicht eindeutig,
-**genau eine** Frage: „Was soll ins Template — ein Tool, ein Fragment oder eine Änderung
-an einer managed Datei, und welche?" Nie selbst im Projekt nach Funden suchen — das tun
+**genau eine** Frage: „Was soll ins Kit — ein Tool, ein Fragment, eine Änderung an einer
+managed Datei oder eine globale Regel, und welche?" Nie selbst im Projekt nach Funden suchen — das tun
 `/coding-kit:update-conventions` und `/coding-kit:step-done`.
 
 **Kontext:**
@@ -67,10 +72,15 @@ offenen Schritt weitermachen.
 - **Managed Datei:** den Diff Basis → Projekt
   (`git diff --no-index .claude/template-base/<Ziel>.base <Ziel>`), gekürzt auf den Teil,
   der allen Projekten nützt.
+- **Globale Regel:** den Regeltext und die Zone der Kit-Datei, in die er gehört
+  (`section:global-…`); bei einer geänderten Zone den Diff Kit-Fassung → Rechner aus dem
+  `zones`-Lauf des Aufrufers. Nur die eine Regel, nie die ganze persönliche CLAUDE.md.
 
 ## 2. Generalisieren (Pflicht vor jeder Ausgabe)
 
 - Template-Material (Fragment-Text, Datei-Ausschnitte, Modul-Skizze) ist **englisch**.
+  Ausnahme: Die Kit-Regeln sind deutsch, das Material einer globalen Regel deshalb auch
+  (Issue und Prompt bleiben englisch bzw. in der Sprache des Gesprächs).
 - Projektwerte werden Platzhalter aus MANIFEST § Placeholders oder eine neutrale
   Beschreibung. Nicht hinein: Projekt-, Personen-, Kunden- und Hostnamen, lokale Pfade,
   IPs, private Domains (Platzhalter wie `example.com` sind erlaubt), Secrets. Das
@@ -112,8 +122,8 @@ Fehlt einer der Teile, „none" schreiben statt ihn wegzulassen.
 
 **Issue** (englisch — das Kit-Repo ist öffentlich):
 
-- Titel je Fund: `template: add a <language> module`, `standards: add a <name> fragment`
-  oder `template: <file> — <change in a few words>`.
+- Titel je Fund: `template: add a <language> module`, `standards: add a <name> fragment`,
+  `template: <file> — <change in a few words>` oder `global: <rule in a few words>`.
 - Body genau nach diesem Gerüst — Überschriften und Ebenen wie hier, keine weiteren:
 
   ```
@@ -128,7 +138,8 @@ Fehlt einer der Teile, „none" schreiben statt ihn wegzulassen.
   ### Suggested, not from the project (unverified)
   ## Kit rules
   (MANIFEST im selben Commit, Versions-Bump und CHANGELOG mit „### Template",
-  just check grün)
+  just check grün; bei einer globalen Regel: Versions-Bump und CHANGELOG ohne
+  „### Template", just check grün)
   ```
 - Ein Block mit dem vollständigen Befehl — Titel und Body eingesetzt, der Body über
   stdin:
@@ -160,6 +171,9 @@ fertigem Ergebnis:
     ist `modules/standards/<name>.md` plus eine Katalog-Zeile mit Signalen.
   - Managed Datei: die Datei unter `plugins/coding-kit/template/` und ihre Zeile im
     MANIFEST.
+  - Globale Regel: `plugins/coding-kit/global/coding-kit.md` (Zonen, Stufenblöcke,
+    Schlüssel-Kommentar) und die Regeln dazu in `CLAUDE.md`; geprüft wird sie von
+    `scripts/validate.py`, gerendert von `template-sync.sh render-global`.
 - **Recherchieren:** den aktuellen Stand der Toolchain bzw. des Themas per Websuche
   klären (Werkzeuge, Versionen, gängige Praxis), bevor etwas entsteht.
 - **Bisherige Erkenntnisse gewichten** — die beiden Teile *From the project* und
@@ -177,6 +191,7 @@ fertigem Ergebnis:
 ## 5. Abschluss
 
 Kurz sagen: abgeschickt ist nichts; nach einem Release mit der Ergänzung bringt
-`/coding-kit:update-conventions` sie in die Projekte. Eine dauerhafte Ablehnung
+`/coding-kit:update-conventions` sie in die Projekte — eine globale Regel mit `global` auf
+die Rechner. Eine dauerhafte Ablehnung
 (Rules-Zeile `tool:NAME`, `fragment:NAME` oder `module:NAME`) trägt der aufrufende Skill
 ein, nicht dieser.

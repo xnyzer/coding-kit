@@ -23,13 +23,32 @@ Arbeit).
   `~/.claude/CLAUDE.md` kopierte. Jetzt kommen sie mit dem Plugin auf den Rechner und
   werden nach `~/.claude/rules/coding-kit.md` gerendert, das Claude Code in jeder Session
   lädt; `~/.claude/CLAUDE.md` bleibt allein dem Nutzer. Die Abschnitte sind
-  `section:`-Zonen (`global-language`, `global-explain`, `global-git`, `global-graphiti`,
+  `section:`-Zonen (`global-head` mit dem Kommentar für Menschen und dem Titel,
+  `global-language`, `global-explain`, `global-git`, `global-graphiti`,
   `global-workflow`). Inhalt wie die Vorlage plus die Regel, nichts ohne ausdrückliche
   Erlaubnis als Artifact zu veröffentlichen; neu ist der Abschnitt Erklär-Niveau mit den
   Stufen `einsteiger`, `junior`, `fortgeschritten` und `senior` und einer freien Notiz.
   Antwortsprache, Stufe und Notiz kommen aus der Personal-Config
   (`CODING_KIT_REPLY_LANGUAGE`, `CODING_KIT_EXPLAIN_LEVEL`, `CODING_KIT_EXPLAIN_NOTE`);
-  ohne Wert entfällt die Zeile. Noch richtet kein Skill die Datei ein.
+  ohne Wert entfällt die Zeile.
+- **`/coding-kit:update-conventions global` (Teil G):** richtet die Kit-Regeln auf dem
+  Rechner ein und gleicht sie je Abschnitt über `zones` ab, auch außerhalb eines Projekts;
+  jeder andere Lauf prüft sie einmal mit, sobald sie eingerichtet sind. Fehlen Werte,
+  startet er `explain-level`. Eine alte Kit-Kopie in `~/.claude/CLAUDE.md` (erkannt an der
+  Kopfzeile der früheren Vorlage) migriert er in einem Schritt mit der Einrichtung: Die
+  Kit-Abschnitte gehen hinaus, Persönliches bleibt, unklare Zeilen legt er einzeln vor.
+  Eine selbst angelegte CLAUDE.md schreibt er nie, er meldet nur Widersprüche zu den
+  Kit-Regeln. Der Stand des letzten Abgleichs liegt als Basis im Datenordner des Plugins
+  (`snapshot --snapshot`); `global <ordner>` arbeitet mit einem Stellvertreter-Ordner.
+  Eine Datei `rules/coding-kit.md` ohne Kennung des Kits fasst er nicht an.
+- **`teach-step`** liest und schreibt kein Lernprofil mehr in Graphiti (ohne Graphiti
+  fehlte es ganz): Die Vorauswahl der Vertrautheitsfrage kommt aus der Stufe
+  (`einsteiger` → Neuland, `junior` → Grundlagen, ab `fortgeschritten` → Routiniert), die
+  des Lernziels aus der Notiz; am Ende schlägt der Skill höchstens einen neuen Notiz-Text
+  vor.
+- **`propose-to-template`** kennt die Fund-Art „globale Regel": eine Regel aus der
+  persönlichen CLAUDE.md oder eine auf dem Rechner geänderte Zone der Kit-Regeln, mit der
+  Kit-Datei als Ziel (Material deutsch, Issue-Titel `global: …`).
 - **`scripts/template-sync.sh render-global` (neu):** rendert die Kit-Regeln mit den
   Werten der Personal-Config nach `OUT/rules/coding-kit.md`. Die Datei liest das Skript
   als Shell-Syntax, ohne sie auszuführen (Kommentare hinter Werten erlaubt); es meldet je
@@ -39,7 +58,8 @@ Arbeit).
   kurzes Interview (Programmieren, Shell, Git, Frameworks, Projekt-Werkzeuge, wie viel
   Code der Nutzer mitliest) führt zu einem Vorschlag für Stufe und Notiz samt Stufentext
   aus der Kit-Datei; nach Freigabe schreibt der Skill die Werte in die Personal-Config.
-  Er ist die einzige Stelle, die diese Werte abfragt, und jederzeit erneut aufrufbar.
+  Er ist die einzige Stelle, die diese Werte abfragt, und jederzeit erneut aufrufbar. Ein
+  bewusst leerer Wert gilt als beantwortet; nur ein fehlender Schlüssel wird nachgefragt.
 - **`scripts/template-sync.sh set-global` (neu):** schreibt die Werte der globalen Regeln
   in eine Kopie der Personal-Config unter `OUT` (Modus 600): je Schlüssel eine Zeile
   `NAME="Wert"` mit dem Kommentar aus der Kit-Datei, so maskiert, dass die Shell den Wert
@@ -56,7 +76,15 @@ Arbeit).
   `.claude/settings.json` des Repos, die `template/core/CLAUDE.md` aus Sessions im
   Kit-Repo heraushält. Die Versionsregel zählt `global/` zum Plugin-Inhalt; Skript-Tests
   für `render-global`, `set-global` (samt Gegenprobe, dass die Shell die geschriebenen
-  Werte wörtlich liest) und `zones` auf einem Stellvertreter-Config-Ordner.
+  Werte wörtlich liest) und `zones` auf einem Stellvertreter-Config-Ordner. Die
+  Authoring-Doku verbietet Skills einen eigenen Erklärstil: Wie ausführlich Claude
+  erklärt, regelt das Erklär-Niveau.
+
+### Template
+
+- `HOW-TO-CODE-WITH-CLAUDE.md` — die Zeile zu `/update-conventions` nennt `global`: Es
+  gleicht die globalen Kit-Regeln auf dem Rechner ab (Antwortsprache, Erklär-Niveau,
+  Haus-Regeln), jeder andere Lauf prüft sie einmal mit.
 
 ## 1.5.0 — 2026-10-26
 

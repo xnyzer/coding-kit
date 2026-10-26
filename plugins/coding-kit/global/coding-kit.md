@@ -1,4 +1,5 @@
 <!-- coding-kit:global-rules -->
+<!-- section:global-head -->
 <!--
 Diese Datei gehört dem coding-kit-Plugin: /coding-kit:update-conventions erzeugt sie aus
 der Kit-Vorlage und den Werten in ~/.claude/coding-kit.env und gleicht sie nach
@@ -20,6 +21,7 @@ Abweichen:
   Gegenteil einer Regel von hier schreiben: Bei Widersprüchen entscheidet Claude beliebig.
 -->
 # coding-kit — globale Regeln
+<!-- /section:global-head -->
 
 <!-- section:global-language -->
 ## Sprache & Stil

@@ -16,6 +16,75 @@ zusammen:
 
 ---
 
+## F-040c — Abgleich in update-conventions, Niveau in den Skills (2026-10-26)
+
+Teil von F-040 (Globale Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau;
+F-040a–b siehe darunter, F-040d–e folgen).
+
+**Problem:** Kit-Datei, Render und Werte (F-040a–b) waren da, aber kein Skill richtete die
+globalen Regeln ein oder glich sie ab, und teach-step stützte sich noch auf ein
+Lernprofil in Graphiti, das ohne Graphiti fehlte.
+
+**Was entstanden ist (1.6.0, unveröffentlicht):**
+
+- **`update-conventions`, Teil G (Kit → Rechner):** Argument `global`, auch außerhalb
+  eines Projekts, und `global <ordner>` als Stellvertreter für Tests. Jeder andere Lauf
+  außer `revise` prüft die Regeln nach dem letzten Projekt einmal mit, sobald sie
+  eingerichtet sind oder eine alte Kopie da ist; `status` berichtet nur.
+  - **G1 Stand:** Config-Ordner aus `CLAUDE_CONFIG_DIR` oder `~/.claude` (laut
+    Claude-Code-Doku verschiebt die Variable den ganzen Ordner); Kennung der Kit-Datei
+    (ohne Kennung ist sie fremd und wird nie angefasst); eine alte Kit-Kopie erkennt er an
+    der Kopfzeile der früheren Vorlage; die Werte zeigt `render-global`.
+  - **G2:** fehlende Werte über `explain-level`; `empty` gilt als beantwortet.
+  - **G3:** Ersteinrichtung oder `zones --snapshot` je Zone, Übernahme wie bei den
+    seed-Zonen (alle auf einmal oder per zweitem Lauf mit den angenommenen Namen).
+  - **G4:** Migration einer alten Kit-Kopie zusammen mit der Einrichtung — Kit-Abschnitte
+    heraus, unklare Zeilen einzeln (behalten, dem Kit vorschlagen, streichen); ohne
+    Bereinigung wird auch keine Regeldatei geschrieben.
+  - **G5:** Eine selbst angelegte CLAUDE.md wird nur gelesen; Widersprüche meldet er mit
+    Lösungen, die der Nutzer selbst umsetzt.
+  - **G6:** Stand nach jedem Dialog per `snapshot --snapshot` unter
+    `${CLAUDE_PLUGIN_DATA}/global-base`.
+- **Kit-Datei:** neue Zone `global-head` um Kommentar und Titel.
+- **`explain-level`:** Ein Wert lässt sich bewusst leer setzen; nur ein fehlender
+  Schlüssel gilt als offen.
+- **`teach-step`:** kein Lernprofil in Graphiti mehr. Die Vorauswahl der
+  Vertrautheitsfrage kommt aus der Stufe, die des Lernziels aus der Notiz; am Ende
+  höchstens ein Notiz-Vorschlag mit Verweis auf `explain-level`.
+- **`propose-to-template`:** Fund-Art „globale Regel" mit der Kit-Datei als Ziel
+  (Material deutsch, Issue-Titel `global: …`, Kit-Regeln ohne `### Template`).
+- **Doku:** Authoring-Regel „Erklärstil" in `docs/skill-authoring.md`; README-Zeilen zu
+  update-conventions und propose-to-template; die HOW-TO des Templates nennt `global`
+  (CHANGELOG `### Template`).
+
+**Verifikation:** `just check` grün mit 1524 Checks unter dash, bash und mawk; alle
+Skill-Frontmatter als YAML gelesen. Der Validator hielt einen Doppelpunkt mit Leerzeichen
+in der Beschreibung von update-conventions an, behoben. Grep: „Lernprofil" steht nur noch
+im teach-step-Satz, dass es keines gibt; kein `search_nodes` oder `add_memory` dazu.
+Teil G setzt nichts von Hand ein (`render-global`, `zones`, `snapshot`). An einem
+Stellvertreter-Ordner von Hand geprüft: `snapshot --snapshot` legt die Basis an, `zones`
+arbeitet damit auf dem Config-Ordner. Der echte Lauf folgt in F-040e. Secrets- und
+Privacy-Scan ohne Fund.
+
+**Notable decisions:**
+- Teil G läuft in normalen Läufen nur, wenn die Regeln eingerichtet sind oder eine alte
+  Kopie da ist — wer die globalen Regeln nicht will, merkt nichts davon.
+- Der Stand des letzten Abgleichs ist ein Snapshot über das Skript statt einer losen
+  Kopie: deterministisch, und der Session-Hinweis (F-040d) vergleicht mit genau dieser
+  Datei.
+- Einrichtung und Migration einer alten Kopie nur gemeinsam: Sonst stünden alte und neue
+  Regeln doppelt da, die Sprachregel sogar widersprüchlich.
+- Zone `global-head`, weil der Kommentar mit Schlüsseln und Optionen auf den Rechnern
+  sonst veraltet.
+- Gefunden: Eine neue Zone der Kit-Datei oder des Templates meldet `zones` als
+  `opted-out` und bietet sie nie an → F-049.
+
+**Geänderte Dateien:**
+`plugins/coding-kit/skills/{update-conventions,teach-step,propose-to-template,explain-level}/SKILL.md`,
+`plugins/coding-kit/global/coding-kit.md`, `docs/skill-authoring.md`,
+`plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`, `README.md`,
+`plugins/coding-kit/CHANGELOG.md`; dazu `PROGRESS.md` mit dem Backlog-Eintrag F-049.
+
 ## F-040b — Interview-Skill `explain-level` (2026-10-26)
 
 Teil von F-040 (Globale Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau;

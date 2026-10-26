@@ -89,6 +89,10 @@ Einordnung früh eindeutig (z. B. „beruflich seit Jahren, alles davon täglich
   Notiz und in ein bis zwei Sätzen, warum nicht eine Stufe höher oder tiefer. **Eine**
   Frage: übernehmen (empfohlen) — Stufe ändern — Notiz ändern. Bei einer Änderung den
   neuen Vorschlag zeigen und erneut fragen.
+- **Bewusst ohne Wert:** Will der Nutzer Antwortsprache, Stufe oder Notiz gar nicht
+  festlegen, den Wert leer schreiben (`"CODING_KIT_EXPLAIN_LEVEL="`). Leer heißt „bewusst
+  ohne" — die Zeile entfällt in den Regeln, und `/coding-kit:update-conventions` fragt
+  nicht erneut; ein fehlender Schlüssel dagegen gilt als noch nicht gefragt.
 
 ## 4. Schreiben
 
