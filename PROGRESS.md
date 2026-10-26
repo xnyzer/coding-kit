@@ -36,6 +36,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-044b | Skill `propose-to-template` → **erster Hintergrund-Skill (`user-invocable: false`): Claude startet ihn mit einem Fund (Tool ohne Vorlage, projektlokales Fragment, Abweichung an einer managed Datei) und bekommt einen generalisierten, personendatenfreien Übernahme-Vorschlag — kopierfertig als Issue (Standard, `gh issue create` als Text) oder als Prompt für eine Session im Kit-Repo; nichts wird abgeschickt. CONTRIBUTING beschreibt solche Vorschläge, die Authoring-Doku Hintergrund-Skills.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-044c | Skills anbinden, Testlauf, Release → **update-conventions, step-done und prep-step bieten je Tool ohne Vorlage den Vorschlag fürs Template (`propose-to-template`) oder die Ablehnung `tool:NAME` an, choose-stack rät dafür kein Modul; der alte Abschnitt „Übernahme-Vorschlag" entfällt; Funde aus zwei Testläufen mitgenommen (Material getrennt nach Projekt und Vorschlag, Prompt als Entwurfsauftrag mit Recherche, festes Issue-Gerüst, keine verschachtelten Backticks, Datumsformat der Spalte Since); Release 1.4.0 gepusht (CI grün), Plugin aktualisiert. F-044 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-045a | `zones` und die Override-Regel → **`template-sync.sh zones` vergleicht seed-Zonen und Fragmente im Slot mit dem Render (Zustände von `identical` bis `broken`) und schreibt das Ergebnis mit eingesetzten Blöcken nach `OUT` — alle oder per Name, neue Fragmente an ihrer Stelle aus dem Render; Marker gelten nur allein auf einer Zeile (MANIFEST, `detect`, Validator); Kopfzone der Registry ohne Marker-Text; `snapshot` weist unbekannte Ziele ab; Version 1.5.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
+| F-045b | `lock-check` → **`template-sync.sh lock-check` prüft die `mise.lock` gegen `lockfile_platforms` und die CI-Plattform aus `runs-on` (Runner-Labels von GitHub) und meldet je Lock-Eintrag `complete`, `gaps`, `ci-gap`, `no-url`, `unlocked` oder `stale`; Backends ohne Download-URL (laut mise-Doku, z. B. npm, cargo) sind nie eine Lücke; Gegenprobe mit echtem `mise lock`; Known-limitation-Nachtrag zu pnpm.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 
 ---
 
@@ -80,8 +81,9 @@ enthält.
 - `local` heißt nur „nicht im Render". Ob ein solches Fragment im Katalog steht (dann
   fehlt es nur in `FRAGMENTS`), prüft der Skill vor `propose-to-template`; das Skript
   bekommt dafür kein Template-Argument.
-- `lock-check` gibt eine Zeile je Tool aus, nicht je Tool und Plattform. Den Abgleich mit
-  den „Known limitation"-Einträgen im CHANGELOG macht weiter der Skill — das ist Prosa.
+- `lock-check` gibt eine Zeile je Lock-Eintrag aus (Tool und Version), nicht je
+  Plattform. Den Abgleich mit den „Known limitation"-Einträgen im CHANGELOG macht weiter
+  der Skill — das ist Prosa.
 - Die CI-Plattform kommt aus den `runs-on`-Zeilen der Workflows, die `jdx/mise-action`
   nutzen, ohne YAML-Parser; Ausdrücke und self-hosted Runner ergeben `unknown`, dann fragt
   der Skill.
@@ -96,8 +98,8 @@ enthält.
   Zustände `identical`, `differs`, `override` (bei Fragmenten mit Hinweis, ob sich das
   Template seit der Basis geändert hat), `new`, `opted-out`, `local`, `unmarked`, `broken`.
   `lock-check PROJECT` mit Kopfzeilen (Plattformen, CI-Plattform, fehlende Lock-Datei oder
-  Einstellung) und je Tool `complete`, `gaps`, `ci-gap`, `unlocked` oder `stale` samt
-  fehlenden Plattformen. Tests unter dash und bash.
+  Einstellung) und je Lock-Eintrag `complete`, `gaps`, `ci-gap`, `no-url`, `unlocked`
+  oder `stale` samt fehlenden Plattformen. Tests unter dash und bash.
 - MANIFEST §§ Markers, Seed sections, Standards fragments: Marker allein auf einer Zeile;
   die Auswertung macht das Skript. Der Validator prüft das für den Template-Inhalt.
 - Template: Kopfzone der `convention-overrides.md`-Vorlage ohne marker-ähnlichen Text
@@ -108,32 +110,6 @@ enthält.
 - Keine neuen Dependencies.
 
 **Abhängigkeiten:** keine (baut auf `template-sync.sh` aus F-041 auf, erledigt).
-
-#### F-045b — `lock-check`
-
-**Was:** Befehl `lock-check PROJECT`: `lockfile_platforms` aus `[settings]` der
-`mise.toml` (ein- und mehrzeilig), Tools und Plattform-Einträge der `mise.lock` (auch
-Schlüssel in Anführungszeichen), Tools der `mise.toml` ohne Lock-Eintrag (`unlocked`) und
-umgekehrt (`stale`), CI-Plattform aus `runs-on` (`ubuntu-*` → `linux-x64`, `*-arm` →
-arm64, `macos-*` → `macos-arm64`, `macos-13` und `*-intel` → `macos-x64`, `windows-*` →
-`windows-x64`, sonst `unknown`). Einmal von Hand an einem Wegwerf-Projekt mit echtem
-`mise lock` gegenprüfen (mit `MISE_TRUSTED_CONFIG_PATHS`, ohne neue Trust-Einträge) und
-dabei klären, ob Backend-Tools (`npm:…`) Plattform-Einträge bekommen — wenn nicht, ein
-eigener Zustand statt eines Fehlalarms.
-
-**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
-`tests/template-sync/lock.sh` (neu, mit Fixtures für Lock- und Workflow-Dateien),
-`tests/template-sync/run.sh`, `plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** keine (unabhängig von F-045a, dieselbe Version).
-
-**Abnahmekriterien:**
-- [ ] Tests unter dash und bash, ohne Netz und ohne mise: Lücke auf der CI-Plattform,
-      übrige Lücke, `unlocked`, `stale`, keine Lock-Datei, keine Einstellung,
-      CI-Plattform `unknown`.
-- [ ] Die Gegenprobe mit echtem `mise lock` stimmt mit dem Skript überein; das Verhalten
-      der Backend-Tools ist festgehalten.
-- [ ] `just check` grün.
 
 #### F-045c — Skills anbinden
 

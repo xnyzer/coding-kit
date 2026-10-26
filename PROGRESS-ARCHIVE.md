@@ -16,6 +16,84 @@ zusammen:
 
 ---
 
+## F-045b — `lock-check` (2026-10-26)
+
+Teil von F-045 (Zonen-Abgleich und Lock-Prüfung ins Skript; F-045a siehe darunter,
+F-045c–d folgen).
+
+**Problem:** Die Prüfung der `mise.lock` auf Plattform-Einträge (choose-stack
+§ Lock-Datei, update-conventions A2 Schritt 11) machte das Sprachmodell selbst — mit
+eigenem awk oder gar nicht. Ob Backend-Tools wie `npm:` Plattform-Einträge brauchen, war
+ungeklärt.
+
+**Was entstanden ist (1.5.0, unveröffentlicht):**
+
+- **`template-sync.sh lock-check PROJECT`:** liest `lockfile_platforms` aus `[settings]`
+  der `mise.toml` (ein- und mehrzeilig, mit Kommentaren, beide Anführungszeichen), die
+  Einträge der `mise.lock` (auch Schlüssel in Anführungszeichen, ein Eintrag je Version;
+  eine Plattform-Tabelle gehört wie in TOML zum letzten Eintrag ihres Tools) und die
+  CI-Plattform aus den `runs-on`-Zeilen der Workflows mit `jdx/mise-action`.
+- **Ausgabe:** Kopfzeilen `platforms` (Liste oder `missing`), `ci` je Runner (Plattform,
+  Label, Workflow; `unknown` für Ausdrücke und self-hosted Runner, `none` ohne
+  mise-Workflow) und `lockfile missing`; ohne Einstellung oder Lock-Datei folgt nichts
+  weiter. Dann je Lock-Eintrag bzw. konfiguriertem Tool
+  `tool <Name> <Version> <Zustand> <fehlende Plattformen>` mit `complete`, `gaps`,
+  `ci-gap`, `no-url`, `unlocked` oder `stale`.
+- **Runner-Labels** nach der GitHub-Doku: `ubuntu-*-arm` → linux-arm64, übrige
+  `ubuntu-*` → linux-x64; `macos-13`, `macos-*-intel` und `macos-*-large` → macos-x64,
+  übrige `macos-*` (auch `-xlarge`) → macos-arm64; `windows-*-arm` → windows-arm64,
+  übrige `windows-*` → windows-x64.
+- **Backends ohne URL:** `NO_URL_BACKENDS` im Skript nach der mise-Doku (mise.lock
+  § Backend support): `asdf`, `cargo`, `dotnet`, `gem`, `go`, `npm`, `pipx`, `pypi`,
+  `spinel`, `spm`, `ubi`, `core:dotnet`, `core:rust`, `core:swift`. Ihre Einträge sind
+  `no-url`, nie eine Lücke.
+- **Tests:** `tests/template-sync/lock.sh` (neu) mit Fixtures im Format von `mise lock`:
+  alle Zustände, zwei Versionen eines Tools, `[tools.NAME]`-Tabelle in der `mise.toml`,
+  CRLF, einzeilige Einstellung, keine CI, fehlende Einstellung und Lock-Datei, eine
+  nachgestellte Plattform-Tabelle, Fehlerfälle und elf Runner-Labels.
+- **CHANGELOG:** Eintrag für `lock-check`; Abschnitt „Known limitation" mit dem Nachtrag
+  zu pnpm — für `linux-arm64-musl` gibt es wieder ein Release, für `macos-x64` weiterhin
+  nicht.
+
+**Gegenprobe mit echtem `mise lock`** (Wegwerf-Projekte, `MISE_TRUSTED_CONFIG_PATHS`):
+
+- Voller Lock mit `just`, `node`, `pnpm`, `github:BurntSushi/ripgrep`, `npm:prettier` und
+  `cargo:tokei`: URL-Backends `complete`; npm und cargo ohne Plattform-Tabellen →
+  `no-url`; pnpm 11 ohne `macos-x64` → `gaps`.
+- Ein Lock nur für `macos-arm64` → `ci-gap` für alle URL-Backends.
+- `npm:prettier` installiert mit `mise install --locked` auch ohne Plattform-Einträge.
+- `mise install` allein schreibt Einträge ganz ohne Plattform-Tabellen. Deshalb
+  entscheidet das Backend, nicht das Fehlen der Tabellen — sonst bliebe der Fehler aus
+  F-031 unentdeckt.
+- Aufgeräumt: die Testinstallation von prettier entfernt, zwei Trust-Einträge gelöscht,
+  die `mise install` trotz `MISE_TRUSTED_CONFIG_PATHS` anlegte.
+
+**Verifikation:** `just check` grün (Validator, 780 Skript-Tests unter dash und bash, 90
+davon neu); dieselbe Suite mit mawk grün; die Lock-Datei dieses Repos ergibt mit gesetzter
+Einstellung `complete` für alle vier Tools. Fehlerinjektion an einer Kopie: Liste ohne URL
+leer, CI-Lücke nie blockierend, Plattform-Tabelle beim falschen Eintrag, `stale` und
+`unlocked` aus, arm-Runner nicht erkannt, Workflows ohne mise mitgezählt, mehrzeilige
+Einstellung nicht gelesen, Eintrag ohne Tabellen als vollständig — alle gefangen (4, 4,
+4, 2, 6, 2, 2, 28 und 2 Fehlschläge). Versionsregel gegen `origin/main` grün.
+
+**Notable decisions:**
+- Eine Zeile je Lock-Eintrag statt je Tool, mit Version: Zwei Versionen eines Tools
+  können verschiedene Lücken haben.
+- Die Backends ohne URL stehen als Liste aus der mise-Doku im Skript; eine strukturelle
+  Regel („keine Tabelle = harmlos") ließe den F-031-Fehler durch.
+- Ohne `lockfile_platforms` oder ohne Lock-Datei gibt es keine Tool-Zeilen: Die
+  Einstellung bringt update-conventions, die Lock-Datei `mise lock`.
+- Die Fehlerinjektion zeigte, dass eine Plattform-Tabelle hinter dem Eintrag eines
+  anderen Tools verworfen wurde; der Parser folgt jetzt der TOML-Regel.
+- `sed` mit `\t` im Ersatztext durch awk ersetzt — POSIX legt `\t` dort nicht fest.
+- Bekannte Grenzen: vfox-Backend-Plugins stehen nicht in der Liste (Namensformat unklar)
+  und würden als Lücke gemeldet; Tools, die nur mise-Tasks deklarieren, erscheinen als
+  `stale` — das Kit nutzt keine mise-Tasks.
+
+**Geänderte Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
+`tests/template-sync/lock.sh` (neu), `tests/template-sync/run.sh`,
+`plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
+
 ## F-045a — `zones` und die Override-Regel (2026-10-26)
 
 Teil von F-045 (Zonen-Abgleich und Lock-Prüfung ins Skript; F-045b–d folgen).

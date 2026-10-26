@@ -49,6 +49,17 @@
 #       (without one to the slot's start) and replaces the placeholder text of a slot
 #       without fragments. OUT/.zones/<kind>/<name>.<project|template|base> hold the
 #       blocks for the diffs.
+#   lock-check PROJECT
+#       Checks the mise.lock of PROJECT against lockfile_platforms in [settings] of its
+#       mise.toml and the platforms its CI installs on (runs-on of the workflows that
+#       use jdx/mise-action). Lines: platforms <list|missing>; ci <platform|unknown>
+#       <runs-on> <workflow> per runner, or ci none; lockfile missing. Without the
+#       setting or the lock file nothing follows. Then per lock entry or configured
+#       tool: tool <name> <version> <state> <missing platforms>, states complete, gaps
+#       (platforms missing, none of the CI), ci-gap (a CI platform missing — the CI
+#       installs with --locked and fails), no-url (a backend that records no download
+#       URL, e.g. npm or cargo — never a gap), unlocked (in mise.toml, not in the lock),
+#       stale (in the lock, not in mise.toml).
 #   detect [--changed] [--answers FILE] [--registry FILE] TEMPLATE PROJECT [SIGNAL…]
 #       Matches the signals of PROJECT against the stack modules and catalog fragments
 #       of TEMPLATE (MANIFEST § Detection). Without SIGNAL it reads the files git lists
@@ -111,6 +122,7 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh snapshot [--snapshot DIR] PROJECT SOLL TARGET...
        sh template-sync.sh base-from-history KIT VERSION OUT
        sh template-sync.sh zones [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SEEDS OUT [NAME...]
+       sh template-sync.sh lock-check PROJECT
        sh template-sync.sh detect [--changed] [--answers FILE] [--registry FILE] TEMPLATE PROJECT [SIGNAL...]
 EOF
   exit 2
@@ -1290,6 +1302,149 @@ zones() {
   done
 }
 
+# --- lock-check -----------------------------------------------------------------
+
+# Backends whose lock entries record no download URL, so `mise install --locked` needs
+# none (mise documentation, mise.lock § Backend support); every other backend needs one
+# per platform. A core tool is written core:<tool>.
+NO_URL_BACKENDS='asdf cargo dotnet gem go npm pipx pypi spinel spm ubi core:dotnet core:rust core:swift'
+
+# lockfile_platforms from [settings] of a mise.toml, one per line (single- or multi-line
+# array); status 1 when the setting is missing.
+lock_platforms() {  # MISE_TOML
+  awk '
+    { sub(/\r$/, "") }
+    /^[ \t]*\[/ && !collecting {
+      t = $0; sub(/^[ \t]*\[[ \t]*/, "", t); sub(/[ \t]*\].*$/, "", t)
+      insettings = (t == "settings")
+      next
+    }
+    insettings && !collecting && /^[ \t]*lockfile_platforms[ \t]*=/ {
+      collecting = 1; found = 1
+      sub(/^[^=]*=/, "")
+    }
+    collecting {
+      line = $0; sub(/#.*/, "", line)
+      while (match(line, /"[^"]*"|\047[^\047]*\047/)) {
+        print substr(line, RSTART + 1, RLENGTH - 2)
+        line = substr(line, RSTART + RLENGTH)
+      }
+      if (index($0, "]")) collecting = 0
+    }
+    END { exit !found }' "$1"
+}
+
+# Entries of a mise.lock → "name<TAB>version<TAB>backend<TAB> platform platform…", one
+# per [[tools.NAME]] (one per version). As TOML has it, a [tools.NAME."platforms.P"]
+# table belongs to the latest [[tools.NAME]] above it, wherever it stands.
+lock_entries() {  # MISE_LOCK
+  awk -v tab="$TAB" '
+    function unq(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); gsub(/^"|"$/, "", s); return s }
+    { sub(/\r$/, "") }
+    /^[ \t]*\[\[[ \t]*tools\./ {
+      h = $0; sub(/^[ \t]*\[\[[ \t]*tools\./, "", h); sub(/[ \t]*\]\][ \t]*$/, "", h)
+      cur = ++n
+      name[n] = unq(h); ver[n] = "-"; be[n] = "-"; plats[n] = ""
+      latest[name[n]] = n
+      next
+    }
+    /^[ \t]*\[/ {
+      cur = 0
+      h = $0; sub(/^[ \t]*\[[ \t]*tools\./, "", h)
+      i = index(h, ".\"platforms.")
+      if (i && (unq(substr(h, 1, i - 1)) in latest)) {
+        p = substr(h, i + 12); sub(/".*$/, "", p)
+        x = latest[unq(substr(h, 1, i - 1))]
+        plats[x] = plats[x] " " p
+      }
+      next
+    }
+    cur && /^[ \t]*version[ \t]*=/ { v = $0; sub(/^[^=]*=/, "", v); ver[cur] = unq(v) }
+    cur && /^[ \t]*backend[ \t]*=/ { v = $0; sub(/^[^=]*=/, "", v); be[cur] = unq(v) }
+    END { for (x = 1; x <= n; x++) print name[x] tab ver[x] tab be[x] tab plats[x] }' "$1"
+}
+
+# The platforms the CI runs mise on: "platform<TAB>runs-on<TAB>workflow" per runs-on line
+# of each workflow that uses jdx/mise-action — from GitHub's runner labels, "unknown" for
+# expressions, self-hosted runners and anything else.
+ci_platforms() {  # PROJECT
+  for cp_wf in "$1"/.github/workflows/*.yml "$1"/.github/workflows/*.yaml; do
+    [ -f "$cp_wf" ] || continue
+    grep -q 'jdx/mise-action' "$cp_wf" || continue
+    awk -v wf="${cp_wf#"$1"/}" -v tab="$TAB" '
+      { sub(/\r$/, "") }
+      /^[ \t]*runs-on:/ {
+        v = $0; sub(/^[ \t]*runs-on:[ \t]*/, "", v); sub(/[ \t]+#.*$/, "", v)
+        gsub(/^["\047]|["\047]$/, "", v)
+        if (v == "") v = "-"
+        p = "unknown"
+        if (v ~ /^ubuntu-.*-arm$/) p = "linux-arm64"
+        else if (v ~ /^ubuntu-[a-z0-9.]+$/) p = "linux-x64"
+        else if (v == "macos-13" || v ~ /^macos-[a-z0-9.]+-(intel|large)$/) p = "macos-x64"
+        else if (v ~ /^macos-[a-z0-9.-]+$/) p = "macos-arm64"
+        else if (v ~ /^windows-.*-arm$/) p = "windows-arm64"
+        else if (v ~ /^windows-[a-z0-9.-]+$/) p = "windows-x64"
+        print p tab v tab wf
+      }' "$cp_wf"
+  done | LC_ALL=C sort -u
+}
+
+lock_check() {
+  [ $# -eq 1 ] || usage
+  P=$1
+  [ -d "$P" ] || die "project not found: $P"
+  [ -f "$P/mise.toml" ] || die "no mise.toml in $P"
+  setup_work
+  if lock_platforms "$P/mise.toml" > "$WORK/platforms"; then
+    printf 'platforms\t%s\n' "$(awk 'NR > 1 { printf "," } { printf "%s", $0 }' "$WORK/platforms")"
+  else
+    printf 'platforms\tmissing\n'
+  fi
+  ci_platforms "$P" > "$WORK/ci"
+  if [ -s "$WORK/ci" ]; then
+    awk -v tab="$TAB" '{ print "ci" tab $0 }' "$WORK/ci"
+  else
+    printf 'ci\tnone\n'
+  fi
+  [ -s "$WORK/platforms" ] || return 0
+  if [ ! -f "$P/mise.lock" ]; then
+    printf 'lockfile\tmissing\n'
+    return 0
+  fi
+  lock_entries "$P/mise.lock" > "$WORK/entries"
+  mise_signals "$P/mise.toml" mise.toml | cut -f1 | sed 's/^tool://' | LC_ALL=C sort -u > "$WORK/tools"
+  awk -F "$TAB" -v OFS="$TAB" -v tab="$TAB" -v nourl=" $NO_URL_BACKENDS " \
+    -v pf="$WORK/platforms" -v cf="$WORK/ci" -v tf="$WORK/tools" '
+    BEGIN {
+      while ((getline l < pf) > 0) plat[++np] = l
+      while ((getline l < cf) > 0) { split(l, c, tab); ci[c[1]] = 1 }
+      while ((getline l < tf) > 0) configured[l] = 1
+    }
+    {
+      name = $1; ver = $2; be = $3; locked[name] = 1
+      if (!(name in configured)) { print "tool", name, ver, "stale", "-"; next }
+      # Without a backend field, a prefixed name is its own backend; a bare name counts
+      # as one that needs URLs.
+      if (be == "-" && index(name, ":")) be = name
+      type = substr(be, 1, index(be, ":") - 1)
+      qual = (type == "core") ? be : type
+      if (type != "" && (index(nourl, " " type " ") || index(nourl, " " qual " "))) {
+        print "tool", name, ver, "no-url", "-"; next
+      }
+      have = " " $4 " "; miss = ""; blocks = 0
+      for (i = 1; i <= np; i++) {
+        if (index(have, " " plat[i] " ")) continue
+        miss = miss (miss == "" ? "" : ",") plat[i]
+        if (plat[i] in ci) blocks = 1
+      }
+      if (miss == "") print "tool", name, ver, "complete", "-"
+      else print "tool", name, ver, (blocks ? "ci-gap" : "gaps"), miss
+    }
+    END {
+      for (t in configured) if (!(t in locked)) print "tool", t, "-", "unlocked", "-"
+    }' "$WORK/entries" | LC_ALL=C sort -t "$TAB" -k2,2 -k3,3
+}
+
 # --- detect ---------------------------------------------------------------------
 
 # Normalized PyPI name (lowercase, each run of -, _ and . as one -), shared by the
@@ -1762,6 +1917,7 @@ case $cmd in
   snapshot) snapshot "$@" ;;
   base-from-history) base_from_history "$@" ;;
   zones) zones "$@" ;;
+  lock-check) lock_check "$@" ;;
   detect) detect "$@" ;;
   *) usage ;;
 esac

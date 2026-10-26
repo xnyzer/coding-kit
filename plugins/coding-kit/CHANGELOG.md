@@ -26,13 +26,23 @@ Zonen, Fragmente und Lock-Datei prüft das Skript statt des Modells (F-045, in A
   abweichende Blöcke ersetzt, neue Fragmente hinter ihrem nächsten Vorgänger aus dem
   Render, in einem Slot ohne Fragmente anstelle des Platzhaltertexts — alle oder nur die
   genannten. Die Blöcke für die Diffs liegen unter `OUT/.zones/`.
+- **`scripts/template-sync.sh lock-check` (neu):** prüft die `mise.lock` eines Projekts
+  gegen `lockfile_platforms` der `mise.toml` und die Plattformen der CI (`runs-on` der
+  Workflows mit `jdx/mise-action`, nach den Runner-Labels von GitHub; Ausdrücke und
+  self-hosted Runner ergeben `unknown`). Kopfzeilen für Plattformen, CI und eine fehlende
+  Einstellung oder Lock-Datei, dann je Lock-Eintrag bzw. konfiguriertem Tool `complete`,
+  `gaps`, `ci-gap` (die CI scheitert mit `--locked`), `no-url`, `unlocked` oder `stale`.
+  Backends, die laut mise keine Download-URL aufzeichnen (`npm`, `cargo`, `pipx` …),
+  gelten nie als Lücke; ein Eintrag ganz ohne Plattform-Tabellen, wie ihn `mise install`
+  allein schreibt, dagegen schon. Gegengeprüft mit echtem `mise lock`.
 - **`snapshot`** weist ein Ziel ab, das weder gerendert ist noch eine Basis hat, bevor er
   etwas schreibt. Mehrere Ziele in einem Argument (zsh teilt Variablen nicht in Wörter)
   liefen bisher still als `removed` durch (Fund aus F-043c).
 - **`detect`** zählt einen Fragment-Marker nur, wenn er allein auf seiner Zeile steht.
 - **Kit:** Der Validator verlangt, dass Zonen- und Fragment-Marker im Template allein auf
   ihrer Zeile stehen; Skript-Tests für alle Zustände, das Einsetzen, die Auswahl per Name
-  und frische Renders (docs-only mit und ohne Graphiti, ts-node).
+  und frische Renders (docs-only mit und ohne Graphiti, ts-node); `lock-check`-Tests mit
+  Fixtures im Format von `mise lock`, ohne Netz und ohne mise.
 
 ### Template
 
@@ -44,6 +54,13 @@ Zonen, Fragmente und Lock-Datei prüft das Skript statt des Modells (F-045, in A
 - Die Kopfzone der `.claude/convention-overrides.md` (`overrides-head`) beschreibt das
   Override ohne marker-ähnlichen Text. Bisher hielt eine wörtliche Suche die Zone deshalb
   für geschützt und bot sie nie zur Aktualisierung an.
+
+### Known limitation
+
+- pnpm (Modul `ts-node`), Nachtrag zum Hinweis aus Template 0.13.3: Für
+  `linux-arm64-musl` gibt es wieder ein Release — die Gegenprobe zu `lock-check` am
+  2026-10-26 (pnpm 11.21.0) fand den Eintrag. Für `macos-x64` fehlt es weiterhin;
+  Projekte mit ts-node können pnpm auf Intel-Macs nicht über die Lock-Datei installieren.
 
 ## 1.4.0 — 2026-10-25
 
