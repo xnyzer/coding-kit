@@ -45,8 +45,198 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
-`/coding-kit:prep-step` vorbereiten._
+### F-040 — Globale Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau
+
+**Status:** PLANNED
+
+**Problem:** Die Vorlage `templates/global-CLAUDE.md` erreicht einen Rechner nur einmal:
+`install.sh` kopiert sie, wenn noch keine `~/.claude/CLAUDE.md` existiert, und meldet sonst
+nur „wird nicht überschrieben". Danach driften Vorlage und installierte Fassung unbemerkt
+auseinander — beobachtet in beide Richtungen: der Languages-Block-Absatz aus F-020 fehlt in
+der installierten Fassung, eine dort ergänzte generische Regel (Artifacts nur mit
+ausdrücklicher Erlaubnis veröffentlichen) fehlt in der Vorlage. F-024, F-029 und F-030
+planen weitere Änderungen an der Vorlage, die bestehende Rechner ohne Abgleich nie
+erreichen. Der manuelle Weg im README (`curl … -o ~/.claude/CLAUDE.md`) überschreibt eine
+eigene CLAUDE.md ohne Rückfrage. Ein Erklär-Niveau gibt es nicht: Wie ausführlich Claude
+antwortet, kann niemand einmal festlegen; teach-step liest dafür ein Lernprofil aus
+Graphiti, das ohne Graphiti fehlt.
+
+**Idee:** Die Kit-Regeln kommen mit dem Plugin auf den Rechner, als eigene Datei neben der
+persönlichen CLAUDE.md. Persönliche Werte (Antwortsprache, Erklär-Niveau) stehen an einer
+Stelle und werden beim Abgleich eingesetzt. Der Abgleich zeigt Unterschiede abschnittsweise
+und übernimmt nur Bestätigtes; eine selbst angelegte CLAUDE.md fasst das Kit nie an.
+
+**Entschieden (2026-10-26):**
+- **Ort:** Die Kit-Regeln liegen in `~/.claude/rules/coding-kit.md`. Claude Code lädt
+  Nutzer-Regeln aus `~/.claude/rules/` in jeder Session wie die CLAUDE.md, ohne Rückfrage.
+  `~/.claude/CLAUDE.md` gehört allein dem Nutzer. Quelle im Plugin:
+  `plugins/coding-kit/global/coding-kit.md` — nicht in `template/`, denn sie ist kein
+  Projektinhalt und deutsch. `templates/` entfällt.
+- **Verworfen:** Zonen in der persönlichen CLAUDE.md (Marker-Migration einer fremden
+  Datei); ein `@`-Import aus dem Plugin-Cache (der Pfad enthält die Version); ein
+  SessionStart-Hook, der die Regeln selbst einspeist (keine Bestätigung, gilt ungefragt für
+  jeden Plugin-Nutzer); eine CLAUDE.md im Plugin (lädt Claude Code nicht).
+- **Widersprüche:** Claude Code hängt alle Anweisungsdateien aneinander, ohne Vorrang; bei
+  einem Widerspruch entscheidet Claude beliebig. Deshalb nie über zwei Dateien abweichen.
+  Gewollter Vorrang steht im Regeltext (wie beim Languages-Block). Abweichen heißt: die Zone
+  in der Kit-Datei ändern und mit einer Override-Zeile schützen oder ihr Markerpaar löschen
+  (dauerhafter Opt-out). Eigene Zusatzregeln gehören in `~/.claude/CLAUDE.md`.
+- **Fremde Dateien:** Das Kit schreibt nie in eine `~/.claude/CLAUDE.md` ohne die Kopfzeile
+  der alten Vorlage („Gepflegt als Vorlage im coding-kit …", gleich in allen drei
+  Fassungen); dort meldet der Abgleich nur Widersprüche zu den Kit-Regeln. Eine alte
+  Kit-Kopie wird nur mit Diff und Zustimmung bereinigt; bleibt nichts Persönliches übrig,
+  bietet der Abgleich das Löschen an. Die Kit-Datei trägt eine eigene Kennung; eine fremde
+  Datei gleichen Namens wird nie überschrieben.
+- **Werte:** nur in `~/.claude/coding-kit.env`, die Optionen als Kommentar hinter dem Wert:
+  `CODING_KIT_REPLY_LANGUAGE` (Antwortsprache, freier Text), `CODING_KIT_EXPLAIN_LEVEL`
+  (`einsteiger | junior | fortgeschritten | senior`), `CODING_KIT_EXPLAIN_NOTE` (freier
+  Text, präzisiert die Stufe; bei Widerspruch gilt die Notiz). Fehlt ein Wert oder ist er
+  leer, entfällt seine Zeile. Claude Code setzt in Anweisungsdateien keine Variablen ein:
+  Der Abgleich rendert die Kit-Datei, die Regeldatei ist erzeugt. Nur die env-Datei zu
+  ändern reicht deshalb nicht — erst der Abgleich übernimmt. Gefragt werden die Werte nur
+  im Abgleich (erreicht auch bestehende Nutzer), `install.sh` fragt nicht. Stufenliste und
+  Schlüssel-Kommentare stehen technisch nur in der Kit-Datei.
+- **Erklär-Niveau:** gilt für Antworten, Rückfragen, Pläne, Zusammenfassungen und
+  Fehlerberichte — nicht für Code, Kommentare, Commits und Doku-Inhalte im Projekt, nicht
+  für die Strenge von Prüfungen und Freigaben. Skills schreiben keinen eigenen Erklärstil
+  vor; feste Ausgabeformate bleiben, die Sprache darin folgt dem Niveau. teach-step nimmt
+  das Niveau als Vorauswahl seiner Vertrautheitsfrage (`einsteiger` → Neuland, `junior` →
+  Grundlagen, ab `fortgeschritten` → Routiniert), liest und schreibt kein Lernprofil mehr
+  in Graphiti und schlägt am Ende höchstens einen neuen Notiz-Text vor.
+- **Abgleich:** in `update-conventions`. `global` gleicht nur die Kit-Regeln ab, auch
+  außerhalb eines Projekts, und richtet sie erstmals ein. Der normale Lauf und `alle`
+  prüfen sie einmal mit, wenn sie eingerichtet sind oder eine alte Kopie da ist — sonst
+  still; `status` berichtet mit. Vergleich und Einsetzen über `zones` (die Kit-Datei hat
+  `section:`-Zonen).
+- **Hinweis:** Ein SessionStart-Hook meldet in einer Zeile eine alte Kit-Kopie ohne
+  Kit-Datei, eine seit dem letzten Abgleich geänderte Kit-Datei oder geänderte, noch nicht
+  übernommene Werte. Sonst bleibt er still, auch bei Nutzern ohne globale Regeln. Den Stand
+  des letzten Abgleichs merkt er sich in `${CLAUDE_PLUGIN_DATA}`; abgelehnte Änderungen
+  lösen keinen neuen Hinweis aus.
+- **Kein `curl`-Weg mehr:** Er überschreibt heute ohne Rückfrage und enthielte rohe
+  Platzhalter. Ohne Klon: Plugin installieren, `/coding-kit:update-conventions global`.
+  Keine Platzhalter-Datei am alten Pfad — der alte Befehl scheitert mit 404 und
+  überschreibt nichts (geprüft).
+- **Bestehende Abweichung:** Sprachregel aus der Vorlage, Artifact-Regel wortgleich ins
+  Kit.
+- **Template-CLAUDE.md im Kit-Repo:** Claude Code lädt `template/core/CLAUDE.md`, sobald
+  eine Datei in diesem Ordner gelesen wird. `claudeMdExcludes` in der
+  `.claude/settings.json` des Repos schließt alle Anweisungsdateien unter
+  `plugins/coding-kit/template/` aus; die Begründung steht in der Repo-CLAUDE.md, weil JSON
+  keine Kommentare kennt.
+- **Nutzer-Doku im README:** Warnkasten, was das Kit mit den globalen Einstellungen macht;
+  die Werte mit Optionen, wie man sie setzt und ändert; Abweichungen und eigene Regeln; die
+  Modi von `update-conventions` zur Anwendung.
+
+**Abhängigkeiten:** F-039 und F-045 (`zones`), beide erledigt. Vor F-024, F-029 und F-030
+— deren Änderungen an den Kit-Regeln erreichen bestehende Rechner erst über den Abgleich.
+Übernimmt aus F-033 das Lernprofil von teach-step.
+
+#### F-040a — Kit-Datei, Werte, Render
+
+**Was:** Kit-Datei `plugins/coding-kit/global/coding-kit.md` aus der Vorlage plus
+Artifact-Regel: `section:`-Zonen je Abschnitt, Kennung, ein HTML-Kommentar für Menschen
+(gehört dem Kit, so weichst du ab, die Schlüssel samt Kommentar), Platzhalter und
+Stufenblöcke in der Syntax des Templates. Neuer Befehl in `template-sync.sh`, der die
+Kit-Datei mit den Werten der env-Datei rendert: liest nur die `CODING_KIT_*`-Zeilen, führt
+die Datei nie aus, erlaubt Kommentare hinter Werten, lehnt eine unbekannte Stufe ab.
+`version-rule.py` zählt `global/` als Plugin-Inhalt; der Validator prüft die Marker der
+Kit-Datei, ihre Stufenliste gegen die Stufenblöcke und die `claudeMdExcludes`-Zeile.
+`.claude/settings.json` mit `claudeMdExcludes`, Begründung in der Repo-CLAUDE.md. Version
+1.6.0 (unveröffentlicht), CHANGELOG.
+
+**Dateien:** `plugins/coding-kit/global/coding-kit.md` (neu),
+`plugins/coding-kit/scripts/template-sync.sh`, `tests/template-sync/global.sh` (neu),
+`tests/template-sync/run.sh`, `scripts/validate.py`, `scripts/version-rule.py`,
+`.claude/settings.json` (neu), `CLAUDE.md`,
+`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** keine.
+
+**Abnahmekriterien:**
+- [ ] Tests unter dash und bash (plus mawk und gawk): alle Werte gesetzt, einzelne leer
+      oder fehlend, Kommentar hinter dem Wert, unbekannte Stufe; `zones` auf einem
+      Stellvertreter-Config-Ordner mit `identical`, `differs`, `override`, `opted-out` und
+      einer fremden Datei ohne Marker.
+- [ ] Die gerenderte Kit-Datei enthält beide aufgelösten Unterschiede (Sprachregel der
+      Vorlage, Artifact-Regel).
+- [ ] `just check` grün.
+
+#### F-040b — Abgleich in update-conventions, Niveau in den Skills
+
+**Was:** `update-conventions` bekommt den globalen Teil: Argument `global`, Mitprüfung im
+normalen Lauf, bei `alle` und `status`. Ablauf: Config-Ordner bestimmen (prüfen:
+`$CLAUDE_CONFIG_DIR`, sonst `~/.claude`), fehlende Werte erfragen und die Schlüssel samt
+Kommentar aus der Kit-Datei in die env-Datei schreiben (nach Freigabe), rendern, per
+`zones` je Abschnitt abgleichen, Ergebnis kopieren, Stand in `${CLAUDE_PLUGIN_DATA}`
+merken. Migration einer alten Kit-Kopie: Kit-Abschnitte heraus, Persönliches bleibt,
+unklare Zeilen einzeln vorlegen, Löschen anbieten. Für eine fremde CLAUDE.md nur der
+Widerspruchs-Hinweis. Allgemein nützliche Regeln über `propose-to-template` (neue
+Fund-Art). Ein Stellvertreter-Ordner als Argument macht den Teil testbar, ohne das echte
+`~/.claude` anzufassen. teach-step ohne Graphiti-Lernprofil, Vorauswahl aus dem Niveau.
+Authoring-Regel zum Erklärstil. Die HOW-TO des Templates nennt `global` (`### Template` im
+CHANGELOG). `/add-skill` läuft mit.
+
+**Dateien:**
+`plugins/coding-kit/skills/{update-conventions,teach-step,propose-to-template}/SKILL.md`,
+`docs/skill-authoring.md`, `plugins/coding-kit/template/core/HOW-TO-CODE-WITH-CLAUDE.md`,
+`plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** F-040a.
+
+**Abnahmekriterien:**
+- [ ] Kein Skill liest oder schreibt mehr ein Lernprofil in Graphiti (grep).
+- [ ] Kein Skill setzt Kit-Regeln von Hand ein; Render und Vergleich nur über das Skript.
+- [ ] `just check` grün.
+
+#### F-040c — Session-Hinweis, Installer, Nutzer-Doku
+
+**Was:** SessionStart-Hook (Bash wie der Stop-Hook) mit den drei Hinweisen aus
+„Entschieden", Eintrag in `hooks.json`. `install.sh` Schritt 4 schreibt nichts Globales
+mehr: Er meldet eine alte Kit-Kopie oder eine eigene CLAUDE.md und endet mit dem Verweis
+auf `/coding-kit:update-conventions global`. `templates/` entfällt. README: Warnkasten;
+Werte mit Optionen, wie man sie setzt und ändert (nur die env-Datei zu ändern reicht
+nicht); Abschnitt „Eigene Abweichungen und Ergänzungen"; Modi von `update-conventions` zur
+Anwendung; manueller Weg ohne `curl`; Absatz Commit-Identität; Dateibaum. Der Validator
+prüft, dass das README dieselben Stufen nennt wie die Kit-Datei. CHANGELOG mit dem, was
+bestehende Nutzer nach dem Update erleben. Verweise auf die alte Vorlage in F-024, F-029
+und F-030 nachziehen (mit Vorschau).
+
+**Dateien:** `plugins/coding-kit/hooks/session-start.sh` (neu),
+`plugins/coding-kit/hooks/hooks.json`, Hook-Tests (neu, in `run.sh` eingehängt),
+`install.sh`, `templates/global-CLAUDE.md` (entfällt), `README.md`, `scripts/validate.py`,
+`plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`.
+
+**Abhängigkeiten:** F-040b.
+
+**Abnahmekriterien:**
+- [ ] Hook-Tests: alte Kopie, Kit geändert, Werte geändert, Änderung abgelehnt (still),
+      keine globalen Regeln (still), nur eine eigene CLAUDE.md (still).
+- [ ] `install.sh` mit einem Test-HOME schreibt nichts unter `rules/` und lässt die
+      CLAUDE.md unverändert.
+- [ ] Kein `curl`-Weg und kein Verweis auf `templates/` mehr im Repo (grep, außer Archiv
+      und CHANGELOG).
+- [ ] `just check` grün.
+
+#### F-040d — Testlauf, Release, erster echter Abgleich
+
+**Was:** Testläufe mit `claude -p --plugin-dir plugins/coding-kit` an
+Stellvertreter-Ordnern: Neueinrichtung, alte Kit-Kopie mit persönlicher Ergänzung, eigene
+CLAUDE.md ohne Kit. Kosten nennen. Release 1.6.0 nach dem bekannten Ablauf; Push nur auf
+ausdrückliche Bitte, vorher Personendaten-grep. Danach der erste echte Abgleich auf dem
+Rechner des Nutzers: Werte setzen (das Graphiti-Lernprofil wird zu Niveau und Notiz),
+beide Unterschiede übernehmen, die alte CLAUDE.md bereinigen oder löschen; entscheiden, ob
+das Graphiti-Lernprofil bleibt.
+
+**Dateien:** `plugins/coding-kit/CHANGELOG.md`, dazu Funde aus den Läufen.
+
+**Abhängigkeiten:** F-040c.
+
+**Abnahmekriterien:**
+- [ ] Drei Testläufe wie beschrieben, Endstand per Skript geprüft, Kosten genannt.
+- [ ] Release 1.6.0 gepusht, CI grün, Plugin aktualisiert, Cache geprüft.
+- [ ] Gegenprobe in einer neuen Session: Kit-Regeln einmal geladen, keine doppelte
+      Sprachregel, `template/core/CLAUDE.md` im Kit-Repo nicht geladen.
 
 ---
 
@@ -57,9 +247,9 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 **Empfohlene Reihenfolge** (Stand 2026-10-26; die Einträge darunter bleiben nach Nummer
 sortiert):
 
-1. **F-040** — unabhängig von F-036 und mittelgroß; die globale CLAUDE.md driftet schon
-   (siehe Eintrag), und jede Session lädt sie. Vor den Strängen Graphiti und Host, deren
-   Änderungen an der globalen Vorlage sonst bestehende Rechner nicht erreichen.
+1. **F-040** — unabhängig von F-036; die globale CLAUDE.md driftet schon (siehe
+   Eintrag), und jede Session lädt sie. Vor den Strängen Graphiti und Host, deren
+   Änderungen an den Kit-Regeln sonst bestehende Rechner nicht erreichen.
 2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
 3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
@@ -346,8 +536,8 @@ das sonst im Graph landet.
 - Alle Graphiti-Stellen (Skills, globale Vorlage, Template-Block, README) auf harte
   Kopplung prüfen — auch impliziten Text wie „erst den Graph fragen".
 - Ersatz nur für Wissen ohne eigenen Ort: Entscheidungen, Nicht-Ziele und offene Fragen
-  tragen nach F-036 Feature-Dateien und ADRs. Übrig bleiben u. a. das Lernprofil von
-  `teach-step` (lebt heute nur im Graph) und Infra-Fakten — dafür
+  tragen nach F-036 Feature-Dateien und ADRs. Übrig bleiben u. a. Infra-Fakten (das
+  Lernprofil von `teach-step` entfällt mit F-040) — dafür
   Claude-Code-Auto-Memory, eine Datei unter `private/` oder bewusst kein Ersatz, dann
   dokumentiert.
 - Der Graphiti-Block der CLAUDE.md-Vorlage im Template (`template/core/CLAUDE.md`) ist
@@ -505,49 +695,6 @@ ergänzen — im selben Commit.
 
 ---
 
-### F-040 — Globale CLAUDE.md mit dem Plugin ausliefern und abgleichen
-
-**Status:** BACKLOG
-
-**Problem:** Die Vorlage `templates/global-CLAUDE.md` erreicht einen Rechner nur einmal:
-`install.sh` kopiert sie, wenn noch keine `~/.claude/CLAUDE.md` existiert, und meldet sonst
-nur „wird nicht überschrieben". Danach driften Vorlage und installierte Fassung unbemerkt
-auseinander — beobachtet in beide Richtungen: der Languages-Block-Absatz aus F-020 fehlt in
-der installierten Fassung, eine dort ergänzte generische Regel (Artifacts nur mit
-ausdrücklicher Erlaubnis veröffentlichen) fehlt in der Vorlage. F-024, F-029 und F-030
-planen weitere Änderungen an der Vorlage, die bestehende Rechner ohne Abgleich nie
-erreichen.
-
-**Idee:** Die Vorlage wird mit dem Plugin ausgeliefert und kommt so mit jedem Update auf
-den Rechner. Ein Abgleich zeigt die Unterschiede zur installierten Fassung abschnittsweise
-und übernimmt nur Bestätigtes; persönliche Ergänzungen bleiben unangetastet. Generische
-Regeln, die nur in der installierten Fassung stehen, werden als Übernahme-Vorschlag fürs
-Kit gemeldet — die Vererbung bleibt abwärts wie bei den Konventionen (F-018).
-
-**Lösungsskizze:**
-- Vorlage in den Plugin-Ordner, aber nicht nach `template/`: dort liegt nur MANIFEST-Inhalt
-  für Projekte, die globale Datei geht auf den Rechner und ist deutsch.
-- Kit-eigene Abschnitte markieren, ähnlich den `section:NAME`-Zonen der seed-Dateien;
-  alles Unmarkierte gilt als persönlich und wird nie angefasst.
-- Abgleich mit Diff und Bestätigung je Abschnitt; `install.sh` richtet aus derselben
-  Quelle ein.
-- Bestehende Abweichung als erster Lauf auflösen (Languages-Absatz, Artifact-Regel).
-- Pfad-Folgen: README lädt die Vorlage im manuellen Weg per `curl` über
-  `…/main/templates/global-CLAUDE.md`, `install.sh` liest sie aus dem Checkout, der Kopf
-  der Vorlage nennt ihren Pfad.
-- Plugin-Änderung: Versions-Bump und CHANGELOG.
-
-**Noch zu analysieren:**
-- Welcher Skill den Abgleich trägt (`update-conventions`, ein eigener kleiner Skill oder
-  ein Hinweis des Stop-Hooks bei Abweichung).
-- Wie installierte Fassungen ohne Marker erkannt werden (einmalige Marker-Migration wie
-  bei den seed-Dateien).
-- Ob die alte `curl`-URL weiter funktionieren soll.
-
-**Abhängigkeiten:** F-039 (Plugin-Struktur und Versionsregel stehen dann). Sinnvoll vor
-F-024, F-029 und F-030 — deren Änderungen an der Vorlage erreichen bestehende Rechner erst
-über den Abgleich.
-
 ### F-046 — Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
 
 **Status:** BACKLOG
@@ -648,7 +795,7 @@ F-036 Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt
 F-037 Unabhängiges Review in step-done (Reviewer mit frischem Kontext)
 F-038 Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature von Claude aufrufbar (DONE)
 F-039 Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0 (DONE)
-F-040 Globale CLAUDE.md mit dem Plugin ausliefern und abgleichen
+F-040 Globale Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau (PLANNED)
 F-041 Projektzusätze in managed Dateien erhalten, Abweichungen früh erkennen (DONE)
 F-042 Neue Sprachen und Frameworks erkennen, Vorlagen nachziehen (DONE)
 F-043 Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen (DONE)
