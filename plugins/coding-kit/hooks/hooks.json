@@ -1,6 +1,18 @@
 {
-  "description": "coding-kit stop hook — reminds about uncommitted changes in kit-managed projects (detected via PROGRESS.md FEATURE-INDEX or .claude/template-version). Silent everywhere else.",
+  "description": "coding-kit hooks — the stop hook reminds about uncommitted changes in kit-managed projects (detected via PROGRESS.md FEATURE-INDEX or .claude/template-version); the session-start hook adds one line when the kit's global rules need a sync (old kit copy in CLAUDE.md, kit or personal values changed since the last sync). Both are silent everywhere else.",
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

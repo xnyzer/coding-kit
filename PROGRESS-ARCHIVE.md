@@ -16,6 +16,71 @@ zusammen:
 
 ---
 
+## F-040d — Session-Hinweis, Installer, Nutzer-Doku (2026-10-26)
+
+Teil von F-040 (Globale Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau;
+F-040a–c siehe darunter, F-040e folgt).
+
+**Problem:** Seit F-040a–c kann `update-conventions global` die Kit-Regeln einrichten und
+abgleichen, aber niemand erfuhr, wann das nötig ist. `install.sh` kopierte weiter die
+alte Vorlage, und das README beschrieb noch den `curl`-Weg.
+
+**Was entstanden ist (1.6.0, unveröffentlicht):**
+
+- **`hooks/session-start.sh` (neu), Eintrag in `hooks.json` (Matcher `startup`):**
+  meldet als SessionStart-Kontext (`hookSpecificOutput.additionalContext`) in einer
+  Zeile eine alte Kit-Kopie in der CLAUDE.md des Config-Ordners (Kopfzeile der früheren
+  Vorlage); geänderte Kit-Regeln oder Werte, wenn die Regeldatei die Kennung trägt und der
+  Render mit den aktuellen Werten von der Basis `${CLAUDE_PLUGIN_DATA}/global-base`
+  abweicht; eine Personal-Config, die `render-global` ablehnt. Ohne Kit-Regeln, bei einer
+  fremden Regeldatei, ohne Datenordner und bei abgelehnten Änderungen schweigt er. Er
+  schreibt nichts und endet immer mit 0 — ein anderer Exit-Code zeigte laut Doku eine
+  Fehlermeldung.
+- **`install.sh`:** Schritt 4 meldet eine alte Kit-Kopie, eine eigene CLAUDE.md und ob
+  die Kit-Regeln eingerichtet sind; er schreibt nichts Globales und endet mit dem Verweis
+  auf `update-conventions global`. Config-Ordner und Personal-Config folgen
+  `CLAUDE_CONFIG_DIR`.
+- **`templates/global-CLAUDE.md` entfernt**, der `curl`-Weg im README gestrichen.
+- **README:** beide Einrichtungswege auf die Kit-Regeln umgestellt; neuer Abschnitt
+  „Globale Kit-Regeln" mit Warnkasten (was das Kit mit den globalen Einstellungen macht),
+  „Antwortsprache und Erklär-Niveau" (Schlüssel samt Kommentar, Stufen, Setzen und Ändern
+  — die env-Datei allein reicht nicht) und „Eigene Abweichungen und Ergänzungen"; eine
+  Tabelle der Aufrufe von `update-conventions`; Abschnitt „Session-Hinweis"; die
+  Personal-Config um die drei Schlüssel ergänzt; Commit-Identität, Windows-Hinweis,
+  Einleitung und Dateibaum nachgezogen.
+- **Validator:** Die Zeile `CODING_KIT_EXPLAIN_LEVEL` im README muss dieselben Stufen
+  nennen wie die Kit-Datei.
+- **Tests:** `tests/template-sync/hook.sh` (neu) mit 22 Fällen je Durchgang an einem
+  Stellvertreter-Config- und -Datenordner. `lefthook.yml` lässt die Skript-Tests auch bei
+  Änderungen an den Hooks laufen.
+- **PROGRESS:** Verweise auf die alte Vorlage in F-024, F-029, F-030 und F-033 auf die
+  Kit-Regeln umgestellt.
+
+**Verifikation:** `just check` grün mit 1590 Checks unter dash, bash und mawk (66 davon
+neu); eine echte Ausgabe des Hooks mit Python als JSON gelesen. `install.sh --local`
+zweimal in einem Test-HOME ausgeführt (der gh-Token nur als Umgebungsvariable des
+Laufs): Mit alter Kit-Kopie wie mit eigener CLAUDE.md blieb die Datei byte-gleich, und
+`rules/` entstand nicht; die echte Plugin-Konfiguration blieb unberührt, das Test-HOME
+ist gelöscht. Grep: `templates/` und `curl` stehen nur noch im F-040-Eintrag, im Archiv
+und im CHANGELOG. Die Fehlerprobe für die README-Prüfung (veränderte Stufenliste) schlägt
+an. Secrets- und Privacy-Scan ohne Fund.
+
+**Notable decisions:**
+- Ein gemeinsamer Hinweis für „Kit geändert" und „Werte geändert": Beides vergleicht der
+  Hook mit derselben Basis; getrennt ginge nur mit einer zweiten gespeicherten Datei, und
+  die Lösung ist in beiden Fällen derselbe Befehl.
+- Der Hook läuft nur beim Start einer neuen Session (`startup`), nicht nach `resume`,
+  `clear` oder `compact`.
+- Ohne Datenordner schweigt der Hook beim Vergleich, statt jede Session zu melden.
+- Die Testdaten tragen die alte Kopfzeile nur bis zu dem Teil, an dem Hook und Abgleich
+  die Kopie erkennen.
+
+**Geänderte Dateien:** `plugins/coding-kit/hooks/session-start.sh` (neu),
+`plugins/coding-kit/hooks/hooks.json`, `tests/template-sync/hook.sh` (neu),
+`tests/template-sync/run.sh`, `install.sh`, `templates/global-CLAUDE.md` (entfernt),
+`README.md`, `scripts/validate.py`, `lefthook.yml`, `plugins/coding-kit/CHANGELOG.md`,
+`PROGRESS.md`.
+
 ## F-040c — Abgleich in update-conventions, Niveau in den Skills (2026-10-26)
 
 Teil von F-040 (Globale Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau;

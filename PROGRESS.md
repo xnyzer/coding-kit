@@ -43,6 +43,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-040a | Kit-Datei, Werte, Render → **die globalen Regeln liegen als `global/coding-kit.md` im Plugin (fünf Zonen, Kennung, Sprachregel der Vorlage, Artifact-Regel, Erklär-Niveau mit vier Stufen und Notiz); `template-sync.sh render-global` rendert sie mit den Werten der Personal-Config, ohne die Datei auszuführen, und `zones` gleicht das Ergebnis mit einem Config-Ordner ab; `claudeMdExcludes` hält die Template-CLAUDE.md aus Sessions im Kit-Repo; Validator, Versionsregel und Tests nachgezogen; Version 1.6.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-040b | Interview-Skill `explain-level` → **neuer Skill `/coding-kit:explain-level`: Interview zu Antwortsprache und Erklär-Niveau (Programmieren, Shell, Git, Frameworks, Projekt-Werkzeuge, Code mitlesen), Vorschlag für Stufe und Notiz mit dem Stufentext der Kit-Datei, einzige Stelle, die die Werte abfragt; `template-sync.sh set-global` schreibt die Werte in eine Kopie der Personal-Config (erste Zuweisung ersetzt, spätere entfernt, Rest unverändert, für die Shell wörtlich maskiert); README, plugin.json, CHANGELOG.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-040c | Abgleich in update-conventions, Niveau in den Skills → **`update-conventions global` (Teil G) richtet die globalen Kit-Regeln ein und gleicht sie je Zone über `zones` ab, jeder andere Lauf prüft sie einmal mit; fehlende Werte über `explain-level`, Migration einer alten Kit-Kopie in einem Schritt mit der Einrichtung, eine selbst angelegte CLAUDE.md nur mit Widerspruchs-Hinweis; Stand als Basis im Plugin-Datenordner; teach-step ohne Graphiti-Lernprofil; `propose-to-template` mit der Fund-Art globale Regel; Authoring-Regel zum Erklärstil; HOW-TO nennt `global`.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
+| F-040d | Session-Hinweis, Installer, Nutzer-Doku → **SessionStart-Hook meldet eine alte Kit-Kopie, geänderte Kit-Regeln oder Werte und eine unlesbare Personal-Config (Render gegen die Basis, schreibt nie, endet immer ohne Fehler); `install.sh` schreibt nichts Globales mehr und verweist auf `update-conventions global`; `templates/` und der `curl`-Weg entfallen; README mit Warnkasten, Werten, Abweichungen, den Aufrufen von `update-conventions` und dem Session-Hinweis; der Validator gleicht die Stufen im README ab; Verweise in F-024, F-029, F-030 und F-033 nachgezogen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 
 ---
 
@@ -136,35 +137,6 @@ und übernimmt nur Bestätigtes; eine selbst angelegte CLAUDE.md fasst das Kit n
 — deren Änderungen an den Kit-Regeln erreichen bestehende Rechner erst über den Abgleich.
 Übernimmt aus F-033 das Lernprofil von teach-step.
 
-#### F-040d — Session-Hinweis, Installer, Nutzer-Doku
-
-**Was:** SessionStart-Hook (Bash wie der Stop-Hook) mit den drei Hinweisen aus
-„Entschieden", Eintrag in `hooks.json`. `install.sh` Schritt 4 schreibt nichts Globales
-mehr: Er meldet eine alte Kit-Kopie oder eine eigene CLAUDE.md und endet mit dem Verweis
-auf `/coding-kit:update-conventions global`. `templates/` entfällt. README: Warnkasten;
-Werte mit Optionen, wie man sie setzt und ändert (nur die env-Datei zu ändern reicht
-nicht); Abschnitt „Eigene Abweichungen und Ergänzungen"; Modi von `update-conventions` zur
-Anwendung; manueller Weg ohne `curl`; Absatz Commit-Identität; Dateibaum. Der Validator
-prüft, dass das README dieselben Stufen nennt wie die Kit-Datei. CHANGELOG mit dem, was
-bestehende Nutzer nach dem Update erleben. Verweise auf die alte Vorlage in F-024, F-029
-und F-030 nachziehen (mit Vorschau).
-
-**Dateien:** `plugins/coding-kit/hooks/session-start.sh` (neu),
-`plugins/coding-kit/hooks/hooks.json`, Hook-Tests (neu, in `run.sh` eingehängt),
-`install.sh`, `templates/global-CLAUDE.md` (entfällt), `README.md`, `scripts/validate.py`,
-`plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`.
-
-**Abhängigkeiten:** F-040c.
-
-**Abnahmekriterien:**
-- [ ] Hook-Tests: alte Kopie, Kit geändert, Werte geändert, Änderung abgelehnt (still),
-      keine globalen Regeln (still), nur eine eigene CLAUDE.md (still).
-- [ ] `install.sh` mit einem Test-HOME schreibt nichts unter `rules/` und lässt die
-      CLAUDE.md unverändert.
-- [ ] Kein `curl`-Weg und kein Verweis auf `templates/` mehr im Repo (grep, außer Archiv
-      und CHANGELOG).
-- [ ] `just check` grün.
-
 #### F-040e — Testlauf, Release, erster echter Abgleich
 
 **Was:** Testläufe mit `claude -p --plugin-dir plugins/coding-kit` an
@@ -233,8 +205,9 @@ Skill statt zu raten.
 **Lösungsskizze:**
 - Reihenfolge in step-done § Autor-Config: Personal-Config → `gh api user` → fragen; kein
   GitHub-Format mehr erzwingen.
-- Gleiche Härte in `templates/global-CLAUDE.md` entschärfen: GitHub-Noreply als Default
-  für GitHub-Projekte, Kernaussage bleibt „keine private Adresse".
+- Gleiche Härte in den globalen Kit-Regeln entschärfen
+  (`plugins/coding-kit/global/coding-kit.md`, Zone `global-git`): GitHub-Noreply als
+  Default für GitHub-Projekte, Kernaussage bleibt „keine private Adresse".
 - Weitere Fundstellen desselben Musters prüfen (u. a. `new-project` 4a) und die
   README-Zeile zum Schlüssel an die neue Rolle anpassen.
 - Template-Seite: Die Noreply-Regel steht auch im Template (`template/core/CLAUDE.md`,
@@ -358,10 +331,10 @@ seine Zeitstempel — kein manuelles Löschen.
   ausführlicher Prosa, also weniger Entitäten.
 - `reference_time` setzen, wo vergangene Ereignisse beschrieben werden, damit die
   zeitliche Auflösung ohne Nacharbeit stimmt; `update_communities` bleibt aus.
-- Globale CLAUDE.md-Vorlage anpassen: Löschanweisung streichen, Splitting-Regel
-  überdenken, auf die zentrale Konvention verweisen.
+- Globale Kit-Regeln anpassen (Zone `global-graphiti`): Löschanweisung streichen,
+  Splitting-Regel überdenken, auf die zentrale Konvention verweisen.
 - Betroffen: alle Skills mit Graphiti-Schreibzugriff, `docs/skill-authoring.md`,
-  Vorlage der globalen CLAUDE.md.
+  die globalen Kit-Regeln.
 
 **Noch zu analysieren:**
 - Welchen Anteil die Kit-Skills am Gesamtverbrauch haben, verglichen mit Schreibern
@@ -402,7 +375,7 @@ zuletzt geschriebenen eigenen Episoden angekommen sind.
   ohne bestehende Settings zu überschreiben (vorhandenen Wert respektieren oder
   nachfragen).
 - Schlüssel und Default zur Laufzeit gegen die aktuelle Claude-Code-Doku prüfen.
-- In der globalen CLAUDE.md-Vorlage bzw. README kurz begründen, warum der Wert gesetzt
+- In den globalen Kit-Regeln bzw. im README kurz begründen, warum der Wert gesetzt
   wird.
 - Speicherbedarf der Transkripte bei längerer Aufbewahrung im Blick behalten.
 
@@ -485,7 +458,7 @@ Graphiti vollständig laufen. Optional bekommt das Kit einen Ersatzweg für das 
 das sonst im Graph landet.
 
 **Lösungsskizze:**
-- Alle Graphiti-Stellen (Skills, globale Vorlage, Template-Block, README) auf harte
+- Alle Graphiti-Stellen (Skills, globale Kit-Regeln, Template-Block, README) auf harte
   Kopplung prüfen — auch impliziten Text wie „erst den Graph fragen".
 - Ersatz nur für Wissen ohne eigenen Ort: Entscheidungen, Nicht-Ziele und offene Fragen
   tragen nach F-036 Feature-Dateien und ADRs. Übrig bleiben u. a. Infra-Fakten (das

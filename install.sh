@@ -5,7 +5,8 @@
 #   1. Preconditions: gh (authenticated) and claude must be installed.
 #   2. Adds the xnyzer marketplace and installs the coding-kit plugin.
 #   3. Creates the personal config ~/.claude/coding-kit.env (prefilled via gh api).
-#   4. Offers to install the global ~/.claude/CLAUDE.md from the kit template (once it ships).
+#   4. Reports the kit's global rules; it never writes them or ~/.claude/CLAUDE.md —
+#      setting them up is /coding-kit:update-conventions global in a Claude session.
 #   5. Checks the base toolchain (mise, just, lefthook, gitleaks); offers brew install.
 #
 # Usage:
@@ -16,9 +17,10 @@ set -euo pipefail
 MARKETPLACE_REPO="xnyzer/coding-kit"
 MARKETPLACE_NAME="xnyzer"
 PLUGIN_NAME="coding-kit"
-ENV_FILE="$HOME/.claude/coding-kit.env"
+# Claude Code's config folder: CLAUDE_CONFIG_DIR moves all of ~/.claude.
+CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+ENV_FILE="$CONFIG_DIR/coding-kit.env"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GLOBAL_CLAUDE_TEMPLATE="$SCRIPT_DIR/templates/global-CLAUDE.md"
 LOCAL_MODE=false
 [ "${1:-}" = "--local" ] && LOCAL_MODE=true
 
@@ -99,20 +101,23 @@ EOF
   ok "angelegt (chmod 600)"
 fi
 
-# --- 4. Global CLAUDE.md -----------------------------------------------------
-say "Globale ~/.claude/CLAUDE.md"
+# --- 4. Global kit rules ------------------------------------------------------
+# Only reports. Setting up and syncing the rules — with the interview for reply language
+# and explanation level, a diff and a confirmation — is /coding-kit:update-conventions
+# global in a Claude session; a CLAUDE.md of the user's own is never touched.
+say "Globale Kit-Regeln"
 
-if [ -f "$GLOBAL_CLAUDE_TEMPLATE" ]; then
-  if [ -f "$HOME/.claude/CLAUDE.md" ]; then
-    ok "existiert bereits — wird nicht überschrieben (Abgleich: diff gegen templates/global-CLAUDE.md)"
-  elif ask_yes_no "Globale CLAUDE.md aus der Kit-Vorlage einrichten?" j; then
-    cp "$GLOBAL_CLAUDE_TEMPLATE" "$HOME/.claude/CLAUDE.md"
-    ok "eingerichtet aus templates/global-CLAUDE.md"
-  else
-    warn "übersprungen"
-  fi
+RULES_FILE="$CONFIG_DIR/rules/coding-kit.md"
+USER_CLAUDE_MD="$CONFIG_DIR/CLAUDE.md"
+if [ -f "$USER_CLAUDE_MD" ] && grep -qF "Gepflegt als Vorlage im coding-kit" "$USER_CLAUDE_MD"; then
+  warn "$USER_CLAUDE_MD ist eine Kopie der früheren Kit-Vorlage — /coding-kit:update-conventions global übernimmt den Kit-Teil in die Kit-Regeln (nur nach Bestätigung, Persönliches bleibt)"
+elif [ -f "$USER_CLAUDE_MD" ]; then
+  ok "eigene $USER_CLAUDE_MD gefunden — das Kit fasst sie nie an"
+fi
+if [ -f "$RULES_FILE" ]; then
+  ok "Kit-Regeln eingerichtet ($RULES_FILE)"
 else
-  warn "Kit-Vorlage (templates/global-CLAUDE.md) existiert noch nicht — übersprungen"
+  warn "Kit-Regeln noch nicht eingerichtet (optional) — in einer Claude-Session: /coding-kit:update-conventions global"
 fi
 
 # --- 5. Toolchain ------------------------------------------------------------
@@ -141,4 +146,5 @@ if [ "${#MISSING[@]}" -gt 0 ]; then
   fi
 fi
 
-say "Fertig. Nächste Schritte: neue Claude-Code-Session starten, Skills unter /coding-kit:<name> prüfen."
+say "Fertig. Nächste Schritte: neue Claude-Code-Session starten, Skills unter /coding-kit:<name> prüfen;"
+say "für die globalen Kit-Regeln dort /coding-kit:update-conventions global (fragt Antwortsprache und Erklär-Niveau ab)."

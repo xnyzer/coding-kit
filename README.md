@@ -1,10 +1,10 @@
 # coding-kit
 
 Mein persönliches Claude-Code-Kit — das Scaffolding-System, mit dem neue Projekte entstehen
-und Bestandsprojekte aktuell bleiben: ein **Plugin** mit Workflow-Skills und dem
-**Projekt-Template** (Core, Stack-Module, Standards-Fragmente), ein **Marketplace** zum
-Installieren, ein **Renovate-Preset** für alle Projekte und ein **Installer** für neue
-Rechner. Das Template lag bis 0.16.0 im eigenen Repo project-template; seit 1.0.0 kommt
+und Bestandsprojekte aktuell bleiben: ein **Plugin** mit Workflow-Skills, dem
+**Projekt-Template** (Core, Stack-Module, Standards-Fragmente) und den **globalen
+Kit-Regeln** für jede Claude-Session, ein **Marketplace** zum Installieren, ein
+**Renovate-Preset** für alle Projekte und ein **Installer** für neue Rechner. Das Template lag bis 0.16.0 im eigenen Repo project-template; seit 1.0.0 kommt
 es mit dem Plugin, Skills und Template teilen eine Version.
 
 > Kit-Sprache ist Deutsch (das Kit ist primär für den Eigenbedarf). Englisch ist nur, was
@@ -29,9 +29,10 @@ der [dritte Weg](#ohne-github-nur-git).
 ### Automatisiert (empfohlen)
 
 Repo klonen und den Installer ausführen — er prüft die Voraussetzungen, richtet
-Marketplace + Plugin ein, legt die Personal-Config an (via `gh api` vorbefüllt), bietet
-die globale `~/.claude/CLAUDE.md` aus der Kit-Vorlage an und prüft die Toolchain
-(Installation auf Wunsch via brew):
+Marketplace + Plugin ein, legt die Personal-Config an (via `gh api` vorbefüllt), meldet
+den Stand der [globalen Kit-Regeln](#globale-kit-regeln) und prüft die Toolchain
+(Installation auf Wunsch via brew). Die Kit-Regeln schreibt er nicht; die richtest du
+danach in einer Claude-Session mit `/coding-kit:update-conventions global` ein:
 
 ```bash
 git clone https://github.com/xnyzer/coding-kit.git && cd coding-kit && ./install.sh
@@ -48,8 +49,7 @@ git clone https://github.com/xnyzer/coding-kit.git && cd coding-kit && ./install
 Der Installer ist **idempotent**: jeder Schritt prüft erst den Zustand, mehrfaches
 Ausführen ist gefahrlos und überspringt, was schon da ist — auch geeignet, um nach den
 zwei `/plugin`-Befehlen nur den Rest nachzuziehen. Der Klon wird bloß für den Installer
-und die CLAUDE.md-Vorlage gebraucht; das Plugin selbst kommt über den Marketplace von
-GitHub. Für die reine Nutzung brauchst du das Repo also nicht lokal.
+gebraucht; das Plugin samt Kit-Regeln kommt über den Marketplace von GitHub. Für die reine Nutzung brauchst du das Repo also nicht lokal.
 
 ### Manuell
 
@@ -81,15 +81,18 @@ chmod 600 ~/.claude/coding-kit.env
 Projekte-Verzeichnis vorher prüfen und ggf. anpassen. Schlüssel-Referenz:
 [Personal-Config](#personal-config).
 
-**3. Globale `~/.claude/CLAUDE.md`** — optional: kein Skill liest sie, das Kit
-funktioniert ohne. Sie setzt die House-Defaults (Antwortsprache, „nie automatisch
+**3. Globale Kit-Regeln** — optional: Das Kit funktioniert ohne. Sie setzen die
+House-Defaults für jede Session (Antwortsprache, Erklär-Niveau, „nie automatisch
 committen", Noreply-Mail-Pflicht, Graphiti-Konventionen) — ohne sie fehlen diese
-Leitplanken außerhalb der Skills. Ohne Klon direkt aus dem Repo holen:
+Leitplanken außerhalb der Skills. Einrichten in einer Claude-Session:
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/xnyzer/coding-kit/main/templates/global-CLAUDE.md \
-  -o ~/.claude/CLAUDE.md
 ```
+/coding-kit:update-conventions global
+```
+
+Das fragt Antwortsprache und Erklär-Niveau ab und zeigt die Regeln, bevor es sie
+schreibt. Was dabei mit deinen Einstellungen geschieht:
+[Globale Kit-Regeln](#globale-kit-regeln).
 
 **4. Toolchain** — `mise`, `just`, `lefthook`, `gitleaks`: die Skills rufen die
 just-Standardrezepte, die Projekt-Hooks nutzen lefthook + gitleaks. Auf macOS:
@@ -98,7 +101,7 @@ just-Standardrezepte, die Projekt-Hooks nutzen lefthook + gitleaks. Auf macOS:
 Frisch installierte Skills sind ggf. erst nach einem Session-Neustart sichtbar.
 
 > **Windows:** Beide Wege brauchen eine Bash (Git for Windows) — `install.sh` und die
-> Snippets sind Bash, und der Stop-Hook des Plugins ruft `bash` auf. Ausführen in
+> Snippets sind Bash, und die Hooks des Plugins rufen `bash` auf. Ausführen in
 > derselben Umgebung, in der `claude` läuft: in Git Bash ist `$HOME` das
 > Windows-Benutzerverzeichnis, ein Lauf unter WSL schreibt dagegen ins WSL-Home und
 > bleibt für eine native Windows-Installation unsichtbar. Die Toolchain kommt dort über
@@ -151,11 +154,13 @@ die Repo-Settings aus 4c entfallen. Die projektübergreifende Discovery
 von `/update-conventions alle` findet lokale Projekte über `.claude/template-version` unter
 `$CODING_KIT_PROJECTS_DIR`, das Marker-Topic braucht sie dafür nicht.
 
-**Commit-Identität:** Die Kit-Vorlage der globalen `~/.claude/CLAUDE.md` schreibt die
-GitHub-Noreply-Adresse als Pflicht fest und löst sie über `gh api user` auf. Auf einem
-Rechner ohne GitHub ist das die falsche Regel — dort den Abschnitt auf die Adresse des
-eigenen Hosts umschreiben und `git config user.email` **pro Repo** setzen, damit die
-Firmenadresse nicht in private Projekte wandert.
+**Commit-Identität:** Die [globalen Kit-Regeln](#globale-kit-regeln) schreiben die
+GitHub-Noreply-Adresse als Pflicht fest und lösen sie über `gh api user` auf. Auf einem
+Rechner ohne GitHub ist das die falsche Regel — dort den Abschnitt „Git & Commits" in
+`~/.claude/rules/coding-kit.md` auf die Adresse des eigenen Hosts umschreiben, mit einer
+Override-Zeile schützen (siehe [Eigene Abweichungen](#eigene-abweichungen-und-ergänzungen))
+und `git config user.email` **pro Repo** setzen, damit die Firmenadresse nicht in private
+Projekte wandert.
 
 ## Tägliche Nutzung
 
@@ -219,6 +224,24 @@ ihn frei. `step-done` bündelt das mit der Commit-Frage; im autonomen `/goal`-La
 die Freigabe beim Start für die geplanten Substeps, neue Ideen werden gesammelt und am
 Ende vorgeschlagen.
 
+### update-conventions: die Aufrufe
+
+`/coding-kit:update-conventions` holt, was das Kit inzwischen anders macht — in Projekte
+und auf den Rechner, immer nur abwärts und nie ohne deine Bestätigung je Datei bzw.
+Abschnitt:
+
+| Aufruf | Wann | Was passiert |
+|--------|------|--------------|
+| `/coding-kit:update-conventions` | im Projekt, nach einem Plugin-Update | Projekt abgleichen (managed Dateien, Fragmente, seed-Zonen, Lock-Datei); danach einmal die globalen Kit-Regeln, sofern eingerichtet |
+| `… <pfad>` oder `… <name>` | ein anderes Projekt | wie oben, für dieses Projekt |
+| `… alle` | alle Projekte auf einmal | Liste bestätigen, dann je Projekt; danach einmal die globalen Kit-Regeln |
+| `… global` | Ersteinrichtung der Kit-Regeln, nach einer Änderung der Werte, nach dem Hinweis beim Session-Start | nur die [globalen Kit-Regeln](#globale-kit-regeln), auch außerhalb eines Projekts |
+| `… status` | vorher sehen, was käme | nur Bericht, schreibt nichts (auch nicht global) |
+| `… revise` | die Abweichungs-Registry aufräumen | nur die Registry-Revision, ohne globale Regeln |
+
+`global <ordner>` nimmt einen anderen Ordner als `~/.claude` — gedacht für Tests, das
+echte `~/.claude` bleibt dabei unberührt.
+
 ### Autonomer Lauf (build-step + /goal)
 
 Ganze Features samt Substeps unbeaufsichtigt bauen lassen — über den eingebauten
@@ -255,6 +278,21 @@ während im Projekt uncommittete Änderungen liegen, erinnert er einmal pro Stop
   anderes Gitignoriertes lösen nichts aus.
 - Abschalten: Plugin deaktivieren (`claude plugin disable coding-kit`) oder committen. 😉
 
+### Session-Hinweis
+
+Ein zweiter Hook läuft beim Start einer Session und meldet sich in einer Zeile, wenn die
+[globalen Kit-Regeln](#globale-kit-regeln) einen Abgleich brauchen — Claude sagt es dir
+dann einmal:
+
+- `~/.claude/CLAUDE.md` ist noch eine Kopie der früheren Kit-Vorlage;
+- die Kit-Regeln oder deine Werte haben sich seit dem letzten Abgleich geändert (etwa
+  nach einem Plugin-Update oder einer Änderung der Personal-Config);
+- die Personal-Config lässt sich nicht lesen.
+
+Er liest nur, schreibt nichts und schweigt, wenn du die globalen Regeln nicht eingerichtet
+hast oder eine eigene Datei unter `~/.claude/rules/coding-kit.md` liegt. Abgelehnte
+Änderungen meldet er nicht erneut, erst die nächste Änderung des Kits oder der Werte.
+
 ## Renovate-Preset
 
 `default.json` im Repo-Root ist ein Shareable Preset; Projekte binden es so an:
@@ -266,10 +304,85 @@ während im Projekt uncommittete Änderungen liegen, erinnert er einmal pro Stop
 Inhalt: `config:recommended` + Digest-Pinning für GitHub Actions + Label `dependencies`.
 Details und die (bewusst manuelle) App-Installation: [docs/renovate-preset.md](docs/renovate-preset.md).
 
+## Globale Kit-Regeln
+
+Die Haus-Regeln des Kits für jede Claude-Session: Antwortsprache, Erklär-Niveau, Git- und
+Commit-Regeln, Graphiti, Arbeitsweise. Sie kommen mit dem Plugin
+(`plugins/coding-kit/global/coding-kit.md`) und liegen auf dem Rechner als
+`~/.claude/rules/coding-kit.md` — Claude Code lädt jede Datei in `~/.claude/rules/` in
+jeder Session, wie die CLAUDE.md. Eingerichtet und abgeglichen werden sie mit
+`/coding-kit:update-conventions global`.
+
+> **Was das Kit mit deinen globalen Claude-Einstellungen macht**
+>
+> - **Es legt eine eigene Datei an:** `~/.claude/rules/coding-kit.md`, nur nach deiner
+>   Bestätigung. Sie gehört dem Kit; nach Plugin-Updates bietet `update-conventions` die
+>   Änderungen abschnittsweise an, wieder mit Diff und Bestätigung.
+> - **Deine `~/.claude/CLAUDE.md` schreibt das Kit nie.** Einzige Ausnahme: Sie ist eine
+>   Kopie der früheren Kit-Vorlage (Titel „Globale House-Defaults — Claude Code",
+>   darunter „Gepflegt als Vorlage im coding-kit …"). Dann bietet
+>   `update-conventions global` an, den Kit-Teil herauszunehmen; persönliche Zeilen
+>   bleiben, und du siehst den Diff vorher. Bleibt nichts Persönliches übrig, schlägt es
+>   vor, die Datei zu löschen.
+> - **Widersprüche:** Claude Code lädt CLAUDE.md und Kit-Regeln zusammen, ohne Vorrang.
+>   Widersprechen sie sich, folgt Claude einer beliebigen Seite. Der Abgleich weist darauf
+>   hin; auflösen kannst du es wie unter
+>   [Eigene Abweichungen](#eigene-abweichungen-und-ergänzungen) beschrieben.
+> - **Eine fremde Datei** unter `~/.claude/rules/coding-kit.md` — ohne die Kennung des
+>   Kits in der ersten Zeile — fasst das Kit nicht an.
+> - Mit `CLAUDE_CONFIG_DIR` gilt statt `~/.claude` dieser Ordner.
+
+### Antwortsprache und Erklär-Niveau
+
+Drei Werte in der [Personal-Config](#personal-config) bestimmen, wie Claude mit dir
+spricht:
+
+```sh
+CODING_KIT_REPLY_LANGUAGE=""  # Sprache der Antworten, z. B. Deutsch, English; leer = Claude-Standard
+CODING_KIT_EXPLAIN_LEVEL=""   # einsteiger | junior | fortgeschritten | senior; leer = Claude-Standard
+CODING_KIT_EXPLAIN_NOTE=""    # freier Text, präzisiert die Stufe; leer = keine Notiz
+```
+
+| Stufe | Wie Claude antwortet |
+|-------|----------------------|
+| `einsteiger` | wenig oder keine Programmiererfahrung: einfache Sprache, jeder Fachbegriff erklärt, eine Frage auf einmal, bei größeren Änderungen der Hinweis, was sich zu lesen lohnt |
+| `junior` | Grundlagen sitzen, Frameworks und Werkzeuge sind neu: Zusammenhänge und das Warum erklärt, übliche Wege genannt und einer empfohlen |
+| `fortgeschritten` | selbstständig: nur Neues, Ungewöhnliches und Abwägungen erklärt |
+| `senior` | knapp und in Fachsprache, Trade-offs und Risiken, Details auf Nachfrage |
+
+Die Notiz ergänzt die Stufe um das, was keine Stufe ausdrückt (z. B. „Python sicher, Git
+und Frameworks neu"); bei einem Widerspruch gilt die Notiz. Das Niveau betrifft nur
+Claudes Antworten, Rückfragen, Pläne und Zusammenfassungen — nie den Code, die Commits
+oder die Doku im Projekt; dafür gelten die Coding-Regeln.
+
+- **Setzen:** `/coding-kit:explain-level` — ein kurzes Interview zu Programmieren, Shell,
+  Git, Frameworks und Projekt-Werkzeugen, danach ein Vorschlag für Stufe und Notiz.
+  `update-conventions global` startet es selbst, wenn Werte fehlen. Einen Wert, den du
+  bewusst leer lässt, fragt kein Lauf erneut ab.
+- **Ändern:** `/coding-kit:explain-level` erneut aufrufen oder die Zeile in der env-Datei
+  ändern — **danach `/coding-kit:update-conventions global`**. Nur die env-Datei zu ändern
+  reicht nicht: Die Regeln auf dem Rechner entstehen erst beim Abgleich neu; der
+  [Session-Hinweis](#session-hinweis) erinnert daran.
+
+### Eigene Abweichungen und Ergänzungen
+
+| Wunsch | Weg |
+|--------|-----|
+| Antwortsprache, Erklär-Niveau | die Werte oben — nicht die Regeldatei ändern |
+| Eine Kit-Regel anders | den Abschnitt in `~/.claude/rules/coding-kit.md` ändern und darin eine eigene Zeile `<!-- override: Grund -->` ergänzen; der Abgleich lässt ihn dann stehen |
+| Eine Kit-Regel gar nicht | die beiden `section:`-Markerzeilen des Abschnitts löschen; der Abgleich bietet ihn nie wieder an |
+| Eigene Zusatzregeln | in `~/.claude/CLAUDE.md`, die das Kit nie anfasst |
+| In einem Projekt anders | in der Projekt-CLAUDE.md, wo die Kit-Regel das vorsieht (z. B. der Languages-Block) |
+
+Nicht das Gegenteil einer Kit-Regel in die CLAUDE.md schreiben — Claude folgt dann
+beliebig einer Seite. Eine allgemein nützliche Regel aus deiner CLAUDE.md bietet der
+Abgleich als Vorschlag fürs Kit an.
+
 ## Personal-Config
 
-`~/.claude/coding-kit.env` (dotenv, shell-sourcebar, **nie committen**) — legt der
-Installer an. Enthält, was nicht zur Laufzeit ermittelbar ist, plus Offline-Fallbacks:
+`~/.claude/coding-kit.env` (dotenv, shell-sourcebar, **nie committen**; mit
+`CLAUDE_CONFIG_DIR` in diesem Ordner) — legt der Installer an. Enthält, was nicht zur
+Laufzeit ermittelbar ist, plus Offline-Fallbacks:
 
 | Schlüssel | Bedeutung |
 |-----------|-----------|
@@ -277,6 +390,12 @@ Installer an. Enthält, was nicht zur Laufzeit ermittelbar ist, plus Offline-Fal
 | `CODING_KIT_GIT_AUTHOR_NAME` | Git-Autorname |
 | `CODING_KIT_GIT_NOREPLY_EMAIL` | GitHub-Noreply-Adresse für Commits |
 | `CODING_KIT_PROJECTS_DIR` | Wurzelverzeichnis der Projekte |
+| `CODING_KIT_REPLY_LANGUAGE` | Antwortsprache der [globalen Kit-Regeln](#antwortsprache-und-erklär-niveau) |
+| `CODING_KIT_EXPLAIN_LEVEL` | Erklär-Niveau: `einsteiger`, `junior`, `fortgeschritten` oder `senior` |
+| `CODING_KIT_EXPLAIN_NOTE` | Notiz, die die Stufe präzisiert |
+
+Die letzten drei setzt `/coding-kit:explain-level`; wirksam werden sie mit
+`/coding-kit:update-conventions global`.
 
 ## Repo-Struktur
 
@@ -286,17 +405,17 @@ plugins/coding-kit/               Das Plugin
   .claude-plugin/plugin.json      Name, Version (gilt für Skills und Template), Beschreibung
   CHANGELOG.md                    Ein CHANGELOG ab 1.0.0, darunter die eingefrorenen Reihen
   skills/<name>/SKILL.md          Die Skills (ein Ordner je Skill)
-  hooks/hooks.json + *.sh         Projekterkennender Stop-Hook
+  hooks/hooks.json + *.sh         Projekterkennender Stop-Hook und Session-Hinweis
+  global/coding-kit.md            Globale Kit-Regeln (→ ~/.claude/rules/coding-kit.md, deutsch)
   scripts/template-sync.sh        Rendern, Drei-Wege-Merge, Snapshot und Erkennung (von Skills aufgerufen)
   template/                       Projekt-Template (englisch): MANIFEST.md, core/, modules/
 default.json                      Renovate-Shareable-Preset (Root = Preset-Konvention)
 upstreams.json                    Watchliste für /check-upstreams (persistierte Refs)
-templates/global-CLAUDE.md        Vorlage der globalen ~/.claude/CLAUDE.md (House-Defaults)
 docs/                             Pflege-Doku (Skill-Authoring, Renovate-Preset)
 install.sh                        Neuer-Rechner-Bootstrap (idempotent)
 scripts/validate.py               Validator für Kit, Template und Vertrag (`just check` + CI)
 scripts/version-rule.py           Versionsregel (Pre-Commit + CI, `just version-rule`)
-tests/template-sync/              Tests des Skripts unter dash und bash, dazu mawk/gawk (`just test`)
+tests/template-sync/              Tests des Skripts und des Session-Hinweises unter dash und bash, dazu mawk/gawk (`just test`)
 PROGRESS.md, PROGRESS-ARCHIVE.md  Aufgaben (F-NNN); das Archiv führt auch die TPL-Reihe
 private/                          Gitignoriert — private Notizen/Quellen
 ```

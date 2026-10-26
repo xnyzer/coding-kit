@@ -6,12 +6,14 @@ pre-commit:
     - name: validate
       run: just validate
     # The script tests take several seconds; they run when the script, the template or
-    # global rules it renders or the tests change. CI and `just check` always run them.
+    # global rules it renders, the hooks or the tests change. CI and `just check` always
+    # run them.
     - name: script-tests
       run: just test
       glob:
         - "plugins/coding-kit/scripts/*"
         - "plugins/coding-kit/global/*"
+        - "plugins/coding-kit/hooks/*"
         - "plugins/coding-kit/template/*"
         - "plugins/coding-kit/template/**/*"
         - "tests/template-sync/*"

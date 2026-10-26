@@ -1,6 +1,7 @@
 #!/bin/sh
 # Tests for plugins/coding-kit/scripts/template-sync.sh against the bundled template and
-# the kit's global rules (plugins/coding-kit/global/).
+# the kit's global rules (plugins/coding-kit/global/), plus the session-start hook that
+# reads them.
 # Every case runs under dash and bash (the shells skills meet on Linux and macOS); the
 # script must behave the same in both. Then one more pass under the first shell for each
 # of mawk and gawk that is installed but not the default awk: awk implementations differ
@@ -194,6 +195,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 . "$HERE/sync.sh"
 . "$HERE/zones.sh"
 . "$HERE/global.sh"
+. "$HERE/hook.sh"
 . "$HERE/lock.sh"
 . "$HERE/detect.sh"
 
@@ -216,6 +218,7 @@ run_cases() {  # DIR
   run_sync_cases
   run_zones_cases
   run_global_cases
+  run_hook_cases
   run_lock_cases
   run_detect_cases
 }

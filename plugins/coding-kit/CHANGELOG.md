@@ -18,6 +18,13 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
 Globale Kit-Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau (F-040, in
 Arbeit).
 
+**Nach dem Update:** Wer die frühere Kit-Vorlage in `~/.claude/CLAUDE.md` hat, bekommt
+beim nächsten Session-Start einen Hinweis. `/coding-kit:update-conventions global`
+richtet dann die Kit-Regeln in `~/.claude/rules/coding-kit.md` ein und nimmt — nach
+Bestätigung und mit Diff — den Kit-Teil aus der CLAUDE.md; persönliche Zeilen bleiben.
+Bis dahin bleibt alles wie bisher. Eine selbst angelegte CLAUDE.md fasst das Kit nicht
+an, und wer die Kit-Regeln nicht einrichtet, merkt vom Update nichts.
+
 - **`global/coding-kit.md` (neu):** die globalen Regeln des Kits. Bisher lagen sie als
   Vorlage `templates/global-CLAUDE.md` im Repo-Root, die nur `install.sh` einmal nach
   `~/.claude/CLAUDE.md` kopierte. Jetzt kommen sie mit dem Plugin auf den Rechner und
@@ -41,6 +48,22 @@ Arbeit).
   Kit-Regeln. Der Stand des letzten Abgleichs liegt als Basis im Datenordner des Plugins
   (`snapshot --snapshot`); `global <ordner>` arbeitet mit einem Stellvertreter-Ordner.
   Eine Datei `rules/coding-kit.md` ohne Kennung des Kits fasst er nicht an.
+- **Session-Hinweis (neu, `hooks/session-start.sh`):** Beim Start einer Session meldet
+  er in einer Zeile eine alte Kit-Kopie in der CLAUDE.md, seit dem letzten Abgleich
+  geänderte Kit-Regeln oder Werte (Render gegen die Basis im Datenordner) oder eine
+  Personal-Config, die sich nicht lesen lässt. Er schreibt nichts, endet immer ohne
+  Fehler und schweigt ohne eingerichtete Kit-Regeln, bei einer fremden Regeldatei und
+  bei abgelehnten Änderungen.
+- **`install.sh`** schreibt nichts Globales mehr: Schritt 4 meldet eine alte Kit-Kopie,
+  eine eigene CLAUDE.md und ob die Kit-Regeln eingerichtet sind, und verweist auf
+  `/coding-kit:update-conventions global`. Die Personal-Config legt er mit
+  `CLAUDE_CONFIG_DIR` in diesem Ordner an. `templates/global-CLAUDE.md` und der
+  `curl`-Weg im README entfallen — der Befehl überschrieb eine eigene CLAUDE.md ohne
+  Rückfrage.
+- **README:** Abschnitte zu den globalen Kit-Regeln (was das Kit mit den globalen
+  Einstellungen macht, Antwortsprache und Erklär-Niveau samt Optionen, wie man sie setzt
+  und ändert, eigene Abweichungen und Ergänzungen), zu den Aufrufen von
+  `update-conventions` und zum Session-Hinweis.
 - **`teach-step`** liest und schreibt kein Lernprofil mehr in Graphiti (ohne Graphiti
   fehlte es ganz): Die Vorauswahl der Vertrautheitsfrage kommt aus der Stufe
   (`einsteiger` → Neuland, `junior` → Grundlagen, ab `fortgeschritten` → Routiniert), die
@@ -76,7 +99,8 @@ Arbeit).
   `.claude/settings.json` des Repos, die `template/core/CLAUDE.md` aus Sessions im
   Kit-Repo heraushält. Die Versionsregel zählt `global/` zum Plugin-Inhalt; Skript-Tests
   für `render-global`, `set-global` (samt Gegenprobe, dass die Shell die geschriebenen
-  Werte wörtlich liest) und `zones` auf einem Stellvertreter-Config-Ordner. Die
+  Werte wörtlich liest), `zones` auf einem Stellvertreter-Config-Ordner und den
+  Session-Hinweis; der Validator gleicht die Stufen im README mit der Kit-Datei ab. Die
   Authoring-Doku verbietet Skills einen eigenen Erklärstil: Wie ausführlich Claude
   erklärt, regelt das Erklär-Niveau.
 

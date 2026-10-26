@@ -755,6 +755,16 @@ def check_global_rules(findings: list[str], global_keys: set[str]) -> None:
             f"{rel}: level options in the key comment {options} differ from the level "
             f"blocks {levels}"
         )
+    # The README shows the same key comment to users; it must name the same levels.
+    readme = REPO_ROOT / "README.md"
+    if readme.is_file():
+        match = LEVEL_OPTIONS_RE.search(readme.read_text(encoding="utf-8"))
+        named = [option.strip() for option in match.group(1).split("|")] if match else []
+        if named != levels:
+            findings.append(
+                f"README.md: the CODING_KIT_EXPLAIN_LEVEL line names {named}, the kit "
+                f"rules have the levels {levels}"
+            )
 
 
 def check_template_excluded(findings: list[str]) -> None:
