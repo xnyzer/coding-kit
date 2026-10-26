@@ -16,6 +16,80 @@ zusammen:
 
 ---
 
+## F-045a — `zones` und die Override-Regel (2026-10-26)
+
+Teil von F-045 (Zonen-Abgleich und Lock-Prüfung ins Skript; F-045b–d folgen).
+
+**Problem:** Den Abgleich der seed-Zonen und der Fragmente im Slot (update-conventions A2
+Schritte 6 und 7) machte das Sprachmodell selbst — Testläufe bauten ihn mit eigenem awk
+nach oder ließen ihn aus. Die Kopfzone der Registry-Vorlage nannte den Override-Marker als
+Doku-Text, sodass eine wörtliche Suche die Zone für geschützt hielt. `snapshot` meldete
+Ziele, die als ein einziges Argument kamen, still als `removed` (Fund aus F-043c).
+
+**Was entstanden ist (1.5.0, unveröffentlicht):**
+
+- **`template-sync.sh zones [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SEEDS
+  OUT [NAME…]`:** vergleicht die `section:NAME`-Zonen der gerenderten Dateien
+  (`render --seeds`) und die `fragment:NAME`-Blöcke im Slot mit dem Projekt. Je Block eine
+  Zeile `<Ziel> <section|fragment> <Name> <Zustand> <+a -d>` mit den Zuständen
+  `identical`, `differs`, `override`, `new`, `opted-out`, `unmarked`, `local`, `no-file`,
+  `broken` und `skipped`; ein Block, den keine Seite hat, bekommt keine Zeile (z. B.
+  `claude-graphiti` ohne Graphiti). Bei geschützten Fragmenten zählt die Spalte, was das
+  Template seit der Basis geändert hat.
+- **Ergebnis wie bei `merge`:** `OUT/<Ziel>` ist die Projektdatei mit allen abweichenden
+  und neuen Blöcken eingesetzt, mit Namen nur den genannten. Abweichende Blöcke werden
+  ersetzt; ein neues Fragment kommt hinter seinen nächsten Vorgänger aus dem Render, der
+  im Slot steht, ohne Vorgänger an den Slot-Anfang, in einem Slot ohne Fragmente anstelle
+  des Platzhaltertexts. `OUT/.zones/<Art>/<Name>.<project|template|base>` halten die
+  Blöcke für die Diffs. Ein Name ohne einsetzbaren Block, mehrere Namen in einem Argument
+  und kaputte Marker im Render brechen mit Exit 1 ab.
+- **Marker-Regel:** Ein Marker (Slot, Zone, Fragment, Override) gilt nur allein auf einer
+  Zeile. `zones` wertet nur solche Zeilen aus, `detect` zählt einen Fragment-Marker mit
+  Text auf derselben Zeile nicht mehr, und der Validator verlangt die Regel für Zonen- und
+  Fragment-Marker im Template. MANIFEST §§ Markers, Seed sections und Standards fragments
+  beschreiben Regel und Befehl.
+- **Registry-Vorlage:** Die Kopfzone `overrides-head` beschreibt das Override ohne
+  marker-ähnlichen Text; sie kommt per `zones` in die Projekte.
+- **`snapshot`** prüft alle Ziele vor dem ersten Schreiben und weist eines ab, das weder
+  gerendert ist noch eine Basis hat.
+- **Tests:** `tests/template-sync/zones.sh` (neu): alle Zustände, CRLF, Override-Zeile und
+  Override im Text, Prosa-Zeilen mit Markern (Text davor und dahinter, auch im Slot),
+  Einsetzen an der Stelle aus dem Render, Platzhalter, Slot-Anfang, `skip`, Auswahl per
+  Name, `--snapshot`, `--base` und Fehlerfälle. Frische Renders (docs-only mit und ohne
+  Graphiti, ts-node) ergeben nur `identical`; die Kopfzone mit dem alten Override-Text
+  ergibt `differs`, und das Ergebnis ist wieder die gerenderte Datei. Die
+  `snapshot`-Fälle stehen in `sync.sh`, der Prosa-Marker für `detect` in `detect.sh`.
+- **Version:** `plugin.json` 1.5.0, CHANGELOG-Eintrag mit `### Template` samt Hinweis zur
+  strengeren Override-Regel.
+
+**Verifikation:** `just check` grün (Validator, 690 Skript-Tests unter dash und bash, 138
+davon neu); dieselbe Suite auch mit mawk als `awk` grün. Fehlerinjektion an einer Kopie:
+Override-Erkennung aus, Override im Text zählt, neues Fragment immer an den Slot-Anfang,
+`skip` ignoriert, Platzhalter nicht ersetzt, Ziel-Prüfung in `snapshot` aus, Marker ohne
+Anker am Zeilenanfang bzw. -ende — alle gefangen (16, 6, 6, 4, 2, 6, 4 und 2
+Fehlschläge). Versionsregel gegen `origin/main` grün.
+
+**Notable decisions:**
+- `zones` nimmt über den Plan hinaus auch `--base` (Migration mit gerenderter Basis) und
+  `--registry` (eine `skip`-Zeile gilt auch für Zonen) — wie `merge`.
+- Ohne Basis bekommt ein geschütztes Fragment keine Zählung: Ob das Template sich
+  geändert hat, lässt sich dann nicht sagen. Bisher zeigte der Skill in diesem Fall den
+  Diff Projekt → Template.
+- Text im Slot außerhalb von Fragmenten gilt als Platzhalter und weicht dem ersten neuen
+  Fragment, wie beim Render (MANIFEST § Module contract).
+- Ergebnisse sind wie bei `merge` auf LF normalisiert.
+- mawk-Fund: Ein awk-Array namens `NF` (eingebaute Variable) nimmt das macOS-awk hin,
+  mawk — Standard auf Ubuntu und in der CI — nicht; umbenannt. Die Tests liefen deshalb
+  zusätzlich mit mawk per PATH-Link; mawk bleibt außerhalb der Toolchain (GPL-2.0).
+
+**Geänderte Dateien:**
+`plugins/coding-kit/scripts/template-sync.sh`, `tests/template-sync/zones.sh` (neu),
+`tests/template-sync/run.sh`, `tests/template-sync/sync.sh`,
+`tests/template-sync/detect.sh`, `plugins/coding-kit/template/MANIFEST.md`,
+`plugins/coding-kit/template/core/.claude/convention-overrides.md`,
+`scripts/validate.py`, `plugins/coding-kit/.claude-plugin/plugin.json`,
+`plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
+
 ## F-044c — Skills anbinden, Testlauf, Release (2026-10-25)
 
 Schließt F-044 ab (Sprachen ohne Vorlage erkennen und dem Template vorschlagen; F-044a–b

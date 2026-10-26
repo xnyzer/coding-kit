@@ -14,8 +14,8 @@ updates treat it — the Kind column:
 
 `/step-done` reports changes to managed files that have no row. Paths may be globs
 (`.github/**`); several paths can share a row. Deviations that are not about one file go
-to the Rules table. Inside a seed zone or a standards fragment, `<!-- override: reason -->`
-protects just that part.
+to the Rules table. Inside a seed zone or a standards fragment, a line that holds nothing
+but an HTML comment starting with `override:` and the reason protects just that part.
 
 A Rules row with the Rule `module:NAME` or `fragment:NAME` declines a detection proposal
 for good: the skills stop offering that stack module or standards fragment. The Deviation

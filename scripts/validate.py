@@ -232,13 +232,20 @@ def check_blocklist(path: Path, text: str, findings: list[str], terms: list[str]
 
 
 def check_paired_markers(path: Path, text: str, findings: list[str]) -> None:
-    """Every `<!-- fragment:NAME -->` / `<!-- section:NAME -->` must be balanced by a
-    matching close, in order; section names must be unique within a file."""
+    """Every `<!-- fragment:NAME -->` / `<!-- section:NAME -->` must stand on a line of its
+    own (MANIFEST § Markers — template-sync.sh ignores it anywhere else) and be balanced
+    by a matching close, in order; section names must be unique within a file."""
     rel = display_path(path)
     stacks: dict[str, list[str]] = {"fragment": [], "section": []}
     seen_sections: set[str] = set()
     for match in PAIRED_MARKER_RE.finditer(text):
         closing, kind, name = match.group(1), match.group(2), match.group(3)
+        line_start = text.rfind("\n", 0, match.start()) + 1
+        line_end = text.find("\n", match.end())
+        line = text[line_start : line_end if line_end != -1 else len(text)]
+        if line.strip() != match.group(0):
+            findings.append(f"{rel}: {kind} marker '{name}' must stand on a line of its own")
+            continue
         stack = stacks[kind]
         if not closing:
             if kind == "section":

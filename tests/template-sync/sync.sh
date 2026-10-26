@@ -171,6 +171,12 @@ run_sync_cases() {
     test ! -e "$TMP/np/.claude/template-base/drop.txt.base"
   check "snapshot: listing" row_is n drop.txt removed
   refute "snapshot: path outside the project refused" ts snapshot "$TMP/np" "$TMP/np.soll" ../x
+  fixture nz keep.txt 'old\n' 'x\n' 'new\n'
+  refute "snapshot: targets in one argument refused" ts snapshot "$TMP/nz" "$TMP/nz.soll" "keep.txt drop.txt"
+  refute "snapshot: target neither rendered nor with a base refused" \
+    ts snapshot "$TMP/nz" "$TMP/nz.soll" keep.txt nope.txt
+  check "snapshot: nothing written when one target is refused" \
+    file_is nz/.claude/template-base/keep.txt.base 'old\n'
 
   # --- stand-ins: --registry and --snapshot instead of the files below .claude/ ---
   put op/a.txt 'a\nb\nc\nP\n'

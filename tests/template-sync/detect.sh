@@ -78,7 +78,7 @@ run_detect_cases() {
   put dp/deploy/nginx/site.conf 'server {}\n'
   put dp/docs/compose-notes.md 'notes\n'
   put dp/.claude/template-base/compose.yaml 'services: {}\n'
-  put dp/CODING-STANDARDS.md "# Standards\n$DS\n<!-- fragment:ts-node -->\nx\n<!-- /fragment:ts-node -->\n\n<!-- fragment:react -->\ny\n<!-- /fragment:react -->\n$DE\n<!-- fragment:nextjs -->\n"
+  put dp/CODING-STANDARDS.md "# Standards\n$DS\n<!-- fragment:ts-node -->\nx\n<!-- /fragment:ts-node -->\n\n<!-- fragment:react -->\ny\n<!-- /fragment:react -->\n<!-- fragment:prisma --> is text, not a marker\n$DE\n<!-- fragment:nextjs -->\n"
   put dp/.claude/convention-overrides.md '# Convention Overrides\n\n## Files\n\n| Path | Kind | Reason | Since |\n|------|------|--------|-------|\n\n## Rules\n\n| Rule | Deviation | Reason | Since |\n|------|-----------|--------|-------|\n| `module:go` | Go only for one helper | reason | 2026-10-25 |\n| fragment:docker | images built elsewhere | reason | 2026-10-25 |\n| Living docs | other rule | reason | 2026-10-25 |\n'
   project_answers dp ts-node
   tgit "$TMP/dp" init -q
@@ -96,6 +96,7 @@ run_detect_cases() {
   check "modules come first" test "$(sed -n 1p "$TMP/d.tsv" | cut -f1)" = module
   check "fragment marker in the slot: covered" hit_is d fragment react covered
   check "fragment marker outside the slot does not count" hit_is d fragment nextjs missing
+  check "fragment marker with text on its line does not count" hit_is d fragment prisma missing
   check "minified JSON and scoped names" evidence_has d fragment prisma 'npm:@prisma/client (apps/web/package.json)'
   check "peerDependencies count" evidence_has d fragment api-design 'npm:hono (apps/web/package.json)'
   refute "keys outside the dependency tables do not count" evidence_has d fragment api-design 'npm:express'

@@ -66,6 +66,9 @@ otherwise.
 | `# module:gitignore` / `# module:ci-jobs` | Append points for module parts in non-HTML files. |
 | `<!-- override: reason -->` | Project-local deviation inside a seed zone or a standards fragment: `/update-conventions` leaves that zone or fragment alone. Whole files are registered in § Deviation registry instead. |
 
+A marker counts only on a line of its own (surrounding whitespace allowed). The same text
+inside a line — e.g. in prose that explains a marker — is not a marker.
+
 ## Sync direction
 
 Convention flow is **exclusively downward**: template → project, via `/new-project` and
@@ -245,8 +248,10 @@ a self-contained file `modules/standards/<name>.md` whose body is wrapped in
   language fragment alone. Module and catalog fragments share the `fragment:` names, hence
   the suffix.
 - **Policy** — managed. `/update-conventions` refreshes each fragment by its `fragment:NAME`
-  marker — fragment-granular and downward only (template → project), respecting inline
-  overrides.
+  marker — fragment-granular and downward only (template → project), respecting override
+  lines (§ Markers). `scripts/template-sync.sh zones` in the plugin compares the fragments
+  with the render and puts a new one behind its nearest predecessor of the render order
+  that the slot holds (without one at the start of the slot).
   A project-added fragment not in the catalog is never written to; it is reported as a
   manually triggerable adoption proposal for the template (see § Sync direction).
 - **Assembly** — appending the fragments at instantiation / `/choose-stack` is coding-kit logic;
@@ -327,8 +332,9 @@ Seed files are living documents and never updated as a whole — but some carry
 zones are wrapped in `<!-- section:NAME -->` … `<!-- /section:NAME -->` markers so
 `/update-conventions` can diff and offer each section individually; everything unmarked
 stays untouchable. A project that deletes a marker pair permanently opts that zone out
-of updates. Evaluating the markers is coding-kit logic; this manifest defines the
-contract and the inventory:
+of updates; an override line inside a zone protects it (§ Markers). The plugin's
+`scripts/template-sync.sh zones` compares each zone with the render; this manifest
+defines the contract and the inventory:
 
 | Seed file | Sections |
 |-----------|----------|

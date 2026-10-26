@@ -185,6 +185,7 @@ same_but_first_line() {  # RENDERED SOURCE
 HERE=$(cd "$(dirname "$0")" && pwd)
 . "$HERE/render.sh"
 . "$HERE/sync.sh"
+. "$HERE/zones.sh"
 . "$HERE/detect.sh"
 
 # --- main -----------------------------------------------------------------------
@@ -203,6 +204,7 @@ for SH in $shells; do
   mkdir -p "$TMP"
   run_render_cases
   run_sync_cases
+  run_zones_cases
   run_detect_cases
 done
 

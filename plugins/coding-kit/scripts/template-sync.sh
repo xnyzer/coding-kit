@@ -27,11 +27,28 @@
 #       new, missing (project deleted it), removed (no longer rendered), skipped.
 #   snapshot [--snapshot DIR] PROJECT SOLL TARGET…
 #       Sets the base of each TARGET to its rendered version; a TARGET that SOLL no
-#       longer has loses its base. Line: <target> <set|removed>.
+#       longer has loses its base. Line: <target> <set|removed>. A TARGET that is neither
+#       rendered nor has a base is refused before anything is written.
 #   base-from-history KIT VERSION OUT
 #       Exports the template of VERSION from the git history of a coding-kit checkout
 #       into OUT/template (missing or empty OUT); a release without template changes
 #       has the template of the commit that set its version. Line: <template dir> <commit>.
+#   zones [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SEEDS OUT [NAME…]
+#       Compares the marked blocks of PROJECT with SEEDS (a render with --seeds): the
+#       section:NAME zones of the seed files and the fragment:NAME blocks in the
+#       module:coding-standards slot. Line per block: <target> <section|fragment> <name>
+#       <state> <+a -d>, states: identical, differs, override (an override line in the
+#       project's block; the count is what the template changed since the base,
+#       fragments only), new (a fragment only SEEDS has), opted-out (the project removed
+#       the zone's markers), unmarked (the file has no zone markers or no slot at all),
+#       local (only the project has it), no-file, broken (unbalanced, nested or
+#       duplicate markers), skipped (skip row). A block that neither side has gets no
+#       line. OUT/<target> is the project file with every differing and new block
+#       applied — only the NAMEs given, if any: a differing block is replaced, a new
+#       fragment goes behind its nearest predecessor of the render order in the slot
+#       (without one to the slot's start) and replaces the placeholder text of a slot
+#       without fragments. OUT/.zones/<kind>/<name>.<project|template|base> hold the
+#       blocks for the diffs.
 #   detect [--changed] [--answers FILE] [--registry FILE] TEMPLATE PROJECT [SIGNAL…]
 #       Matches the signals of PROJECT against the stack modules and catalog fragments
 #       of TEMPLATE (MANIFEST § Detection). Without SIGNAL it reads the files git lists
@@ -55,6 +72,7 @@
 # .claude/convention-overrides.md: skip, keep, adapt, registered (row without kind) or
 # none. Comparisons ignore CR line ends, a missing final newline and the content of the
 # module:coding-standards slot (fragments are synced one by one, never with the file).
+# A marker (slot, section, fragment, override) counts only on a line of its own.
 #
 # POSIX sh plus git, awk, sed, find, sort, tar and mktemp. No network, no writes outside
 # the named directories and a private temp directory. Exit status 1 on a contract
@@ -92,6 +110,7 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh merge [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SOLL OUT
        sh template-sync.sh snapshot [--snapshot DIR] PROJECT SOLL TARGET...
        sh template-sync.sh base-from-history KIT VERSION OUT
+       sh template-sync.sh zones [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SEEDS OUT [NAME...]
        sh template-sync.sh detect [--changed] [--answers FILE] [--registry FILE] TEMPLATE PROJECT [SIGNAL...]
 EOF
   exit 2
@@ -703,10 +722,10 @@ parse_opts() {  # COMMAND ARGS…
     case $1 in
       --seeds) po_for=render po_n=1 ;;
       --changed) po_for=detect po_n=1 ;;
-      --base) po_for='status merge' po_n=2 ;;
+      --base) po_for='status merge zones' po_n=2 ;;
       --answers) po_for=detect po_n=2 ;;
-      --registry) po_for='status changed merge detect' po_n=2 ;;
-      --snapshot) po_for='status changed merge snapshot' po_n=2 ;;
+      --registry) po_for='status changed merge zones detect' po_n=2 ;;
+      --snapshot) po_for='status changed merge snapshot zones' po_n=2 ;;
       --*)
         printf 'template-sync: unknown option %s\n' "$1" >&2
         usage
@@ -944,8 +963,14 @@ snapshot() {
   set_paths "$P"
   [ -d "$P" ] || die "project not found: $P"
   [ -d "$SOLL" ] || die "rendered template not found: $SOLL"
+  # All targets are checked before anything is written.
   for sn_t in "$@"; do
     check_target "$sn_t"
+    if [ ! -f "$SOLL/$sn_t" ] && [ ! -f "$SNAP_PATH/$sn_t.base" ]; then
+      die "unknown target '$sn_t': not rendered in $SOLL and no base — pass each target as an argument of its own"
+    fi
+  done
+  for sn_t in "$@"; do
     sn_base=$SNAP_PATH/$sn_t.base
     if [ -f "$SOLL/$sn_t" ]; then
       mkdir -p "${sn_base%/*}"
@@ -1011,6 +1036,258 @@ base_from_history() {
       > "$OUT/.claude-plugin/plugin.json"
   fi
   printf '%s\t%s\n' "$OUT/template" "$bf_commit"
+}
+
+# --- zones ----------------------------------------------------------------------
+
+# A zone marker or the slot opening on a line of its own: the files zones looks at.
+ZONE_LINE_RE='^[[:space:]]*<!--[[:space:]]*(/?section:[a-z0-9][a-z0-9-]*|module:coding-standards)[[:space:]]*-->[[:space:]]*$'
+
+# Targets of SEEDS whose rendered or project file has zone markers or the slot, sorted.
+zone_targets() {
+  (cd "$SEEDS" && find . -type f) | sed 's|^\./||' | LC_ALL=C sort | while IFS= read -r zt_t; do
+    if grep -q -E "$ZONE_LINE_RE" "$SEEDS/$zt_t" \
+      || { [ -f "$P/$zt_t" ] && grep -q -E "$ZONE_LINE_RE" "$P/$zt_t"; }; then
+      printf '%s\n' "$zt_t"
+    fi
+  done
+}
+
+# One target: prints "target<TAB>kind<TAB>name<TAB>state<TAB>from<TAB>to" per block (from
+# and to name the files whose diffstat completes the line, "-" for none), writes the
+# block files below $ZDIR and, when it applies a block, $WORK/zone.out. Blocks are parsed
+# per file as r (render), p (project) and b (base): a marker counts only on a line of its
+# own, fragments only inside the first slot. Exit 9: broken markers in the render.
+zones_one() {  # TARGET SKIP
+  zo_p=
+  if [ -f "$P/$1" ]; then zo_p=$P/$1; fi
+  zo_b=$(base_of "$1")
+  [ -f "$zo_b" ] || zo_b=
+  awk -v target="$1" -v skip="$2" -v rf="$SEEDS/$1" -v pf="$zo_p" -v bf="$zo_b" \
+    -v zdir="$ZDIR" -v sel="$ZSEL" -v empty="$WORK/empty" -v applied="$WORK/applied" \
+    -v o="$WORK/zone.out" -v open="$SLOT_OPEN" -v shut="$SLOT_CLOSE" '
+    function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+    function load(f, s,   l, n) {
+      n = 0
+      while ((getline l < f) > 0) { sub(/\r$/, "", l); L[s, ++n] = l }
+      close(f)
+      N[s] = n
+    }
+    # Block marker → MK kind, MN name, MC closing; 0 for any other line.
+    function marker(t,   m, c) {
+      if (t !~ /^<!--[ \t]*\/?(section|fragment):[a-z0-9][a-z0-9-]*[ \t]*-->$/) return 0
+      m = t; sub(/^<!--[ \t]*/, "", m); sub(/[ \t]*-->$/, "", m)
+      MC = (substr(m, 1, 1) == "/")
+      if (MC) m = substr(m, 2)
+      c = index(m, ":"); MK = substr(m, 1, c - 1); MN = substr(m, c + 1)
+      return 1
+    }
+    # A second block of the same kind and name breaks the first.
+    function add(s, k, n, from, to, ov, br,   x) {
+      if ((s, k, n) in ID) { BR[s, ID[s, k, n]] = 1; return }
+      x = ++NB[s]
+      K[s, x] = k; NM[s, x] = n; BO[s, x] = from; BC[s, x] = to; OV[s, x] = ov; BR[s, x] = br
+      ID[s, k, n] = x
+    }
+    # Per side s: NB blocks (K kind, NM name, BO/BC marker lines, OV override, BR broken),
+    # SO/SC slot lines, SB slot never closed, HS any section marker, FM fragment markers
+    # in the slot. (Not NF: that is the field count of awk.)
+    function scan(s,   i, t, os, oso, ovs, of, ofo, ovf, inslot) {
+      NB[s] = 0; SO[s] = 0; SC[s] = 0; SB[s] = 0; HS[s] = 0; FM[s] = 0
+      for (i = 1; i <= N[s]; i++) {
+        t = trim(L[s, i])
+        if (!SO[s] && t == open) { SO[s] = i; inslot = 1; continue }
+        if (inslot && t == shut) {
+          SC[s] = i; inslot = 0
+          if (of != "") { add(s, "fragment", of, 0, 0, 0, 1); of = "" }
+          continue
+        }
+        if (marker(t)) {
+          if (MK == "section") {
+            HS[s] = 1
+            if (!MC && os == "") { os = MN; oso = i; ovs = 0 }
+            else if (MC && os == MN) { add(s, "section", MN, oso, i, ovs, 0); os = "" }
+            else {
+              if (os != "") add(s, "section", os, 0, 0, 0, 1)
+              add(s, "section", MN, 0, 0, 0, 1); os = ""
+            }
+          } else if (inslot) {
+            FM[s]++
+            if (!MC && of == "") { of = MN; ofo = i; ovf = 0 }
+            else if (MC && of == MN) { add(s, "fragment", MN, ofo, i, ovf, 0); of = "" }
+            else {
+              if (of != "") add(s, "fragment", of, 0, 0, 0, 1)
+              add(s, "fragment", MN, 0, 0, 0, 1); of = ""
+            }
+          }
+          continue
+        }
+        if (t ~ /^<!--[ \t]*override:.*-->$/) {
+          if (os != "") ovs = 1
+          if (of != "") ovf = 1
+        }
+      }
+      if (os != "") add(s, "section", os, 0, 0, 0, 1)
+      if (of != "") add(s, "fragment", of, 0, 0, 0, 1)
+      if (inslot) SB[s] = 1
+    }
+    function same(a, i, b, j,   n, x) {
+      n = BC[a, i] - BO[a, i]
+      if (n != BC[b, j] - BO[b, j]) return 0
+      for (x = 1; x < n; x++) if (L[a, BO[a, i] + x] != L[b, BO[b, j] + x]) return 0
+      return 1
+    }
+    # Content of a block (without its markers) → file F.
+    function dump(s, i, f,   x) {
+      printf "" > f
+      for (x = BO[s, i] + 1; x < BC[s, i]; x++) print L[s, x] > f
+      close(f)
+    }
+    # A block with its markers → the result.
+    function emit(i,   x) {
+      for (x = BO["r", i]; x <= BC["r", i]; x++) print L["r", x] > o
+    }
+    BEGIN {
+      OFS = "\t"
+      load(rf, "r"); scan("r")
+      if (SB["r"]) exit 9
+      for (i = 1; i <= NB["r"]; i++) if (BR["r", i]) exit 9
+      hasp = (pf != "")
+      if (hasp) { load(pf, "p"); scan("p") }
+      if (bf != "") { load(bf, "b"); scan("b") }
+
+      for (i = 1; i <= NB["r"]; i++) {
+        k = K["r", i]; n = NM["r", i]
+        j = (("p", k, n) in ID) ? ID["p", k, n] : 0
+        tf = zdir "/" k "/" n ".template"; pf2 = zdir "/" k "/" n ".project"
+        from = "-"; to = "-"
+        if (skip == 1) st = "skipped"
+        else if (!hasp) st = "no-file"
+        else if (k == "fragment" && SB["p"]) st = "broken"
+        else if (k == "fragment" && !SO["p"]) { st = "unmarked"; dump("r", i, tf) }
+        else if (j && BR["p", j]) st = "broken"
+        else if (j && OV["p", j]) {
+          st = "override"
+          dump("r", i, tf); dump("p", j, pf2)
+          # Fragments only: what the template changed since the base.
+          if (k == "fragment" && (("b", k, n) in ID) && !BR["b", ID["b", k, n]]) {
+            from = zdir "/" k "/" n ".base"; to = tf
+            dump("b", ID["b", k, n], from)
+          }
+        }
+        else if (j && same("r", i, "p", j)) st = "identical"
+        else if (j) { st = "differs"; dump("r", i, tf); dump("p", j, pf2); from = pf2; to = tf }
+        else if (k == "fragment") { st = "new"; dump("r", i, tf); from = empty; to = tf }
+        else { st = HS["p"] ? "opted-out" : "unmarked"; dump("r", i, tf) }
+        if ((st == "differs" || st == "new") && (sel == "" || index(sel, " " n " "))) {
+          AP[i] = 1; napplied++
+          print n >> applied
+        }
+        print target, k, n, st, from, to
+      }
+      for (j = 1; j <= NB["p"]; j++) {
+        k = K["p", j]; n = NM["p", j]
+        if (("r", k, n) in ID) continue
+        if (skip == 1) st = "skipped"
+        else if (BR["p", j]) st = "broken"
+        else { st = "local"; dump("p", j, zdir "/" k "/" n ".project") }
+        print target, k, n, st, "-", "-"
+      }
+      close(applied)
+      if (!napplied) exit 0
+
+      # Differing blocks are replaced in place; a new fragment goes behind its nearest
+      # predecessor in the render order that is in the slot (or arrives with it), without
+      # one to the start of the slot.
+      for (i = 1; i <= NB["r"]; i++) {
+        if (!AP[i]) continue
+        k = K["r", i]; n = NM["r", i]
+        if (("p", k, n) in ID) { REPL[BO["p", ID["p", k, n]]] = i; continue }
+        anchor = SO["p"]
+        for (x = i - 1; x >= 1; x--) {
+          if (K["r", x] != "fragment") continue
+          if (("p", "fragment", NM["r", x]) in ID) {
+            y = ID["p", "fragment", NM["r", x]]
+            if (!BR["p", y]) { anchor = BC["p", y]; break }
+          } else if (AP[x]) { anchor = ANC[x]; break }
+        }
+        ANC[i] = anchor
+        G[anchor, ++GN[anchor]] = i
+      }
+      # In a slot without fragments the new ones replace the placeholder text.
+      placeholder = (FM["p"] == 0)
+      printf "" > o
+      for (i = 1; i <= N["p"]; i++) {
+        if (placeholder && i == SO["p"] && GN[i]) {
+          print L["p", i] > o
+          for (m = 1; m <= GN[i]; m++) { if (m > 1) print "" > o; emit(G[i, m]) }
+          i = SC["p"]
+          print L["p", i] > o
+          continue
+        }
+        if (i in REPL) {
+          x = REPL[i]
+          print L["p", i] > o
+          for (y = BO["r", x] + 1; y < BC["r", x]; y++) print L["r", y] > o
+          i = BC["p", ID["p", K["r", x], NM["r", x]]]
+        }
+        print L["p", i] > o
+        for (m = 1; m <= GN[i]; m++) {
+          if (i == SO["p"]) { emit(G[i, m]); print "" > o }
+          else { print "" > o; emit(G[i, m]) }
+        }
+      }
+      close(o)
+    }'
+}
+
+zones() {
+  [ $# -ge 3 ] || usage
+  P=$1 SEEDS=$2 OUT=$3
+  shift 3
+  set_paths "$P"
+  [ -d "$P" ] || die "project not found: $P"
+  [ -d "$SEEDS" ] || die "rendered template not found: $SEEDS"
+  check_out_dir "$OUT"
+  ZSEL=
+  for zs_name in "$@"; do
+    case $zs_name in
+      '' | *[!a-z0-9-]*) die "invalid block name '$zs_name' — pass each name as an argument of its own" ;;
+    esac
+    ZSEL="$ZSEL $zs_name"
+  done
+  if [ -n "$ZSEL" ]; then ZSEL="$ZSEL "; fi
+  setup_work
+  load_registry
+  : > "$WORK/empty"
+  : > "$WORK/applied"
+  ZDIR=$OUT/.zones
+  mkdir -p "$ZDIR/section" "$ZDIR/fragment"
+  zone_targets > "$WORK/zone-targets"
+  while IFS= read -r zn_t; do
+    zn_skip=0
+    if [ "$(kind_of "$zn_t")" = skip ]; then zn_skip=1; fi
+    rm -f "$WORK/zone.out"
+    zones_one "$zn_t" "$zn_skip" > "$WORK/zone.tsv" \
+      || die "$SEEDS/$zn_t: unbalanced, nested or duplicate section or fragment markers"
+    if [ -f "$WORK/zone.out" ]; then
+      mkdir -p "$(dirname "$OUT/$zn_t")"
+      mv "$WORK/zone.out" "$OUT/$zn_t"
+    fi
+    while IFS="$TAB" read -r zn_tt zn_k zn_n zn_s zn_from zn_to; do
+      zn_stat=-
+      if [ "$zn_from" != - ]; then
+        zn_stat=$(diffstat "$zn_from" "$zn_to")
+        if [ "$zn_stat" = "+0 -0" ]; then zn_stat=-; fi
+      fi
+      printf '%s\t%s\t%s\t%s\t%s\n' "$zn_tt" "$zn_k" "$zn_n" "$zn_s" "$zn_stat"
+    done < "$WORK/zone.tsv"
+  done < "$WORK/zone-targets"
+  # Word splitting of the name list is intended.
+  for zs_name in $ZSEL; do
+    grep -qxF -- "$zs_name" "$WORK/applied" \
+      || die "$zs_name: no differing or new block of that name to apply"
+  done
 }
 
 # --- detect ---------------------------------------------------------------------
@@ -1457,7 +1734,7 @@ detect() {
   : > "$WORK/covered"
   dt_slot=$(part_target CODING-STANDARDS.part.md) || dt_slot=
   if [ -n "$dt_slot" ] && [ -f "$P/$dt_slot" ] && slot_of "$P/$dt_slot" "$WORK/slot"; then
-    sed -n 's/^[[:space:]]*<!--[[:space:]]*fragment:\([a-z0-9-]*\)[[:space:]]*-->.*$/\1/p' \
+    sed -n 's/^[[:space:]]*<!--[[:space:]]*fragment:\([a-z0-9-]*\)[[:space:]]*-->[[:space:]]*$/\1/p' \
       "$WORK/slot" > "$WORK/covered"
   fi
   # What the module of the answers declares comes with the render, marker or not.
@@ -1484,6 +1761,7 @@ case $cmd in
   merge) merge "$@" ;;
   snapshot) snapshot "$@" ;;
   base-from-history) base_from_history "$@" ;;
+  zones) zones "$@" ;;
   detect) detect "$@" ;;
   *) usage ;;
 esac

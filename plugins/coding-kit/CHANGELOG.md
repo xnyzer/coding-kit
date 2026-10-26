@@ -13,6 +13,38 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 1.5.0 — unveröffentlicht
+
+Zonen, Fragmente und Lock-Datei prüft das Skript statt des Modells (F-045, in Arbeit).
+
+- **`scripts/template-sync.sh zones` (neu):** vergleicht die markierten Blöcke eines
+  Projekts mit dem Render (`render --seeds`) — die `section:NAME`-Zonen der seed-Dateien
+  und die `fragment:NAME`-Blöcke im Standards-Slot. Je Block eine Zeile mit Zustand
+  (`identical`, `differs`, `override`, `new`, `opted-out`, `unmarked`, `local`, `no-file`,
+  `broken`, `skipped`) und Diffstat; bei geschützten Fragmenten zählt er, was das Template
+  seit der Basis geändert hat. Das Ergebnis schreibt er wie `merge` nach `OUT/<Ziel>`:
+  abweichende Blöcke ersetzt, neue Fragmente hinter ihrem nächsten Vorgänger aus dem
+  Render, in einem Slot ohne Fragmente anstelle des Platzhaltertexts — alle oder nur die
+  genannten. Die Blöcke für die Diffs liegen unter `OUT/.zones/`.
+- **`snapshot`** weist ein Ziel ab, das weder gerendert ist noch eine Basis hat, bevor er
+  etwas schreibt. Mehrere Ziele in einem Argument (zsh teilt Variablen nicht in Wörter)
+  liefen bisher still als `removed` durch (Fund aus F-043c).
+- **`detect`** zählt einen Fragment-Marker nur, wenn er allein auf seiner Zeile steht.
+- **Kit:** Der Validator verlangt, dass Zonen- und Fragment-Marker im Template allein auf
+  ihrer Zeile stehen; Skript-Tests für alle Zustände, das Einsetzen, die Auswahl per Name
+  und frische Renders (docs-only mit und ohne Graphiti, ts-node).
+
+### Template
+
+- MANIFEST § Markers: Ein Marker gilt nur allein auf einer Zeile. Ein Override
+  (HTML-Kommentar mit `override:` und Grund) mitten in einer Textzeile schützt eine Zone
+  oder ein Fragment nicht mehr — wer so eines nutzt, setzt es auf eine eigene Zeile.
+- MANIFEST §§ Seed sections und Standards fragments nennen `template-sync.sh zones` als
+  Vergleich; ein neues Fragment kommt hinter seinen nächsten Vorgänger aus dem Render.
+- Die Kopfzone der `.claude/convention-overrides.md` (`overrides-head`) beschreibt das
+  Override ohne marker-ähnlichen Text. Bisher hielt eine wörtliche Suche die Zone deshalb
+  für geschützt und bot sie nie zur Aktualisierung an.
+
 ## 1.4.0 — 2026-10-25
 
 Tools ohne Vorlage werden erkannt und können dem Template vorgeschlagen werden (F-044).

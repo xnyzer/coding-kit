@@ -35,6 +35,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-044a | Erkennung: Zustand `unknown` und Ablehnung `tool:NAME` → **`detect` meldet nach Modulen und Fragmenten jedes Tool aus `[tools]` der `mise.toml`, für das das Template keine Konvention hat (`unknown`, mit Rules-Zeile `tool:NAME` `declined`); bekannt sind Tools aus der Core- und den Modul-`mise.toml` sowie deklarierte `tool:`-Signale, Backend-Tools zählen nie; MANIFEST und Registry-Kopf beschreiben Zustand und Zeile.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-044b | Skill `propose-to-template` → **erster Hintergrund-Skill (`user-invocable: false`): Claude startet ihn mit einem Fund (Tool ohne Vorlage, projektlokales Fragment, Abweichung an einer managed Datei) und bekommt einen generalisierten, personendatenfreien Übernahme-Vorschlag — kopierfertig als Issue (Standard, `gh issue create` als Text) oder als Prompt für eine Session im Kit-Repo; nichts wird abgeschickt. CONTRIBUTING beschreibt solche Vorschläge, die Authoring-Doku Hintergrund-Skills.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
 | F-044c | Skills anbinden, Testlauf, Release → **update-conventions, step-done und prep-step bieten je Tool ohne Vorlage den Vorschlag fürs Template (`propose-to-template`) oder die Ablehnung `tool:NAME` an, choose-stack rät dafür kein Modul; der alte Abschnitt „Übernahme-Vorschlag" entfällt; Funde aus zwei Testläufen mitgenommen (Material getrennt nach Projekt und Vorschlag, Prompt als Entwurfsauftrag mit Recherche, festes Issue-Gerüst, keine verschachtelten Backticks, Datumsformat der Spalte Since); Release 1.4.0 gepusht (CI grün), Plugin aktualisiert. F-044 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-25 |
+| F-045a | `zones` und die Override-Regel → **`template-sync.sh zones` vergleicht seed-Zonen und Fragmente im Slot mit dem Render (Zustände von `identical` bis `broken`) und schreibt das Ergebnis mit eingesetzten Blöcken nach `OUT` — alle oder per Name, neue Fragmente an ihrer Stelle aus dem Render; Marker gelten nur allein auf einer Zeile (MANIFEST, `detect`, Validator); Kopfzone der Registry ohne Marker-Text; `snapshot` weist unbekannte Ziele ab; Version 1.5.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 
 ---
 
@@ -90,10 +91,10 @@ enthält.
   nichts verglichen.
 
 **Lösungsskizze** (Stand Planung 2026-10-26):
-- Skript: `zones [--snapshot DIR] PROJECT SEEDS OUT [NAME…]` (SEEDS = Render mit
-  `--seeds`), Zeile `<Ziel> <section|fragment> <Name> <Zustand> <+a -d>`, Zustände
-  `identical`, `differs`, `override` (bei Fragmenten mit Hinweis, ob sich das Template
-  seit der Basis geändert hat), `new`, `opted-out`, `local`, `unmarked`, `broken`.
+- Skript: `zones [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SEEDS OUT [NAME…]`
+  (SEEDS = Render mit `--seeds`), Zeile `<Ziel> <section|fragment> <Name> <Zustand> <+a -d>`,
+  Zustände `identical`, `differs`, `override` (bei Fragmenten mit Hinweis, ob sich das
+  Template seit der Basis geändert hat), `new`, `opted-out`, `local`, `unmarked`, `broken`.
   `lock-check PROJECT` mit Kopfzeilen (Plattformen, CI-Plattform, fehlende Lock-Datei oder
   Einstellung) und je Tool `complete`, `gaps`, `ci-gap`, `unlocked` oder `stale` samt
   fehlenden Plattformen. Tests unter dash und bash.
@@ -107,33 +108,6 @@ enthält.
 - Keine neuen Dependencies.
 
 **Abhängigkeiten:** keine (baut auf `template-sync.sh` aus F-041 auf, erledigt).
-
-#### F-045a — `zones` und die Override-Regel
-
-**Was:** Befehl `zones` im Skript samt Kopf-Doku: Blöcke aus den seed-Dateien des Renders
-und aus dem Slot der `CODING-STANDARDS.md`, Vergleich normalisiert wie bei `status`,
-Ergebnis nach `OUT/<Ziel>` (alle `differs` und `new` bzw. die genannten); `--snapshot` für
-den Hinweis bei Override-Fragmenten. `snapshot` weist unbekannte Ziele ab. MANIFEST
-§§ Markers, Seed sections und Standards fragments; der Validator prüft, dass Block-Marker
-im Template allein auf ihrer Zeile stehen. Kopfzone `overrides-head` umformuliert.
-Version 1.5.0 (unveröffentlicht), CHANGELOG-Eintrag mit `### Template` samt Hinweis zur
-strengeren Override-Regel.
-
-**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
-`tests/template-sync/zones.sh` (neu), `tests/template-sync/run.sh`,
-`tests/template-sync/sync.sh` (`snapshot`), `plugins/coding-kit/template/MANIFEST.md`,
-`plugins/coding-kit/template/core/.claude/convention-overrides.md`, `scripts/validate.py`,
-`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** keine.
-
-**Abnahmekriterien:**
-- [ ] Tests unter dash und bash: alle Zustände, Einsetzen an der Stelle aus dem Render,
-      Auswahl per `NAME`, `--snapshot`, Fehlerfälle von `snapshot` (Ziele als ein
-      Argument).
-- [ ] Ein Override mitten in einer Zeile schützt nicht; die alte Kopfzone ergibt
-      `differs`, nicht `override`.
-- [ ] `just check` grün.
 
 #### F-045b — `lock-check`
 
