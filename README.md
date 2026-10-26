@@ -295,7 +295,7 @@ docs/                             Pflege-Doku (Skill-Authoring, Renovate-Preset)
 install.sh                        Neuer-Rechner-Bootstrap (idempotent)
 scripts/validate.py               Validator für Kit, Template und Vertrag (`just check` + CI)
 scripts/version-rule.py           Versionsregel (Pre-Commit + CI, `just version-rule`)
-tests/template-sync/              Tests des Skripts unter dash und bash (`just test`)
+tests/template-sync/              Tests des Skripts unter dash und bash, dazu mawk/gawk (`just test`)
 PROGRESS.md, PROGRESS-ARCHIVE.md  Aufgaben (F-NNN); das Archiv führt auch die TPL-Reihe
 private/                          Gitignoriert — private Notizen/Quellen
 ```
@@ -316,6 +316,10 @@ private/                          Gitignoriert — private Notizen/Quellen
 - `just setup` installiert die Git-Hooks (gitleaks, Validator, Versionsregel; die
   Skript-Tests, wenn Skript, Template oder Tests sich ändern), `just check` ist das
   Vollgate — muss vor jedem Commit grün sein.
+- Für Arbeit an `template-sync.sh` mawk installieren (`brew install mawk`), optional
+  gawk: Die Skript-Tests laufen dann zusätzlich mit ihnen. mawk ist das Standard-awk auf
+  Debian und Ubuntu, gawk auf Fedora und Arch, und das macOS-awk nimmt mehr hin als beide.
+  Beide bleiben optionale lokale Werkzeuge (GPL), nicht Teil der Toolchain.
 - Aufgaben laufen als F-Nummern in `PROGRESS.md` — das Kit nutzt seine eigenen Skills
   (Dogfooding).
 

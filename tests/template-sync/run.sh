@@ -1,7 +1,11 @@
 #!/bin/sh
 # Tests for plugins/coding-kit/scripts/template-sync.sh against the bundled template.
 # Every case runs under dash and bash (the shells skills meet on Linux and macOS); the
-# script must behave the same in both. Prints failures only, then a summary.
+# script must behave the same in both. Then one more pass under the first shell for each
+# of mawk and gawk that is installed but not the default awk: awk implementations differ
+# (mawk is the default on Debian and Ubuntu, gawk on Fedora and Arch, and the macOS awk
+# accepts more than either). Prints failures only, then a summary that names the shells
+# and awks tested.
 #
 #   sh tests/template-sync/run.sh
 
@@ -17,12 +21,14 @@ checks=0
 failures=0
 SH=
 TMP=
+# Pass name in failure lines: the shell, plus the awk when it is not the default one.
+LABEL=
 
 # --- harness --------------------------------------------------------------------
 
 fail() {
   failures=$((failures + 1))
-  printf 'FAIL [%s] %s\n' "$SH" "$*"
+  printf 'FAIL [%s] %s\n' "$LABEL" "$*"
 }
 
 # check DESCRIPTION COMMAND… — passes when COMMAND succeeds.
@@ -200,15 +206,60 @@ if [ -z "$shells" ]; then
   exit 1
 fi
 
-for SH in $shells; do
-  TMP=$BASE_TMP/$SH
+# All cases with $SH, their files below DIR.
+run_cases() {  # DIR
+  TMP=$1
   mkdir -p "$TMP"
   run_render_cases
   run_sync_cases
   run_zones_cases
   run_lock_cases
   run_detect_cases
+}
+
+# The awk implementation behind COMMAND: mawk or gawk by their -W version line, "other"
+# for anything else (the macOS awk prints no version there).
+awk_kind() {  # COMMAND
+  ak_line=$("$1" -W version < /dev/null 2> /dev/null | sed -n 1p)
+  case $ak_line in
+    mawk*) echo mawk ;;
+    'GNU Awk'*) echo gawk ;;
+    *) echo other ;;
+  esac
+}
+
+for SH in $shells; do
+  LABEL=$SH
+  run_cases "$BASE_TMP/$SH"
 done
 
-printf 'template-sync tests: %d checks, %d failed (shells:%s)\n' "$checks" "$failures" "$shells"
+# One more pass under the first shell for each extra awk, found as `awk` through a link
+# at the front of PATH, so the script and the test helpers both use it.
+default_awk=$(awk_kind awk)
+if [ "$default_awk" = other ]; then awks='system awk'; else awks=$default_awk; fi
+not_installed=
+first_shell=${shells# }
+first_shell=${first_shell%% *}
+for extra in mawk gawk; do
+  [ "$extra" != "$default_awk" ] || continue
+  if ! command -v "$extra" > /dev/null 2>&1; then
+    not_installed="$not_installed $extra"
+    continue
+  fi
+  mkdir -p "$BASE_TMP/bin-$extra"
+  ln -s "$(command -v "$extra")" "$BASE_TMP/bin-$extra/awk"
+  saved_path=$PATH
+  PATH=$BASE_TMP/bin-$extra:$PATH
+  export PATH
+  SH=$first_shell
+  LABEL=$first_shell/$extra
+  run_cases "$BASE_TMP/$extra"
+  PATH=$saved_path
+  export PATH
+  awks="$awks, $extra"
+done
+
+summary="shells:$shells; awk: $awks"
+if [ -n "$not_installed" ]; then summary="$summary; not installed:$not_installed"; fi
+printf 'template-sync tests: %d checks, %d failed (%s)\n' "$checks" "$failures" "$summary"
 [ "$failures" -eq 0 ]

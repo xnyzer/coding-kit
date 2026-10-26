@@ -14,7 +14,7 @@ check: validate test
 validate:
     uv run --with pyyaml python3 scripts/validate.py
 
-# Tests of the plugin scripts (template-sync.sh) under dash and bash
+# Tests of the plugin scripts under dash and bash, plus mawk and gawk when installed
 test:
     sh tests/template-sync/run.sh
 

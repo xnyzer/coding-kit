@@ -39,6 +39,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-045b | `lock-check` → **`template-sync.sh lock-check` prüft die `mise.lock` gegen `lockfile_platforms` und die CI-Plattform aus `runs-on` (Runner-Labels von GitHub) und meldet je Lock-Eintrag `complete`, `gaps`, `ci-gap`, `no-url`, `unlocked` oder `stale`; Backends ohne Download-URL (laut mise-Doku, z. B. npm, cargo) sind nie eine Lücke; Gegenprobe mit echtem `mise lock`; Known-limitation-Nachtrag zu pnpm.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-045c | Skills anbinden → **update-conventions gleicht Fragmente und seed-Zonen über `zones` ab (nach dem Kopieren der Merge-Ergebnisse, teilweise Zustimmung per zweitem Lauf) und prüft die Lock-Datei über `lock-check`; choose-stack wertet `lock-check` aus und setzt Fragmente in Modus B über `zones` ein; „ein Fragment anhängen" für alle Skills festgelegt; Authoring-Doku: Einsetzen im Skript, mawk-Tests.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-045d | Testlauf, Release, Gegenprobe → **Lauf von update-conventions mit `--plugin-dir` an einem Projekt aus Template 1.4.0 (0,91 USD): Zonen, Fragmente und Lock-Datei nur über `zones` und `lock-check`, teilweise Zustimmung per zweitem Lauf, Endstand per Skript geprüft; Fund mitgenommen: vor `mise trust` fragen; Release 1.5.0 gepusht (CI grün), Plugin aktualisiert; Gegenprobe an einem Downstream-Projekt ohne Fund (0,56 USD). F-045 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
+| F-047 | Skript-Tests zusätzlich mit mawk → **`run.sh` hängt je einen Durchgang mit mawk und gawk an, wenn installiert und nicht das Standard-awk (erkannt über `awk -W version`); die Zusammenfassung nennt die geprüften awks; ein eingeschleustes `NF`-Array fällt nur im mawk-Durchgang auf; Doku nachgezogen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 
 ---
 
@@ -56,22 +57,21 @@ _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer
 **Empfohlene Reihenfolge** (Stand 2026-10-26; die Einträge darunter bleiben nach Nummer
 sortiert):
 
-1. **F-047** — klein und sofort nützlich, bevor wieder viel awk entsteht.
-2. **F-040** — unabhängig von F-036 und mittelgroß; die globale CLAUDE.md driftet schon
+1. **F-040** — unabhängig von F-036 und mittelgroß; die globale CLAUDE.md driftet schon
    (siehe Eintrag), und jede Session lädt sie. Vor den Strängen Graphiti und Host, deren
    Änderungen an der globalen Vorlage sonst bestehende Rechner nicht erreichen.
-3. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
+2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
-4. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
-5. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-6. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
+3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
+4. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+5. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
    mit. F-026 ist in F-039 aufgegangen, sein Rest (Kit-Repo-Herkunft in `check-upstreams`)
    in F-032.
-7. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
-8. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+6. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+7. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
-Strang 5 und 6 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 4 und 5 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ### F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
@@ -605,39 +605,6 @@ Kostenschätzung — und erst dann der Abschnitt dazu in der README.
 **Abhängigkeiten:** alle übrigen Einträge der Empfohlenen Reihenfolge — gemessen wird der
 Endstand; besonders F-036 und F-045 verändern den Verbrauch.
 
-### F-047 — Skript-Tests zusätzlich mit mawk
-
-**Status:** PLANNED
-
-**Problem:** `just check` testet `template-sync.sh` nur mit dem awk des Rechners. Auf
-macOS nimmt das mehr hin als mawk, das Standard-awk auf Ubuntu und in der CI. In F-045a
-fiel ein awk-Array namens `NF` deshalb erst unter mawk auf — lokal grün, in der CI wäre
-es rot gewesen, und die CI läuft erst beim Push.
-
-**Idee:** Sind mawk oder gawk installiert und nicht schon das Standard-awk, laufen die
-Skript-Tests in `just check` zusätzlich mit ihnen als `awk`. Ohne sie läuft `just check`
-wie bisher, mit einem kurzen Hinweis.
-
-**Lösungsskizze** (Stand Planung 2026-10-26):
-- `tests/template-sync/run.sh` hängt nach den Durchgängen unter dash und bash je einen
-  Durchgang mit mawk und mit gawk an — für jedes, das installiert und nicht das
-  Standard-awk ist —, unter einer Shell, mit einem Link `awk → <awk>` in einem
-  Temp-Ordner vorn im `PATH`. Das Standard-awk erkennt `awk -W version` (mawk, GNU Awk;
-  das macOS-awk nennt dort keine Version). Kostet rund 20 Sekunden je zusätzlichem awk zu
-  den heutigen gut 40. `just check`, Pre-Commit-Hook und CI bekommen das ohne eigene
-  Änderung.
-- Die Zusammenfassung nennt die geprüften awks; so zeigt auch das CI-Log, welches awk der
-  Runner nutzt. Ist es nicht mawk, wird noch in F-047 entschieden, ob die CI mawk
-  nachinstalliert.
-- `docs/skill-authoring.md` § Hilfsskripte: Aus „vor dem Commit von Hand mit mawk testen"
-  wird der Hinweis auf die automatischen Durchgänge; die README (Repo-Struktur,
-  Entwicklung) nennt mawk und gawk als optionale Werkzeuge; der Kommentar des
-  `test`-Rezepts im justfile zieht nach.
-- Nur Kit-Repo (Tests, justfile, Doku), kein Plugin-Inhalt, keine Versionsänderung. mawk
-  und gawk bleiben außerhalb der Toolchain (GPL).
-
-**Abhängigkeiten:** keine.
-
 ---
 
 <!-- FEATURE-INDEX
@@ -688,5 +655,5 @@ F-043 Sprachfragmente in Sprachregeln und Toolchain-Regeln aufteilen (DONE)
 F-044 Sprachen ohne Vorlage erkennen und dem Template vorschlagen (DONE)
 F-045 Zonen-Abgleich und Lock-Prüfung ins Skript (DONE)
 F-046 Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
-F-047 Skript-Tests zusätzlich mit mawk (PLANNED)
+F-047 Skript-Tests zusätzlich mit mawk (DONE)
 -->
