@@ -55,8 +55,312 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
-`/coding-kit:prep-step` vorbereiten._
+### F-036 — Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt
+
+**Status:** PLANNED
+
+**Problem:** Anforderungen und Aufgaben leben an mehreren Stellen und ziehen um.
+`define-requirements` schreibt die Kern-Features in die `REQUIREMENTS.md` und zugleich als
+F-Nummern in die `PROGRESS.md`; die Auflösung der REQUIREMENTS.md wird praktisch nie
+erreicht. Ein Eintrag zieht vom Backlog über die offenen Aufgaben ins Archiv um, und jeder
+Umzug ist eine Kopie, die auseinanderlaufen kann. Die Übersicht wächst mit jedem
+Abschluss: Im Kit hat die `PROGRESS.md` 637 Zeilen (ein Lesezugriff schafft sie nicht
+mehr ganz), Done-Zeilen haben im Mittel 490 Zeichen, das Archiv 4.719 Zeilen, und ein
+Feature verteilt sich dort auf mehrere Abschnitte. Eine gründliche Spezifikation verlangt
+kein Skill — Randfälle, prüfbare Abnahmekriterien, Tests und Nicht-Ziele fehlen —, und die
+Beratung vor dem Bau (passt das, gibt es Besseres, lieber nicht?) ist nicht geregelt.
+
+**Idee:** Jede Aufgabe bekommt eine Datei `features/F-NNN-kurzname.md`, die über ihren
+ganzen Lebenslauf wächst — Erfassung, Spezifikation, Plan, Verlauf — und
+PROGRESS-Eintrag, Archiv-Einträge und REQUIREMENTS.md ersetzt. `features/INDEX.md` ist die
+knappe Übersicht. add-feature erfasst knapp und berät, prep-step spezifiziert je nach Größe
+bis hin zum Interview. Vorbild sind die 3 Cs der agilen Praxis (Karte – Gespräch –
+Bestätigung: add-feature – prep-step – Abnahmekriterien) und Spec-Workflows für
+KI-Coding (ai-coding-starter-kit mit `features/INDEX.md`, GitHub Spec Kit).
+
+**Entschieden (2026-10-27):**
+
+- **Dateien:** `features/INDEX.md` (seed) ersetzt `PROGRESS.md`;
+  `features/F-000-template.md` (managed, wie `docs/adr/0000-template.md`) ist die
+  Vorlage; je F-Nummer eine Datei, Substeps darin. `PROGRESS.md`, `PROGRESS-ARCHIVE.md`
+  und `REQUIREMENTS.md` entfallen. Dateiname `F-NNN-` plus Kurzname aus dem Titel (ASCII,
+  klein, Bindestriche, etwa 40 Zeichen), beim Anlegen fest.
+- **Flacher Ordner, kein Unterordner für Erledigtes:** Pfade bleiben stabil, Verweise aus
+  anderen Dateien, ADRs, Commits und Graphiti brechen nicht. Werden es sehr viele, später
+  nach Nummernbereichen bündeln, nie nach Status.
+- **INDEX:** Kopf-Zone `index-head` (Template-Text) mit Zweck, Titelregel und
+  Status-Legende samt Weg zwischen den Status. Darunter **Empfohlene Reihenfolge** — von
+  Hand, mit Stand-Datum, Nummern mit einem Halbsatz Begründung, Stränge erlaubt; jederzeit
+  auf Zuruf überarbeitbar (Vorschau, dann OK), add-feature, prep-step und step-done
+  schlagen Änderungen vor, größere Umplanung über refine-requirements. Dann die Tabelle
+  aller Features (ID mit Link, Titel, Status, Fertig-Datum), nach Nummer sortiert und
+  **per Skript aus den Kopfblöcken erzeugt** (zwischen Markern, nicht von Hand ändern);
+  `next-feature` als sichtbare Zeile.
+- **Titelregel:** höchstens 70 Zeichen; sagt, was sich ändert — nicht wie, nicht warum,
+  kein Ergebnisbericht; kein Status, keine Version, keine Klammer-Aufzählung. Verweise
+  wie „aufgegangen in" trägt die Statusspalte.
+- **Kopfblock** (Frontmatter, nur einfache `feld: wert`-Zeilen): `id`, `title`, `type`
+  (`feature` neues Verhalten / `fix` falsches Verhalten / `change` Umbau, Doku, Pflege,
+  Audit — steuert nur die Ziel-Abschnitte, die Nummer bleibt F-NNN), `status`, `size`
+  (`S`/`M`/`L`, ab prep-step), `created`, `done`, `depends-on`, `superseded-by`. Nicht:
+  Priorität (trägt die Reihenfolge), Release-Version, Story Points.
+- **Status** (Token englisch): `BACKLOG` erfasst (add-feature) → `PLANNED` Spezifikation
+  und Plan freigegeben, Ready erfüllt (prep-step) → `IN-PROGRESS` erster Substep
+  verbucht (step-done, in der freigegebenen Verbuchung) → `DONE` alles verbucht, alle
+  Abnahmekriterien belegt (step-done; endgültig, Folgearbeit bekommt eine neue Nummer).
+  Aus jedem offenen Status: `DROPPED` bewusst nicht oder nicht weiter umgesetzt, Grund in
+  der Datei; `SUPERSEDED` aufgegangen in oder aufgeteilt auf andere Nummern
+  (`superseded-by`). Beide behalten Datei und Nummer. Ein S-Feature ohne Substeps geht
+  von PLANNED direkt nach DONE. Kein Status für „Spezifikation ohne Plan" — prep-step
+  sieht es an der Datei.
+- **Abschnitte der Feature-Datei:**
+  - *Erfassung* (add-feature): Problem; Ziel — `feature`: Story „Als … möchte ich …,
+    damit …", `fix`: Ist, Soll, Reproduktion, `change`: Ziel und was gleich bleiben muss;
+    Lösungsskizze (unverbindlich); Abhängigkeiten; Noch zu analysieren.
+  - *Spezifikation* (prep-step, Phase 1): Abnahmekriterien AK-n als Gegeben/Wenn/Dann
+    inkl. Negativfällen; Randfälle R-n mit erwartetem Verhalten; Nicht-Ziele; Tests je AK;
+    Einbettung; offene Fragen mit `[KLÄREN]`; Entscheidungen datiert mit Grund
+    (überstimmt der Nutzer eine Empfehlung, steht das so da).
+  - *Plan* (prep-step, Phase 2): Größe mit Begründung, Ansatz, Substeps F-NNNa ….
+  - *Verlauf* (step-done, je Substep): was umgesetzt wurde und wie, mit den wichtigen
+    Stellen (keine vollständige Dateiliste — die hat der Commit); Entscheidungen und
+    warum; Abweichung vom Plan; Funde. Das Problem steht nur oben in der Datei,
+    Planungsentscheidungen nur einmal.
+  - Abnahmekriterien werden beim Abschluss mit Beleg abgehakt (Test, Check, Befehl).
+  - Überschriften und Text in der Sprache der lebenden Doku, Feldnamen und Token
+    englisch; die Vorlage ist englisch, ihre Hinweise stehen als HTML-Kommentare und
+    fallen beim Ausfüllen weg.
+- **Größe** (prep-step, vor dem Interview; nach der Spezifikation erneut geprüft): drei
+  Signale, das höchste zählt — Aufwand (S unter 5 Dateien und 200 Zeilen, M bis 15 und
+  500, L darüber), Unsicherheit (Lösung liegt auf der Hand / einzelne offene Fragen /
+  viele offene Fragen, neue Technik, Spike nötig), Reichweite (eine Stelle / mehrere Teile
+  des Projekts / Daten- oder Projektmigration, Sicherheits- oder Auth-Pfade, Vorlage für
+  andere Projekte). Claude schlägt die Größe mit einem Satz Begründung vor, der Nutzer
+  kann sie ändern.
+- **Tiefe je Größe** (begrenzt auch nach oben, damit Kleines nicht lästig wird):
+  - S: kein Interview, Claude legt eine Mini-Spezifikation mit 1–3 Abnahmekriterien vor;
+    Randfälle ausdrücklich „keine" oder 1–2; Plan in Stichpunkten, keine Substeps.
+  - M: Interview nur zu offenen Punkten (etwa 3–6 Fragen); Abnahmekriterien als
+    Gegeben/Wenn/Dann mit Negativfall; 3–5 Randfälle; 1–3 Nicht-Ziele; Testfall je AK;
+    kurze Einbettungsprüfung; 2–3 Substeps.
+  - L: volles Interview, eine Frage je Runde mit Empfehlung, Example Mapping (je Regel
+    Beispiele und Gegenbeispiele, offene Fragen getrennt); Stories priorisiert; Randfälle
+    systematisch (Daten, Zustände, Fehler, Sicherheit, Migration); Nicht-Ziele Pflicht;
+    Teststrategie; volle Einbettungsanalyse; 3–5 Substeps, bei großer Unsicherheit ein
+    Spike zuerst. Braucht es mehr, in eigene F-Nummern teilen.
+- **Beratung und Abraten:**
+  - add-feature: Bringt der Nutzer eine fertige Lösung mit, zuerst das Problem dahinter
+    festhalten — die Lösung wird Option, kein Auftrag. Das stärkste Gegenargument und
+    Alternativen nennen (auch „nichts bauen", „Doku statt Code", „gibt es schon"). Eine
+    von vier Empfehlungen: aufnehmen, an Bestehendes anhängen, anders lösen, nicht
+    aufnehmen — auf Wunsch als Datei mit DROPPED und Grund, empfohlen, wenn die Idee
+    wiederkommen kann.
+  - prep-step: Einbettung prüfen — was berührt das Feature, was muss mitgeändert werden,
+    was setzt die Anfrage stillschweigend voraus (Rückweg, Migration, Fehlermeldung,
+    Berechtigung), was Bestehendes muss angepasst werden (im Feature oder als
+    Folge-F-Nummer), Widerspruch zu Zielen, Nicht-Zielen, ADRs? Fragen aus drei
+    Blickwinkeln (Nutzen, Umsetzung, Prüfung) plus Sicherheit. Ab M mindestens eine
+    Alternative zur Skizze. Darf abraten und plant keinen Workaround; die Entscheidung
+    bleibt beim Nutzer.
+- **Ready** (Bedingung für PLANNED): Problem und Ziel klar, Größe gesetzt, jedes
+  Abnahmekriterium prüfbar und mit Testidee, Randfälle betrachtet, Nicht-Ziele ab M, kein
+  blockierendes `[KLÄREN]`, Abhängigkeiten erledigt oder eingeplant, Einbettung geprüft,
+  Plan steht. **Done:** step-done wie heute, dazu alle Abnahmekriterien des Substeps mit
+  Beleg, Verlauf geschrieben, INDEX aktuell.
+- **Projektziele:** Ziele, Nicht-Ziele und Rahmenbedingungen als drei kurze
+  Unterabschnitte im Überblick der Projekt-CLAUDE.md — ein Ort für „was ist das Projekt",
+  in jeder Sitzung geladen, keine eigene Datei. Verworfen: eine eigene `PRODUCT.md` per
+  `@`-Einbindung — sie wäre ein zweiter Ort neben dem Überblick, der schon Zweck, Umfang
+  und Zielgruppe beschreibt, und nah an der alten REQUIREMENTS.md. Wird es in einem
+  Projekt deutlich mehr, darf es ausgelagert und per `@` eingebunden werden — Ausnahme,
+  nicht Vorlage. Entscheidungen zu einem Feature stehen in seiner Datei, Grundsätzliches
+  als ADR.
+- **Freigabe-Gate** gilt für `features/INDEX.md`, Feature-Dateien und die Ziel-Abschnitte
+  der CLAUDE.md. Lange
+  Entwürfe (etwa ab 40 Zeilen) legt der Skill nach `private/`, übernimmt sie nach dem OK
+  und löscht den Entwurf.
+- **Index-Skript** im Template (`scripts/features-index.sh`, POSIX-Shell, Name
+  vorläufig): erzeugt die Tabelle und prüft in `just check` Pflichtfelder, `id` passend
+  zum Dateinamen, erlaubte Status, `done` und `superseded-by` je Status, Titellänge,
+  eindeutige Nummern, `next-feature` über der höchsten, aktuelle Tabelle und nur offene
+  Features in der Reihenfolge. Der Pre-Commit-Hook prüft nur, er erzeugt nicht (sonst
+  kämen ungesehene Änderungen in den Commit).
+- **Migration — alles wird überführt, auch Erledigtes:** über update-conventions,
+  einmalig, je Datei mit Diff und Bestätigung; Inhalt wortgetreu, nicht umformuliert.
+  - Skriptbefehl in `template-sync.sh` (Name offen) für das Mechanische: FEATURE-INDEX →
+    Nummern, Titel, Status („aufgegangen in" → SUPERSEDED); offene Einträge → Datei (Text
+    unter Erfassung, Substeps unter Plan); Archiv-Abschnitte nach Nummer gruppiert, je
+    Substep ein Verlauf-Eintrag, zeitlich aufsteigend, `created` und `done` aus frühestem
+    und spätestem Datum; eine Done-Zeile ohne Archiv-Abschnitt wird selbst
+    Verlauf-Eintrag; Nummern ohne Inhalt → Datei mit Vermerk; Unzugeordnetes wird
+    gelistet, nicht geraten.
+  - Skill für das, was Urteil braucht: REQUIREMENTS.md verteilen (Ziele, Nicht-Ziele,
+    Rahmen → Überblick der CLAUDE.md; Entscheidungen → ADR oder Feature-Datei;
+    Kern-Features ohne Nummer → neue Dateien; offene Fragen → die betroffene Datei),
+    Reihenfolge-Text übernehmen, Titel über 70 Zeichen kürzen,
+    Unzugeordnetes klären. Danach `PROGRESS.md`, `PROGRESS-ARCHIVE.md` und
+    `REQUIREMENTS.md` nach Bestätigung löschen (Git behält sie).
+  - Skills der neuen Version können nur das neue Format; bei einer alten `PROGRESS.md`
+    verweisen sie auf die Migration.
+- **Kit selbst:** zieht erst nach Release und Plugin-Update um (entschieden 2026-10-23),
+  mit derselben Migration als erstem Praxistest; sie setzt keine
+  `.claude/template-answers` voraus. Die 28 `TPL-NNN`-Abschnitte kommen in eine eigene
+  Verlaufsdatei `docs/project-template-history.md`, nicht in die F-Reihe.
+- **Version 2.0.0:** jedes Projekt muss migrieren, bevor es mit den neuen Skills
+  weiterarbeitet.
+- **Bewusst nicht übernommen:** Story Points, Velocity, Sprints (Werkzeuge für Teams mit
+  Kapazität); viele Status bis „Deployed"; mehrere Dateien je Feature (Spec Kit, Kiro);
+  Archiv-Umzug (OpenSpec); EARS-Schreibweise (Gegeben/Wenn/Dann passt direkt auf Tests);
+  Story Map als eigenes Dokument.
+- **Abgrenzung:** F-036 regelt die Beratung beim Planen, F-034 den Maßstab beim Bauen
+  (Workaround-Stopp, Review-Kriterien). F-037 prüft gegen Abnahmekriterien, Randfälle und
+  Nicht-Ziele der Datei. F-029 schreibt einen Graphiti-Anlass je Feature mit Verweis auf
+  die Datei.
+
+**Abhängigkeiten:** F-039 und F-049 (erledigt — neue und entfernte Zonen erreichen
+bestehende Projekte). Berührt dieselben Skills wie F-034; F-034 und F-037 folgen danach.
+Entlastet F-029 und F-033.
+
+#### F-036a — Vorlagen und Index-Skript
+
+**Was:** Template: `features/INDEX.md` (seed, Zone `index-head`, Reihenfolge, erzeugte
+Tabelle zwischen Markern, `next-feature`), `features/F-000-template.md` (managed);
+CLAUDE.md-Vorlage: Überblick mit den Unterabschnitten Ziele, Nicht-Ziele und
+Rahmenbedingungen (Projektinhalt, kein Template-Text), Zonen `claude-startup` und
+`claude-workflow` auf `features/`; HOW-TO (Workflows, wichtige
+Dateien), README, ADR-README, PR-Vorlage und `private/README.md` nachziehen;
+`scripts/features-index.sh` (erzeugen und prüfen), justfile-Rezept zum Erzeugen,
+Prüfung in `just check`. `core/PROGRESS.md`, `core/PROGRESS-ARCHIVE.md` und
+`core/REQUIREMENTS.md` entfernen. MANIFEST: Zieltabelle, Seed-Zonen (neu `index-head`;
+weg `progress-head`, `archive-head`, `requirements-head`), erste
+Zeilen in „Removed and renamed targets", Beschreibung von `{{LANG_LIVING_DOCS}}`.
+Validator, Tests, Version 2.0.0 mit CHANGELOG-Eintrag samt `### Template`.
+
+**Dateien:** `plugins/coding-kit/template/MANIFEST.md`; unter
+`plugins/coding-kit/template/core/`: `features/INDEX.md`, `features/F-000-template.md`,
+`CLAUDE.md`, `HOW-TO-CODE-WITH-CLAUDE.md`, `README.md`,
+`docs/adr/README.md`, `.github/PULL_REQUEST_TEMPLATE.md`, `private/README.md`, `justfile`,
+`scripts/features-index.sh` (entfernt: `PROGRESS.md`, `PROGRESS-ARCHIVE.md`,
+`REQUIREMENTS.md`); `scripts/validate.py`, `tests/template-sync/features.sh` (neu),
+`tests/template-sync/run.sh`, `plugins/coding-kit/.claude-plugin/plugin.json`,
+`plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** keine.
+
+**Abnahmekriterien:**
+- [ ] Ein frisch gerendertes Projekt besteht `just check`; sein INDEX ist leer und
+      gültig, seine CLAUDE.md hat im Überblick die Abschnitte Ziele, Nicht-Ziele und
+      Rahmenbedingungen.
+- [ ] Tests: Erzeugen ergibt die Tabelle aus den Kopfblöcken (Sortierung, Links, Status,
+      Datum) und lässt Kopf und Reihenfolge unangetastet; Prüfen fängt fehlendes
+      Pflichtfeld, `id` ungleich Dateiname, unbekannten Status, fehlendes `done` oder
+      `superseded-by`, Titel über 70 Zeichen, doppelte Nummer, zu niedriges
+      `next-feature`, veraltete Tabelle und Erledigtes in der Reihenfolge.
+- [ ] Läuft unter dash und bash, mit System-awk und mawk.
+- [ ] Vertragsprüfungen und Versionsregel grün; `just check` grün.
+
+#### F-036b — Kern-Skills
+
+**Was:** add-feature (Beratung: Problem vor Lösung, Gegenargument, Alternativen, vier
+Empfehlungen, DROPPED auf Wunsch; legt Datei und Kopfblock an, erzeugt die Tabelle,
+schlägt einen Platz in der Reihenfolge vor). prep-step (Größe aus drei Signalen; Phase 1
+Spezifikation in der Tiefe je Größe — Interview, Example Mapping, drei Blickwinkel plus
+Sicherheit, Einbettung, Abraten erlaubt; Ready-Prüfung; Phase 2 Plan mit Substeps;
+PLANNED; lange Entwürfe nach `private/`). build-step (liest die Datei, Nicht-Ziele als
+Scope-Schutz, sammelt Abweichungen für step-done). step-done (Verlauf-Eintrag je Substep,
+Abnahmekriterien mit Beleg, IN-PROGRESS bzw. DONE, Tabelle erzeugen, Reihenfolge
+nachziehen; kein Archiv mehr). teach-step. Freigabe-Gate-Text in allen fünf und in
+`docs/skill-authoring.md`. Altformat: Bei einer `PROGRESS.md` mit FEATURE-INDEX und ohne
+`features/INDEX.md` auf die Migration verweisen. `/add-skill` läuft mit.
+
+**Dateien:** `plugins/coding-kit/skills/{add-feature,prep-step,build-step,step-done,teach-step}/SKILL.md`,
+`docs/skill-authoring.md`, `README.md`, `plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** F-036a.
+
+**Abnahmekriterien:**
+- [ ] Die fünf Skills lesen und schreiben nur noch `features/` und die Ziel-Abschnitte
+      der CLAUDE.md; jeder
+      Punkt aus „Entschieden" zu Beratung, Größe, Tiefe, Ready, Status und Verlauf ist
+      einem Skill zugeordnet.
+- [ ] Bei altem Format verweisen sie auf die Migration statt zu raten.
+- [ ] `just check` grün.
+
+#### F-036c — Anforderungs- und Randskills, Hook, Doku
+
+**Was:** define-requirements (Interview → Ziel-Abschnitte im Überblick der CLAUDE.md, je
+Kern-Feature eine schlanke Datei mit BACKLOG, Reihenfolge, Tabelle;
+Eigenschafts-Trigger als Rahmenbedingung; Auflöse-Regel entfällt). refine-requirements
+(arbeitet auf den Ziel-Abschnitten der CLAUDE.md, Feature-Dateien und ADRs; Teilen und
+Streichen über SUPERSEDED und DROPPED; Umplanung der Reihenfolge).
+new-project, handoff, audit-code, check-upstreams auf die neuen Dateien;
+update-conventions erkennt Kit-Projekte auch an `features/INDEX.md`; der Stop-Hook
+ebenso. Globale Kit-Regeln (Satz zu F-Nummern in `PROGRESS.md`), Kit-README,
+`.claude/skills/add-skill`. `/add-skill` läuft mit.
+
+**Dateien:** `plugins/coding-kit/skills/{define-requirements,refine-requirements,new-project,handoff,audit-code,check-upstreams,update-conventions}/SKILL.md`,
+`plugins/coding-kit/hooks/stop-reminder.sh`, `tests/template-sync/hook.sh`,
+`plugins/coding-kit/global/coding-kit.md`, `README.md`, `.claude/skills/add-skill/SKILL.md`,
+`plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** F-036b.
+
+**Abnahmekriterien:**
+- [ ] Eine Suche nach `PROGRESS`, `REQUIREMENTS` und `FEATURE-INDEX` über Plugin und
+      Template findet nur noch Migration, Altformat-Erkennung und CHANGELOG.
+- [ ] Test: Der Stop-Hook meldet sich in einem Projekt mit `features/INDEX.md` und
+      offenen Änderungen und bleibt in einem fremden Repo still.
+- [ ] `just check` grün.
+
+#### F-036d — Migration
+
+**Was:** Skriptbefehl in `template-sync.sh` für den mechanischen Teil (siehe
+„Entschieden"), schreibt nach `OUT` und listet Unzugeordnetes; Kopf-Doku des Skripts,
+MANIFEST beschreibt den Befehl. Migrationsschritt in update-conventions: altes Format
+erkennen, Skript laufen lassen, REQUIREMENTS verteilen, Titel kürzen, Unzugeordnetes
+klären, Diff und Bestätigung je Datei, Altdateien erst danach löschen.
+
+**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
+`tests/template-sync/migrate.sh` (neu), `tests/template-sync/run.sh`,
+`plugins/coding-kit/skills/update-conventions/SKILL.md`,
+`plugins/coding-kit/template/MANIFEST.md`, `plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** F-036a (Format von INDEX und Feature-Datei), F-036c
+(update-conventions).
+
+**Abnahmekriterien:**
+- [ ] Tests: Standardformat; geplanter Eintrag mit Substeps; Archiv neueste zuerst →
+      Verlauf aufsteigend; Done-Zeile ohne Archiv-Abschnitt; Nummer ohne Inhalt;
+      „aufgegangen in" → SUPERSEDED; Altformate wie „Schritt 1.2" werden gelistet, nicht
+      geraten; mit und ohne REQUIREMENTS.md; dash und bash, System-awk und mawk.
+- [ ] Kopien eines docs-only- und eines ts-node-Projekts: jede F-Nummer als Datei und im
+      INDEX, jeder offene Eintrag und jeder Archiv-Abschnitt wortgleich übernommen (per
+      Skript gegengeprüft), danach `just check` grün.
+
+#### F-036e — Testläufe, Release, Umstellung des Kits
+
+**Was:** Läufe mit `claude -p --plugin-dir plugins/coding-kit` an Stellvertreter-Ordnern,
+Kosten je Lauf nennen: neues Projekt mit define-requirements; add-feature mit Abraten;
+prep-step für ein S- und ein L-Feature; step-done mit Verlauf und erzeugter Tabelle;
+Migration eines Bestandsprojekts. Release 2.0.0 nach dem bekannten Ablauf (Push nur auf
+ausdrückliche Bitte, vorher Personendaten-grep). Nach dem Plugin-Update das Kit selbst
+migrieren: TPL-Abschnitte nach `docs/project-template-history.md`; Kit-CLAUDE.md mit
+Zielen und Nicht-Zielen im Überblick (aus Überblick und README, Vorschau) und den Regeln
+zu PROGRESS und Nummern; README-Struktur; das Kit-`just check` prüft seine `features/`.
+Gegenprobe an einem Downstream-Projekt.
+
+**Dateien:** `plugins/coding-kit/CHANGELOG.md`, Funde aus den Läufen; Umstellung des
+Kits: `features/` (neu), `docs/project-template-history.md` (neu),
+`CLAUDE.md`, `README.md`, `justfile`; entfallen: `PROGRESS.md`, `PROGRESS-ARCHIVE.md`.
+
+**Abhängigkeiten:** F-036d.
+
+**Abnahmekriterien:**
+- [ ] Alle Läufe ohne Handarbeit, Endstand per Skript geprüft, Kosten je Lauf genannt.
+- [ ] Release 2.0.0 gepusht, CI grün, Plugin aktualisiert.
+- [ ] Das Kit arbeitet mit `features/`: 49 Feature-Dateien, Tabelle erzeugt,
+      TPL-Verlauf in eigener Datei, `just check` grün.
+- [ ] Gegenprobe an einem Downstream-Projekt ohne Inhaltsverlust.
 
 ---
 
@@ -401,9 +705,9 @@ Inhalt regelt die `CODING-STANDARDS.md`.
   oder bearbeitet. `build-step` prüft das im Selbst-Review, `step-done` im Review.
 - Knapper Ersatz-Maßstab für Projekte ohne `CODING-STANDARDS.md` (Kernprinzipien,
   kein Duplikat der Vorlage).
-- `teach-step`, `prep-step` (einfachstes Design planen, Security-Punkte je Substep
-  benennen) und `step-done` (Review-Kriterien Verständlichkeit und Secure Coding)
-  konsistent nachziehen.
+- `teach-step`, `prep-step` (einfachstes Design planen; Security-Punkte je Substep
+  deckt mit F-036 der Sicherheits-Blick der Spezifikation ab) und `step-done`
+  (Review-Kriterien Verständlichkeit und Secure Coding) konsistent nachziehen.
 - Inhaltliche Lücken der Vorlage (Lesbarkeit vor Cleverness, Secure Coding über Secrets
   hinaus) sind mit TPL-021 (project-template 0.14.0) bereits im Template;
   Bestandsprojekte erhalten sie über `/update-conventions`. Neu dazu: eine Regel in der
@@ -415,75 +719,6 @@ Inhalt regelt die `CODING-STANDARDS.md`.
 erst danach (sonst doppelte Arbeit); zusammen mit F-037 umsetzen. Gegenstück:
 TPL-021 (Inhalte der CODING-STANDARDS-Vorlage, erledigt) — die Skill-Kriterien darauf
 abstimmen.
-
----
-
-### F-036 — Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt
-
-**Status:** BACKLOG
-
-**Problem:** Anforderungen leben doppelt und laufen auseinander. `define-requirements`
-schreibt die Kern-Features in die `REQUIREMENTS.md` und zugleich als F-Nummern in die
-`PROGRESS.md`; die Auflösung der REQUIREMENTS.md (alles überführt, keine offene
-Produktfrage, Nutzer bestätigt) wird praktisch nie erreicht, die Überführung in
-CLAUDE.md, ADRs und PROGRESS bleibt Handarbeit. Zugleich fehlt je Feature eine
-gründliche Spezifikation: Edge-Cases, prüfbare Abnahmekriterien, Testfälle,
-Nicht-Ziele und offene Fragen werden nirgends verlangt, und die PROGRESS.md wächst
-mit jedem Eintrag weiter.
-
-**Idee:** Jede Information wird sofort an ihren endgültigen Ort geschrieben, ein
-Übergangs-Dokument entfällt. Projektweites (Ziele, Nicht-Ziele, Constraints) landet in
-der Projekt-CLAUDE.md, Grundsatzentscheidungen als ADR, jedes Feature in einer eigenen
-Datei `features/F-NNN-….md`, die über seinen ganzen Lebenszyklus wächst: Erfassung,
-Spezifikation, Plan, Abweichungen beim Bau, Abnahme. Die `PROGRESS.md` wird zur reinen
-Übersicht. Vorbild: der Spec-Workflow aus AlexPEClub/ai-coding-starter-kit (Interview
-eine Frage je Runde mit Empfehlung, Abnahmekriterien im Given/When/Then-Muster,
-Out of Scope mit Verweisen, Entscheidungsprotokoll, offene Fragen als Checkboxen).
-
-**Lösungsskizze:**
-- `REQUIREMENTS.md` entfällt. `define-requirements` legt nur die Feature-Landkarte an
-  (je Feature eine schlanke Datei mit Status BACKLOG + Übersichtszeile) und schreibt
-  Projektweites direkt in CLAUDE.md bzw. ADRs; die Detail-Spec entsteht erst kurz vor
-  dem Bau.
-- `add-feature` legt die Feature-Datei an (Problem, Idee, Skizze), `prep-step` baut sie
-  in zwei Phasen aus: Spezifikation per Interview (Edge-Cases, Abnahmekriterien,
-  Testfälle, Nicht-Ziele, offene Fragen, Entscheidungen), dann Technik-Plan; Tiefe
-  skaliert mit Klein/Mittel/Groß. `build-step` ergänzt Abweichungen, `step-done` hängt
-  die Abnahme an und schließt ab — die Feature-Datei ersetzt den Archiv-Eintrag.
-- Die Vorlage der Feature-Datei liegt im Template (`template/core/`; entschieden
-  2026-10-23: Inhalt im Template, Prozess in den Skills), kommt per
-  `update-conventions` in die Projekte und wird von den Skills zur Laufzeit gelesen —
-  kein Duplikat.
-- Übersicht bleibt knapp: Erledigtes ist dort nur ein Haken (F-Nummer, Titel, Datum),
-  höchstens mit kurzem Kommentar, wenn ihn jemand beim Überfliegen braucht (offene
-  Lücke, Folge-F-Nummer, Release-Version) — keine Zusammenfassungen; die stehen in der
-  Feature-Datei. Anlass: Done-Tabellen in Projekten wachsen heute je Aufgabe um einen
-  Absatz. Die Migration bietet an, bestehende lange Done-Zeilen zu kürzen.
-- `refine-requirements` arbeitet auf CLAUDE.md, Feature-Dateien und ADRs; der
-  Auflöse-Mechanismus fällt weg. Nicht-Ziele der Spec speisen den Scope-Schutz in
-  `build-step`.
-- Übrige Skills mit PROGRESS-/REQUIREMENTS-Bezug nachziehen (u. a. new-project,
-  handoff, teach-step, audit-code); Konsistenzprüfung Übersicht ↔ Feature-Dateien als
-  Check-Kandidat für `just check`.
-- Bestandsprojekte: `update-conventions` bietet eine einmalige Migration an
-  (REQUIREMENTS.md und offene PROGRESS-Einträge auf die Zielorte verteilen, Diff und
-  Bestätigung je Datei); bestehende `PROGRESS-ARCHIVE.md` bleibt eingefroren.
-- Die eigene PROGRESS des Kits erst in der Release-Phase umstellen — nach Push und
-  Plugin-Update, mit der neuen Migration (zugleich erster Praxistest). Vorher arbeiten
-  alle Sessions mit dem installierten alten Plugin, das die neue Struktur nicht kennt
-  (entschieden 2026-10-23).
-
-**Noch zu analysieren:**
-- Name und Ort der Übersicht (`PROGRESS.md` behalten spart Migration) und ob der
-  FEATURE-INDEX-Kommentar in der Übersichtstabelle aufgeht.
-- Projektweite Inhalte in CLAUDE.md oder eigener Produktdatei — Schwelle, ab der
-  ausgelagert wird.
-- Status an einer Stelle oder an zweien (Datei-Kopf + Übersicht).
-
-**Abhängigkeiten:** F-039 — das Template-Gegenstück (Vorlage der Feature-Datei,
-Vorlagen PROGRESS/REQUIREMENTS/CLAUDE/HOW-TO/README, ADR-README, MANIFEST inkl.
-Seed-Sections) entsteht im selben Commit wie die Skills. Berührt dieselben Skills wie
-F-034 (prep-step, step-done) — F-034 folgt danach. Entlastet F-029 und F-033.
 
 ---
 
@@ -620,7 +855,7 @@ F-032 Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git)
 F-033 Betrieb ohne Graphiti absichern
 F-034 Senior-Maßstab in den Bau-Skills (Lesbarkeit, keine Workarounds, Secure Coding)
 F-035 Repo-übergreifende Übergabe statt Parallelarbeit (coding-kit ↔ project-template) (→ aufgegangen in F-039)
-F-036 Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt
+F-036 Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt (PLANNED)
 F-037 Unabhängiges Review in step-done (Reviewer mit frischem Kontext)
 F-038 Freigabe-Regel für PROGRESS-Einträge kit-weit; add-feature von Claude aufrufbar (DONE)
 F-039 Ein Repo: project-template ins Plugin, gemeinsame Version 1.0.0 (DONE)
