@@ -72,6 +72,24 @@ Skills dieser Version weiterarbeitet.
   Stop-Hooks nennt die Verbuchung in der Feature-Datei.
 - **Globale Kit-Regeln:** Aufgaben laufen als F-Nummern mit je einer Datei in
   `features/` (kommt über `update-conventions global`).
+- **`scripts/template-sync.sh migrate`** überführt das alte Dokumentmodell eines Projekts
+  wortgetreu in Feature-Dateien: Nummer, Titel und Status aus dem FEATURE-INDEX (beide
+  Schreibweisen; „→ aufgegangen in" wird `SUPERSEDED` mit `superseded-by`), der offene
+  Eintrag unter die Erfassung, seine offenen Substeps unter den Plan, Archiv-Abschnitte
+  und Done-Zeilen ohne Archiv-Abschnitt als Verlauf, ältester zuerst; Überschriften
+  behalten ihren Abstand, Code-Blöcke bleiben unberührt. Status aus `**Status:**`,
+  Substeps und Verlauf (`IN-PROGRESS`, sobald etwas verbucht ist), Daten aus dem Verlauf
+  und, wo keins steht, aus der Git-Historie; `type` immer `feature`. Was außerhalb eines
+  F-Eintrags steht (die Reihenfolge, ein „Schritt 1.2"), wird mit Zeilenbereich gelistet,
+  nicht geraten; mit `--index` kommt der gerenderte Index samt `next-feature` dazu, mit
+  `--sections` heißen die Abschnitte in der Doku-Sprache.
+- **`update-conventions`** migriert mit dem neuen Abschnitt A4: Index-Vorlage aus dem
+  Render (ohne Antworten aus Hilfsantworten), Skript, dann das Urteil — Reihenfolge in den
+  Index, `REQUIREMENTS.md` verteilen (Ziele in die CLAUDE.md, Entscheidungen als ADR oder
+  in die Feature-Datei, Kern-Features ohne Nummer als neue Dateien), Unzugeordnetes
+  klären, lange Titel kürzen —, Tabelle erzeugen, Vorschau gruppenweise mit Stichproben,
+  übernehmen und erst danach die Altdateien löschen. Das Argument `features` macht nur
+  diese Migration, auch in einem Repo ohne Template-Antworten.
 - **Kit:** Tests für den Stop-Hook (Projekt mit `features/INDEX.md`, altes Format,
   Stempel, sauberer Baum, unversionierte Datei, zweiter Stopp, fremdes Repo); der
   repo-lokale Skill `add-skill` nennt die Aufgabenliste des Kits nur noch allgemein — wo

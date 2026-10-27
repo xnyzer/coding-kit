@@ -16,6 +16,90 @@ zusammen:
 
 ---
 
+## F-036d — Migration (2026-10-27)
+
+Teil von F-036 (Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt; F-036a–c
+siehe darunter, F-036e folgt).
+
+**Problem:** Skills und Template kannten nach F-036c nur noch `features/`, bestehende
+Projekte hatten aber `PROGRESS.md`, `PROGRESS-ARCHIVE.md` und teils `REQUIREMENTS.md` in
+sehr unterschiedlichen Spielarten. Ohne Migration könnten sie mit 2.0.0 nicht
+weiterarbeiten; alles sollte überführt werden, auch Erledigtes, wortgetreu.
+
+**Was entstanden ist (2.0.0, unveröffentlicht):**
+
+- **`template-sync.sh migrate [--index FILE] [--sections A,B,C] PROJECT OUT`:** liest
+  PROGRESS und Archiv, schreibt je F-Nummer `OUT/features/F-NNN-kurzname.md` und eine
+  Ausgabeliste; ins Projekt schreibt es nichts.
+  - FEATURE-INDEX in beiden Schreibweisen (`F-NNN Titel (STATUS)` und die
+    `features:`-Liste); `(→ aufgegangen in …)` wird SUPERSEDED mit `superseded-by`.
+  - Blöcke: Überschriften zählen nur außerhalb von Code-Blöcken; ein F-Eintrag endet an
+    der nächsten Überschrift gleicher oder höherer Ebene, tiefere derselben Nummer
+    bleiben darin. Der offene Eintrag geht unter die Erfassung (ohne `**Status:**`),
+    seine offenen Substeps unter den Plan, die Archiv-Abschnitte (umgekehrte
+    Dateireihenfolge, dann stabil nach Datum) und Done-Zeilen ohne eigenen
+    Archiv-Abschnitt in den Verlauf; Überschriften behalten ihren Abstand zum Block.
+  - Status: SUPERSEDED aus dem Index; mit offenem Eintrag dessen Status-Zeile, sonst
+    PLANNED mit Substeps bzw. BACKLOG, IN-PROGRESS sobald Verlauf da ist; ohne Eintrag
+    DONE bei Verlauf, sonst der Index-Status, sonst BACKLOG. Titel aus dem Index, sonst
+    aus der Überschrift des Eintrags bzw. des Archiv-Abschnitts der Nummer.
+  - Daten: `created` und `done` aus frühestem und spätestem Datum des Verlaufs; die
+    Git-Historie der beiden Dateien liefert den Tag, an dem eine Nummer zuerst auftauchte
+    (auch wenn er früher liegt), und den Tag, an dem ihre Index-Zeile `(DONE)` bekam.
+  - Ausgabe: `feature`, `unassigned` (Block außerhalb jedes F-Eintrags mit
+    Zeilenbereich), `empty`, `conflict`, `date … git`, `missing`, `type feature N`,
+    `next-feature`, `requirements`, `index`. `--index` kopiert den gerenderten Index mit
+    `next-feature`, `--sections` benennt die drei Abschnitte in der Doku-Sprache.
+- **update-conventions A4:** Index-Vorlage aus dem Render, ohne Antworten aus
+  Hilfsantworten; Skript; dann das Urteil — Reihenfolge-Text in den Index, REQUIREMENTS
+  verteilen (Ziele in die CLAUDE.md, Entscheidungen als ADR oder in die Feature-Datei,
+  Kern-Features ohne Nummer als neue Dateien, offene Fragen als `[CLARIFY]`),
+  Unzugeordnetes klären, Konflikte und leere Nummern zeigen, lange Titel kürzen;
+  Tabelle per `features-index.sh`; Vorschau gruppenweise mit Stichproben; übernehmen,
+  danach die Altdateien löschen. A1 und A2 rufen A4 zwischen Schritt 5 und 6 auf, Schritt
+  8 löscht die drei Altdateien nur über A4, `status` berichtet. Neues Argument
+  `features`: nur die Migration, auch ohne Template-Antworten.
+- **MANIFEST § Features:** Absatz zur Migration.
+- **Tests:** `tests/template-sync/migrate.sh` (neu, 44 Checks je Durchgang) an einem
+  kleinen Altprojekt, das jede Regel einmal trifft — Standardformat, geplanter Eintrag
+  mit Substeps, Archiv neueste zuerst → Verlauf aufsteigend, Done-Zeile ohne
+  Archiv-Abschnitt, Nummer ohne Inhalt, „aufgegangen in", „Schritt 1.2" gelistet, mit
+  und ohne Archiv und REQUIREMENTS, Listen-Index, Git-Daten, Index-Kopie, Ablehnungen —
+  und einer eigenständigen Wortgleich-Prüfung: Jede Inhaltszeile der Altdateien steht
+  genau so oft in den Feature-Dateien, nichts kommt dazu.
+
+**Verifikation:** `just check` grün mit 2103 Checks unter dash, bash und mawk (44 neu je
+Durchgang); Gegenprobe der Wortgleich-Prüfung (gelöschte und erfundene Zeile werden
+gemeldet). Kopien eines docs-only- und eines ts-node-Projekts: jede F-Nummer als Datei
+und im Index (15 bzw. 52), Wortgleich-Prüfung grün, Index-Prüfung grün (ts-node nach dem
+Kürzen zweier Titel über 70 Zeichen, wie es der Skill tut), `just check` der
+docs-only-Kopie grün; mawk liefert für die ts-node-Kopie dasselbe Ergebnis Byte für
+Byte. Probe am Kit: 49 Dateien, Wortgleich-Prüfung grün; gelistet werden die 28
+TPL-Abschnitte und der Reihenfolge-Text, fünf Titel sind zu kürzen. Versionsregel grün;
+gitleaks, Privacy-Muster, Blocklist und Projektnamen ohne Fund.
+
+**Notable decisions:**
+- `type` wird einheitlich `feature` und gemeldet — der Typ steuert nur die Form neuer
+  Spezifikationen (Nutzerentscheidung).
+- Fehlende Daten aus der Git-Historie, mit Quelle in der Ausgabe (Nutzerentscheidung).
+- Bestätigung gruppenweise mit Stichproben statt je Datei; jede Datei auf Wunsch
+  (Nutzerentscheidung) — die Wortgleichheit sichert das Skript.
+- Ein offener Eintrag mit Verlauf wird IN-PROGRESS: Das ist die Definition des Status.
+- Der Index kommt aus dem Render; das Skript setzt nur `next-feature` und rechnet ihn
+  nicht selbst zusammen.
+
+**Abweichungen vom Plan:** Das Argument `features` und die Optionen `--index` und
+`--sections` kamen dazu — ein Repo ohne Template-Antworten (das Kit in F-036e) muss
+migrieren können, und die Abschnitte stehen in der Doku-Sprache. `just check` der
+ts-node-Kopie lief nicht (es bräuchte die Node-Abhängigkeiten, die alte justfile prüft
+`features/` nicht); dort gilt die Index-Prüfung.
+
+**Geänderte Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
+`tests/template-sync/migrate.sh` (neu), `tests/template-sync/run.sh`,
+`plugins/coding-kit/skills/update-conventions/SKILL.md`,
+`plugins/coding-kit/template/MANIFEST.md`, `plugins/coding-kit/CHANGELOG.md`,
+`PROGRESS.md`.
+
 ## F-036c — Anforderungs- und Randskills, Hook, Doku (2026-10-27)
 
 Teil von F-036 (Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt; F-036a–b

@@ -104,6 +104,32 @@
 #       .claude/template-answers the module check is skipped (note on stderr). Then a
 #       line per tool the template has no convention for: tool <name>
 #       <unknown|declined> <tool:name (first path[ +more])>.
+#   migrate [--index FILE] [--sections INTAKE,PLAN,HISTORY] PROJECT OUT
+#       Moves the document model before coding-kit 2.0.0 — PROGRESS.md with its
+#       FEATURE-INDEX block and PROGRESS-ARCHIVE.md of PROJECT — into one feature file per
+#       F-number, OUT/features/F-NNN-<short name>.md (OUT missing or empty; MANIFEST
+#       § Features), word for word. Number, title and status come from the FEATURE-INDEX
+#       (a "(→ aufgegangen in F-…)" suffix: SUPERSEDED with superseded-by); an open entry
+#       (### F-NNN) gives its text to the intake section, its substeps (F-NNNa …) to the
+#       plan; the archive sections of a number become history entries, oldest first, and
+#       a Done-table row without an archive section becomes one itself. Headings inside a
+#       moved block keep their distance to it. Status: SUPERSEDED from the index; with an
+#       open entry its **Status:** line (else PLANNED with substeps, BACKLOG without),
+#       IN-PROGRESS once history exists; without one DONE when there is history, else the
+#       index status, else BACKLOG. The title comes from the index line, else from the
+#       heading of the open entry or the archive section of the number (else its oldest
+#       section). created and done are the earliest and latest date of
+#       the history; the git history of the two files fills in the day a number first
+#       appeared (also when earlier) and the day its index line got (DONE). type is
+#       always feature. --sections names the three section headings (default
+#       Intake,Plan,History) in the language of the living docs; --index copies a
+#       rendered features/INDEX.md to OUT with next-feature set. Lines:
+#       unassigned <file> <from-to> <heading> (a block with content outside every
+#       F-entry, e.g. an old "Schritt 1.2"), feature <F-NNN> <status> <path> <sources>,
+#       empty <F-NNN> (only an index line), conflict <F-NNN> <index status> <entry
+#       status>, date <F-NNN> <created|done> git, missing <F-NNN> <created|done>,
+#       type feature <count>, next-feature <F-NNN>, requirements REQUIREMENTS.md (left
+#       to the skill), index features/INDEX.md. Nothing is written into PROJECT.
 #
 # Options name a stand-in for a file of PROJECT, so a skill can go on with files it
 # prepared in a temp folder while a write below .claude/ waits for approval:
@@ -138,6 +164,8 @@ BASE_DIR=
 ANSWERS_OPT=
 REGISTRY_OPT=
 SNAPSHOT_OPT=
+INDEX_OPT=
+SECTIONS_OPT=Intake,Plan,History
 CHANGED=0
 SEEDS=0
 
@@ -159,6 +187,7 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh zones [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SEEDS OUT [NAME...]
        sh template-sync.sh lock-check PROJECT
        sh template-sync.sh detect [--changed] [--answers FILE] [--registry FILE] TEMPLATE PROJECT [SIGNAL...]
+       sh template-sync.sh migrate [--index FILE] [--sections INTAKE,PLAN,HISTORY] PROJECT OUT
 EOF
   exit 2
 }
@@ -774,6 +803,7 @@ parse_opts() {  # COMMAND ARGS…
       --answers) po_for=detect po_n=2 ;;
       --registry) po_for='status changed merge zones detect' po_n=2 ;;
       --snapshot) po_for='status changed merge snapshot zones' po_n=2 ;;
+      --index | --sections) po_for=migrate po_n=2 ;;
       --*)
         printf 'template-sync: unknown option %s\n' "$1" >&2
         usage
@@ -804,6 +834,11 @@ parse_opts() {  # COMMAND ARGS…
         REGISTRY_OPT=$2
         ;;
       --snapshot) SNAPSHOT_OPT=$2 ;;
+      --index)
+        [ -f "$2" ] || die "index file not found: $2"
+        INDEX_OPT=$2
+        ;;
+      --sections) SECTIONS_OPT=$2 ;;
     esac
     shift "$po_n"
     OPTS_SHIFT=$((OPTS_SHIFT + po_n))
@@ -2285,6 +2320,480 @@ detect() {
   report_tools
 }
 
+# --- migrate: the document model before 2.0.0 → feature files ----------------------
+
+# Dates from the git history of PROJECT's PROGRESS.md and PROGRESS-ARCHIVE.md: per
+# number the day of the first commit that added a line naming it ("first"), and the day
+# the FEATURE-INDEX line got its (DONE) ("done"). Lines: <first|done> <F-NNN> <date>.
+# Nothing when PROJECT is no git repository.
+migrate_git_dates() {  # PROJECT
+  git -C "$1" rev-parse --is-inside-work-tree > /dev/null 2>&1 || return 0
+  git -C "$1" log --reverse --format='@@date %as' -p --no-color --no-ext-diff \
+    -- PROGRESS.md PROGRESS-ARCHIVE.md 2> /dev/null | awk '
+    /^@@date / { day = $2; next }
+    /^\+\+\+/ || !/^\+/ { next }
+    /next-feature/ { next }
+    {
+      line = $0
+      done_line = (line ~ /^\+[ \t-]*F-[0-9][0-9][0-9][0-9]*:?[ \t]/ && index(line, "(DONE)"))
+      while (match(line, /F-[0-9][0-9][0-9][0-9]*/)) {
+        id = substr(line, RSTART, RLENGTH)
+        line = substr(line, RSTART + RLENGTH)
+        if (!(id in first)) { first[id] = day; print "first\t" id "\t" day }
+        if (done_line && !(id in done)) { done[id] = day; print "done\t" id "\t" day }
+        if (done_line) done_line = 0
+      }
+    }'
+}
+
+migrate() {  # PROJECT OUT
+  [ $# -eq 2 ] || usage
+  mg_p=$1 mg_out=$2
+  [ -f "$mg_p/PROGRESS.md" ] || die "no PROGRESS.md in $mg_p"
+  check_out_dir "$mg_out"
+  case $SECTIONS_OPT in
+    *,*,*) ;;
+    *) die "--sections needs three names: INTAKE,PLAN,HISTORY" ;;
+  esac
+  setup_work
+  migrate_git_dates "$mg_p" > "$WORK/gitdates"
+  mg_archive=/dev/null
+  [ -f "$mg_p/PROGRESS-ARCHIVE.md" ] && mg_archive=$mg_p/PROGRESS-ARCHIVE.md
+  mkdir -p "$mg_out/features"
+  LC_ALL=C awk -v out="$mg_out/features" -v sections="$SECTIONS_OPT" \
+    -v gitf="$WORK/gitdates" -v progf="$mg_p/PROGRESS.md" -v archf="$mg_archive" '
+    function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
+    function base_of(id) { sub(/[a-z]$/, "", id); return id }
+    function num(id) { return substr(base_of(id), 3) + 0 }
+    function is_date(s) { return s ~ /^[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]$/ }
+
+    # The last YYYY-MM-DD in S, or "".
+    function last_date(s,    d) {
+      d = ""
+      while (match(s, /[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]/)) {
+        d = substr(s, RSTART, RLENGTH)
+        s = substr(s, RSTART + RLENGTH)
+      }
+      return d
+    }
+
+    # The F-number a heading text starts with (F-NNN or F-NNNa), or "".
+    function f_id(t,    id, rest) {
+      if (!match(t, /^F-[0-9][0-9][0-9][0-9]*[a-z]?/)) return ""
+      id = substr(t, 1, RLENGTH)
+      rest = substr(t, RLENGTH + 1)
+      if (rest == "" || rest ~ /^([ :.,-]|—|–)/) return id
+      return ""
+    }
+
+    # The text of a heading after its F-number and separator.
+    function title_of(t) {
+      sub(/^F-[0-9][0-9][0-9][0-9]*[a-z]?[ \t]*/, "", t)
+      sub(/^(—|–|-|:)[ \t]*/, "", t)
+      return trim(t)
+    }
+
+    function new_block(kind, level, id, text) {
+      nb++
+      b_doc[nb] = doc; b_kind[nb] = kind; b_level[nb] = level
+      b_id[nb] = id; b_base[nb] = (id == "" ? "" : base_of(id)); b_head[nb] = text
+      b_from[nb] = FNR; b_to[nb] = FNR; b_n[nb] = 0
+      cur = nb
+      if (kind == "entry") {
+        known[b_base[nb]] = 1
+        if (doc == "p") { pe_n[b_base[nb]]++; pe_b[b_base[nb], pe_n[b_base[nb]]] = nb }
+        else { ae_n[b_base[nb]]++; ae_b[b_base[nb], ae_n[b_base[nb]]] = nb }
+      }
+    }
+
+    function add_line(hl) {
+      b_n[cur]++
+      b_line[cur, b_n[cur]] = $0
+      b_hl[cur, b_n[cur]] = hl
+      b_to[cur] = FNR
+    }
+
+    function heading(level, text,    id) {
+      id = f_id(text)
+      if (b_kind[cur] == "entry" && level > b_level[cur] && (id == "" || base_of(id) == b_base[cur])) {
+        add_line(level); return
+      }
+      if (id != "") { new_block("entry", level, id, text); return }
+      if (level == 1 && b_kind[cur] == "head") { add_line(level); return }
+      new_block("other", level, "", text)
+    }
+
+    # A row of the old Done table: | F-NNNx | description | date |
+    function done_row(line,    n, c, i, id, desc, d) {
+      n = split(line, c, "|")
+      id = trim(c[2])
+      desc = trim(c[3])
+      for (i = 4; i < n - 1; i++) desc = desc " | " trim(c[i])
+      d = trim(c[n - 1])
+      if (!is_date(d)) d = ""
+      nd++
+      d_id[nd] = id; d_desc[nd] = desc; d_date[nd] = d
+      done_ids[id] = 1
+      known[base_of(id)] = 1
+      b_has_done[cur] = 1
+    }
+
+    # A line of the FEATURE-INDEX block.
+    function index_line(line,    id, rest, st, t, at) {
+      line = trim(line)
+      if (line ~ /^next-feature:/) {
+        if (match(line, /F-[0-9][0-9][0-9][0-9]*/)) ix_next = substr(line, RSTART, RLENGTH)
+        return
+      }
+      sub(/^-[ \t]*/, "", line)
+      if (!match(line, /^F-[0-9][0-9][0-9][0-9]*:?[ \t]+/)) return
+      id = substr(line, 1, RLENGTH)
+      sub(/:?[ \t]+$/, "", id)
+      rest = trim(substr(line, RLENGTH + 1))
+      st = ""
+      if (match(rest, /[ \t]*\(([A-Z]+-)?[A-Z]+\)$/)) {
+        t = substr(rest, RSTART, RLENGTH)
+        gsub(/[ \t()]/, "", t)
+        if (t ~ /^(BACKLOG|PLANNED|IN-PROGRESS|DONE|DROPPED|SUPERSEDED)$/) {
+          st = t
+          rest = trim(substr(rest, 1, RSTART - 1))
+        }
+      }
+      if (st == "" && match(rest, /[ \t]*\([^()]*\)$/)) {
+        t = substr(rest, RSTART, RLENGTH)
+        at = RSTART
+        if ((t ~ /\([ \t]*→/ || t ~ /aufgegangen|merged|superseded|ersetzt/) && t ~ /F-[0-9][0-9][0-9]/) {
+          st = "SUPERSEDED"
+          ix_sup[id] = ids_in(t)
+          rest = trim(substr(rest, 1, at - 1))
+        }
+      }
+      ix_title[id] = rest
+      ix_status[id] = st
+      known[id] = 1
+    }
+
+    # All F-numbers in S as "F-001, F-002".
+    function ids_in(s,    r, id) {
+      r = ""
+      while (match(s, /F-[0-9][0-9][0-9][0-9]*/)) {
+        id = substr(s, RSTART, RLENGTH)
+        s = substr(s, RSTART + RLENGTH)
+        r = r (r == "" ? "" : ", ") id
+      }
+      return r
+    }
+
+    # Lines of an "other" block that carry content (not structure).
+    function significant(b,    i, l, s) {
+      s = 0
+      for (i = 1; i <= b_n[b]; i++) {
+        l = trim(b_line[b, i])
+        if (l == "" || l ~ /^(---|\*\*\*)$/ || l ~ /^_.*_$/ || l ~ /^<!--.*-->$/) continue
+        if (l ~ /^\|/ && (b_has_done[b] || l ~ /^\|[-: |]+\|$/ || l ~ /^\|[ \t]*(—|–|-)?[ \t]*\|/)) continue
+        s++
+      }
+      return s
+    }
+
+    # Line I of block B, a heading moved by SHIFT levels (kept between 3 and 6).
+    function shifted(b, i, shift,    l, n) {
+      if (!b_hl[b, i]) return b_line[b, i]
+      n = b_hl[b, i] + shift
+      if (n < 3) n = 3
+      if (n > 6) n = 6
+      l = b_line[b, i]
+      sub(/^#+/, "", l)
+      return substr("######", 1, n) l
+    }
+
+    function slug(t,    s) {
+      s = t
+      gsub(/Ä/, "Ae", s); gsub(/Ö/, "Oe", s); gsub(/Ü/, "Ue", s)
+      gsub(/ä/, "ae", s); gsub(/ö/, "oe", s); gsub(/ü/, "ue", s); gsub(/ß/, "ss", s)
+      s = tolower(s)
+      gsub(/[^a-z0-9]+/, "-", s)
+      sub(/^-+/, "", s); sub(/-+$/, "", s)
+      if (length(s) > 40) {
+        s = substr(s, 1, 41)
+        if (s ~ /-/) sub(/-[^-]*$/, "", s)
+        else s = substr(s, 1, 40)
+      }
+      sub(/-+$/, "", s)
+      return s == "" ? "feature" : s
+    }
+
+    function emit(line) { print line > path }
+    function field(key, value) { emit(key ":" (value == "" ? "" : " " value)) }
+
+    BEGIN {
+      split(sections, sec, ",")
+      while ((getline line < gitf) > 0) {
+        split(line, g, "\t")
+        if (g[1] == "first") git_first[g[2]] = g[3]
+        else git_done[g[2]] = g[3]
+      }
+      close(gitf)
+    }
+
+    FNR == 1 {
+      doc = (FILENAME == progf) ? "p" : "a"
+      in_fence = 0; in_index = 0
+      new_block("head", 1, "", "")
+    }
+
+    {
+      sub(/\r$/, "")
+      if (doc == "p" && !in_fence && !in_index && $0 ~ /^[ \t]*<!--[ \t]*FEATURE-INDEX/) {
+        in_index = ($0 !~ /-->/)
+        next
+      }
+      if (in_index) {
+        if ($0 ~ /-->/) { in_index = 0; next }
+        index_line($0)
+        next
+      }
+      if ($0 ~ /^[ \t]*(```|~~~)/) { in_fence = !in_fence; add_line(0); next }
+      if (!in_fence && match($0, /^#+ /)) { heading(RLENGTH - 1, substr($0, RLENGTH + 1)); next }
+      if (!in_fence && doc == "p" && b_kind[cur] != "entry" &&
+          $0 ~ /^\|[ \t]*F-[0-9][0-9][0-9][0-9]*[a-z]?[ \t]*\|/) done_row($0)
+      add_line(0)
+    }
+
+    END {
+      # What could not be assigned: other blocks with content.
+      for (b = 1; b <= nb; b++)
+        if (b_kind[b] == "other" && significant(b))
+          printf "unassigned\t%s\t%d-%d\t%s\n", (b_doc[b] == "p" ? "PROGRESS.md" : "PROGRESS-ARCHIVE.md"),
+            b_from[b], b_to[b], b_head[b]
+
+      # The numbers, ascending.
+      n = 0
+      for (id in known) { n++; ord[n] = id }
+      for (i = 2; i <= n; i++) {
+        v = ord[i]
+        for (j = i - 1; j >= 1 && num(ord[j]) > num(v); j--) ord[j + 1] = ord[j]
+        ord[j + 1] = v
+      }
+      highest = 0
+      defaulted = 0
+      for (k = 1; k <= n; k++) {
+        id = ord[k]
+        if (num(id) > highest) highest = num(id)
+        write_feature(id)
+      }
+      next_num = highest + 1
+      if (ix_next != "" && num(ix_next) > next_num) next_num = num(ix_next)
+      printf "type\tfeature\t%d\n", defaulted
+      printf "next-feature\tF-%03d\n", next_num
+    }
+
+    function write_feature(id,    k, b, i, st, entry_st, nh, h, sources, title, created, done, f, plan_from, sub_id, d, prev, x, y) {
+      # Status line and parts of the open entries
+      entry_st = ""
+      for (k = 1; k <= pe_n[id]; k++) {
+        b = pe_b[id, k]
+        for (i = 1; i <= b_n[b]; i++)
+          if (match(b_line[b, i], /^\*\*Status:?\*\*:?[ \t]*[A-Z-]+/)) {
+            entry_st = b_line[b, i]
+            sub(/^\*\*Status:?\*\*:?[ \t]*/, "", entry_st)
+            sub(/[^A-Z-].*$/, "", entry_st)
+            b_skip[b, i] = 1
+          }
+      }
+
+      # History items: archive sections newest first in the file → oldest first here,
+      # then Done rows without an archive section of their own.
+      nh = 0
+      for (k = ae_n[id]; k >= 1; k--) {
+        b = ae_b[id, k]; nh++
+        h_kind[nh] = "a"; h_ref[nh] = b; h_date[nh] = last_date(b_head[b])
+      }
+      for (k = 1; k <= nd; k++) {
+        if (base_of(d_id[k]) != id || archived(d_id[k])) continue
+        nh++; h_kind[nh] = "d"; h_ref[nh] = k; h_date[nh] = d_date[k]
+      }
+      # Undated items take the date before them, then a stable sort by date.
+      prev = ""
+      for (i = 1; i <= nh; i++) { h_key[i] = (h_date[i] != "" ? h_date[i] : prev); prev = h_key[i]; h_pos[i] = i }
+      for (i = 2; i <= nh; i++) {
+        x = h_pos[i]
+        for (j = i - 1; j >= 1 && h_key[h_pos[j]] > h_key[x]; j--) h_pos[j + 1] = h_pos[j]
+        h_pos[j + 1] = x
+      }
+
+      # Status
+      if (ix_status[id] == "SUPERSEDED") st = "SUPERSEDED"
+      else if (pe_n[id] > 0) {
+        st = entry_st
+        if (st !~ /^(BACKLOG|PLANNED|IN-PROGRESS)$/) st = has_substeps(id) ? "PLANNED" : "BACKLOG"
+        if (nh > 0) st = "IN-PROGRESS"
+        if (ix_status[id] != "" && ix_status[id] != st && ix_status[id] != "PLANNED")
+          printf "conflict\t%s\tindex %s\tentry %s\n", id, ix_status[id], st
+      } else if (nh > 0) st = "DONE"
+      else if (ix_status[id] != "") st = ix_status[id]
+      else st = "BACKLOG"
+
+      sources = ""
+      if (id in ix_title) sources = "index"
+      if (pe_n[id]) sources = sources (sources == "" ? "" : ",") "open"
+      if (ae_n[id]) sources = sources (sources == "" ? "" : ",") "archive:" ae_n[id]
+      for (k = 1; k <= nh; k++) if (h_kind[k] == "d") y++
+      if (y) sources = sources (sources == "" ? "" : ",") "done-row:" y
+      if (sources == "index") printf "empty\t%s\n", id
+
+      # Title: the index line, else the first heading that names the number
+      title = ix_title[id]
+      if (title == "" && pe_n[id]) title = title_of(b_head[pe_b[id, 1]])
+      if (title == "" && ae_n[id]) {
+        # the section of the number itself, else the oldest one
+        b = ae_b[id, ae_n[id]]
+        for (k = 1; k <= ae_n[id]; k++) if (b_id[ae_b[id, k]] == id) { b = ae_b[id, k]; break }
+        title = title_of(b_head[b])
+        sub(/[ \t]*\([^()]*[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][^()]*\)$/, "", title)
+        sub(/[ \t]*(—|–|-)[ \t]*(DONE[ \t]*)?[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/, "", title)
+      }
+      if (title == "") title = id
+
+      # Dates
+      created = ""
+      for (i = 1; i <= nh; i++) if (h_date[i] != "" && (created == "" || h_date[i] < created)) created = h_date[i]
+      if (git_first[id] != "" && (created == "" || git_first[id] < created)) {
+        created = git_first[id]; printf "date\t%s\tcreated\tgit\n", id
+      }
+      if (created == "") printf "missing\t%s\tcreated\n", id
+      done = ""
+      if (st == "DONE" || st == "DROPPED" || st == "SUPERSEDED") {
+        for (i = 1; i <= nh; i++) if (h_date[i] > done) done = h_date[i]
+        if (done == "" && st == "DONE" && git_done[id] != "") { done = git_done[id]; printf "date\t%s\tdone\tgit\n", id }
+        if (done == "" && st == "DONE") printf "missing\t%s\tdone\n", id
+      }
+
+      f = id "-" slug(title) ".md"
+      path = out "/" f
+      printf "feature\t%s\t%s\tfeatures/%s\t%s\n", id, st, f, sources
+      defaulted++
+
+      emit("---")
+      emit("id: " id)
+      emit("title: " title)
+      emit("type: feature")
+      emit("status: " st)
+      emit("size:")
+      field("created", created)
+      field("done", done)
+      emit("depends-on:")
+      field("superseded-by", st == "SUPERSEDED" ? ix_sup[id] : "")
+      emit("---")
+      emit("")
+      emit("# " id " — " title)
+
+      # Intake: the open entries up to their first substep
+      plan_n = 0
+      intake = 0
+      for (k = 1; k <= pe_n[id]; k++) {
+        b = pe_b[id, k]
+        if (b_id[b] != id) { plan_b[++plan_n] = b; plan_at[plan_n] = 0; continue }
+        plan_from = b_n[b] + 1
+        for (i = 1; i <= b_n[b]; i++) {
+          sub_id = (b_hl[b, i] ? f_id(substr(b_line[b, i], b_hl[b, i] + 2)) : "")
+          if (sub_id != "" && sub_id != id) { plan_from = i; break }
+        }
+        span_skip(b, 1, plan_from - 1)
+        if (sp_first) {
+          if (!intake) { emit(""); emit("## " sec[1]); intake = 1 }
+          emit("")
+          for (i = sp_first; i <= sp_last; i++) if (!b_skip[b, i]) emit(shifted(b, i, 2 - b_level[b]))
+        }
+        if (plan_from <= b_n[b]) { plan_b[++plan_n] = b; plan_at[plan_n] = plan_from }
+      }
+      if (!intake && !pe_n[id] && !nh) {
+        emit(""); emit("## " sec[1]); emit("")
+        emit("<!-- migrated: the old FEATURE-INDEX had only this line for the number -->")
+      }
+
+      # Plan: the substeps still open
+      if (plan_n) {
+        emit(""); emit("## " sec[2])
+        for (k = 1; k <= plan_n; k++) {
+          b = plan_b[k]
+          emit("")
+          if (!plan_at[k]) {
+            emit(substr("######", 1, 3) " " b_head[b])
+            span_skip(b, 1, b_n[b])
+          } else span_skip(b, plan_at[k], b_n[b])
+          if (sp_first) {
+            if (!plan_at[k]) emit("")
+            # A substep that stood as its own entry keeps its children one level below it.
+            for (i = sp_first; i <= sp_last; i++)
+              if (!b_skip[b, i]) emit(shifted(b, i, (plan_at[k] ? 2 : 3) - b_level[b]))
+          }
+        }
+      }
+
+      # History: oldest first
+      if (nh) {
+        emit(""); emit("## " sec[3])
+        for (k = 1; k <= nh; k++) {
+          x = h_pos[k]
+          emit("")
+          if (h_kind[x] == "a") {
+            b = h_ref[x]
+            emit("### " b_head[b])
+            span_skip(b, 1, b_n[b])
+            if (sp_first) { emit(""); for (i = sp_first; i <= sp_last; i++) emit(shifted(b, i, 3 - b_level[b])) }
+          } else {
+            y = h_ref[x]
+            emit("### " d_id[y] (d_date[y] != "" ? " (" d_date[y] ")" : ""))
+            emit("")
+            emit(d_desc[y])
+          }
+        }
+      }
+      close(path)
+      for (k = 1; k <= nh; k++) delete h_kind[k]
+    }
+
+    # Like span, between FROM and TO, skipping removed status lines.
+    function span_skip(b, from, to,    i, l) {
+      sp_first = 0; sp_last = 0
+      for (i = from; i <= to; i++) {
+        l = trim(b_line[b, i])
+        if (b_skip[b, i] || l == "" || l == "---") continue
+        if (!sp_first) sp_first = i
+        sp_last = i
+      }
+    }
+
+    function archived(id,    k) {
+      for (k = 1; k <= ae_n[base_of(id)]; k++) if (b_id[ae_b[base_of(id), k]] == id) return 1
+      return 0
+    }
+
+    function has_substeps(id,    k, b, i, s) {
+      for (k = 1; k <= pe_n[id]; k++) {
+        b = pe_b[id, k]
+        if (b_id[b] != id) return 1
+        for (i = 1; i <= b_n[b]; i++) {
+          if (!b_hl[b, i]) continue
+          s = f_id(substr(b_line[b, i], b_hl[b, i] + 2))
+          if (s != "" && s != id) return 1
+        }
+      }
+      return 0
+    }
+  ' "$mg_p/PROGRESS.md" "$mg_archive" > "$WORK/listing"
+  cat "$WORK/listing"
+  [ -f "$mg_p/REQUIREMENTS.md" ] && printf 'requirements\tREQUIREMENTS.md\n'
+  if [ -n "$INDEX_OPT" ]; then
+    mg_next=$(awk -F "$TAB" '$1 == "next-feature" { print $2 }' "$WORK/listing")
+    grep -q '^next-feature:' "$INDEX_OPT" || die "no next-feature line in $INDEX_OPT"
+    sed "s/^next-feature:.*/next-feature: $mg_next/" "$INDEX_OPT" > "$mg_out/features/INDEX.md"
+    printf 'index\tfeatures/INDEX.md\n'
+  fi
+  return 0
+}
+
 cmd=${1:-}
 [ $# -eq 0 ] || shift
 parse_opts "$cmd" "$@"
@@ -2301,5 +2810,6 @@ case $cmd in
   zones) zones "$@" ;;
   lock-check) lock_check "$@" ;;
   detect) detect "$@" ;;
+  migrate) migrate "$@" ;;
   *) usage ;;
 esac

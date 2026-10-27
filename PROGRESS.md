@@ -53,6 +53,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-036a | Vorlagen und Index-Skript → **`features/INDEX.md` (seed, Zone `index-head` mit Titelregel und Status-Legende) und `features/F-000-template.md` (managed) ersetzen `PROGRESS.md`, `PROGRESS-ARCHIVE.md` und `REQUIREMENTS.md` im Template (erste Zeilen in „Removed and renamed targets"); `scripts/features-index.sh` erzeugt die Tabelle (`write`) und prüft Kopfblöcke, Nummern, Tabelle, `next-feature` und Reihenfolge (`check`) — in `just check` jeder justfile, als `just features-index` und im Pre-Commit-Hook; CLAUDE.md-Überblick mit Zielen, Nicht-Zielen und Rahmenbedingungen; MANIFEST § Features; Version 2.0.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 | F-036b | Kern-Skills → **add-feature berät vor dem Anlegen (Problem vor Lösung, Gegenargument, Alternativen, vier Empfehlungen, DROPPED auf Wunsch) und legt `features/F-NNN-kurzname.md` an; prep-step schätzt die Größe aus drei Signalen, spezifiziert in der Tiefe je Größe (Interview, Example Mapping, Einbettung, darf abraten), prüft Ready und setzt PLANNED; build-step baut aus der Feature-Datei mit den Nicht-Zielen als Grenze; step-done verbucht Verlauf, Belege und Status statt Archiv; teach-step führt aus der Datei; alle fünf verweisen bei altem Format auf die Migration; Authoring-Doku, README, CHANGELOG.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 | F-036c | Anforderungs- und Randskills, Hook, Doku → **define-requirements füllt Ziele, Nicht-Ziele und Rahmenbedingungen im Überblick der CLAUDE.md und legt je Kern-Feature eine Datei mit BACKLOG an (Auflöse-Regel entfällt); refine-requirements teilt und streicht über SUPERSEDED und DROPPED, datiert Entscheidungen in der Feature-Datei oder als ADR, plant die Reihenfolge um; new-project, handoff, audit-code, check-upstreams umgestellt; update-conventions und Stop-Hook erkennen `features/INDEX.md` (mit Tests); globale Kit-Regeln, Kit-README, add-skill.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
+| F-036d | Migration → **`template-sync.sh migrate` überführt PROGRESS, Archiv und FEATURE-INDEX eines Projekts wortgetreu in Feature-Dateien (Status aus Index, Status-Zeile und Verlauf, Daten aus dem Verlauf oder Git, `type` immer `feature`, Unzugeordnetes gelistet, `--index`, `--sections`); update-conventions A4 übernimmt das Urteil (Reihenfolge, REQUIREMENTS verteilen, Titel kürzen, Vorschau gruppenweise, Altdateien erst danach löschen), neues Argument `features`; 44 Tests je Durchgang mit unabhängiger Wortgleich-Prüfung; Kopien eines docs-only- und eines ts-node-Projekts migriert.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 
 ---
 
@@ -227,31 +228,6 @@ KI-Coding (ai-coding-starter-kit mit `features/INDEX.md`, GitHub Spec Kit).
 **Abhängigkeiten:** F-039 und F-049 (erledigt — neue und entfernte Zonen erreichen
 bestehende Projekte). Berührt dieselben Skills wie F-034; F-034 und F-037 folgen danach.
 Entlastet F-029 und F-033.
-
-#### F-036d — Migration
-
-**Was:** Skriptbefehl in `template-sync.sh` für den mechanischen Teil (siehe
-„Entschieden"), schreibt nach `OUT` und listet Unzugeordnetes; Kopf-Doku des Skripts,
-MANIFEST beschreibt den Befehl. Migrationsschritt in update-conventions: altes Format
-erkennen, Skript laufen lassen, REQUIREMENTS verteilen, Titel kürzen, Unzugeordnetes
-klären, Diff und Bestätigung je Datei, Altdateien erst danach löschen.
-
-**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
-`tests/template-sync/migrate.sh` (neu), `tests/template-sync/run.sh`,
-`plugins/coding-kit/skills/update-conventions/SKILL.md`,
-`plugins/coding-kit/template/MANIFEST.md`, `plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-036a (Format von INDEX und Feature-Datei), F-036c
-(update-conventions).
-
-**Abnahmekriterien:**
-- [ ] Tests: Standardformat; geplanter Eintrag mit Substeps; Archiv neueste zuerst →
-      Verlauf aufsteigend; Done-Zeile ohne Archiv-Abschnitt; Nummer ohne Inhalt;
-      „aufgegangen in" → SUPERSEDED; Altformate wie „Schritt 1.2" werden gelistet, nicht
-      geraten; mit und ohne REQUIREMENTS.md; dash und bash, System-awk und mawk.
-- [ ] Kopien eines docs-only- und eines ts-node-Projekts: jede F-Nummer als Datei und im
-      INDEX, jeder offene Eintrag und jeder Archiv-Abschnitt wortgleich übernommen (per
-      Skript gegengeprüft), danach `just check` grün.
 
 #### F-036e — Testläufe, Release, Umstellung des Kits
 

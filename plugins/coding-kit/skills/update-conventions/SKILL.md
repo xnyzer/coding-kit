@@ -1,7 +1,7 @@
 ---
 name: update-conventions
-description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME); Abweichungs-Registry mit den Arten skip, keep, adapt; erkennt bei jedem Lauf per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt (dauerhafte Ablehnung als Rules-Zeile); Migration für Projekte ohne Snapshot; erkennt im Template entfernte/umbenannte Dateien. Ohne Argument nur das Projekt im aktuellen Ordner, alle Projekte nur mit `alle`; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente werden nie angefasst; sie und Tools ohne Vorlage meldet er mit dem Angebot, sie dem Template vorzuschlagen (Hintergrund-Skill propose-to-template). Mit `global` — und einmal in jedem anderen Lauf, sobald sie eingerichtet sind — gleicht er auch die globalen Kit-Regeln auf dem Rechner ab (`~/.claude/rules/coding-kit.md`, aus der Kit-Datei und den Werten der Personal-Config gerendert) — Ersteinrichtung, Diff und Bestätigung je Abschnitt, Migration einer alten Kit-Kopie in `~/.claude/CLAUDE.md`; eine selbst angelegte CLAUDE.md fasst er nie an. Nichts wird ungefragt überschrieben.
-argument-hint: "[Projekt | alle | global [Ordner]] [status | revise]"
+description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME); Abweichungs-Registry mit den Arten skip, keep, adapt; erkennt bei jedem Lauf per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt (dauerhafte Ablehnung als Rules-Zeile); Migration für Projekte ohne Snapshot und für das Dokumentmodell vor 2.0.0 (PROGRESS, Archiv und REQUIREMENTS → eine Datei je Feature in features/, auch mit dem Argument `features` allein); erkennt im Template entfernte/umbenannte Dateien. Ohne Argument nur das Projekt im aktuellen Ordner, alle Projekte nur mit `alle`; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente werden nie angefasst; sie und Tools ohne Vorlage meldet er mit dem Angebot, sie dem Template vorzuschlagen (Hintergrund-Skill propose-to-template). Mit `global` — und einmal in jedem anderen Lauf, sobald sie eingerichtet sind — gleicht er auch die globalen Kit-Regeln auf dem Rechner ab (`~/.claude/rules/coding-kit.md`, aus der Kit-Datei und den Werten der Personal-Config gerendert) — Ersteinrichtung, Diff und Bestätigung je Abschnitt, Migration einer alten Kit-Kopie in `~/.claude/CLAUDE.md`; eine selbst angelegte CLAUDE.md fasst er nie an. Nichts wird ungefragt überschrieben.
+argument-hint: "[Projekt | alle | global [Ordner] | features] [status | revise]"
 disable-model-invocation: true
 user-invocable: true
 ---
@@ -31,6 +31,9 @@ Fragmente nie selbst zusammenführen, einsetzen oder aus dem Template abschreibe
 - **`status`:** nur Bericht — nichts im Projekt schreiben (keine Antworten, kein
   Snapshot, keine Registry, kein Stempel) und nichts im Config-Ordner.
 - **`revise`:** nur die Registry-Revision (A2 Schritt 10).
+- **`features`:** nur die Migration des Dokumentmodells (A4) für das Repo im aktuellen
+  Ordner — auch für eines ohne Template-Antworten (etwa das coding-kit selbst); kein
+  Abgleich, keine globalen Regeln.
 - Ein Aufrufer kann eine **Sichtbarkeits-Prämisse** übergeben (z. B.
   `/coding-kit:go-public` vor dem Übergang: „behandle als public") — sie gilt für diesen
   Lauf als `VISIBILITY` (A2 Schritt 2).
@@ -82,7 +85,11 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
   Auswahl bestätigen lassen; nur lokale Checkouts bearbeiten (fehlt einer: klonen
   anbieten).
 - Je Projekt: Liegen `.claude/template-answers` **und** `.claude/template-base/` vor →
-  A2. Sonst zuerst A3 (Migration), dann A2.
+  A2. Sonst zuerst A3 (Migration), dann A2. Hat das Projekt noch das **alte
+  Dokumentmodell** (`PROGRESS.md` mit FEATURE-INDEX, keine `features/INDEX.md`), gehört
+  A4 in den Lauf: nach A2 Schritt 5 (der Merge bringt `scripts/features-index.sh` und
+  `features/F-000-template.md`), vor Schritt 6. Die Skills ab 2.0.0 arbeiten erst danach
+  wieder mit dem Projekt.
 - **Nach dem letzten Projekt:** Teil G, sofern die globalen Kit-Regeln eingerichtet sind
   oder eine alte Kit-Kopie da ist (G1); sonst kein Wort dazu. `revise` lässt G aus.
 
@@ -153,7 +160,7 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    - `removed`: Schritt 8. `skipped`: nur auflisten.
 
    Nach dem Übernehmen geänderte JSON-Dateien auf Gültigkeit prüfen (Schritt 11 prüft
-   ohnehin `just check`).
+   ohnehin `just check`). Altes Dokumentmodell → jetzt A4, dann weiter mit Schritt 6.
 6. **Blöcke abgleichen — Fragmente im Slot.** Erst nach dem Kopieren aus Schritt 5, sonst
    überschreibt das Ergebnis den Merge der `CODING-STANDARDS.md`:
    `sh <skript> render --seeds <template> <projekt>/.claude/template-answers <tmp>/seeds`,
@@ -229,7 +236,8 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
      Seed-Basis landet hier auch `claude-graphiti`, wenn `OPTIONAL` kein `graphiti`
      enthält (mit Basis kommt sie als `removed`) — mit Schritt 2 abgleichen.
    - `no-file` → die seed-Datei fehlt (vom Projekt gelöscht, oder ein Projekt im alten
-     Format ohne `features/INDEX.md`): nur melden. `broken` → melden; `identical` und `skipped` nur zählen.
+     Format ohne `features/INDEX.md` — dann zuerst A4): nur melden. `broken` → melden;
+     `identical` und `skipped` nur zählen.
 
    Eine Zone, die weder Projekt noch Render haben (`claude-graphiti` ohne Graphiti),
    meldet das Skript nicht.
@@ -238,8 +246,9 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    Ziel bzw. `removed`, frühere Policy) — nichts erraten. Liegt das alte Ziel nicht (mehr)
    im Projekt, still überspringen; sonst **Umbenennung** → Umzug anbieten,
    **Entfernung** → Rückbau anbieten, je Datei bestätigt; `skip`-Zeilen gelten.
-   **seed-Dateien** nie löschen oder verschieben — nur melden. Die Klasse `removed` aus
-   Schritt 4 meint dasselbe aus Sicht des Snapshots.
+   **seed-Dateien** nie löschen oder verschieben — nur melden; Ausnahme sind
+   `PROGRESS.md`, `PROGRESS-ARCHIVE.md` und `REQUIREMENTS.md`, die A4 nach der Migration
+   löscht. Die Klasse `removed` aus Schritt 4 meint dasselbe aus Sicht des Snapshots.
 9. **Snapshot setzen:** `sh <skript> snapshot <projekt> <tmp>/soll <Ziele…>` für jedes
    Ziel dieses Laufs **außer** „diesmal nicht", `skipped`, nicht angelegten `new`- und
    nicht wiederhergestellten `missing`-Zielen. Damit ist die neue Template-Fassung die
@@ -277,7 +286,9 @@ die Tabelle aus `sh <skript> status <projekt>` (ohne Snapshot: `status --base
 Tools ohne Vorlage, Ablehnungen), die Zeilen aus `zones` (Schritt 6, nichts kopieren)
 und `lock-check` (Schritt 11) und was Schritt 10 vorschlagen würde, als Hinweis. Ohne
 `.claude/template-answers` prüft das Skript keine Module — das im Bericht sagen.
-Antworten für die Vorschau nur in `<tmp>` anlegen. Nichts im Projekt schreiben.
+Antworten für die Vorschau nur in `<tmp>` anlegen. Nichts im Projekt schreiben. Hat das
+Projekt das alte Dokumentmodell, das sagen und die Ausgabe von `migrate` (A4 Schritt 3)
+zusammengefasst zeigen.
 
 ### A3. Migration — Projekte ohne Snapshot oder Antworten
 
@@ -349,6 +360,79 @@ dann A2 ab Schritt 3.
      MANIFEST-Inventar um die wiedererkennbaren Zonen zu setzen — jeder Marker allein auf
      seiner Zeile, reine Wrapper, Inhalt unverändert; nicht Wiederauffindbares auslassen
      (Opt-out).
+
+### A4. Dokumentmodell migrieren — Projekte vor 2.0.0
+
+Ab coding-kit 2.0.0 ist jede Aufgabe eine Datei `features/F-NNN-kurzname.md`,
+`features/INDEX.md` die Übersicht, und Ziele, Nicht-Ziele und Rahmenbedingungen stehen im
+Überblick der CLAUDE.md (MANIFEST § Features). Ein Projekt mit `PROGRESS.md` (und
+FEATURE-INDEX), `PROGRESS-ARCHIVE.md` und ggf. `REQUIREMENTS.md` zieht einmal um — **alles
+wird überführt, auch Erledigtes, wortgetreu**. Das Mechanische macht das Skript, das
+Urteil der Skill; geschrieben wird erst nach Freigabe.
+
+**Freigabe-Gate:** Jede neue oder geänderte Feature-Datei (`features/F-NNN-*.md`), jede
+Änderung an `features/INDEX.md` und an den Ziel-Abschnitten im Überblick der
+`CLAUDE.md` wird zuerst als Vorschau gezeigt und erst nach ausdrücklichem OK des Nutzers
+geschrieben (ausgenommen: genau der zuvor freigegebene Text; die Tabelle erzeugt danach
+das Skript). Lange Entwürfe (etwa ab 40 Zeilen) gehen als Datei nach `private/` und
+werden nach dem Übernehmen gelöscht.
+
+1. **Index-Vorlage:** `<tmp>/seeds/features/INDEX.md` aus dem Render von A2 Schritt 6
+   (`render --seeds`, gern schon jetzt). Ohne Template-Antworten (Argument `features`):
+   Hilfsantworten nur für diesen Render in `<tmp>` — `PROJECT_NAME` (aus dem Titel der
+   `PROGRESS.md`, sonst der Ordnername), `LANG_LIVING_DOCS` (Languages-Block der
+   CLAUDE.md, sonst die Sprache der PROGRESS), `MODULE=docs-only`, `VISIBILITY=private`,
+   alle übrigen Schlüssel aus MANIFEST § Answers mit dem Wert `-` — und davon nur
+   `features/INDEX.md` verwenden.
+2. **Abschnittsnamen** in der Sprache der lebenden Doku festlegen (Template: `Intake`,
+   `Plan`, `History`; deutsch z. B. `Erfassung`, `Plan`, `Verlauf`).
+3. **Skript:** `sh <skript> migrate --index <tmp>/seeds/features/INDEX.md --sections
+   <drei Namen, kommagetrennt> <projekt> <tmp>/migrate` — es liest nur, schreibt nach
+   `<tmp>/migrate/features/` und listet (Kopf des Skripts):
+   - `feature` — je Nummer Status, Datei und Quellen; daraus die Gesamtliste.
+   - `unassigned` — Blöcke außerhalb jedes F-Eintrags, mit Zeilenbereich. Die
+     **empfohlene Reihenfolge** kommt in den gleichnamigen Abschnitt von
+     `<tmp>/migrate/features/INDEX.md`: nur offene Features, je Nummer ein Halbsatz
+     Begründung, Stand-Datum heute (Inhalt übernehmen, nicht neu erfinden). Für alles
+     andere (Alt-Formate wie „Schritt 1.2", Erläuterungen, fremde Reihen) mit dem Nutzer
+     klären: in eine Feature-Datei (wortgetreu, z. B. unter Verlauf), als ADR, nach
+     `docs/` — oder weglassen, weil Git es behält. Nie raten, welcher Nummer etwas gehört.
+   - `requirements` — `REQUIREMENTS.md` verteilen: Ziele, Nicht-Ziele und
+     Rahmenbedingungen in die drei Ziel-Abschnitte im Überblick der CLAUDE.md (Sprache
+     der CLAUDE.md-Prosa); Decision-Log-Einträge als ADR, wenn sie das Projekt prägen,
+     sonst unter Entscheidungen der betroffenen Feature-Datei; Kern-Features ohne Nummer
+     als neue Dateien (Format wie `/coding-kit:add-feature` § 4, `next-feature` zählt
+     hoch); offene Fragen als `- [ ] [CLARIFY] …` in die betroffene Datei.
+   - `conflict` — Index und offener Eintrag nennen verschiedene Status: zeigen, der
+     Nutzer entscheidet.
+   - `empty` — eine Nummer nur mit Index-Zeile: so lassen (die Datei trägt einen
+     Vermerk), Inhalt ergänzen oder `DROPPED` mit Grund.
+   - `date … git` — das Datum stammt aus der Git-Historie; nur erwähnen. `missing` —
+     kein Datum zu finden: fragen.
+   - `type feature <Anzahl>` — alle Dateien tragen `type: feature`; erwähnen, Änderungen
+     nur auf Wunsch.
+   Titel über 70 Zeichen (meldet Schritt 4) nach der Titelregel kürzen und als Vorschlag
+   zeigen. Geändert werden in `<tmp>/migrate` nur Kopfblöcke, die Reihenfolge und vom
+   Nutzer bestätigte Zuordnungen — der übernommene Text bleibt wortgetreu.
+4. **Tabelle und Prüfung:** `sh <projekt>/scripts/features-index.sh write
+   <tmp>/migrate/features` (ohne das Skript im Projekt: das aus dem Template,
+   `${CLAUDE_PLUGIN_ROOT}/template/core/scripts/features-index.sh`); was es meldet,
+   beheben, bis es grün ist.
+5. **Vorschau, gruppenweise:** die vollständige Liste (Nummer, Titel, Status, Quellen),
+   dazu je Gruppe — offen (`BACKLOG`, `PLANNED`, `IN-PROGRESS`), erledigt (`DONE`),
+   aufgegangen oder verworfen (`SUPERSEDED`, `DROPPED`) — zwei, drei Dateien ganz, den
+   Index und die Ziel-Abschnitte der CLAUDE.md. Je Gruppe bestätigen lassen; jede
+   einzelne Datei zeigt der Skill auf Wunsch.
+6. **Übernehmen:** `<tmp>/migrate/features/` ins Projekt kopieren, die Ziel-Abschnitte in
+   die CLAUDE.md schreiben, dann — eigene Bestätigung — `PROGRESS.md`,
+   `PROGRESS-ARCHIVE.md` und `REQUIREMENTS.md` löschen (Git behält sie). Registry-Zeilen,
+   die diese Dateien nennen, zum Austragen vormerken (A2 Schritt 10). Danach `sh
+   <projekt>/scripts/features-index.sh check` — muss grün sein.
+7. **Weiter:** im Abgleich mit A2 Schritt 6 (die Zone `index-head` ist dann `identical`,
+   die Zonen der CLAUDE.md zeigen auf `features/`); Schritt 9 setzt die Seed-Basis von
+   `features/INDEX.md`. Mit dem Argument `features` endet der Lauf hier: `just check`
+   (falls vorhanden) grün, Commit-Vorschlag (z. B. `docs: move tasks to feature files`)
+   — **nur nach OK**.
 
 ---
 

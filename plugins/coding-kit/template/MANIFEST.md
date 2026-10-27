@@ -383,6 +383,20 @@ open. Every justfile runs `check` in `just check` and `write` as `just features-
 (§ Module contract); the pre-commit hook runs `check` when files in `features/` are staged
 and never writes.
 
+**Migration from the model before 2.0.0.** A project with `PROGRESS.md` (and its
+`FEATURE-INDEX` block), `PROGRESS-ARCHIVE.md` and possibly `REQUIREMENTS.md` moves once,
+through `/update-conventions`. The mechanical part is `scripts/template-sync.sh migrate`
+in the plugin: every F-number becomes a feature file, word for word — the open entry
+under intake (its open substeps under plan), the archive sections and Done rows of the
+number as history, oldest first; number, title and status from the `FEATURE-INDEX`
+(`→ aufgegangen in …` becomes `SUPERSEDED`), dates from the history and, where none is
+written, from git; `type` is always `feature`. Whatever stands outside an F-entry (an old
+"Schritt 1.2", the recommended order) is listed, never guessed. The skill does what
+needs judgment: it places the order text in the index, shortens titles over 70
+characters, distributes `REQUIREMENTS.md` (goals, non-goals and constraints into the
+overview of `CLAUDE.md`, decisions into an ADR or a feature file, core features without a
+number into new files), and deletes the old files only after the new ones are confirmed.
+
 ## Seed sections
 
 Seed files are living documents and never updated as a whole — but some carry
