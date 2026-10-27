@@ -133,7 +133,11 @@ Temp-Verzeichnis (`mktemp -d`, im Folgenden `<tmp>`).
 4. **Snapshot:** `sh <skript> render <template> <projekt>/.claude/template-answers
    <tmp>/soll` (nur managed Ziele), dann `sh <skript> snapshot <projekt> <tmp>/soll
    <alle Ziele dieser Liste>`. Der Snapshot ist die reine Fassung — die Konkretisierungen
-   aus Schritt 3 sind ab jetzt Projektabweichungen mit Registry-Zeile.
+   aus Schritt 3 sind ab jetzt Projektabweichungen mit Registry-Zeile. **Seed-Basen:**
+   `sh <skript> snapshot --seeds <projekt> <tmp>/neu <seed-Ziele>` für jede seed-Datei
+   aus MANIFEST § Seed sections, die der Render aus Schritt 2 geschrieben hat (Zeilen mit
+   `seed`). An ihr erkennt `/coding-kit:update-conventions` später neue Zonen des
+   Templates.
 5. **Prüfen:** `sh <skript> status <projekt>` — nur die Dateien aus Schritt 3 dürfen
    `deviates` zeigen, und zwar mit Art `adapt`. **Nur Manifest-Ziele:** mit `git status`
    gegenprüfen, dass außer den gerenderten Dateien, der LICENSE, den Antworten und dem

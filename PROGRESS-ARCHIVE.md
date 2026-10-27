@@ -16,6 +16,53 @@ zusammen:
 
 ---
 
+## F-049b — Skills anbinden (2026-10-27)
+
+Teil von F-049 (Neue Zonen erkennen und anbieten; F-049a siehe darunter, F-049c folgt).
+
+**Problem:** Seit F-049a kennt `zones` neue, abgewählte, unbestätigte und entfernte Zonen
+und liest Seed-Basen, aber kein Skill bot die neuen Zustände an oder setzte die Basen.
+
+**Was entstanden ist (1.7.0, unveröffentlicht):**
+
+- **update-conventions A2 Schritt 6:** `zones` vergleicht mit Render und Basis; das
+  Ergebnis ohne Namen enthält `differs`, `new` und `removed`, `opted-out` und
+  `unconfirmed` kommen nur über einen Lauf mit den Namen hinein. Der Skill entfernt keine
+  Blöcke selbst.
+- **A2 Schritt 7:** `new` → **einsetzen** / **nicht einsetzen (Opt-out)**, ohne „diesmal
+  nicht"; `opted-out` → auflisten und das Zurückholen anbieten; `unconfirmed` → einmal
+  fragen; `removed` → **entfernen** / **behalten**, mit einer `new`-Zone und einer
+  Umbenennung im Update-Fenster als Umzug; `override` mit Zählung → Diff `.base` →
+  `.template` zur Info; `local` neu gefasst (`claude-graphiti` ohne Graphiti kommt mit
+  Basis als `removed`).
+- **A2 Schritt 9:** `snapshot --seeds` für jede seed-Datei mit Zonen-Zeilen außer
+  `no-file` und `skipped`, in jedem Lauf, auch nach abgelehnten Zonen.
+- **A3:** Bei der Migration gibt es keine Seed-Basis; fehlende Zonen kommen als
+  `unconfirmed`, Schritt 9 setzt die Basen.
+- **G3:** dieselben Zustände für die globalen Kit-Regeln; `no-file` und `skipped` kommen
+  dort nicht vor (steht so im Skill). G6 bleibt.
+- **new-project Schritt 4:** setzt die Seed-Basen aus dem Render von Schritt 2 für die
+  seed-Dateien aus MANIFEST § Seed sections.
+- **README:** Die Zeile zu `update-conventions` nennt die Erkennung neuer und
+  gestrichener Zonen an der Basis.
+- CHANGELOG 1.7.0 um beide Skills ergänzt.
+
+**Verifikation:** `just check` grün (1734 Checks unter dash, bash und mawk). Per Skript
+gezählt, dass A2 Schritt 7 und G3 jeden Zustand von `zones` nennen. Secrets- und
+Privacy-Scan samt Blocklist ohne Fund. Ob die Texte im Lauf wirken, prüft F-049c.
+
+**Notable decisions:**
+- Die Seed-Basen setzt Schritt 9 auch nach „diesmal nicht" bei `differs`: Die Basis
+  entscheidet nur, ob eine Zone neu ist; `differs` bietet der nächste Lauf ohnehin
+  wieder an.
+- Eine Umbenennung erkennt der Skill nur über das Update-Fenster (CHANGELOG), nicht über
+  eine Tabelle — wie in F-049 entschieden.
+- Abweichung vom Plan: die README-Zeile kam dazu (Checkliste von `/add-skill`).
+
+**Geänderte Dateien:** `plugins/coding-kit/skills/update-conventions/SKILL.md`,
+`plugins/coding-kit/skills/new-project/SKILL.md`, `README.md`,
+`plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`.
+
 ## F-049a — Skript, Tests, Vertrag (2026-10-27)
 
 Teil von F-049 (Neue Zonen erkennen und anbieten; F-049b–c folgen).

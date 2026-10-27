@@ -158,12 +158,16 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    dann `sh <skript> zones <projekt> <tmp>/seeds <tmp>/zones` (bei der Migration mit
    `--base <tmp>/base`, Stellvertreter wie § 0). Das Skript vergleicht die
    `fragment:NAME`-Blöcke im Slot (dieser Schritt) und die seed-Zonen (Schritt 7) mit dem
-   Render und wertet Marker, Override-Zeilen und die Stelle neuer Fragmente selbst aus.
-   Diffs zeigen aus `<tmp>/zones/.zones/<Art>/<Name>.project` → `.template`; nie selbst
-   Blöcke herausschneiden, einsetzen oder abschreiben. **Übernehmen:** Sind alle
-   angebotenen Blöcke einer Datei angenommen, `<tmp>/zones/<Ziel>` ins Projekt kopieren;
-   sonst `zones` mit den Namen der angenommenen Blöcke in ein frisches `<tmp>/zones-ok`
-   laufen lassen und dieses Ergebnis kopieren. Je Fragment-Zeile:
+   Render und der Basis des letzten Syncs (`.claude/template-base/`, für seed-Dateien
+   `<Ziel>.seed`) und wertet Marker, Override-Zeilen und die Stelle neuer Blöcke selbst
+   aus. Diffs zeigen aus `<tmp>/zones/.zones/<Art>/<Name>.project` → `.template`; nie
+   selbst Blöcke herausschneiden, einsetzen, entfernen oder abschreiben.
+   **Übernehmen:** Das Ergebnis `<tmp>/zones/<Ziel>` enthält alle Blöcke mit `differs`,
+   `new` und `removed`. Sind genau diese angenommen, es ins Projekt kopieren; sonst
+   `zones` mit den Namen der angenommenen Blöcke in ein frisches `<tmp>/zones-ok` laufen
+   lassen und dieses Ergebnis kopieren — immer so, wenn eine `opted-out`- oder
+   `unconfirmed`-Zone hinein soll, denn die setzt das Skript nur per Name ein. Je
+   Fragment-Zeile:
    - `differs` → Diff zeigen; **übernehmen** / **diesmal nicht**.
    - `new` → das `MODULE.md` deklariert es inzwischen, oder es kam aus der Erkennung
      (Schritt 2) nach `FRAGMENTS`: Anhängen anbieten. Das Skript setzt es hinter seinen
@@ -189,13 +193,33 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    dort). **Nie die ganze Datei ersetzen oder neu anlegen** — das Ergebnis des Skripts
    ändert nur die Zonen. Je Zeile:
    - `differs` → Diff zeigen; **übernehmen** / **diesmal nicht**.
-   - `override` → eine Override-Zeile schützt die Zone; nur auflisten.
-   - `opted-out` → fehlendes Markerpaar = **dauerhafter Opt-out**: nur informativ
-     auflisten, Marker nie ungefragt wiederherstellen.
+   - `new` → Datei und Basis kennen die Zone nicht: Das Template hat sie neu, oder ein
+     eingeschalteter Optional-Block bringt sie (z. B. `claude-graphiti` nach Schritt 2).
+     Den Inhalt (`.template`) zeigen, mit dem Grund aus dem Update-Fenster; das Skript
+     setzt sie hinter ihren nächsten Vorgänger aus dem Render. **einsetzen** / **nicht
+     einsetzen (Opt-out)** — ein „diesmal nicht" gibt es nicht: Schritt 9 setzt den
+     Render als Basis, eine nicht eingesetzte Zone gilt danach als abgewählt.
+   - `opted-out` → die Basis kennt die Zone, ihr Markerpaar fehlt = **dauerhafter
+     Opt-out**: nur auflisten, mit dem Angebot, sie zurückzuholen (Lauf mit dem Namen,
+     Schritt 6); nie ungefragt.
+   - `unconfirmed` → die Datei hat noch keine Seed-Basis (Projekt aus der Zeit davor,
+     Migration): Ob die Zone neu ist oder abgewählt wurde, lässt sich nicht sagen. Einmal
+     fragen: **einsetzen** (Lauf mit dem Namen) / **abgewählt lassen**. Ab Schritt 9 hat
+     die Datei eine Basis; die Frage kommt nicht wieder.
+   - `removed` → das Template hat die Zone gestrichen (Datei und Basis haben sie): den
+     Inhalt (`.project`) mit dem Grund aus dem Update-Fenster zeigen; **entfernen** (das
+     Skript nimmt die Zone samt Inhalt heraus) / **behalten** (bleibt als Projekttext,
+     ab dem nächsten Lauf `local`). Kommt im selben Lauf eine `new`-Zone und nennt das
+     Update-Fenster eine Umbenennung, beide zusammen als Umzug anbieten.
+   - `override` → eine Override-Zeile schützt die Zone; nur auflisten. Steht statt `-`
+     eine Zählung, hat das Template die Zone seit dem letzten Sync geändert: den Diff
+     `.base` → `.template` **zur Info** zeigen; übernommen wird von Hand.
    - `unmarked` → der Datei fehlen alle Markerpaare (Projekt vor dem Zonen-Vertrag): die
      Marker-Migration aus A3 Schritt 4 anbieten.
-   - `local` → der Render kennt die Zone nicht, z. B. `claude-graphiti`, obwohl `OPTIONAL`
-     kein `graphiti` enthält: melden und mit Schritt 2 abgleichen, nicht anfassen.
+   - `local` → weder Render noch Basis kennen die Zone (eine eigene Zone des Projekts),
+     oder eine gestrichene Zone trägt eine Override-Zeile: melden, nicht anfassen. Ohne
+     Seed-Basis landet hier auch `claude-graphiti`, wenn `OPTIONAL` kein `graphiti`
+     enthält (mit Basis kommt sie als `removed`) — mit Schritt 2 abgleichen.
    - `no-file` → die seed-Datei fehlt (z. B. eine aufgelöste `REQUIREMENTS.md`): nur
      melden. `broken` → melden; `identical` und `skipped` nur zählen.
 
@@ -212,7 +236,11 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    Ziel dieses Laufs **außer** „diesmal nicht", `skipped`, nicht angelegten `new`- und
    nicht wiederhergestellten `missing`-Zielen. Damit ist die neue Template-Fassung die
    Basis; „dauerhaft abgelehnt" zählt ab jetzt als Projektabweichung. `removed`-Ziele
-   verlieren ihre Basis über denselben Aufruf.
+   verlieren ihre Basis über denselben Aufruf. **Seed-Basen:** `sh <skript> snapshot
+   --seeds <projekt> <tmp>/seeds <Ziele…>` für jede seed-Datei mit `section`-Zeilen aus
+   Schritt 7 außer `no-file` und `skipped` — immer, auch wenn Zonen abgelehnt wurden: Die
+   Basis hält fest, was angeboten wurde; `differs` bietet der nächste Lauf ohnehin
+   wieder an.
 10. **Registry-Revision** (jeder Lauf; Modus `revise` macht nur diesen Schritt):
     `sh <skript> status <projekt>` und die Files-Tabelle der
     `.claude/convention-overrides.md` nebeneinanderlegen —
@@ -281,6 +309,9 @@ dann A2 ab Schritt 3.
    Danach A2 Schritte 3–5, bei (a) mit `merge --base <tmp>/base`. In Schritt 9 erhalten
    „diesmal nicht"-Ziele bei (a) die gewählte Basis (`snapshot <projekt> <tmp>/base
    <Ziele…>`), damit der nächste Lauf sie wieder anbietet; bei (b) bekommen sie keine.
+   Seed-Basen gibt es bei der Migration nicht (der Basis-Render enthält nur managed
+   Ziele): Fehlende Zonen meldet `zones` als `unconfirmed` (A2 Schritt 7), die
+   Seed-Basen setzt A2 Schritt 9 wie in jedem Lauf.
 3. **Registry überführen:** Zeilen einer Alt-Tabelle („File / rule | Deviation | …")
    einzeln in die Tabellen `## Files` (eine Datei bzw. ein Glob; „nie anlegen/anbieten" →
    `skip`, „Projekt behält seine Fassung" → `keep`, konkretisierte `template:adapt`-Stellen
@@ -362,18 +393,34 @@ ist eine bewusste Wahl: nicht nachfragen. Werte nie selbst in die env-Datei schr
   - `differs` → Diff `<tmp>/gzones/.zones/section/<Name>.project` → `.template` zeigen,
     mit dem Grund, wenn er erkennbar ist (neue Kit-Fassung laut CHANGELOG oder geänderter
     Wert); **übernehmen** / **diesmal nicht**.
-  - `override` → der Nutzer hat die Zone geschützt: nur auflisten, den Diff auf Wunsch zur
-    Info.
-  - `opted-out` → fehlendes Markerpaar = dauerhafter Opt-out: nur auflisten.
-  - `local` → die Kit-Datei kennt die Zone nicht (mehr): melden, nicht anfassen.
+  - `new` → eine Kit-Zone, die die Basis nicht kennt (neue Kit-Fassung): Inhalt
+    `<tmp>/gzones/.zones/section/<Name>.template` mit dem Grund aus dem CHANGELOG zeigen;
+    **einsetzen** / **nicht einsetzen (Opt-out)** — G6 setzt danach den Render als Basis,
+    eine nicht eingesetzte Zone gilt dann als abgewählt.
+  - `override` → der Nutzer hat die Zone geschützt: nur auflisten; steht statt `-` eine
+    Zählung, hat sich die Kit-Zone seit dem letzten Abgleich geändert — den Diff `.base`
+    → `.template` zur Info zeigen.
+  - `opted-out` → die Basis kennt die Zone, ihr Markerpaar fehlt = dauerhafter Opt-out:
+    nur auflisten, mit dem Angebot, sie zurückzuholen (Lauf mit dem Namen).
+  - `unconfirmed` → es gibt keine Basis (G6 lief nie, oder der Datenordner des Plugins
+    ist neu): einmal fragen — **einsetzen** (Lauf mit dem Namen) / **abgewählt lassen**.
+  - `removed` → das Kit hat die Zone gestrichen: Inhalt `.project` mit dem Grund aus dem
+    CHANGELOG zeigen; **entfernen** (das Skript nimmt die Zone samt Inhalt heraus) /
+    **behalten** (bleibt als eigener Text, ab dem nächsten Abgleich `local`).
+  - `local` → eine Zone, die weder Kit-Datei noch Basis kennen, oder eine gestrichene
+    mit Override-Zeile: melden, nicht anfassen.
   - `unmarked` → die Datei hat keine Zonen mehr: mit Kennung hat der Nutzer alle
     abgewählt (nur melden), ohne Kennung ist sie fremd (G1).
   - `broken` → melden und die Reparatur von Hand anbieten; `identical` nur zählen.
+    `no-file` und `skipped` kommen hier nicht vor: Der Abgleich läuft nur, wenn die
+    Regeldatei existiert, und der Config-Ordner hat keine Registry.
 
-  **Übernehmen** wie in A2 Schritt 6: Sind alle angebotenen Zonen angenommen,
-  `<tmp>/gzones/rules/coding-kit.md` nach `<config>/rules/coding-kit.md` kopieren; sonst
-  `zones` mit den Namen der angenommenen Zonen in ein frisches `<tmp>/gzones-ok` laufen
-  lassen und dieses Ergebnis kopieren. Nie selbst Zonen einsetzen oder abschreiben.
+  **Übernehmen** wie in A2 Schritt 6: Sind genau die Zonen mit `differs`, `new` und
+  `removed` angenommen, `<tmp>/gzones/rules/coding-kit.md` nach
+  `<config>/rules/coding-kit.md` kopieren; sonst `zones` mit den Namen der angenommenen
+  Zonen in ein frisches `<tmp>/gzones-ok` laufen lassen (`opted-out` und `unconfirmed`
+  nur so) und dieses Ergebnis kopieren. Nie selbst Zonen einsetzen, entfernen oder
+  abschreiben.
 - Ist eine Zone `differs`, weil der Nutzer sie auf dem Rechner geändert hat, und nützt
   die Änderung allen: anbieten, sie dem Kit vorzuschlagen (`propose-to-template`, Art
   globale Regel).

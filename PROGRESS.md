@@ -47,6 +47,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-048 | Frontmatter-Pflichtfelder für Skills → **alle 20 Skills setzen `disable-model-invocation` und `user-invocable` ausdrücklich (Startverhalten unverändert, per Skript verglichen), zwölf mit Argument zeigen ein `argument-hint`; der Validator verlangt beide Flags als `true`/`false`, lehnt einen Skill ab, den niemand starten könnte, lässt nur die 20 dokumentierten Felder zu und prüft die Grenze von 1536 Zeichen; Authoring-Doku mit Feldübersicht, `default-enabled` gestrichen; Hinweise in F-027 und F-037.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-040e | Testlauf, Release, erster echter Abgleich → **vier Testläufe mit `--plugin-dir` (Neueinrichtung, Migration einer alten Kit-Kopie, eigene CLAUDE.md, Interview; zusammen 2,65 USD) ohne Handarbeit, Endstand per Skript geprüft; Fund mitgenommen: die env-Datei nicht ausgeben; Release 1.6.0 gepusht (CI grün), Plugin aktualisiert; erster echter Abgleich: Kit-Regeln eingerichtet, alte CLAUDE.md gelöscht, Lernprofil aus Graphiti entfernt; Gegenprobe per `InstructionsLoaded`-Hook. F-040 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 | F-049a | Skript, Tests, Vertrag → **`zones` unterscheidet über eine Basis neue (`new`), abgewählte (`opted-out`), unbestätigte (`unconfirmed`) und entfernte (`removed`) Zonen, setzt neue an ihrer Stelle aus dem Render ein und entfernt gestrichene; abgewählte und unbestätigte nur per Name; Override-Zählung auch für Zonen; `snapshot --seeds` schreibt die Seed-Basis `<Ziel>.seed`, die `status`, `merge` und `changed` nicht lesen; MANIFEST §§ Base snapshot und Seed sections; Version 1.7.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
+| F-049b | Skills anbinden → **update-conventions bietet neue Zonen zum Einsetzen oder als Opt-out an, gestrichene zum Entfernen oder Behalten, fragt Zonen ohne Basis einmal und holt abgewählte per Name zurück (A2 Schritte 6, 7, 9, A3, G3); Schritt 9 setzt die Seed-Basen in jedem Lauf; new-project setzt sie beim Anlegen; README-Zeile nachgezogen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 
 ---
 
@@ -103,24 +104,6 @@ sie bisher.
 **Abhängigkeiten:** keine. Sinnvoll vor F-036, das die seed-Zonen umbaut — dessen neue
 Zonen erreichen bestehende Projekte sonst nicht. Ergänzt F-040: Teil G und der
 Session-Hinweis melden eine neue Kit-Zone, angeboten wird sie erst mit F-049.
-
-#### F-049b — Skills anbinden
-
-**Was:** update-conventions: A2 Schritt 6/7 bieten die neuen Zustände an (einsetzen /
-Opt-out, entfernen, einmal fragen, abgewählte Zonen per Name einsetzen), Schritt 9 setzt
-die Seed-Basen für alle seed-Dateien mit Zonen, A3 nennt `unconfirmed` als Folge der
-fehlenden Basis, G3 die neuen Zustände für die globalen Regeln (G6 bleibt). new-project
-Schritt 4 setzt die Seed-Basen mit. CHANGELOG nachziehen; `/add-skill` läuft mit.
-
-**Dateien:** `plugins/coding-kit/skills/update-conventions/SKILL.md`,
-`plugins/coding-kit/skills/new-project/SKILL.md`, `plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-049a.
-
-**Abnahmekriterien:**
-- [ ] Jeder Zustand von `zones` ist in A2 und G3 beschrieben; kein Skill setzt Zonen von
-      Hand ein oder entfernt sie.
-- [ ] `just check` grün.
 
 #### F-049c — Testlauf und Release
 

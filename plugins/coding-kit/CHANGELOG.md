@@ -30,6 +30,15 @@ Neue Zonen erreichen bestehende Projekte und Rechner (F-049, in Arbeit).
   Zählung bei geschützten Blöcken gilt jetzt auch für Zonen.
 - **`snapshot --seeds`** setzt die Basis von seed-Dateien als `<Ziel>.seed`; `status`,
   `merge` und `changed` lesen sie nicht. `zones` liest `.base`, sonst `.seed`.
+- **`update-conventions`** bietet die neuen Zustände an: eine neue Zone **einsetzen**
+  oder **nicht einsetzen** (dann gilt sie als abgewählt — ein „diesmal nicht" gibt es
+  dafür nicht), eine gestrichene **entfernen** oder **behalten**, eine Zone ohne Basis
+  einmal erfragen, eine abgewählte auf Wunsch zurückholen (Lauf mit dem Namen); bei
+  geschützten Zonen zeigt er die Template-Änderung seit dem letzten Sync zur Info.
+  Schritt 9 setzt die Seed-Basen in jedem Lauf, auch wenn Zonen abgelehnt wurden. Für
+  die globalen Kit-Regeln (Teil G) gilt dasselbe; ihre Basis im Datenordner gibt es
+  schon.
+- **`new-project`** setzt die Seed-Basen beim Anlegen mit.
 - **Kit:** Tests für neue, abgewählte, entfernte und umbenannte Zonen, Dateien ohne
   Basis, alle Einsetz-Stellen, die Auswahl per Name, `snapshot --seeds`, Graphiti nach
   dem Einschalten und eine neue Zone in den globalen Regeln.
