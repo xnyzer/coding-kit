@@ -13,6 +13,34 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 1.7.0 — unveröffentlicht
+
+Neue Zonen erreichen bestehende Projekte und Rechner (F-049, in Arbeit).
+
+- **`scripts/template-sync.sh zones`** unterscheidet über eine Basis, ob eine fehlende
+  Zone neu ist oder abgewählt wurde. Neue Zustände: `new` auch für Zonen (weder in der
+  Datei noch in der Basis — etwa eine neue Kit-Zone oder `claude-graphiti`, nachdem
+  Graphiti eingeschaltet wurde), `unconfirmed` (die Datei hat noch keine Basis) und
+  `removed` (die Zone steht in Datei und Basis, das Template hat sie entfernt; mit
+  Override-Zeile bleibt sie `local`). `opted-out` heißt jetzt: Die Basis kennt die Zone.
+  Eine neue Zone setzt das Skript hinter ihren nächsten Vorgänger aus dem Render, ohne
+  Vorgänger vor den nächsten Nachfolger, ohne beide ans Dateiende; eine entfernte löscht
+  es samt Inhalt. Ohne Namen wendet es `differs`, `new` und `removed` an, `opted-out` und
+  `unconfirmed` nur per Name — so lässt sich eine abgewählte Zone zurückholen. Die
+  Zählung bei geschützten Blöcken gilt jetzt auch für Zonen.
+- **`snapshot --seeds`** setzt die Basis von seed-Dateien als `<Ziel>.seed`; `status`,
+  `merge` und `changed` lesen sie nicht. `zones` liest `.base`, sonst `.seed`.
+- **Kit:** Tests für neue, abgewählte, entfernte und umbenannte Zonen, Dateien ohne
+  Basis, alle Einsetz-Stellen, die Auswahl per Name, `snapshot --seeds`, Graphiti nach
+  dem Einschalten und eine neue Zone in den globalen Regeln.
+
+### Template
+
+- MANIFEST § Base snapshot: seed-Dateien mit Zonen bekommen eine eigene Basis
+  (`<Ziel>.seed` unter `.claude/template-base/`), die nur der Zonen-Abgleich liest.
+- MANIFEST § Seed sections: neue, abgewählte und entfernte Zonen und wo eine neue Zone
+  eingesetzt wird. Projekte ohne diese Basis werden einmal je fehlender Zone gefragt.
+
 ## 1.6.0 — 2026-10-27
 
 Globale Kit-Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau (F-040);

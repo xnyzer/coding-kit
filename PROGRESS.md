@@ -46,6 +46,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-040d | Session-Hinweis, Installer, Nutzer-Doku → **SessionStart-Hook meldet eine alte Kit-Kopie, geänderte Kit-Regeln oder Werte und eine unlesbare Personal-Config (Render gegen die Basis, schreibt nie, endet immer ohne Fehler); `install.sh` schreibt nichts Globales mehr und verweist auf `update-conventions global`; `templates/` und der `curl`-Weg entfallen; README mit Warnkasten, Werten, Abweichungen, den Aufrufen von `update-conventions` und dem Session-Hinweis; der Validator gleicht die Stufen im README ab; Verweise in F-024, F-029, F-030 und F-033 nachgezogen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-048 | Frontmatter-Pflichtfelder für Skills → **alle 20 Skills setzen `disable-model-invocation` und `user-invocable` ausdrücklich (Startverhalten unverändert, per Skript verglichen), zwölf mit Argument zeigen ein `argument-hint`; der Validator verlangt beide Flags als `true`/`false`, lehnt einen Skill ab, den niemand starten könnte, lässt nur die 20 dokumentierten Felder zu und prüft die Grenze von 1536 Zeichen; Authoring-Doku mit Feldübersicht, `default-enabled` gestrichen; Hinweise in F-027 und F-037.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-26 |
 | F-040e | Testlauf, Release, erster echter Abgleich → **vier Testläufe mit `--plugin-dir` (Neueinrichtung, Migration einer alten Kit-Kopie, eigene CLAUDE.md, Interview; zusammen 2,65 USD) ohne Handarbeit, Endstand per Skript geprüft; Fund mitgenommen: die env-Datei nicht ausgeben; Release 1.6.0 gepusht (CI grün), Plugin aktualisiert; erster echter Abgleich: Kit-Regeln eingerichtet, alte CLAUDE.md gelöscht, Lernprofil aus Graphiti entfernt; Gegenprobe per `InstructionsLoaded`-Hook. F-040 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
+| F-049a | Skript, Tests, Vertrag → **`zones` unterscheidet über eine Basis neue (`new`), abgewählte (`opted-out`), unbestätigte (`unconfirmed`) und entfernte (`removed`) Zonen, setzt neue an ihrer Stelle aus dem Render ein und entfernt gestrichene; abgewählte und unbestätigte nur per Name; Override-Zählung auch für Zonen; `snapshot --seeds` schreibt die Seed-Basis `<Ziel>.seed`, die `status`, `merge` und `changed` nicht lesen; MANIFEST §§ Base snapshot und Seed sections; Version 1.7.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 
 ---
 
@@ -102,31 +103,6 @@ sie bisher.
 **Abhängigkeiten:** keine. Sinnvoll vor F-036, das die seed-Zonen umbaut — dessen neue
 Zonen erreichen bestehende Projekte sonst nicht. Ergänzt F-040: Teil G und der
 Session-Hinweis melden eine neue Kit-Zone, angeboten wird sie erst mit F-049.
-
-#### F-049a — Skript, Tests, Vertrag
-
-**Was:** `zones` bekommt die Zustände `new` (Zone), `removed` und `unconfirmed`, setzt
-neue Zonen nach der Regel aus „Entschieden" ein und entfernt `removed`-Zonen; `opted-out`
-und `unconfirmed` nur per Name. Die Override-Zählung gilt auch für Zonen. `snapshot
---seeds` schreibt und entfernt `<target>.seed`; `zones` liest die Basis aus `.base`, sonst
-`.seed`. Kopf-Doku des Skripts, MANIFEST (§ Base snapshot, § Seed sections, Zustände),
-Version 1.7.0 mit CHANGELOG-Eintrag samt `### Template`.
-
-**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
-`tests/template-sync/zones.sh`, `tests/template-sync/global.sh`,
-`plugins/coding-kit/template/MANIFEST.md`, `plugins/coding-kit/.claude-plugin/plugin.json`,
-`plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** keine.
-
-**Abnahmekriterien:**
-- [ ] Tests: neue Zone in seed-Datei und globalen Regeln, Zone aus einem eingeschalteten
-      `template:optional`, abgewählte Zone (auch per Name wieder eingesetzt), entfernte
-      Zone (auch mit Override), Umbenennung als `removed` plus `new`, Datei ohne Basis
-      (`unconfirmed`), Einsetzen ohne Vorgänger und ohne Nachbarn, `snapshot --seeds`
-      setzt und entfernt `.seed`, `status` und `merge` ignorieren `.seed`.
-- [ ] Läuft unter dash und bash, mit System-awk und mawk.
-- [ ] `just check` grün.
 
 #### F-049b — Skills anbinden
 

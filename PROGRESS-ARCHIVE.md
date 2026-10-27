@@ -16,6 +16,62 @@ zusammen:
 
 ---
 
+## F-049a — Skript, Tests, Vertrag (2026-10-27)
+
+Teil von F-049 (Neue Zonen erkennen und anbieten; F-049b–c folgen).
+
+**Problem:** `zones` meldete jede Zone, die im Render steht und der Datei fehlt, als
+`opted-out` und bot sie nie an. Eine neue Zone erreichte so keine bestehende
+Installation — weder in den seed-Dateien noch in den globalen Kit-Regeln, auch nicht nach
+einer Umbenennung oder einem später eingeschalteten `template:optional`-Block.
+
+**Was entstanden ist (1.7.0, unveröffentlicht):**
+
+- **`zones`:** Die Basis einer Datei ist `<Ziel>.base` des Snapshots, sonst
+  `<Ziel>.seed`, mit `--base DIR` weiter `DIR/<Ziel>`. Eine Zone, die der Render hat und
+  die Datei nicht, ist `new` (auch nicht in der Basis), `opted-out` (in der Basis) oder
+  `unconfirmed` (die Datei hat keine Basis). Eine Zone in Datei und Basis, die der Render
+  nicht mehr hat, ist `removed`; mit Override-Zeile bleibt sie `local`. Ohne Namen wendet
+  das Skript `differs`, `new` und `removed` an, `opted-out` und `unconfirmed` nur per
+  Name. Eine neue Zone kommt hinter ihren nächsten Vorgänger aus dem Render, der in der
+  Datei steht oder mit ihr kommt; ohne Vorgänger vor den nächsten Nachfolger, ohne beide
+  ans Dateiende, mehrere in der Reihenfolge des Renders. Eine entfernte Zone geht samt
+  Inhalt. Die Zählung bei Override zeigt jetzt auch für Zonen, was das Template seit der
+  Basis geändert hat.
+- **`snapshot --seeds`:** schreibt und entfernt `<Ziel>.seed`; ein Ziel mit managed
+  Basis lehnt er ab, bevor er etwas schreibt. `status`, `merge` und `changed` lesen nur
+  `*.base` und sehen die Seed-Basen nicht.
+- **MANIFEST:** § Base snapshot beschreibt die Seed-Basen, § Seed sections neue,
+  abgewählte und entfernte Zonen samt Einsetz-Stelle und die einmalige Nachfrage ohne
+  Basis.
+- **Tests:** `zones.sh` mit einem Block für Seed-Basen (neue, abgewählte, entfernte,
+  umbenannte und geschützte Zonen, alle Einsetz-Stellen, Auswahl per Name, `--base` ohne
+  Seed-Basis), `snapshot --seeds` (setzen, entfernen, Ablehnung, `status` und `merge`
+  unberührt) und einem echten Render, in dem Graphiti nachträglich eingeschaltet wird.
+  `global.sh` mit einer neuen Kit-Zone und dem Opt-out mit und ohne Basis. Die zwei
+  bisherigen Opt-out-Tests ohne Basis prüfen jetzt `unconfirmed`.
+- Version 1.7.0, CHANGELOG mit `### Template`.
+
+**Verifikation:** `just check` grün mit 1734 Checks unter dash, bash und mawk (144
+neu). Der Kern von Hand an einem Beispiel nachgeprüft: Zustände, Diffstat und
+Ergebnisdatei wie geplant. Secrets- und Privacy-Scan samt Blocklist ohne Fund.
+
+**Notable decisions:**
+- Die Seed-Basis liegt mit eigener Endung im selben Ordner: Die `.gitattributes`-Zeile
+  des Snapshots gilt weiter, und kein Befehl außer `zones` muss davon wissen.
+- `removed` gibt es nur für Zonen. Welche Fragmente ein Projekt hat, entscheiden die
+  Antworten (`FRAGMENTS`); ein Fragment, das nur das Projekt hat, bleibt `local`.
+- Beim Einsetzen hinter einem Vorgänger kommt eine Leerzeile davor, vor einem Nachfolger
+  eine danach (und davor, wenn dort Text steht). Beim Entfernen zwischen zwei Leerzeilen
+  geht eine davon mit.
+- Mit `--base` (Migration) bleiben Seed-Basen ungenutzt; fehlende Zonen sind dort
+  `unconfirmed`.
+
+**Geänderte Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
+`tests/template-sync/zones.sh`, `tests/template-sync/global.sh`,
+`plugins/coding-kit/template/MANIFEST.md`, `plugins/coding-kit/.claude-plugin/plugin.json`,
+`plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`.
+
 ## F-040e — Testlauf, Release, erster echter Abgleich (2026-10-27)
 
 Schließt F-040 ab (Globale Regeln mit dem Plugin ausliefern und abgleichen, Erklär-Niveau;

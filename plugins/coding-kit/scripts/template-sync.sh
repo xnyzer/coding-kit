@@ -46,10 +46,12 @@
 #       the template although the project deviated — the template has caught up),
 #       conflict, kept (keep row: conflicts resolved to the project), two-way (no base),
 #       new, missing (project deleted it), removed (no longer rendered), skipped.
-#   snapshot [--snapshot DIR] PROJECT SOLL TARGET…
+#   snapshot [--seeds] [--snapshot DIR] PROJECT SOLL TARGET…
 #       Sets the base of each TARGET to its rendered version; a TARGET that SOLL no
 #       longer has loses its base. Line: <target> <set|removed>. A TARGET that is neither
-#       rendered nor has a base is refused before anything is written.
+#       rendered nor has a base is refused before anything is written. With --seeds the
+#       TARGETs are seed files (SOLL a render with --seeds): their base is
+#       <target>.seed, which only zones reads; a TARGET with a managed base is refused.
 #   base-from-history KIT VERSION OUT
 #       Exports the template of VERSION from the git history of a coding-kit checkout
 #       into OUT/template (missing or empty OUT); a release without template changes
@@ -57,19 +59,26 @@
 #   zones [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SEEDS OUT [NAME…]
 #       Compares the marked blocks of PROJECT with SEEDS (a render with --seeds): the
 #       section:NAME zones of the seed files and the fragment:NAME blocks in the
-#       module:coding-standards slot. Line per block: <target> <section|fragment> <name>
-#       <state> <+a -d>, states: identical, differs, override (an override line in the
-#       project's block; the count is what the template changed since the base,
-#       fragments only), new (a fragment only SEEDS has), opted-out (the project removed
-#       the zone's markers), unmarked (the file has no zone markers or no slot at all),
-#       local (only the project has it), no-file, broken (unbalanced, nested or
-#       duplicate markers), skipped (skip row). A block that neither side has gets no
-#       line. OUT/<target> is the project file with every differing and new block
-#       applied — only the NAMEs given, if any: a differing block is replaced, a new
-#       fragment goes behind its nearest predecessor of the render order in the slot
-#       (without one to the slot's start) and replaces the placeholder text of a slot
-#       without fragments. OUT/.zones/<kind>/<name>.<project|template|base> hold the
-#       blocks for the diffs.
+#       module:coding-standards slot. The base of a target is <target>.base of the
+#       snapshot, else <target>.seed (snapshot --seeds), or DIR/<target> with --base.
+#       Line per block: <target> <section|fragment> <name> <state> <+a -d>, states:
+#       identical, differs, override (an override line in the project's block; the count
+#       is what the template changed since the base), new (a fragment only SEEDS has, or
+#       a zone neither the project nor its base has), opted-out (a zone the base has and
+#       the project lost: the user removed its markers), unconfirmed (a zone the project
+#       lacks while the file has no base to tell new from opted-out), removed (a zone
+#       the project and its base have and SEEDS no longer has), unmarked (the file has no
+#       zone markers or no slot at all), local (only the project has it, or a removed
+#       zone with an override line), no-file, broken (unbalanced, nested or duplicate
+#       markers), skipped (skip row). A block that neither side has gets no line.
+#       OUT/<target> is the project file with every differing, new and removed block
+#       applied — only the NAMEs given, if any; opted-out and unconfirmed zones only when
+#       named. A differing block is replaced, a removed zone is deleted with its content;
+#       a new zone goes behind its nearest predecessor of the render order in the file,
+#       without one before its nearest successor, without both to the end; a new
+#       fragment goes behind its nearest predecessor in the slot (without one to the
+#       slot's start) and replaces the placeholder text of a slot without fragments.
+#       OUT/.zones/<kind>/<name>.<project|template|base> hold the blocks for the diffs.
 #   lock-check PROJECT
 #       Checks the mise.lock of PROJECT against lockfile_platforms in [settings] of its
 #       mise.toml and the platforms its CI installs on (runs-on of the workflows that
@@ -142,7 +151,7 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh status [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT
        sh template-sync.sh changed [--registry FILE] [--snapshot DIR] PROJECT
        sh template-sync.sh merge [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SOLL OUT
-       sh template-sync.sh snapshot [--snapshot DIR] PROJECT SOLL TARGET...
+       sh template-sync.sh snapshot [--seeds] [--snapshot DIR] PROJECT SOLL TARGET...
        sh template-sync.sh base-from-history KIT VERSION OUT
        sh template-sync.sh zones [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SEEDS OUT [NAME...]
        sh template-sync.sh lock-check PROJECT
@@ -756,7 +765,7 @@ parse_opts() {  # COMMAND ARGS…
   OPTS_SHIFT=0
   while [ $# -gt 0 ]; do
     case $1 in
-      --seeds) po_for=render po_n=1 ;;
+      --seeds) po_for='render snapshot' po_n=1 ;;
       --changed) po_for=detect po_n=1 ;;
       --base) po_for='status merge zones' po_n=2 ;;
       --answers) po_for=detect po_n=2 ;;
@@ -999,15 +1008,21 @@ snapshot() {
   set_paths "$P"
   [ -d "$P" ] || die "project not found: $P"
   [ -d "$SOLL" ] || die "rendered template not found: $SOLL"
+  # A seed file's base keeps its own suffix, so status, merge and changed never read it.
+  sn_suffix=.base
+  if [ "$SEEDS" = 1 ]; then sn_suffix=.seed; fi
   # All targets are checked before anything is written.
   for sn_t in "$@"; do
     check_target "$sn_t"
-    if [ ! -f "$SOLL/$sn_t" ] && [ ! -f "$SNAP_PATH/$sn_t.base" ]; then
+    if [ ! -f "$SOLL/$sn_t" ] && [ ! -f "$SNAP_PATH/$sn_t$sn_suffix" ]; then
       die "unknown target '$sn_t': not rendered in $SOLL and no base — pass each target as an argument of its own"
+    fi
+    if [ "$SEEDS" = 1 ] && [ -f "$SNAP_PATH/$sn_t.base" ]; then
+      die "'$sn_t' has a managed base — --seeds takes seed files only"
     fi
   done
   for sn_t in "$@"; do
-    sn_base=$SNAP_PATH/$sn_t.base
+    sn_base=$SNAP_PATH/$sn_t$sn_suffix
     if [ -f "$SOLL/$sn_t" ]; then
       mkdir -p "${sn_base%/*}"
       cp "$SOLL/$sn_t" "$sn_base"
@@ -1098,7 +1113,11 @@ zones_one() {  # TARGET SKIP
   zo_p=
   if [ -f "$P/$1" ]; then zo_p=$P/$1; fi
   zo_b=$(base_of "$1")
-  [ -f "$zo_b" ] || zo_b=
+  if [ ! -f "$zo_b" ]; then
+    zo_b=
+    # A seed file's base (snapshot --seeds); --base names its files without a suffix.
+    if [ -z "$BASE_DIR" ] && [ -f "$SNAP_PATH/$1.seed" ]; then zo_b=$SNAP_PATH/$1.seed; fi
+  fi
   awk -v target="$1" -v skip="$2" -v rf="$SEEDS/$1" -v pf="$zo_p" -v bf="$zo_b" \
     -v zdir="$ZDIR" -v sel="$ZSEL" -v empty="$WORK/empty" -v applied="$WORK/applied" \
     -v o="$WORK/zone.out" -v open="$SLOT_OPEN" -v shut="$SLOT_CLOSE" '
@@ -1190,11 +1209,14 @@ zones_one() {  # TARGET SKIP
       for (i = 1; i <= NB["r"]; i++) if (BR["r", i]) exit 9
       hasp = (pf != "")
       if (hasp) { load(pf, "p"); scan("p") }
-      if (bf != "") { load(bf, "b"); scan("b") }
+      # Without a base a missing zone cannot tell new from opted-out.
+      hasb = (bf != "")
+      if (hasb) { load(bf, "b"); scan("b") }
 
       for (i = 1; i <= NB["r"]; i++) {
         k = K["r", i]; n = NM["r", i]
         j = (("p", k, n) in ID) ? ID["p", k, n] : 0
+        named = (sel != "" && index(sel, " " n " "))
         tf = zdir "/" k "/" n ".template"; pf2 = zdir "/" k "/" n ".project"
         from = "-"; to = "-"
         if (skip == 1) st = "skipped"
@@ -1205,8 +1227,8 @@ zones_one() {  # TARGET SKIP
         else if (j && OV["p", j]) {
           st = "override"
           dump("r", i, tf); dump("p", j, pf2)
-          # Fragments only: what the template changed since the base.
-          if (k == "fragment" && (("b", k, n) in ID) && !BR["b", ID["b", k, n]]) {
+          # What the template changed since the base.
+          if ((("b", k, n) in ID) && !BR["b", ID["b", k, n]]) {
             from = zdir "/" k "/" n ".base"; to = tf
             dump("b", ID["b", k, n], from)
           }
@@ -1214,8 +1236,13 @@ zones_one() {  # TARGET SKIP
         else if (j && same("r", i, "p", j)) st = "identical"
         else if (j) { st = "differs"; dump("r", i, tf); dump("p", j, pf2); from = pf2; to = tf }
         else if (k == "fragment") { st = "new"; dump("r", i, tf); from = empty; to = tf }
-        else { st = HS["p"] ? "opted-out" : "unmarked"; dump("r", i, tf) }
-        if ((st == "differs" || st == "new") && (sel == "" || index(sel, " " n " "))) {
+        else if (!HS["p"]) { st = "unmarked"; dump("r", i, tf) }
+        else if (!hasb) { st = "unconfirmed"; dump("r", i, tf); from = empty; to = tf }
+        else if (("b", k, n) in ID) { st = "opted-out"; dump("r", i, tf) }
+        else { st = "new"; dump("r", i, tf); from = empty; to = tf }
+        # Opted-out and unconfirmed zones only when named: a user may take one back.
+        if (((st == "differs" || st == "new") && (sel == "" || named)) ||
+          ((st == "opted-out" || st == "unconfirmed") && named)) {
           AP[i] = 1; napplied++
           print n >> applied
         }
@@ -1224,21 +1251,54 @@ zones_one() {  # TARGET SKIP
       for (j = 1; j <= NB["p"]; j++) {
         k = K["p", j]; n = NM["p", j]
         if (("r", k, n) in ID) continue
+        pf2 = zdir "/" k "/" n ".project"
+        from = "-"; to = "-"
         if (skip == 1) st = "skipped"
         else if (BR["p", j]) st = "broken"
-        else { st = "local"; dump("p", j, zdir "/" k "/" n ".project") }
-        print target, k, n, st, "-", "-"
+        # A zone the template dropped since the base; an override line keeps it local.
+        else if (k == "section" && (("b", k, n) in ID) && !OV["p", j]) {
+          st = "removed"; dump("p", j, pf2); from = pf2; to = empty
+          if (sel == "" || index(sel, " " n " ")) {
+            RM[BO["p", j]] = j; napplied++
+            print n >> applied
+          }
+        }
+        else { st = "local"; dump("p", j, pf2) }
+        print target, k, n, st, from, to
       }
       close(applied)
       if (!napplied) exit 0
 
-      # Differing blocks are replaced in place; a new fragment goes behind its nearest
-      # predecessor in the render order that is in the slot (or arrives with it), without
-      # one to the start of the slot.
+      # Differing blocks are replaced in place. A new zone goes behind its nearest
+      # predecessor in the render order that is in the file (or arrives with it), without
+      # one before its nearest successor in the file, without both to the end. A new
+      # fragment goes behind its nearest predecessor in the render order that is in the
+      # slot (or arrives with it), without one to the start of the slot.
       for (i = 1; i <= NB["r"]; i++) {
         if (!AP[i]) continue
         k = K["r", i]; n = NM["r", i]
         if (("p", k, n) in ID) { REPL[BO["p", ID["p", k, n]]] = i; continue }
+        if (k == "section") {
+          at = ""
+          for (x = i - 1; x >= 1 && at == ""; x--) {
+            if (K["r", x] != "section") continue
+            if (("p", "section", NM["r", x]) in ID) {
+              y = ID["p", "section", NM["r", x]]
+              if (!BR["p", y]) { at = "after"; al = BC["p", y] }
+            } else if (AP[x]) { at = AT[x]; al = AL[x] }
+          }
+          for (x = i + 1; x <= NB["r"] && at == ""; x++) {
+            if (K["r", x] != "section" || !(("p", "section", NM["r", x]) in ID)) continue
+            y = ID["p", "section", NM["r", x]]
+            if (!BR["p", y]) { at = "before"; al = BO["p", y] }
+          }
+          if (at == "") { at = "end"; al = N["p"] }
+          AT[i] = at; AL[i] = al
+          if (at == "after") G[al, ++GN[al]] = i
+          else if (at == "before") GB[al, ++GBN[al]] = i
+          else GE[++GEN] = i
+          continue
+        }
         anchor = SO["p"]
         for (x = i - 1; x >= 1; x--) {
           if (K["r", x] != "fragment") continue
@@ -1261,6 +1321,18 @@ zones_one() {  # TARGET SKIP
           print L["p", i] > o
           continue
         }
+        for (m = 1; m <= GBN[i]; m++) {
+          if (m == 1 && i > 1 && L["p", i - 1] !~ /^[ \t]*$/) print "" > o
+          emit(GB[i, m]); print "" > o
+        }
+        if (i in RM) {
+          # Removing a zone between blank lines (or at the start) takes one of them along.
+          e = BC["p", RM[i]]
+          if (e < N["p"] && L["p", e + 1] ~ /^[ \t]*$/ &&
+            (i == 1 || L["p", i - 1] ~ /^[ \t]*$/)) e++
+          i = e
+          continue
+        }
         if (i in REPL) {
           x = REPL[i]
           print L["p", i] > o
@@ -1272,6 +1344,10 @@ zones_one() {  # TARGET SKIP
           if (i == SO["p"]) { emit(G[i, m]); print "" > o }
           else { print "" > o; emit(G[i, m]) }
         }
+      }
+      for (m = 1; m <= GEN; m++) {
+        if (m > 1 || L["p", N["p"]] !~ /^[ \t]*$/) print "" > o
+        emit(GE[m])
       }
       close(o)
     }'
@@ -1322,7 +1398,7 @@ zones() {
   # Word splitting of the name list is intended.
   for zs_name in $ZSEL; do
     grep -qxF -- "$zs_name" "$WORK/applied" \
-      || die "$zs_name: no differing or new block of that name to apply"
+      || die "$zs_name: no differing, new, removed, opted-out or unconfirmed block of that name to apply"
   done
 }
 

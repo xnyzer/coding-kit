@@ -57,7 +57,7 @@ run_zones_cases() {
   check "zones: different content differs" zone_is z section beta differs "+1 -1"
   check "zones: override line protects the zone" zone_is z section gamma override -
   check "zones: override text inside a line does not protect" zone_is z section eps differs
-  check "zones: removed marker pair is an opt-out" zone_is z section delta opted-out
+  check "zones: missing zone without a base is unconfirmed" zone_is z section delta unconfirmed "+1 -0"
   check "zones: zone only in the project is local" zone_is z section extra local
   check "zones: marker with text before it is prose" no_zone z zeta
   check "zones: marker with text behind it is prose" no_zone z eta
@@ -88,7 +88,7 @@ run_zones_cases() {
   check "zones: block file of the template" file_is zo/.zones/section/beta.template 'B1\n'
   check "zones: block file of a new fragment" file_is zo/.zones/fragment/lang.template 'L1\n'
   check "zones: block file of a local fragment" file_is zo/.zones/fragment/mine.project 'Y\n'
-  check "zones: template block of an opt-out" file_is zo/.zones/section/delta.template 'D1\n'
+  check "zones: template block of an unconfirmed zone" file_is zo/.zones/section/delta.template 'D1\n'
   refute "zones: no base file without a base" test -e "$TMP/zo/.zones/fragment/ov.base"
   refute "zones: into a non-empty dir refused" ts zones "$TMP/zp" "$TMP/zp.seeds" "$TMP/zo"
 
@@ -119,6 +119,73 @@ run_zones_cases() {
   refute "zones: names in one argument refused" ts zones "$TMP/zp" "$TMP/zp.seeds" "$TMP/zn3" "beta lang"
   refute "zones: a protected block cannot be applied" ts zones "$TMP/zp" "$TMP/zp.seeds" "$TMP/zn4" gamma
   refute "zones: unknown name refused" ts zones "$TMP/zp" "$TMP/zp.seeds" "$TMP/zn5" nope
+  check "zones: a named unconfirmed zone is applied" \
+    eval 'ts zones "$TMP/zp" "$TMP/zp.seeds" "$TMP/zn6" delta > /dev/null'
+  check "zones: unconfirmed zone behind its predecessor" file_is zn6/DOC.md \
+    'head\n<!-- section:alpha -->\nA1\n<!-- /section:alpha -->\n<!-- section:beta -->\nB0\n<!-- /section:beta -->\n<!-- section:gamma -->\n  <!-- override: ours -->\nG0\n<!-- /section:gamma -->\n\n<!-- section:delta -->\nD1\n<!-- /section:delta -->\n<!-- section:eps -->\nE0 <!-- override: not a marker -->\n<!-- /section:eps -->\n<!-- section:extra -->\nX\n<!-- /section:extra -->\nprose about <!-- section:zeta -->\n<!-- section:eta --> in prose\ntail\n'
+
+  # --- seed bases: new, opted-out and removed zones -----------------------------------
+  put zq.seeds/DOC.md 'head\n<!-- section:a -->\nA\n<!-- /section:a -->\n\n<!-- section:b -->\nB\n<!-- /section:b -->\n\n<!-- section:c -->\nC\n<!-- /section:c -->\n\n<!-- section:d -->\nD\n<!-- /section:d -->\n\n<!-- section:n2 -->\nN2\n<!-- /section:n2 -->\n\n<!-- section:ov -->\nOV2\n<!-- /section:ov -->\ntail\n'
+  put zq/DOC.md 'head\n<!-- section:a -->\nA\n<!-- /section:a -->\nmine\n<!-- section:c -->\nC\n<!-- /section:c -->\n\n<!-- section:old -->\nO\n<!-- /section:old -->\n\n<!-- section:ov -->\n<!-- override: ours -->\nOV0\n<!-- /section:ov -->\n<!-- section:kept -->\n<!-- override: still ours -->\nK\n<!-- /section:kept -->\nend\n'
+  put zq/.claude/template-base/DOC.md.seed '<!-- section:a -->\nA\n<!-- /section:a -->\n<!-- section:c -->\nC\n<!-- /section:c -->\n<!-- section:d -->\nD\n<!-- /section:d -->\n<!-- section:old -->\nO\n<!-- /section:old -->\n<!-- section:ov -->\nOV1\n<!-- /section:ov -->\n<!-- section:kept -->\nK0\n<!-- /section:kept -->\n'
+  put zq.seeds/FIRST.md '<!-- section:f1 -->\nF1\n<!-- /section:f1 -->\n\n<!-- section:f2 -->\nF2\n<!-- /section:f2 -->\n'
+  put zq/FIRST.md 'title\n<!-- section:f2 -->\nF2\n<!-- /section:f2 -->\n'
+  put zq/.claude/template-base/FIRST.md.seed '<!-- section:f2 -->\nF2\n<!-- /section:f2 -->\n'
+  put zq.seeds/LONE.md '<!-- section:l1 -->\nL1\n<!-- /section:l1 -->\n<!-- section:l2 -->\nL2\n<!-- /section:l2 -->\n'
+  put zq/LONE.md 'text\n<!-- section:mine2 -->\nM\n<!-- /section:mine2 -->\n'
+  put zq/.claude/template-base/LONE.md.seed 'no zones yet\n'
+  check "zones with seed bases runs" \
+    eval 'ts zones "$TMP/zq" "$TMP/zq.seeds" "$TMP/zqo" > "$TMP/zq.tsv" 2> "$TMP/zq.err"'
+  check "seed base: zone in both stays identical" zone_is zq section a identical -
+  check "seed base: zone missing in project and base is new" zone_is zq section b new "+1 -0"
+  check "seed base: zone missing in the project only is an opt-out" zone_is zq section d opted-out -
+  check "seed base: a renamed zone arrives as new" zone_is zq section n2 new "+1 -0"
+  check "seed base: the old name is removed" zone_is zq section old removed "+0 -1"
+  check "seed base: removed zone with an override stays local" zone_is zq section kept local -
+  check "seed base: override zone counts the template change since the base" \
+    zone_is zq section ov override "+1 -1"
+  check "seed base: base block file of a zone" file_is zqo/.zones/section/ov.base 'OV1\n'
+  check "seed base: project block of a removed zone" file_is zqo/.zones/section/old.project 'O\n'
+  check "seed base: new zones behind their predecessors, removed zone gone" file_is zqo/DOC.md \
+    'head\n<!-- section:a -->\nA\n<!-- /section:a -->\n\n<!-- section:b -->\nB\n<!-- /section:b -->\nmine\n<!-- section:c -->\nC\n<!-- /section:c -->\n\n<!-- section:n2 -->\nN2\n<!-- /section:n2 -->\n\n<!-- section:ov -->\n<!-- override: ours -->\nOV0\n<!-- /section:ov -->\n<!-- section:kept -->\n<!-- override: still ours -->\nK\n<!-- /section:kept -->\nend\n'
+  check "seed base: new zone without predecessor before its successor" file_is zqo/FIRST.md \
+    'title\n\n<!-- section:f1 -->\nF1\n<!-- /section:f1 -->\n\n<!-- section:f2 -->\nF2\n<!-- /section:f2 -->\n'
+  check "seed base: new zones without neighbours at the end, in render order" file_is zqo/LONE.md \
+    'text\n<!-- section:mine2 -->\nM\n<!-- /section:mine2 -->\n\n<!-- section:l1 -->\nL1\n<!-- /section:l1 -->\n\n<!-- section:l2 -->\nL2\n<!-- /section:l2 -->\n'
+  check "seed base: opted-out zone taken back by name" \
+    eval 'ts zones "$TMP/zq" "$TMP/zq.seeds" "$TMP/zqd" d > "$TMP/zqd.tsv"'
+  check "seed base: named opt-out goes behind its predecessor, nothing else applied" file_is zqd/DOC.md \
+    'head\n<!-- section:a -->\nA\n<!-- /section:a -->\nmine\n<!-- section:c -->\nC\n<!-- /section:c -->\n\n<!-- section:d -->\nD\n<!-- /section:d -->\n\n<!-- section:old -->\nO\n<!-- /section:old -->\n\n<!-- section:ov -->\n<!-- override: ours -->\nOV0\n<!-- /section:ov -->\n<!-- section:kept -->\n<!-- override: still ours -->\nK\n<!-- /section:kept -->\nend\n'
+  check "seed base: a removed zone only by name" \
+    eval 'ts zones "$TMP/zq" "$TMP/zq.seeds" "$TMP/zqr" old > /dev/null'
+  check "seed base: only the named zone removed" file_is zqr/DOC.md \
+    'head\n<!-- section:a -->\nA\n<!-- /section:a -->\nmine\n<!-- section:c -->\nC\n<!-- /section:c -->\n\n<!-- section:ov -->\n<!-- override: ours -->\nOV0\n<!-- /section:ov -->\n<!-- section:kept -->\n<!-- override: still ours -->\nK\n<!-- /section:kept -->\nend\n'
+  refute "seed base: a local zone cannot be applied" ts zones "$TMP/zq" "$TMP/zq.seeds" "$TMP/zqk" kept
+  check "seed base: --base names files without suffix, seed bases unused" \
+    eval 'ts zones --base "$TMP/zp.base" "$TMP/zq" "$TMP/zq.seeds" "$TMP/zqb" > "$TMP/zqb.tsv"'
+  check "seed base: without its base the missing zone is unconfirmed" zone_is zqb section d unconfirmed
+
+  # --- snapshot --seeds ----------------------------------------------------------------
+  mkdir -p "$TMP/zq2" "$TMP/zq.none"
+  check "snapshot --seeds runs" \
+    eval 'ts snapshot --seeds "$TMP/zq2" "$TMP/zq.seeds" DOC.md > "$TMP/zq2.tsv"'
+  check "snapshot --seeds: line" row_is zq2 DOC.md set
+  check "snapshot --seeds: base is the rendered seed file" \
+    cmp -s "$TMP/zq2/.claude/template-base/DOC.md.seed" "$TMP/zq.seeds/DOC.md"
+  refute "snapshot --seeds: no managed base written" test -e "$TMP/zq2/.claude/template-base/DOC.md.base"
+  check "status ignores seed bases" eval '[ -z "$(ts status "$TMP/zq")" ]'
+  check "merge ignores seed bases" eval '[ -z "$(ts merge "$TMP/zq" "$TMP/zq.none" "$TMP/zqm")" ]'
+  put zq2/.claude/template-base/STD.md.base 'managed\n'
+  put zq.seeds/STD.md 'managed\n'
+  refute "snapshot --seeds: a target with a managed base is refused" \
+    ts snapshot --seeds "$TMP/zq2" "$TMP/zq.seeds" STD.md
+  refute "snapshot --seeds: nothing written for a refused target" \
+    test -e "$TMP/zq2/.claude/template-base/STD.md.seed"
+  check "snapshot --seeds: a target no longer rendered loses its seed base" \
+    eval 'ts snapshot --seeds "$TMP/zq2" "$TMP/zq.none" DOC.md > "$TMP/zq3.tsv"'
+  check "snapshot --seeds: removed line" row_is zq3 DOC.md removed
+  refute "snapshot --seeds: seed base gone" test -e "$TMP/zq2/.claude/template-base/DOC.md.seed"
+  refute "--seeds is no option of zones" ts zones --seeds "$TMP/zq" "$TMP/zq.seeds" "$TMP/zqx"
 
   # --- broken markers in the render ---------------------------------------------------
   put zx.seeds/A.md '<!-- section:a -->\nx\n'
@@ -138,6 +205,22 @@ run_zones_cases() {
   render zg.seeds docs-only private --seeds OPTIONAL=graphiti
   check "zones with graphiti" eval 'ts zones "$TMP/zg" "$TMP/zg.seeds" "$TMP/zgo" > "$TMP/zg1.tsv"'
   check "graphiti zone identical" zone_is zg1 section claude-graphiti identical
+  # Graphiti switched on later: the seed base of the old answers lacks its zone.
+  cp -R "$TMP/zr" "$TMP/zgp"
+  check "seed base of a project without graphiti" \
+    eval 'ts snapshot --seeds "$TMP/zgp" "$TMP/zr.seeds" CLAUDE.md > /dev/null'
+  check "zones after switching graphiti on" \
+    eval 'ts zones "$TMP/zgp" "$TMP/zg.seeds" "$TMP/zgn" > "$TMP/zgn.tsv"'
+  check "graphiti switched on: its zone is new" zone_is zgn section claude-graphiti new
+  check "graphiti switched on: other zones identical" zone_is zgn section claude-startup identical -
+  cp "$TMP/zgn/CLAUDE.md" "$TMP/zgp/CLAUDE.md"
+  check "zones after inserting the graphiti zone" \
+    eval 'ts zones "$TMP/zgp" "$TMP/zg.seeds" "$TMP/zgn2" > "$TMP/zgn2.tsv"'
+  check "graphiti inserted: its zone is identical" zone_is zgn2 section claude-graphiti identical -
+  check "graphiti inserted: before the startup zone" eval 'awk "
+    /^<!-- section:claude-graphiti -->\$/ { g = NR }
+    /^<!-- section:claude-startup -->\$/ { s = NR }
+    END { exit !(g && g < s) }" "$TMP/zgp/CLAUDE.md"'
   render zt ts-node private --seeds
   render zt.seeds ts-node private --seeds
   check "zones on a fresh ts-node render" eval 'ts zones "$TMP/zt" "$TMP/zt.seeds" "$TMP/zto" > "$TMP/zt1.tsv"'

@@ -100,7 +100,11 @@ tools from reading the copies: Biome rejects a second root `biome.json`, Renovat
 - **Content:** what `scripts/template-sync.sh render` in the plugin writes for the
   project's answers (§ Answers) — managed core targets, module parts and managed
   `files/**`; placeholders filled, `template:adapt` markers left raw. Seed files are not
-  in the snapshot; their zones are synced by marker (§ Seed sections).
+  merged; their zones are synced by marker (§ Seed sections).
+- **Seed bases:** for seed files with zones, the seed render at the last sync as
+  `<target>.seed` (`template-sync.sh snapshot --seeds`). Only the zone sync reads it — it
+  tells a zone the template added since then from one the project opted out of;
+  `status`, `merge` and the `/step-done` backstop read `.base` files only.
 - **Merge:** `/update-conventions` merges each target three-way (`git merge-file`: base,
   project, current template): project additions stay, template changes arrive, only
   overlapping changes conflict. Line ends, a missing final newline and the content of the
@@ -333,8 +337,21 @@ zones are wrapped in `<!-- section:NAME -->` … `<!-- /section:NAME -->` marker
 `/update-conventions` can diff and offer each section individually; everything unmarked
 stays untouchable. A project that deletes a marker pair permanently opts that zone out
 of updates; an override line inside a zone protects it (§ Markers). The plugin's
-`scripts/template-sync.sh zones` compares each zone with the render; this manifest
-defines the contract and the inventory:
+`scripts/template-sync.sh zones` compares each zone with the render and the seed base
+(§ Base snapshot):
+
+- **New zone** — in the render, neither in the file nor in its seed base (added by the
+  template, or by an optional block the answers switched on since): offered and inserted
+  behind its nearest predecessor of the render order that the file has, without one
+  before its nearest successor, without both at the end of the file.
+- **Opted-out zone** — in the seed base, not in the file: listed only; inserted again only
+  on request. Without a seed base (projects synced before seed bases existed) a missing
+  zone is asked about once.
+- **Removed zone** — in the file and its seed base, no longer in the render: removing it
+  with its content is offered; with an override line it stays as project text. A
+  renamed zone shows as one removed and one new zone.
+
+This manifest defines the contract and the inventory:
 
 | Seed file | Sections |
 |-----------|----------|

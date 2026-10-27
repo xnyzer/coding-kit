@@ -261,8 +261,12 @@ run_global_cases() {
   edit_rules gzc '{ sub(/Conventional Commits, englisch/, "Conventional Commits, deutsch"); print }'
   edit_rules gzc '{ print } $0 == "<!-- section:global-graphiti -->" { print "<!-- override: own wording -->" }'
   edit_rules gzc '$0 != "<!-- section:global-workflow -->" && $0 != "<!-- /section:global-workflow -->"'
+  # The base of the last sync: the same render (update-conventions keeps it in the
+  # plugin's data folder).
+  mkdir -p "$TMP/gzc.base/rules"
+  cp "$TMP/ga/$G" "$TMP/gzc.base/$G.base"
   check "zones runs on a config folder" \
-    eval 'ts zones "$TMP/gzc" "$TMP/ga" "$TMP/gzco" > "$TMP/gzc.tsv" 2> "$TMP/gzc.err"'
+    eval 'ts zones --snapshot "$TMP/gzc.base" "$TMP/gzc" "$TMP/ga" "$TMP/gzco" > "$TMP/gzc.tsv" 2> "$TMP/gzc.err"'
   check "zones: config folder, unchanged zone is identical" zone_is gzc section global-language identical -
   check "zones: config folder, explain zone is identical" zone_is gzc section global-explain identical -
   check "zones: config folder, edited zone differs" zone_is gzc section global-git differs "+1 -1"
@@ -273,6 +277,25 @@ run_global_cases() {
   sed 's/Conventional Commits, deutsch/Conventional Commits, englisch/' "$TMP/gzc/$G" > "$TMP/gzc.expected"
   check "zones: config folder, result restores the differing zone only" \
     cmp -s "$TMP/gzco/$G" "$TMP/gzc.expected"
+
+  check "zones: config folder without a base cannot tell an opt-out" \
+    eval 'ts zones "$TMP/gzc" "$TMP/ga" "$TMP/gzcu" > "$TMP/gzcu.tsv" 2> "$TMP/gzcu.err"'
+  check "zones: config folder without a base, missing zone is unconfirmed" \
+    zone_is gzcu section global-workflow unconfirmed
+
+  # A zone the kit gained since the last sync: neither the rules file nor the base has it.
+  copy_rules ga gzw
+  edit_rules gzw '$0 == "<!-- section:global-workflow -->" { skip = 1 } !skip { print } $0 == "<!-- /section:global-workflow -->" { skip = 0 }'
+  mkdir -p "$TMP/gzw.base/rules"
+  cp "$TMP/gzw/$G" "$TMP/gzw.base/$G.base"
+  check "zones: a new kit zone runs" \
+    eval 'ts zones --snapshot "$TMP/gzw.base" "$TMP/gzw" "$TMP/ga" "$TMP/gzwo" > "$TMP/gzw.tsv" 2> "$TMP/gzw.err"'
+  check "zones: a new kit zone is new" zone_is gzw section global-workflow new
+  check "zones: a new kit zone, the others identical" zone_is gzw section global-git identical -
+  cp "$TMP/gzwo/$G" "$TMP/gzw/$G"
+  check "zones: after inserting the new kit zone" \
+    eval 'ts zones --snapshot "$TMP/gzw.base" "$TMP/gzw" "$TMP/ga" "$TMP/gzwo2" > "$TMP/gzw2.tsv"'
+  check "zones: the inserted kit zone is identical" all_zones gzw2 identical
 
   copy_rules ga gzv
   check "zones: a changed value shows as a differing zone" \
