@@ -26,8 +26,13 @@ lint:
 format:
     @echo "docs-only: nothing to format."
 
+# Regenerate the table of all features in features/INDEX.md
+features-index:
+    sh scripts/features-index.sh write
+
 # Full gate — must be green before every commit
 check:
+    sh scripts/features-index.sh check
     @echo "docs-only: no code checks configured."
 
 # Production build

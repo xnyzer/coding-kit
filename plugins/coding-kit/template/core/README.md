@@ -8,7 +8,7 @@ whom, what makes it distinct. -->
 ## Status
 
 <!-- template:adapt: one line on the current state -->
-Early development — see `PROGRESS.md` for the roadmap.
+Early development — see [features/INDEX.md](features/INDEX.md) for the roadmap.
 
 <!-- section:readme-getting-started -->
 ## Getting started
@@ -34,8 +34,9 @@ just check     # full gate: format check, lint, types, tests
 
 ## Documentation
 
-- `REQUIREMENTS.md` — intent (transitional; dissolved into `PROGRESS.md`)
-- `PROGRESS.md` — roadmap and task list
+- `features/INDEX.md` — roadmap: recommended order and the table of all features, one
+  file per feature in `features/`
+- `docs/adr/` — decisions that shape the project beyond one feature
 - `CODING-STANDARDS.md` — binding coding rules
 - `HOW-TO-CODE-WITH-CLAUDE.md` — development workflow (Claude Code + coding-kit skills)
 - `CONTRIBUTING.md`, `SECURITY.md`, `AI-DISCLOSURE.md` — governance

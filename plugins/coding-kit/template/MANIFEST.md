@@ -21,7 +21,7 @@ lowercase and therefore never collide).
 | `{{OWNER}}` | GitHub login | `gh api user --jq .login` |
 | `{{YEAR}}` | Current year | runtime |
 | `{{GROUP_ID}}` | Graphiti group id | defaults to project name |
-| `{{LANG_LIVING_DOCS}}` | Language of living docs (PROGRESS, REQUIREMENTS, decision logs) | `/new-project` language preset (default: English) |
+| `{{LANG_LIVING_DOCS}}` | Language of living docs (feature files and their index, § Features) | `/new-project` language preset (default: English) |
 | `{{LANG_CLAUDE_MD}}` | Language of CLAUDE.md prose | `/new-project` language preset (default: English) |
 | `{{LANG_COMMENTS}}` | Language of code comments & docstrings | `/new-project` language preset (default: English) |
 | `{{LANG_COMMITS}}` | Language of commit-message prose (Conventional tokens stay English) | `/new-project` language preset (default: English) |
@@ -63,6 +63,7 @@ otherwise.
 | `<!-- module:coding-standards -->` … `<!-- /module:coding-standards -->` | Slot in `CODING-STANDARDS.md` §13 where standards fragments are **appended** (each wrapped in `fragment:NAME`), not single-inserted. |
 | `<!-- fragment:NAME -->` … `<!-- /fragment:NAME -->` | Wraps one self-contained standards fragment inside the `module:coding-standards` slot. `NAME` = a catalog fragment (`modules/standards/`) or a stack module's own module fragment. See § Standards fragments. |
 | `<!-- section:NAME -->` … `<!-- /section:NAME -->` | Marks a template-owned zone inside a **seed** file that `/update-conventions` may diff and offer individually — never the whole file. Names are lowercase-kebab, unique across the template. See § Seed sections. |
+| `<!-- features-index -->` … `<!-- /features-index -->` | The generated table of all features in `features/INDEX.md`; only `scripts/features-index.sh write` writes between them (§ Features). |
 | `# module:gitignore` / `# module:ci-jobs` | Append points for module parts in non-HTML files. |
 | `<!-- override: reason -->` | Project-local deviation inside a seed zone or a standards fragment: `/update-conventions` leaves that zone or fragment alone. Whole files are registered in § Deviation registry instead. |
 
@@ -148,9 +149,8 @@ contains itself, is offered for removal.
 | Source | Target in project | Policy |
 |--------|-------------------|--------|
 | `core/CLAUDE.md` | `CLAUDE.md` | seed |
-| `core/PROGRESS.md` | `PROGRESS.md` | seed |
-| `core/PROGRESS-ARCHIVE.md` | `PROGRESS-ARCHIVE.md` | seed |
-| `core/REQUIREMENTS.md` | `REQUIREMENTS.md` | seed (transitional artifact) |
+| `core/features/INDEX.md` | same path | seed |
+| `core/features/F-000-template.md` | same path | managed |
 | `core/README.md` | `README.md` | seed |
 | `core/LICENSE` | `LICENSE` | seed (default Apache-2.0; `/choose-license` may replace) |
 | `core/CODE_OF_CONDUCT.md` | `CODE_OF_CONDUCT.md` | managed, public-only |
@@ -178,6 +178,7 @@ contains itself, is offered for removal.
 | `core/.gitignore` | `.gitignore` | managed (module appends below marker) |
 | `core/private/README.md` | `private/README.md` | managed |
 | `core/scripts/privacy-lint.sh` | `scripts/privacy-lint.sh` | managed |
+| `core/scripts/features-index.sh` | same path | managed |
 | `core/docs/adr/README.md` | same path | managed |
 | `core/docs/adr/0000-template.md` | same path | managed |
 
@@ -192,8 +193,13 @@ enforces it).
 
 | Version | Old target | New target | Policy |
 |---------|------------|------------|--------|
+| 2.0.0 | `PROGRESS.md` | removed | seed |
+| 2.0.0 | `PROGRESS-ARCHIVE.md` | removed | seed |
+| 2.0.0 | `REQUIREMENTS.md` | removed | seed |
 
-No target has been removed or renamed so far (checked back to template 0.1.0).
+The three files of the old document model are replaced by `features/` (§ Features).
+Their content is not moved by this table: `/update-conventions` migrates it into feature
+files and the overview of `CLAUDE.md`, and deletes the old files only after that.
 
 ## Module contract
 
@@ -225,8 +231,10 @@ above are exact. The plugin's `scripts/template-sync.sh render` implements them:
   machine-read.
 
 **Standard recipe set** every module's justfile must implement (skills call only these):
-`setup`, `dev`, `test`, `lint`, `format`, `check`, `build`. `check` is the full gate
-(format check + lint + types + tests) and must be green before any commit.
+`setup`, `dev`, `test`, `lint`, `format`, `check`, `build`, `features-index`. `check` is
+the full gate (format check + lint + types + tests) and must be green before any commit;
+it also runs `sh scripts/features-index.sh check`, and `features-index` runs
+`sh scripts/features-index.sh write` (§ Features).
 
 ## Standards fragments
 
@@ -329,6 +337,52 @@ kit decides — never added to the project. Stub modules (`modules/README.md`) d
 signals, so their languages count as `unknown` too. A tool that needs no convention (an
 infra CLI, a linter) is declined with a Rules row.
 
+## Features
+
+Every task of a project is a **feature**: an F-number with one file
+`features/F-NNN-short-name.md` that grows over its whole life — intake, specification, plan,
+history — and is never moved or renamed. The short name comes from the title (lowercase
+ASCII letters, digits, hyphens; about 40 characters) and stays when the title changes.
+`features/F-000-template.md` (managed) is the template; `features/INDEX.md` (seed) is the
+overview. A project's goals, non-goals and constraints live in the overview of `CLAUDE.md`.
+
+**Header block.** A feature file starts with a block between two `---` lines of plain
+`key: value` lines — no quotes, no multi-line values, lists comma-separated:
+
+| Field | Value | Required |
+|-------|-------|----------|
+| `id` | `F-NNN`, the number of the file name | yes |
+| `title` | at most 70 characters; says what changes — not how, not why | yes |
+| `type` | `feature` (new behaviour), `fix` (wrong behaviour), `change` (rework, docs, upkeep, audit) | yes |
+| `status` | see below | yes |
+| `size` | `S`, `M`, `L`; empty until `/prep-step` sets it | — |
+| `created` | `YYYY-MM-DD` | yes |
+| `done` | `YYYY-MM-DD`; required for `DONE`, allowed for `DROPPED` and `SUPERSEDED`, empty while open | — |
+| `depends-on` | F-numbers | — |
+| `superseded-by` | F-numbers; required for `SUPERSEDED`, empty otherwise | — |
+
+**Status.** Open: `BACKLOG` (captured), `PLANNED` (specification and plan approved),
+`IN-PROGRESS` (first substep booked). Closed: `DONE` (final; follow-up work gets a new
+number), `DROPPED` (not, or no further, implemented; the reason is in the file),
+`SUPERSEDED` (merged into or split across the features in `superseded-by`). The way
+through and who sets what: the zone `index-head` of `features/INDEX.md`.
+
+**Sections** of a feature file, headed in the language of the living docs: intake,
+specification, plan, history — the template carries them with their hints.
+
+**Index.** `features/INDEX.md` has the zone `index-head`, then the recommended order
+(written by hand; only open features), then the table of all features between the marker
+lines `<!-- features-index -->` and `<!-- /features-index -->`, then the line
+`next-feature: F-NNN`. The table is generated, never edited by hand: one row per feature,
+sorted by number — ID linked to the file, title, status (`SUPERSEDED → F-NNN`), done date.
+
+**Script.** `scripts/features-index.sh` (managed, POSIX sh + awk) is the only writer of the
+table: `write` regenerates it, `check` reports broken header blocks, duplicate numbers, a
+stale table, a missing or too low `next-feature` and recommended-order entries that are not
+open. Every justfile runs `check` in `just check` and `write` as `just features-index`
+(§ Module contract); the pre-commit hook runs `check` when files in `features/` are staged
+and never writes.
+
 ## Seed sections
 
 Seed files are living documents and never updated as a whole — but some carry
@@ -360,9 +414,7 @@ This manifest defines the contract and the inventory:
 | Seed file | Sections |
 |-----------|----------|
 | `core/CLAUDE.md` | `claude-graphiti` (inside the `template:optional:graphiti` block), `claude-startup`, `claude-conventions`, `claude-workflow` |
-| `core/PROGRESS.md` | `progress-head` |
-| `core/PROGRESS-ARCHIVE.md` | `archive-head` |
-| `core/REQUIREMENTS.md` | `requirements-head` |
+| `core/features/INDEX.md` | `index-head` |
 | `core/README.md` | `readme-getting-started` |
 | `core/.claude/convention-overrides.md` | `overrides-head` |
 

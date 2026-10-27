@@ -14,6 +14,8 @@ stays discoverable; its contents are not.
 - Personal or customer data, real names, private email addresses.
 - Working material with private context (e.g. the original project brief) that must stay out
   of the tracked tree.
+- Long drafts (about 40 lines and more) of a feature file, the features index or the goals
+  in `CLAUDE.md` while they wait for approval — deleted once the approved text is in place.
 
 ## blocklist.txt
 
@@ -25,7 +27,7 @@ only the lint's generic patterns run.
 
 ## Rules
 
-- **Never** copy anything from here into a tracked file. The living docs (README, PROGRESS,
+- **Never** copy anything from here into a tracked file. The living docs (README, features,
   …) stay free of private information so the project is publishable at any time.
 - If something private slips into the tree, move it here and scrub the history before any
   publish.

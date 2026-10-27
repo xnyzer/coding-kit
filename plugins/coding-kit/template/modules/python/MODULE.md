@@ -11,7 +11,7 @@ enforces the floor. Build backend: `uv_build`.
 
 | Part | Notes |
 |------|-------|
-| `justfile` | replaces core justfile; `check` = ruff format-check + ruff lint + pyright + pytest |
+| `justfile` | replaces core justfile; `check` = features index + ruff format-check + ruff lint + pyright + pytest; `features-index` regenerates the index table |
 | `mise.part.toml` | python (current stable major.minor) + uv |
 | `gitignore.part` | .venv, caches, dist |
 | `CODING-STANDARDS.part.md` | Python toolchain rules for §13 (module fragment) |

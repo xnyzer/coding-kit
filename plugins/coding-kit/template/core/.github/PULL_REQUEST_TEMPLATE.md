@@ -9,6 +9,6 @@
 ## Checklist
 
 - [ ] `just check` is green
-- [ ] Docs updated where behaviour changed (README, PROGRESS, standards)
+- [ ] Docs updated where behaviour changed (README, feature file, standards)
 - [ ] No secrets, private emails, IPs, or local paths in the diff
 - [ ] Conventional Commits title; security-relevant changes called out explicitly

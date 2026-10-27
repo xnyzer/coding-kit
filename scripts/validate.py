@@ -131,6 +131,14 @@ SNAPSHOT_ATTRIBUTE_RE = re.compile(r"^\.claude/template-base/\*\*\s.*linguist-ge
 # `${CLAUDE_PLUGIN_ROOT}/<path>` as written in skill text (substituted at load time).
 PLUGIN_ROOT_VAR = "${CLAUDE_PLUGIN_ROOT}"
 PLUGIN_PATH_RE = re.compile(re.escape(PLUGIN_ROOT_VAR) + r"/([^\s`'\"),;]+)")
+# Features index (MANIFEST § Features): every justfile a project can get runs the check in
+# `just check` and the generator as `just features-index`; the pre-commit hook checks too.
+FEATURES_RECIPES = {
+    "check": "sh scripts/features-index.sh check",
+    "features-index": "sh scripts/features-index.sh write",
+}
+LEFTHOOK_TEMPLATE = TEMPLATE_ROOT / "core" / "lefthook.yml"
+JUST_RECIPE_RE = re.compile(r"^([a-z][a-z0-9-]*)(?:\s[^:\n]*)?:(?!=)[^\n]*\n((?:[ \t]+\S[^\n]*\n?)*)", re.M)
 
 MUST_BE_EXECUTABLE = ("install.sh",)
 
@@ -831,6 +839,24 @@ def check_template_contract(findings: list[str]) -> None:
     check_module_file_policies(findings)
     check_snapshot_contract(text, findings)
     check_detection(text, findings)
+    check_features_recipes(findings)
+
+
+def check_features_recipes(findings: list[str]) -> None:
+    """The core justfile and every module justfile run the features index check in
+    `check` and its generator as `features-index`; the pre-commit hook runs the check."""
+    justfiles = [TEMPLATE_ROOT / "core" / "justfile", *sorted(TEMPLATE_ROOT.glob("modules/*/justfile"))]
+    for justfile in justfiles:
+        recipes = {
+            name: body for name, body in JUST_RECIPE_RE.findall(justfile.read_text(encoding="utf-8"))
+        }
+        for recipe, command in FEATURES_RECIPES.items():
+            if command not in recipes.get(recipe, ""):
+                findings.append(
+                    f"{display_path(justfile)}: recipe '{recipe}' does not run '{command}'"
+                )
+    if "sh scripts/features-index.sh check" not in LEFTHOOK_TEMPLATE.read_text(encoding="utf-8"):
+        findings.append(f"{display_path(LEFTHOOK_TEMPLATE)}: no pre-commit job runs the features index check")
 
 
 def parse_frontmatter(path: Path, findings: list[str]) -> dict | None:
@@ -980,7 +1006,9 @@ def main() -> int:
         check_placeholders(path, text, findings, registry, global_keys)
         check_privacy(path, text, findings)
         check_blocklist(path, text, findings, blocklist)
-        if in_template(path):
+        # Markers are HTML comments in Markdown; a script that searches for one (e.g. the
+        # template's features-index.sh) names it inside a line of code, not as a marker.
+        if in_template(path) and path.suffix == ".md":
             check_paired_markers(path, text, findings)
     check_plugin_contracts(findings)
     check_global_rules(findings, global_keys)

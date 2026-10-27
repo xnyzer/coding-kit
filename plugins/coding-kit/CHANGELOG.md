@@ -13,6 +13,49 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 2.0.0 — unveröffentlicht
+
+Neues Dokumentmodell: eine Datei je Feature statt `PROGRESS.md`, Archiv und
+`REQUIREMENTS.md` (F-036, in Arbeit). Jedes Projekt muss migrieren, bevor es mit den
+Skills dieser Version weiterarbeitet.
+
+- **`scripts/features-index.sh`** (Template, POSIX-Shell und awk): `write` erzeugt die
+  Tabelle aller Features in `features/INDEX.md` aus den Kopfblöcken der Feature-Dateien,
+  sortiert nach Nummer und nur zwischen ihren Markern; ein übersetzter Tabellenkopf
+  bleibt. `check` meldet kaputte Kopfblöcke (Pflichtfelder, `id` passend zum Dateinamen,
+  erlaubte Werte für Typ, Status und Größe, Datumsformat, `done` und `superseded-by` je
+  Status, Titel über 70 Zeichen), doppelte Nummern, eine veraltete Tabelle, eine fehlende
+  oder zu niedrige `next-feature`-Zeile und Nummern in der empfohlenen Reihenfolge, die
+  keine Datei haben oder nicht offen sind. Bei kaputtem Kopfblock schreibt `write`
+  nichts.
+- **`define-requirements`:** Verweis auf die entfernte Template-Datei `REQUIREMENTS.md`
+  gestrichen; der Skill selbst wird mit F-036c umgebaut.
+- **Kit:** Tests für Erzeugen und Prüfen unter dash und bash, mit System-awk und mawk;
+  der Validator verlangt Prüfung und Erzeugen in jeder justfile des Templates und die
+  Prüfung im Pre-Commit-Hook; der Test-Helfer für Markerpaare zählt nur Marker allein auf
+  einer Zeile.
+
+### Template
+
+- **Neu:** `features/INDEX.md` (seed, Zone `index-head` mit Zweck, Titelregel und
+  Status-Legende samt Weg zwischen den Status; darunter die empfohlene Reihenfolge, die
+  erzeugte Tabelle und `next-feature`) und `features/F-000-template.md` (managed: die
+  Vorlage einer Feature-Datei mit Kopfblock und den Abschnitten Erfassung,
+  Spezifikation, Plan, Verlauf). MANIFEST § Features beschreibt Dateien, Kopfblock,
+  Status, Index und Skript.
+- **Entfernt:** `PROGRESS.md`, `PROGRESS-ARCHIVE.md` und `REQUIREMENTS.md` samt ihren
+  Zonen; MANIFEST § Removed and renamed targets führt sie. Ihr Inhalt kommt über die
+  Migration in `/update-conventions` in die neuen Dateien.
+- **`CLAUDE.md`:** Der Überblick hat die Unterabschnitte Ziele, Nicht-Ziele und
+  Rahmenbedingungen (Projektinhalt). Die Zonen `claude-startup`, `claude-conventions` und
+  `claude-workflow` verweisen auf `features/`; Entscheidungen zu einem Feature stehen in
+  seiner Datei, Grundsätzliches als ADR.
+- **`justfile`** (core und alle Module): `just check` prüft den Index, `just
+  features-index` erzeugt die Tabelle. **`lefthook.yml`:** Der Pre-Commit-Hook prüft,
+  wenn Dateien in `features/` im Commit sind, und schreibt nie.
+- HOW-TO, README, ADR-README, PR-Vorlage und `private/README.md` auf `features/`
+  umgestellt.
+
 ## 1.7.0 — 2026-10-27
 
 Neue Zonen erreichen bestehende Projekte und Rechner (F-049).

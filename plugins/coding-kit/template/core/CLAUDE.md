@@ -22,18 +22,32 @@
 paragraph, written so a fresh session understands what this project is. Full context:
 README.md -->
 
+### Goals
+
+<!-- template:adapt: what the project must achieve — a few bullets. This file is loaded
+in every session: keep each section short; if it grows a lot, move it into its own file
+and import it with @ -->
+
+### Non-goals
+
+<!-- template:adapt: what the project deliberately does not do — as binding as the goals -->
+
+### Constraints
+
+<!-- template:adapt: technical, legal, platform and budget constraints -->
+
 ## Status & where to start
 
 <!-- template:adapt: current state in one or two sentences; keep updated as the project
 evolves (the /step-done skill maintains this) -->
 
 <!-- section:claude-startup -->
-Read `README.md` and `REQUIREMENTS.md` (while it exists). Then `PROGRESS.md`: its open-tasks
-section and the `FEATURE-INDEX` block are the working context — read those; when the file
-has grown large, scan the Done table and backlog instead of reading every entry. Skip
-`PROGRESS-ARCHIVE.md` at startup — consult it only for the rationale of a specific finished
-task. **To continue: open `PROGRESS.md`, take the first open task, run `/prep-step` to plan,
-`/build-step` to implement, then `/step-done` to finish.** Work the open tasks top to bottom.
+Read `README.md`, then `features/INDEX.md`: its recommended order and the table of all
+features are the working context. Open a feature file (`features/F-NNN-*.md`) when you
+work on that feature or need the reasons behind a finished one — not all of them at
+startup. **To continue: take the first feature of the recommended order, run `/prep-step`
+to specify and plan it, `/build-step` to implement it, then `/step-done` to finish each
+substep.**
 <!-- /section:claude-startup -->
 
 <!-- section:claude-conventions -->
@@ -41,7 +55,7 @@ task. **To continue: open `PROGRESS.md`, take the first open task, run `/prep-st
 
 - **Languages** (chosen at instantiation, independent of repo visibility — identifiers,
   Conventional-Commit tokens, status tokens, and governance docs are always English):
-  - Living docs (PROGRESS, REQUIREMENTS, decision logs): **{{LANG_LIVING_DOCS}}**
+  - Living docs (feature files and their index): **{{LANG_LIVING_DOCS}}**
   - CLAUDE.md prose (project parts of this file): **{{LANG_CLAUDE_MD}}**
   - Code comments & docstrings: **{{LANG_COMMENTS}}**
   - Commit-message prose: **{{LANG_COMMITS}}**
@@ -62,11 +76,16 @@ task. **To continue: open `PROGRESS.md`, take the first open task, run `/prep-st
 <!-- section:claude-workflow -->
 ## Workflow & skills
 
-Tasks are F-numbers in `PROGRESS.md` (+ `FEATURE-INDEX` block); finished work is archived
-in `PROGRESS-ARCHIVE.md`. Skills come from the **coding-kit plugin**: `/add-feature`
-(intake), `/prep-step` (plan + decompose), `/build-step` (implement the plan), `/step-done`
-(review, secrets scan, docs, commit question), `/audit-code` (full audit). Details:
+Every task is an F-number with its own file in `features/` (`F-NNN-short-name.md`, from
+`F-000-template.md`): intake, specification, plan and history in one place.
+`features/INDEX.md` holds the recommended order and the table of all features, which
+`just features-index` generates from the files. Skills come from the **coding-kit
+plugin**: `/add-feature` (intake and advice), `/prep-step` (specify, size and plan),
+`/build-step` (implement the plan), `/step-done` (review, secrets scan, history and
+booking, commit question), `/audit-code` (full audit). Details:
 `HOW-TO-CODE-WITH-CLAUDE.md`.
-Coding rules: `CODING-STANDARDS.md`. Project-local deviations from template conventions
-are registered in `.claude/convention-overrides.md`.
+Decisions about one feature are recorded in its file; a decision that shapes the project
+beyond one feature becomes an ADR in `docs/adr/`. Coding rules: `CODING-STANDARDS.md`.
+Project-local deviations from template conventions are registered in
+`.claude/convention-overrides.md`.
 <!-- /section:claude-workflow -->

@@ -11,7 +11,7 @@ locally and as an extra CI job. Go version = current stable via mise + `go.mod` 
 
 | Part | Notes |
 |------|-------|
-| `justfile` | replaces core justfile; `check` = fmt-check + vet + golangci-lint + build + test -race |
+| `justfile` | replaces core justfile; `check` = features index + fmt-check + vet + golangci-lint + build + test -race; `features-index` regenerates the index table |
 | `mise.part.toml` | go (current major.minor) + golangci-lint |
 | `gitignore.part` | bin, dist, coverage.out |
 | `CODING-STANDARDS.part.md` | Go toolchain rules for §13 (module fragment) |

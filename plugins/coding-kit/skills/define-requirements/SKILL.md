@@ -39,7 +39,7 @@ Aus der Short-Info Vorschläge ableiten und bestätigen lassen statt offen zu fr
 
 ## 2. REQUIREMENTS.md schreiben (M5-Struktur)
 
-Struktur = Template-Skelett (`${CLAUDE_PLUGIN_ROOT}/template/core/REQUIREMENTS.md`): Kopfnotiz
+Struktur: Kopfnotiz
 „Transitional artifact" mit Auflöse-Regel, **Goals**, **Core features** (nummeriert —
 jedes wird eine F-Nummer), **Out of scope**, **Constraints**, **Decision log** (datiert,
 Product/Technical getrennt; Historie nie umschreiben — neue Einträge ergänzen),

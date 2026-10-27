@@ -1,7 +1,7 @@
 #!/bin/sh
 # Tests for plugins/coding-kit/scripts/template-sync.sh against the bundled template and
 # the kit's global rules (plugins/coding-kit/global/), plus the session-start hook that
-# reads them.
+# reads them and the template's own scripts/features-index.sh.
 # Every case runs under dash and bash (the shells skills meet on Linux and macOS); the
 # script must behave the same in both. Then one more pass under the first shell for each
 # of mawk and gawk that is installed but not the default awk: awk implementations differ
@@ -102,11 +102,12 @@ listing_matches() {
   cmp -s "$TMP/$1.listed" "$TMP/$1.found"
 }
 
-# Every section/fragment/module marker below DIR is opened as often as it is closed.
+# Every section/fragment/module marker below DIR is opened as often as it is closed. A
+# marker counts only on a line of its own (MANIFEST § Markers), not quoted inside code.
 markers_paired() {
   for mp_kind in section fragment module; do
-    mp_open=$(grep -rhoE "<!-- $mp_kind:[a-z0-9-]+ -->" "$TMP/$1" | wc -l)
-    mp_close=$(grep -rhoE "<!-- /$mp_kind:[a-z0-9-]+ -->" "$TMP/$1" | wc -l)
+    mp_open=$(grep -rhxE "[[:space:]]*<!-- $mp_kind:[a-z0-9-]+ -->[[:space:]]*" "$TMP/$1" | wc -l)
+    mp_close=$(grep -rhxE "[[:space:]]*<!-- /$mp_kind:[a-z0-9-]+ -->[[:space:]]*" "$TMP/$1" | wc -l)
     [ "$mp_open" -eq "$mp_close" ] || return 1
   done
 }
@@ -198,6 +199,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 . "$HERE/hook.sh"
 . "$HERE/lock.sh"
 . "$HERE/detect.sh"
+. "$HERE/features.sh"
 
 # --- main -----------------------------------------------------------------------
 
@@ -221,6 +223,7 @@ run_cases() {  # DIR
   run_hook_cases
   run_lock_cases
   run_detect_cases
+  run_features_cases
 }
 
 # The awk implementation behind COMMAND: mawk or gawk by their -W version line, "other"

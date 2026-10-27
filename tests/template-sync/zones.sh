@@ -266,19 +266,19 @@ run_zones_cases() {
   check "zones after inserting the graphiti zone" \
     eval 'ts zones "$TMP/zgp" "$TMP/zg.seeds" "$TMP/zgn2" > "$TMP/zgn2.tsv"'
   check "graphiti inserted: its zone is identical" zone_is zgn2 section claude-graphiti identical -
-  # The head zone of PROGRESS.md opted out by deleting its markers, without a seed base,
-  # next to a zone of the project's own: its text stands, so it is bare.
-  mkdir -p "$TMP/zph"
-  awk '$0 != "<!-- section:progress-head -->" && $0 != "<!-- /section:progress-head -->"' \
-    "$TMP/zr/PROGRESS.md" > "$TMP/zph/PROGRESS.md"
-  printf '\n<!-- section:progress-notes -->\nOwn.\n<!-- /section:progress-notes -->\n' >> "$TMP/zph/PROGRESS.md"
-  { cat "$TMP/zr/PROGRESS.md"; printf '\n<!-- section:progress-notes -->\nOwn.\n<!-- /section:progress-notes -->\n'; } \
+  # The head zone of features/INDEX.md opted out by deleting its markers, without a seed
+  # base, next to a zone of the project's own: its text stands, so it is bare.
+  mkdir -p "$TMP/zph/features"
+  awk '$0 != "<!-- section:index-head -->" && $0 != "<!-- /section:index-head -->"' \
+    "$TMP/zr/features/INDEX.md" > "$TMP/zph/features/INDEX.md"
+  printf '\n<!-- section:index-notes -->\nOwn.\n<!-- /section:index-notes -->\n' >> "$TMP/zph/features/INDEX.md"
+  { cat "$TMP/zr/features/INDEX.md"; printf '\n<!-- section:index-notes -->\nOwn.\n<!-- /section:index-notes -->\n'; } \
     > "$TMP/zph.expected"
   check "zones on a head zone without markers" \
-    eval 'ts zones "$TMP/zph" "$TMP/zr.seeds" "$TMP/zpho" progress-head > "$TMP/zph.tsv"'
-  check "head zone without markers is bare" zone_is zph section progress-head bare -
+    eval 'ts zones "$TMP/zph" "$TMP/zr.seeds" "$TMP/zpho" index-head > "$TMP/zph.tsv"'
+  check "head zone without markers is bare" zone_is zph section index-head bare -
   check "head zone by name: its markers back around the text, nothing else" \
-    cmp -s "$TMP/zpho/PROGRESS.md" "$TMP/zph.expected"
+    cmp -s "$TMP/zpho/features/INDEX.md" "$TMP/zph.expected"
   check "graphiti inserted: before the startup zone" eval 'awk "
     /^<!-- section:claude-graphiti -->\$/ { g = NR }
     /^<!-- section:claude-startup -->\$/ { s = NR }

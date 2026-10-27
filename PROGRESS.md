@@ -50,6 +50,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-049b | Skills anbinden → **update-conventions bietet neue Zonen zum Einsetzen oder als Opt-out an, gestrichene zum Entfernen oder Behalten, fragt Zonen ohne Basis einmal und holt abgewählte per Name zurück (A2 Schritte 6, 7, 9, A3, G3); Schritt 9 setzt die Seed-Basen in jedem Lauf; new-project setzt sie beim Anlegen; README-Zeile nachgezogen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 | F-049c | Text ohne Marker erkennen → **`zones` findet den Text einer fehlenden Zone wörtlich in der Datei: ohne Basis-Eintrag `bare`, per Name legt das Skript nur die Marker darum — ebenso beim Zurückholen einer abgewählten Zone; eine Abwahl in einer Datei ganz ohne Marker bleibt `opted-out`; update-conventions bietet „Marker setzen" / „so lassen" an, die Marker-Migration von Hand bleibt für geänderten Text (Fund aus dem ersten Testlauf).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 | F-049d | Testlauf und Release → **drei Läufe mit `--plugin-dir` (zusammen 2,11 USD): Projekt mit neuer, abgewählter, entfernter und unbestätigter Zone — der erste fand „Text ohne Marker" (→ F-049c), der wiederholte setzte alles über `zones` um; global eine neue Kit-Zone eingesetzt, die Abwahl respektiert; Release 1.7.0 gepusht, CI grün, Plugin aktualisiert. F-049 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
+| F-036a | Vorlagen und Index-Skript → **`features/INDEX.md` (seed, Zone `index-head` mit Titelregel und Status-Legende) und `features/F-000-template.md` (managed) ersetzen `PROGRESS.md`, `PROGRESS-ARCHIVE.md` und `REQUIREMENTS.md` im Template (erste Zeilen in „Removed and renamed targets"); `scripts/features-index.sh` erzeugt die Tabelle (`write`) und prüft Kopfblöcke, Nummern, Tabelle, `next-feature` und Reihenfolge (`check`) — in `just check` jeder justfile, als `just features-index` und im Pre-Commit-Hook; CLAUDE.md-Überblick mit Zielen, Nicht-Zielen und Rahmenbedingungen; MANIFEST § Features; Version 2.0.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 
 ---
 
@@ -102,7 +103,9 @@ KI-Coding (ai-coding-starter-kit mit `features/INDEX.md`, GitHub Spec Kit).
 - **Kopfblock** (Frontmatter, nur einfache `feld: wert`-Zeilen): `id`, `title`, `type`
   (`feature` neues Verhalten / `fix` falsches Verhalten / `change` Umbau, Doku, Pflege,
   Audit — steuert nur die Ziel-Abschnitte, die Nummer bleibt F-NNN), `status`, `size`
-  (`S`/`M`/`L`, ab prep-step), `created`, `done`, `depends-on`, `superseded-by`. Nicht:
+  (`S`/`M`/`L`, ab prep-step), `created`, `done` (Pflicht bei DONE, erlaubt bei DROPPED
+  und SUPERSEDED, leer solange offen), `depends-on`, `superseded-by` (Listen
+  kommagetrennt). Nicht:
   Priorität (trägt die Reihenfolge), Release-Version, Story Points.
 - **Status** (Token englisch): `BACKLOG` erfasst (add-feature) → `PLANNED` Spezifikation
   und Plan freigegeben, Ready erfüllt (prep-step) → `IN-PROGRESS` erster Substep
@@ -117,9 +120,10 @@ KI-Coding (ai-coding-starter-kit mit `features/INDEX.md`, GitHub Spec Kit).
   - *Erfassung* (add-feature): Problem; Ziel — `feature`: Story „Als … möchte ich …,
     damit …", `fix`: Ist, Soll, Reproduktion, `change`: Ziel und was gleich bleiben muss;
     Lösungsskizze (unverbindlich); Abhängigkeiten; Noch zu analysieren.
-  - *Spezifikation* (prep-step, Phase 1): Abnahmekriterien AK-n als Gegeben/Wenn/Dann
-    inkl. Negativfällen; Randfälle R-n mit erwartetem Verhalten; Nicht-Ziele; Tests je AK;
-    Einbettung; offene Fragen mit `[KLÄREN]`; Entscheidungen datiert mit Grund
+  - *Spezifikation* (prep-step, Phase 1): Abnahmekriterien AC-n als Gegeben/Wenn/Dann
+    inkl. Negativfällen; Randfälle EC-n mit erwartetem Verhalten; Nicht-Ziele; Tests je AC;
+    Einbettung; offene Fragen mit `[CLARIFY]` (Kürzel englisch wie alle Tokens);
+    Entscheidungen datiert mit Grund
     (überstimmt der Nutzer eine Empfehlung, steht das so da).
   - *Plan* (prep-step, Phase 2): Größe mit Begründung, Ansatz, Substeps F-NNNa ….
   - *Verlauf* (step-done, je Substep): was umgesetzt wurde und wie, mit den wichtigen
@@ -164,7 +168,7 @@ KI-Coding (ai-coding-starter-kit mit `features/INDEX.md`, GitHub Spec Kit).
     bleibt beim Nutzer.
 - **Ready** (Bedingung für PLANNED): Problem und Ziel klar, Größe gesetzt, jedes
   Abnahmekriterium prüfbar und mit Testidee, Randfälle betrachtet, Nicht-Ziele ab M, kein
-  blockierendes `[KLÄREN]`, Abhängigkeiten erledigt oder eingeplant, Einbettung geprüft,
+  blockierendes `[CLARIFY]`, Abhängigkeiten erledigt oder eingeplant, Einbettung geprüft,
   Plan steht. **Done:** step-done wie heute, dazu alle Abnahmekriterien des Substeps mit
   Beleg, Verlauf geschrieben, INDEX aktuell.
 - **Projektziele:** Ziele, Nicht-Ziele und Rahmenbedingungen als drei kurze
@@ -179,8 +183,9 @@ KI-Coding (ai-coding-starter-kit mit `features/INDEX.md`, GitHub Spec Kit).
   der CLAUDE.md. Lange
   Entwürfe (etwa ab 40 Zeilen) legt der Skill nach `private/`, übernimmt sie nach dem OK
   und löscht den Entwurf.
-- **Index-Skript** im Template (`scripts/features-index.sh`, POSIX-Shell, Name
-  vorläufig): erzeugt die Tabelle und prüft in `just check` Pflichtfelder, `id` passend
+- **Index-Skript** im Template (`scripts/features-index.sh` mit `write` und `check`,
+  POSIX-Shell; Rezept `just features-index`): erzeugt die Tabelle und prüft in
+  `just check` Pflichtfelder, `id` passend
   zum Dateinamen, erlaubte Status, `done` und `superseded-by` je Status, Titellänge,
   eindeutige Nummern, `next-feature` über der höchsten, aktuelle Tabelle und nur offene
   Features in der Reihenfolge. Der Pre-Commit-Hook prüft nur, er erzeugt nicht (sonst
@@ -220,44 +225,6 @@ KI-Coding (ai-coding-starter-kit mit `features/INDEX.md`, GitHub Spec Kit).
 **Abhängigkeiten:** F-039 und F-049 (erledigt — neue und entfernte Zonen erreichen
 bestehende Projekte). Berührt dieselben Skills wie F-034; F-034 und F-037 folgen danach.
 Entlastet F-029 und F-033.
-
-#### F-036a — Vorlagen und Index-Skript
-
-**Was:** Template: `features/INDEX.md` (seed, Zone `index-head`, Reihenfolge, erzeugte
-Tabelle zwischen Markern, `next-feature`), `features/F-000-template.md` (managed);
-CLAUDE.md-Vorlage: Überblick mit den Unterabschnitten Ziele, Nicht-Ziele und
-Rahmenbedingungen (Projektinhalt, kein Template-Text), Zonen `claude-startup` und
-`claude-workflow` auf `features/`; HOW-TO (Workflows, wichtige
-Dateien), README, ADR-README, PR-Vorlage und `private/README.md` nachziehen;
-`scripts/features-index.sh` (erzeugen und prüfen), justfile-Rezept zum Erzeugen,
-Prüfung in `just check`. `core/PROGRESS.md`, `core/PROGRESS-ARCHIVE.md` und
-`core/REQUIREMENTS.md` entfernen. MANIFEST: Zieltabelle, Seed-Zonen (neu `index-head`;
-weg `progress-head`, `archive-head`, `requirements-head`), erste
-Zeilen in „Removed and renamed targets", Beschreibung von `{{LANG_LIVING_DOCS}}`.
-Validator, Tests, Version 2.0.0 mit CHANGELOG-Eintrag samt `### Template`.
-
-**Dateien:** `plugins/coding-kit/template/MANIFEST.md`; unter
-`plugins/coding-kit/template/core/`: `features/INDEX.md`, `features/F-000-template.md`,
-`CLAUDE.md`, `HOW-TO-CODE-WITH-CLAUDE.md`, `README.md`,
-`docs/adr/README.md`, `.github/PULL_REQUEST_TEMPLATE.md`, `private/README.md`, `justfile`,
-`scripts/features-index.sh` (entfernt: `PROGRESS.md`, `PROGRESS-ARCHIVE.md`,
-`REQUIREMENTS.md`); `scripts/validate.py`, `tests/template-sync/features.sh` (neu),
-`tests/template-sync/run.sh`, `plugins/coding-kit/.claude-plugin/plugin.json`,
-`plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** keine.
-
-**Abnahmekriterien:**
-- [ ] Ein frisch gerendertes Projekt besteht `just check`; sein INDEX ist leer und
-      gültig, seine CLAUDE.md hat im Überblick die Abschnitte Ziele, Nicht-Ziele und
-      Rahmenbedingungen.
-- [ ] Tests: Erzeugen ergibt die Tabelle aus den Kopfblöcken (Sortierung, Links, Status,
-      Datum) und lässt Kopf und Reihenfolge unangetastet; Prüfen fängt fehlendes
-      Pflichtfeld, `id` ungleich Dateiname, unbekannten Status, fehlendes `done` oder
-      `superseded-by`, Titel über 70 Zeichen, doppelte Nummer, zu niedriges
-      `next-feature`, veraltete Tabelle und Erledigtes in der Reihenfolge.
-- [ ] Läuft unter dash und bash, mit System-awk und mawk.
-- [ ] Vertragsprüfungen und Versionsregel grün; `just check` grün.
 
 #### F-036b — Kern-Skills
 

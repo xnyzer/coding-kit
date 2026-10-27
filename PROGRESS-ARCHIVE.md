@@ -16,6 +16,99 @@ zusammen:
 
 ---
 
+## F-036a — Vorlagen und Index-Skript (2026-10-27)
+
+Teil von F-036 (Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt; F-036b–e
+folgen).
+
+**Problem:** Das neue Dokumentmodell braucht zuerst seine Grundlage im Template: die
+Feature-Dateien mit Vorlage und Index, ein Skript, das die Tabelle aller Features erzeugt
+und den Ordner prüft, und einen Vertrag, auf den die Skills in F-036b–d bauen.
+
+**Was entstanden ist (2.0.0, unveröffentlicht):**
+
+- **`features/INDEX.md`** (seed): Zone `index-head` mit Zweck, Titelregel, Pflege der
+  Reihenfolge und Status-Legende samt Weg zwischen den Status; darunter „Recommended
+  order" (Projektinhalt), die Tabelle zwischen `<!-- features-index -->` und
+  `<!-- /features-index -->` und die sichtbare Zeile `next-feature: F-001`.
+- **`features/F-000-template.md`** (managed): Kopfblock und die Abschnitte Intake,
+  Specification (Acceptance criteria, Edge cases, Non-goals, Tests, Embedding, Open
+  questions, Decisions), Plan und History; Hinweise als HTML-Kommentare, Tiefe je Größe.
+- **`scripts/features-index.sh`** (managed, POSIX-Shell und awk): `write` liest die
+  Kopfblöcke aller `F-NNN-*.md` (ohne Vorlage), schreibt die Tabelle nach Nummer sortiert
+  nur zwischen ihre Marker, behält einen übersetzten Tabellenkopf und schreibt nichts,
+  solange ein Kopfblock kaputt ist; danach prüft es. `check` meldet fehlende
+  Pflichtfelder, `id` ungleich Dateiname, falschen Dateinamen, unbekannte Felder,
+  Anführungszeichen, unbekannten Typ, Status oder Größe, falsches Datum, `done` und
+  `superseded-by` je Status, Titel über 70 Zeichen (Zeichen, nicht Bytes), doppelte
+  Nummern, fehlende oder zu niedrige `next-feature`, veraltete Tabelle und Nummern in der
+  Reihenfolge ohne Datei oder nicht offen. Fehlt `features/INDEX.md`, verweist es auf
+  die Migration.
+- **justfiles** (core, go, python, ts-node): `check` ruft die Prüfung auf, das neue
+  Rezept `features-index` das Erzeugen; `MODULE.md` der Module und Stubs nachgezogen.
+  **`lefthook.yml`:** Pre-Commit-Job `features-index`, nur bei Dateien in `features/`,
+  prüft nur.
+- **`CLAUDE.md`:** Überblick mit `### Goals`, `### Non-goals`, `### Constraints`
+  (`template:adapt`); Zonen `claude-startup`, `claude-conventions`, `claude-workflow` auf
+  `features/` umgestellt, Entscheidungen in der Feature-Datei oder als ADR.
+- HOW-TO (Skill-Tabelle, Workflows, Größe, step-done, wichtige Dateien), README,
+  ADR-README, PR-Vorlage, `private/README.md` (lange Entwürfe) nachgezogen.
+- **Entfernt:** `core/PROGRESS.md`, `core/PROGRESS-ARCHIVE.md`, `core/REQUIREMENTS.md`
+  samt Zonen `progress-head`, `archive-head`, `requirements-head`.
+- **MANIFEST:** neuer § Features (Dateien, Kopfblock, Status, Abschnitte, Index,
+  Skript), Marker-Zeile für die Tabelle, Zieltabelle, Seed-Zone `index-head`, drei
+  Zeilen in „Removed and renamed targets" (2.0.0, `removed`, seed) mit Hinweis auf die
+  Migration, Standard-Rezepte um `features-index`, Beschreibung von
+  `{{LANG_LIVING_DOCS}}`.
+- **Kit:** `tests/template-sync/features.sh` (neu, 49 Checks je Durchgang) in `run.sh`;
+  `zones.sh` testet die Kopfzone ohne Marker jetzt an `features/INDEX.md`; der Helfer
+  `markers_paired` zählt nur Marker allein auf einer Zeile. Validator: prüft Prüfung und
+  Erzeugen in jeder justfile und den Pre-Commit-Job; die Marker-Prüfung gilt nur noch
+  für Markdown im Template. `define-requirements`: Verweis auf die entfernte
+  Template-Datei gestrichen (Umbau in F-036c).
+- Version 2.0.0, CHANGELOG mit `### Template`.
+
+**Verifikation:** `just check` grün mit 1947 Checks unter dash, bash und mawk (49 neu je
+Durchgang); Versionsregel grün. Ein frisch gerendertes docs-only-Projekt besteht
+`just check`, `just features-index` meldet die leere Tabelle als aktuell, die CLAUDE.md
+hat die drei Unterabschnitte. Gegenprobe: Ohne Prüfzeile in einer Modul-justfile schlägt
+der Validator an. gitleaks, Privacy-Muster und Blocklist ohne Fund.
+
+**Notable decisions:**
+- Namen: `scripts/features-index.sh` mit `check` und `write`, Rezept
+  `just features-index` (Nutzerentscheidung).
+- `done` ist nur bei DONE Pflicht, bei DROPPED und SUPERSEDED erlaubt — alte Einträge
+  wie „aufgegangen in" haben oft kein Datum (Nutzerentscheidung).
+- Der Pre-Commit-Hook prüft mit, nur bei Dateien in `features/` (Nutzerentscheidung;
+  `lefthook.yml` kam dafür zur Dateiliste).
+- Kürzel englisch: `AC-n`, `EC-n`, `[CLARIFY]` statt `AK-n`, `R-n`, `[KLÄREN]` — Tokens
+  bleiben in jeder Projektsprache gleich und suchbar (Nutzer bestätigt).
+- Listen im Kopfblock kommagetrennt (`depends-on: F-034, F-037`), kein `[]`: einfache
+  `feld: wert`-Zeilen, und doch gültiges YAML.
+- Die Reihenfolge liegt zwischen dem Ende der Zone `index-head` und dem Tabellenmarker;
+  so findet das Skript sie auch bei übersetzter Überschrift.
+- awk läuft mit `LC_ALL=C` und zählt Titelzeichen ohne UTF-8-Folgebytes — gleiches
+  Ergebnis in jedem awk.
+
+**Abweichungen vom Plan:** Die Modul-justfiles (go, python, ts-node) und ihre `MODULE.md`
+kamen dazu — die justfile hat die Policy „module", jedes Modul ersetzt sie ganz.
+`lefthook.yml` siehe oben. Validator und Test-Helfer lasen Marker-Text auch mitten in
+einer Codezeile als Marker; beide folgen jetzt der MANIFEST-Regel „nur allein auf einer
+Zeile". Der Pfadverweis in `define-requirements` musste mit, sonst wäre der Validator rot.
+
+**Geänderte Dateien:** unter `plugins/coding-kit/template/`: `MANIFEST.md`,
+`core/features/INDEX.md` (neu), `core/features/F-000-template.md` (neu),
+`core/scripts/features-index.sh` (neu), `core/CLAUDE.md`,
+`core/HOW-TO-CODE-WITH-CLAUDE.md`, `core/README.md`, `core/docs/adr/README.md`,
+`core/.github/PULL_REQUEST_TEMPLATE.md`, `core/private/README.md`, `core/justfile`,
+`core/lefthook.yml`, `modules/{docs-only,go,java,python,swift-ios,ts-node}/MODULE.md`,
+`modules/{go,python,ts-node}/justfile`; entfernt: `core/PROGRESS.md`,
+`core/PROGRESS-ARCHIVE.md`, `core/REQUIREMENTS.md`. Außerdem
+`plugins/coding-kit/skills/define-requirements/SKILL.md`, `scripts/validate.py`,
+`tests/template-sync/{features.sh (neu),run.sh,zones.sh}`,
+`plugins/coding-kit/.claude-plugin/plugin.json`, `plugins/coding-kit/CHANGELOG.md`,
+`PROGRESS.md`.
+
 ## F-049d — Testlauf und Release (2026-10-27)
 
 Schließt F-049 ab (Neue Zonen erkennen und anbieten; F-049a–c siehe darunter).

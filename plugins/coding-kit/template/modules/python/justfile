@@ -26,8 +26,13 @@ format:
     uv run ruff format .
     uv run ruff check --fix .
 
+# Regenerate the table of all features in features/INDEX.md
+features-index:
+    sh scripts/features-index.sh write
+
 # Full gate — must be green before every commit
 check:
+    sh scripts/features-index.sh check
     uv run ruff format --check .
     uv run ruff check .
     uv run pyright
