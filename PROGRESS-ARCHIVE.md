@@ -16,6 +16,107 @@ zusammen:
 
 ---
 
+## F-049d — Testlauf und Release (2026-10-27)
+
+Schließt F-049 ab (Neue Zonen erkennen und anbieten; F-049a–c siehe darunter).
+
+**Problem:** F-049a–c waren nur durch Skript-Tests belegt. Ob update-conventions die neuen
+Zustände im echten Lauf ohne Handarbeit anbietet und umsetzt, zeigt erst ein Modell-Lauf.
+
+**Was entstanden ist (Release 1.7.0):**
+
+- **Drei Testläufe** (`claude -p --plugin-dir`, Opus auf `medium`, Budget-Cap 4 USD je
+  Lauf; zusammen 2,11 USD) an Stellvertreter-Ordnern; das echte `~/.claude` blieb
+  unverändert (Prüfsummen):
+  - Projekt, erster Versuch (0,78 USD, 13 Turns): ein Projekt aus der aktuellen Vorlage
+    mit Stempel 1.6.0, Graphiti in den Antworten eingeschaltet, Seed-Basen außer für
+    `PROGRESS.md`, einer Zone `claude-legacy` nur in Projekt und Basis, abgewählter
+    `claude-workflow` und `progress-head` ohne Marker neben einer eigenen Zone. Fund:
+    `progress-head` wäre ein zweites Mal ans Dateiende gekommen; der Lauf setzte die
+    Marker von Hand → F-049c.
+  - Projekt, wiederholt nach F-049c (0,80 USD, 12 Turns): `claude-graphiti` eingesetzt
+    (vor `claude-startup`), `claude-legacy` entfernt, `progress-head` als `bare` nur
+    umrahmt, `claude-workflow` abgewählt gelassen, Seed-Basen für alle sechs Dateien
+    gesetzt, Stempel 1.7.0 — alles über `zones` und `snapshot`, keine Datei von Hand.
+  - Global (0,53 USD, 5 Turns): Stellvertreter-Config mit Testwerten, Regeldatei und
+    Basis ohne `global-workflow`, `global-git` abgewählt; die neue Zone eingesetzt, die
+    Abwahl respektiert, Basis gleich dem vollen Render; die env-Datei nicht ausgegeben.
+  Den Endstand prüfte jeweils ein eigener `zones`-Lauf.
+- **Release 1.7.0** (`c095e66`, CHANGELOG datiert): Personendaten-Grep über die fünf
+  Commits samt Metadaten und Messages, Blocklist und gitleaks ohne Fund; Push, CI grün
+  (Lauf 40489982920, 1800 Checks unter gawk und mawk); Marketplace und Plugin von 1.6.0
+  auf 1.7.0 aktualisiert, der Cache dateigleich mit dem Repo.
+
+**Notable decisions:**
+- Testprojekt gemischt statt „aus 1.6.0 ohne Seed-Basis" (Nutzerentscheidung): Ohne
+  Basis wären alle fehlenden Zonen `unconfirmed`; nur mit Basen deckt ein Lauf `new`,
+  `opted-out`, `removed` und `unconfirmed` ab.
+- Die überzählige Leerzeile am Ende der globalen Regeldatei stammt aus dem Testaufbau
+  (beim Herausschneiden der Zone blieb die trennende Leerzeile stehen), nicht aus
+  `zones`.
+- Gefunden, nicht verfolgt: Mit `--plugin-dir` meldet der Session-Hinweis immer
+  geänderte globale Regeln, weil das Testplugin einen eigenen Datenordner ohne Basis hat.
+
+**Planungsentscheidungen von F-049** (aus dem Elterneintrag):
+
+**Problem:** `zones` kann eine Zone, die im Render steht und der Datei fehlt, nicht von
+einer abgewählten unterscheiden: Beide heißen `opted-out`, und angeboten wird nichts. So
+erreicht eine neue Zone keine bestehende Installation — in den seed-Dateien der Projekte,
+in den globalen Kit-Regeln auf dem Rechner (F-040) und bei einer umbenannten Zone (die
+alte gilt als `local`, die neue als `opted-out`). Dasselbe gilt für eine Zone in einem
+`template:optional`-Block, den ein Projekt später einschaltet (z. B. `claude-graphiti`).
+Fragmente haben das Problem nicht, sie kennen den Zustand `new`.
+
+**Idee:** `zones` unterscheidet über eine Basis, den Render beim letzten Abgleich: Fehlt
+eine Zone auch dort, ist sie neu (`new`) und wird an ihrer Stelle aus dem Render
+eingesetzt, wie heute ein neues Fragment; steht sie in der Basis, hat der Nutzer sie
+abgewählt. Die globalen Regeln haben diese Basis schon (F-040c), für seed-Dateien fehlt
+sie bisher.
+
+**Entschieden (2026-10-27):**
+- **Basis für seed-Dateien:** der volle Seed-Render beim letzten Abgleich, als
+  `.claude/template-base/<target>.seed`. Die eigene Endung hält sie aus `status`, `merge`
+  und `changed` heraus, die nur `*.base` lesen; die `.gitattributes`-Zeile des Ordners
+  gilt weiter. `snapshot --seeds` schreibt sie, `zones` liest `<target>.base`, sonst
+  `<target>.seed`. Verworfen: eine Liste der Zonen mit der Version, seit der es sie gibt —
+  sie erkennt keine Zone, die erst ein eingeschaltetes `template:optional` bringt.
+- **Zustände einer Zone,** die der Render hat und das Projekt nicht: `new` (auch nicht in
+  der Basis — anbieten und einsetzen), `opted-out` (in der Basis — der Nutzer hat sie
+  abgewählt), `unconfirmed` (keine Basis für die Datei — einmal fragen; danach hat sie
+  eine). Eine Zone, die Projekt und Basis haben und der Render nicht mehr: `removed`
+  (anbieten, die ganze Zone samt Inhalt zu entfernen). Trägt sie eine Override-Zeile,
+  bleibt sie `local` und wird nicht angefasst.
+- **Einsetzen:** hinter die nächste vorangehende Zone aus der Reihenfolge des Renders, die
+  das Projekt hat; ohne Vorgänger vor die nächste folgende, ohne beide ans Dateiende. Ohne
+  Namen setzt `zones` `differs`, `new` und `removed` um; `opted-out` und `unconfirmed`
+  nur, wenn sie per Name genannt sind — so lässt sich eine abgewählte Zone nachträglich
+  einsetzen.
+- **Keine „diesmal nicht"-Wahl bei neuen Zonen:** Der Snapshot setzt danach den Render als
+  Basis, aus „diesmal nicht" würde still ein Opt-out. Angeboten wird **einsetzen** /
+  **nicht einsetzen (Opt-out)**; jeder Lauf listet die abgewählten Zonen und bietet an,
+  eine per Name einzusetzen.
+- **Keine Tabelle umbenannter Zonen:** Mit Basis erscheint eine Umbenennung als `removed`
+  plus `new`, beides wird angeboten. Braucht F-036 einen echten Umzug, kommt die Tabelle
+  dort.
+- **Override in seed-Zonen:** Wie bei Fragmenten zeigt die Zählung einer geschützten Zone,
+  was das Template seit der Basis geändert hat (Diff `.base` → `.template` zur Info).
+- **Migration:** Bestehende Projekte haben keine `.seed`-Basis; ihre fehlenden Zonen
+  kommen einmal als `unconfirmed`. `/new-project` setzt die Seed-Basen ab dem Anlegen.
+- **Text ohne Marker (Fund aus dem ersten Testlauf):** Wer eine Zone abwählt, löscht ihr
+  Markerpaar und behält meist den Text. Steht der Inhalt einer fehlenden Zone wörtlich
+  ohne Marker in der Datei und kennt die Basis sie nicht, meldet `zones` sie als `bare`
+  und legt beim Anwenden (nur per Name) die Marker um den vorhandenen Text, statt sie ein
+  zweites Mal einzusetzen. Kennt die Basis sie, bleibt sie `opted-out`, auch in einer
+  Datei ganz ohne Marker; holt man sie per Name zurück, kommen ebenfalls nur die Marker
+  um den stehenden Text.
+
+**Abhängigkeiten:** keine. Sinnvoll vor F-036, das die seed-Zonen umbaut — dessen neue
+Zonen erreichen bestehende Projekte sonst nicht. Ergänzt F-040: Teil G und der
+Session-Hinweis melden eine neue Kit-Zone, angeboten wird sie erst mit F-049.
+
+**Geänderte Dateien:** `plugins/coding-kit/CHANGELOG.md` (Release), `PROGRESS.md`,
+`PROGRESS-ARCHIVE.md`.
+
 ## F-049c — Text ohne Marker erkennen (2026-10-27)
 
 Teil von F-049 (Neue Zonen erkennen und anbieten; F-049a–b siehe darunter, F-049d folgt).

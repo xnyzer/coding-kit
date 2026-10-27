@@ -49,87 +49,14 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-049a | Skript, Tests, Vertrag → **`zones` unterscheidet über eine Basis neue (`new`), abgewählte (`opted-out`), unbestätigte (`unconfirmed`) und entfernte (`removed`) Zonen, setzt neue an ihrer Stelle aus dem Render ein und entfernt gestrichene; abgewählte und unbestätigte nur per Name; Override-Zählung auch für Zonen; `snapshot --seeds` schreibt die Seed-Basis `<Ziel>.seed`, die `status`, `merge` und `changed` nicht lesen; MANIFEST §§ Base snapshot und Seed sections; Version 1.7.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 | F-049b | Skills anbinden → **update-conventions bietet neue Zonen zum Einsetzen oder als Opt-out an, gestrichene zum Entfernen oder Behalten, fragt Zonen ohne Basis einmal und holt abgewählte per Name zurück (A2 Schritte 6, 7, 9, A3, G3); Schritt 9 setzt die Seed-Basen in jedem Lauf; new-project setzt sie beim Anlegen; README-Zeile nachgezogen.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 | F-049c | Text ohne Marker erkennen → **`zones` findet den Text einer fehlenden Zone wörtlich in der Datei: ohne Basis-Eintrag `bare`, per Name legt das Skript nur die Marker darum — ebenso beim Zurückholen einer abgewählten Zone; eine Abwahl in einer Datei ganz ohne Marker bleibt `opted-out`; update-conventions bietet „Marker setzen" / „so lassen" an, die Marker-Migration von Hand bleibt für geänderten Text (Fund aus dem ersten Testlauf).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
+| F-049d | Testlauf und Release → **drei Läufe mit `--plugin-dir` (zusammen 2,11 USD): Projekt mit neuer, abgewählter, entfernter und unbestätigter Zone — der erste fand „Text ohne Marker" (→ F-049c), der wiederholte setzte alles über `zones` um; global eine neue Kit-Zone eingesetzt, die Abwahl respektiert; Release 1.7.0 gepusht, CI grün, Plugin aktualisiert. F-049 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 
 ---
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-### F-049 — Neue Zonen erkennen und anbieten
-
-**Status:** PLANNED
-
-**Problem:** `zones` kann eine Zone, die im Render steht und der Datei fehlt, nicht von
-einer abgewählten unterscheiden: Beide heißen `opted-out`, und angeboten wird nichts. So
-erreicht eine neue Zone keine bestehende Installation — in den seed-Dateien der Projekte,
-in den globalen Kit-Regeln auf dem Rechner (F-040) und bei einer umbenannten Zone (die
-alte gilt als `local`, die neue als `opted-out`). Dasselbe gilt für eine Zone in einem
-`template:optional`-Block, den ein Projekt später einschaltet (z. B. `claude-graphiti`).
-Fragmente haben das Problem nicht, sie kennen den Zustand `new`.
-
-**Idee:** `zones` unterscheidet über eine Basis, den Render beim letzten Abgleich: Fehlt
-eine Zone auch dort, ist sie neu (`new`) und wird an ihrer Stelle aus dem Render
-eingesetzt, wie heute ein neues Fragment; steht sie in der Basis, hat der Nutzer sie
-abgewählt. Die globalen Regeln haben diese Basis schon (F-040c), für seed-Dateien fehlt
-sie bisher.
-
-**Entschieden (2026-10-27):**
-- **Basis für seed-Dateien:** der volle Seed-Render beim letzten Abgleich, als
-  `.claude/template-base/<target>.seed`. Die eigene Endung hält sie aus `status`, `merge`
-  und `changed` heraus, die nur `*.base` lesen; die `.gitattributes`-Zeile des Ordners
-  gilt weiter. `snapshot --seeds` schreibt sie, `zones` liest `<target>.base`, sonst
-  `<target>.seed`. Verworfen: eine Liste der Zonen mit der Version, seit der es sie gibt —
-  sie erkennt keine Zone, die erst ein eingeschaltetes `template:optional` bringt.
-- **Zustände einer Zone,** die der Render hat und das Projekt nicht: `new` (auch nicht in
-  der Basis — anbieten und einsetzen), `opted-out` (in der Basis — der Nutzer hat sie
-  abgewählt), `unconfirmed` (keine Basis für die Datei — einmal fragen; danach hat sie
-  eine). Eine Zone, die Projekt und Basis haben und der Render nicht mehr: `removed`
-  (anbieten, die ganze Zone samt Inhalt zu entfernen). Trägt sie eine Override-Zeile,
-  bleibt sie `local` und wird nicht angefasst.
-- **Einsetzen:** hinter die nächste vorangehende Zone aus der Reihenfolge des Renders, die
-  das Projekt hat; ohne Vorgänger vor die nächste folgende, ohne beide ans Dateiende. Ohne
-  Namen setzt `zones` `differs`, `new` und `removed` um; `opted-out` und `unconfirmed`
-  nur, wenn sie per Name genannt sind — so lässt sich eine abgewählte Zone nachträglich
-  einsetzen.
-- **Keine „diesmal nicht"-Wahl bei neuen Zonen:** Der Snapshot setzt danach den Render als
-  Basis, aus „diesmal nicht" würde still ein Opt-out. Angeboten wird **einsetzen** /
-  **nicht einsetzen (Opt-out)**; jeder Lauf listet die abgewählten Zonen und bietet an,
-  eine per Name einzusetzen.
-- **Keine Tabelle umbenannter Zonen:** Mit Basis erscheint eine Umbenennung als `removed`
-  plus `new`, beides wird angeboten. Braucht F-036 einen echten Umzug, kommt die Tabelle
-  dort.
-- **Override in seed-Zonen:** Wie bei Fragmenten zeigt die Zählung einer geschützten Zone,
-  was das Template seit der Basis geändert hat (Diff `.base` → `.template` zur Info).
-- **Migration:** Bestehende Projekte haben keine `.seed`-Basis; ihre fehlenden Zonen
-  kommen einmal als `unconfirmed`. `/new-project` setzt die Seed-Basen ab dem Anlegen.
-- **Text ohne Marker (Fund aus dem ersten Testlauf):** Wer eine Zone abwählt, löscht ihr
-  Markerpaar und behält meist den Text. Steht der Inhalt einer fehlenden Zone wörtlich
-  ohne Marker in der Datei und kennt die Basis sie nicht, meldet `zones` sie als `bare`
-  und legt beim Anwenden (nur per Name) die Marker um den vorhandenen Text, statt sie ein
-  zweites Mal einzusetzen. Kennt die Basis sie, bleibt sie `opted-out`, auch in einer
-  Datei ganz ohne Marker; holt man sie per Name zurück, kommen ebenfalls nur die Marker
-  um den stehenden Text.
-
-**Abhängigkeiten:** keine. Sinnvoll vor F-036, das die seed-Zonen umbaut — dessen neue
-Zonen erreichen bestehende Projekte sonst nicht. Ergänzt F-040: Teil G und der
-Session-Hinweis melden eine neue Kit-Zone, angeboten wird sie erst mit F-049.
-
-#### F-049d — Testlauf und Release
-
-**Was:** Testläufe mit `claude -p --plugin-dir plugins/coding-kit` an
-Stellvertreter-Ordnern, Kosten je Lauf nennen: ein Projekt aus Vorlage 1.6.0 mit
-eingeschaltetem Graphiti (neue Zone `claude-graphiti`), einer abgewählten Zone und ohne
-Seed-Basis; ein Lauf `global` mit einer Basis ohne eine Kit-Zone. Release 1.7.0 nach dem
-bekannten Ablauf; Push nur auf ausdrückliche Bitte, vorher Personendaten-grep. Der erste
-Projektlauf vor F-049c (0,78 USD) fand den Fund; nach F-049c läuft er erneut am selben
-Testprojekt.
-
-**Dateien:** `plugins/coding-kit/CHANGELOG.md`, dazu Funde aus den Läufen.
-
-**Abhängigkeiten:** F-049c.
-
-**Abnahmekriterien:**
-- [ ] Beide Läufe wie beschrieben, Endstand per Skript geprüft, Kosten genannt.
-- [ ] Release 1.7.0 gepusht, CI grün, Plugin aktualisiert.
+_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
+`/coding-kit:prep-step` vorbereiten._
 
 ---
 
@@ -137,20 +64,18 @@ Testprojekt.
 
 _Neue Ideen via `/coding-kit:add-feature` — sie bekommen die nächste F-Nummer._
 
-**Empfohlene Reihenfolge** (Stand 2026-10-26; die Einträge darunter bleiben nach Nummer
+**Empfohlene Reihenfolge** (Stand 2026-10-27; die Einträge darunter bleiben nach Nummer
 sortiert):
 
-1. **F-049** — vor F-036, dessen neue seed-Zonen bestehende Projekte sonst nicht
-   erreichen.
-2. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
+1. **F-036** — großer Umbau; alle folgenden Features werden schon mit Spec-Phase und
    Feature-Datei geplant.
-3. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
-4. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
-5. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
+2. **F-034 + F-037** — Qualitätsstrang auf dem neuen prep-step/step-done.
+3. **F-029 → F-033 → F-030** — Graphiti-Strang (F-030 ohne den `install.sh`-Teil).
+4. **F-032 → F-024 → F-025** — Host-Strang; F-025 nimmt den `install.sh`-Teil von F-030
    mit. F-026 ist in F-039 aufgegangen, sein Rest (Kit-Repo-Herkunft in `check-upstreams`)
    in F-032.
-6. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
-7. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+5. **F-027** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit F-025.
+6. **F-046** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
 Strang 4 und 5 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
@@ -708,5 +633,5 @@ F-045 Zonen-Abgleich und Lock-Prüfung ins Skript (DONE)
 F-046 Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
 F-047 Skript-Tests zusätzlich mit mawk (DONE)
 F-048 Frontmatter-Pflichtfelder für Skills und Übersicht der erlaubten Felder (DONE)
-F-049 Neue Zonen erkennen und anbieten (PLANNED)
+F-049 Neue Zonen erkennen und anbieten (DONE)
 -->
