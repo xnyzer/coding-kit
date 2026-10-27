@@ -51,8 +51,116 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 
 ## Offene Aufgaben — von oben nach unten abarbeiten
 
-_Keine vorbereiteten Aufgaben. Nächstes Deliverable aus dem Backlog via
-`/coding-kit:prep-step` vorbereiten._
+### F-049 — Neue Zonen erkennen und anbieten
+
+**Status:** PLANNED
+
+**Problem:** `zones` kann eine Zone, die im Render steht und der Datei fehlt, nicht von
+einer abgewählten unterscheiden: Beide heißen `opted-out`, und angeboten wird nichts. So
+erreicht eine neue Zone keine bestehende Installation — in den seed-Dateien der Projekte,
+in den globalen Kit-Regeln auf dem Rechner (F-040) und bei einer umbenannten Zone (die
+alte gilt als `local`, die neue als `opted-out`). Dasselbe gilt für eine Zone in einem
+`template:optional`-Block, den ein Projekt später einschaltet (z. B. `claude-graphiti`).
+Fragmente haben das Problem nicht, sie kennen den Zustand `new`.
+
+**Idee:** `zones` unterscheidet über eine Basis, den Render beim letzten Abgleich: Fehlt
+eine Zone auch dort, ist sie neu (`new`) und wird an ihrer Stelle aus dem Render
+eingesetzt, wie heute ein neues Fragment; steht sie in der Basis, hat der Nutzer sie
+abgewählt. Die globalen Regeln haben diese Basis schon (F-040c), für seed-Dateien fehlt
+sie bisher.
+
+**Entschieden (2026-10-27):**
+- **Basis für seed-Dateien:** der volle Seed-Render beim letzten Abgleich, als
+  `.claude/template-base/<target>.seed`. Die eigene Endung hält sie aus `status`, `merge`
+  und `changed` heraus, die nur `*.base` lesen; die `.gitattributes`-Zeile des Ordners
+  gilt weiter. `snapshot --seeds` schreibt sie, `zones` liest `<target>.base`, sonst
+  `<target>.seed`. Verworfen: eine Liste der Zonen mit der Version, seit der es sie gibt —
+  sie erkennt keine Zone, die erst ein eingeschaltetes `template:optional` bringt.
+- **Zustände einer Zone,** die der Render hat und das Projekt nicht: `new` (auch nicht in
+  der Basis — anbieten und einsetzen), `opted-out` (in der Basis — der Nutzer hat sie
+  abgewählt), `unconfirmed` (keine Basis für die Datei — einmal fragen; danach hat sie
+  eine). Eine Zone, die Projekt und Basis haben und der Render nicht mehr: `removed`
+  (anbieten, die ganze Zone samt Inhalt zu entfernen). Trägt sie eine Override-Zeile,
+  bleibt sie `local` und wird nicht angefasst.
+- **Einsetzen:** hinter die nächste vorangehende Zone aus der Reihenfolge des Renders, die
+  das Projekt hat; ohne Vorgänger vor die nächste folgende, ohne beide ans Dateiende. Ohne
+  Namen setzt `zones` `differs`, `new` und `removed` um; `opted-out` und `unconfirmed`
+  nur, wenn sie per Name genannt sind — so lässt sich eine abgewählte Zone nachträglich
+  einsetzen.
+- **Keine „diesmal nicht"-Wahl bei neuen Zonen:** Der Snapshot setzt danach den Render als
+  Basis, aus „diesmal nicht" würde still ein Opt-out. Angeboten wird **einsetzen** /
+  **nicht einsetzen (Opt-out)**; jeder Lauf listet die abgewählten Zonen und bietet an,
+  eine per Name einzusetzen.
+- **Keine Tabelle umbenannter Zonen:** Mit Basis erscheint eine Umbenennung als `removed`
+  plus `new`, beides wird angeboten. Braucht F-036 einen echten Umzug, kommt die Tabelle
+  dort.
+- **Override in seed-Zonen:** Wie bei Fragmenten zeigt die Zählung einer geschützten Zone,
+  was das Template seit der Basis geändert hat (Diff `.base` → `.template` zur Info).
+- **Migration:** Bestehende Projekte haben keine `.seed`-Basis; ihre fehlenden Zonen
+  kommen einmal als `unconfirmed`. `/new-project` setzt die Seed-Basen ab dem Anlegen.
+
+**Abhängigkeiten:** keine. Sinnvoll vor F-036, das die seed-Zonen umbaut — dessen neue
+Zonen erreichen bestehende Projekte sonst nicht. Ergänzt F-040: Teil G und der
+Session-Hinweis melden eine neue Kit-Zone, angeboten wird sie erst mit F-049.
+
+#### F-049a — Skript, Tests, Vertrag
+
+**Was:** `zones` bekommt die Zustände `new` (Zone), `removed` und `unconfirmed`, setzt
+neue Zonen nach der Regel aus „Entschieden" ein und entfernt `removed`-Zonen; `opted-out`
+und `unconfirmed` nur per Name. Die Override-Zählung gilt auch für Zonen. `snapshot
+--seeds` schreibt und entfernt `<target>.seed`; `zones` liest die Basis aus `.base`, sonst
+`.seed`. Kopf-Doku des Skripts, MANIFEST (§ Base snapshot, § Seed sections, Zustände),
+Version 1.7.0 mit CHANGELOG-Eintrag samt `### Template`.
+
+**Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
+`tests/template-sync/zones.sh`, `tests/template-sync/global.sh`,
+`plugins/coding-kit/template/MANIFEST.md`, `plugins/coding-kit/.claude-plugin/plugin.json`,
+`plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** keine.
+
+**Abnahmekriterien:**
+- [ ] Tests: neue Zone in seed-Datei und globalen Regeln, Zone aus einem eingeschalteten
+      `template:optional`, abgewählte Zone (auch per Name wieder eingesetzt), entfernte
+      Zone (auch mit Override), Umbenennung als `removed` plus `new`, Datei ohne Basis
+      (`unconfirmed`), Einsetzen ohne Vorgänger und ohne Nachbarn, `snapshot --seeds`
+      setzt und entfernt `.seed`, `status` und `merge` ignorieren `.seed`.
+- [ ] Läuft unter dash und bash, mit System-awk und mawk.
+- [ ] `just check` grün.
+
+#### F-049b — Skills anbinden
+
+**Was:** update-conventions: A2 Schritt 6/7 bieten die neuen Zustände an (einsetzen /
+Opt-out, entfernen, einmal fragen, abgewählte Zonen per Name einsetzen), Schritt 9 setzt
+die Seed-Basen für alle seed-Dateien mit Zonen, A3 nennt `unconfirmed` als Folge der
+fehlenden Basis, G3 die neuen Zustände für die globalen Regeln (G6 bleibt). new-project
+Schritt 4 setzt die Seed-Basen mit. CHANGELOG nachziehen; `/add-skill` läuft mit.
+
+**Dateien:** `plugins/coding-kit/skills/update-conventions/SKILL.md`,
+`plugins/coding-kit/skills/new-project/SKILL.md`, `plugins/coding-kit/CHANGELOG.md`.
+
+**Abhängigkeiten:** F-049a.
+
+**Abnahmekriterien:**
+- [ ] Jeder Zustand von `zones` ist in A2 und G3 beschrieben; kein Skill setzt Zonen von
+      Hand ein oder entfernt sie.
+- [ ] `just check` grün.
+
+#### F-049c — Testlauf und Release
+
+**Was:** Testläufe mit `claude -p --plugin-dir plugins/coding-kit` an
+Stellvertreter-Ordnern, Kosten je Lauf nennen: ein Projekt aus Vorlage 1.6.0 mit
+eingeschaltetem Graphiti (neue Zone `claude-graphiti`), einer abgewählten Zone und ohne
+Seed-Basis; ein Lauf `global` mit einer Basis ohne eine Kit-Zone. Release 1.7.0 nach dem
+bekannten Ablauf; Push nur auf ausdrückliche Bitte, vorher Personendaten-grep.
+
+**Dateien:** `plugins/coding-kit/CHANGELOG.md`, dazu Funde aus den Läufen.
+
+**Abhängigkeiten:** F-049b.
+
+**Abnahmekriterien:**
+- [ ] Beide Läufe wie beschrieben, Endstand per Skript geprüft, Kosten genannt.
+- [ ] Release 1.7.0 gepusht, CI grün, Plugin aktualisiert.
 
 ---
 
@@ -581,55 +689,6 @@ Endstand; besonders F-036 und F-045 verändern den Verbrauch.
 
 ---
 
-### F-049 — Neue Zonen erkennen und anbieten
-
-**Status:** BACKLOG
-
-**Problem:** `zones` kann eine Zone, die im Render steht und der Datei fehlt, nicht von
-einer abgewählten unterscheiden: Beide heißen `opted-out`, und angeboten wird nichts. So
-erreicht eine neue Zone keine bestehende Installation — in den seed-Dateien der Projekte,
-in den globalen Kit-Regeln auf dem Rechner (F-040) und bei einer umbenannten Zone (die
-alte gilt als `local`, die neue als `opted-out`). Dasselbe gilt für eine Zone in einem
-`template:optional`-Block, den ein Projekt später einschaltet (z. B. `claude-graphiti`).
-Fragmente haben das Problem nicht, sie kennen den Zustand `new`.
-
-**Idee:** `zones` unterscheidet über eine Basis, den Render beim letzten Abgleich: Fehlt
-eine Zone auch dort, ist sie neu (`new`) und wird an ihrer Stelle aus dem Render
-eingesetzt, wie heute ein neues Fragment; steht sie in der Basis, hat der Nutzer sie
-abgewählt. Die globalen Regeln haben diese Basis schon (F-040c), für seed-Dateien fehlt
-sie bisher.
-
-**Lösungsskizze:**
-- Zustand `new` für Zonen im Skript, eingesetzt hinter der nächsten vorangehenden Zone in
-  der Reihenfolge des Renders; Tests für alle vier Fälle.
-- Eine Basis für seed-Zonen. Seed-Dateien stehen heute bewusst nicht im Snapshot, sonst
-  würden `status` und `merge` sie wie managed Dateien behandeln.
-- Umbenannte und entfernte Zonen: eine Tabelle im MANIFEST wie
-  `Removed and renamed targets`, damit der Abgleich den Umzug anbietet, statt `local` und
-  `opted-out` zu melden.
-- Skills und Vertrag: update-conventions (A2 Schritt 7, Teil G, Migration), MANIFEST
-  §§ Seed sections und Base snapshot; Plugin- und Template-Änderung mit Version und
-  CHANGELOG `### Template`.
-
-**Noch zu analysieren:**
-- Woher die Basis für seed-Zonen kommt: eine eigene Ablage unter `.claude/template-base/`,
-  die `status` und `merge` nicht als managed Dateien lesen, oder stattdessen eine Liste
-  der Zonen mit der Version, seit der es sie gibt, verglichen mit dem Stempel. Die Liste
-  erkennt aber keine Zone, die erst durch ein eingeschaltetes `template:optional` in den
-  Render kommt.
-- Wo eine neue Zone ohne Vorgänger hinkommt, denn zwischen den Zonen steht Text des
-  Projekts.
-- Was mit einer Zone geschieht, die das Template entfernt; heute bleibt sie als `local`
-  stehen.
-- Projekte ohne Basis (Migration, zweiwegig): ob dort weiter `opted-out` gemeldet oder
-  nachgefragt wird.
-
-**Abhängigkeiten:** keine. Sinnvoll vor F-036, das die seed-Zonen umbaut — dessen neue
-Zonen erreichen bestehende Projekte sonst nicht. Ergänzt F-040: Teil G und der
-Session-Hinweis melden eine neue Kit-Zone, angeboten wird sie erst mit F-049.
-
----
-
 <!-- FEATURE-INDEX
 next-feature: F-050
 F-001 Kit-Grundgerüst (DONE)
@@ -680,5 +739,5 @@ F-045 Zonen-Abgleich und Lock-Prüfung ins Skript (DONE)
 F-046 Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort
 F-047 Skript-Tests zusätzlich mit mawk (DONE)
 F-048 Frontmatter-Pflichtfelder für Skills und Übersicht der erlaubten Felder (DONE)
-F-049 Neue Zonen erkennen und anbieten
+F-049 Neue Zonen erkennen und anbieten (PLANNED)
 -->
