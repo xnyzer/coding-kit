@@ -65,15 +65,18 @@
 #       identical, differs, override (an override line in the project's block; the count
 #       is what the template changed since the base), new (a fragment only SEEDS has, or
 #       a zone neither the project nor its base has), opted-out (a zone the base has and
-#       the project lost: the user removed its markers), unconfirmed (a zone the project
-#       lacks while the file has no base to tell new from opted-out), removed (a zone
-#       the project and its base have and SEEDS no longer has), unmarked (the file has no
-#       zone markers or no slot at all), local (only the project has it, or a removed
-#       zone with an override line), no-file, broken (unbalanced, nested or duplicate
-#       markers), skipped (skip row). A block that neither side has gets no line.
-#       OUT/<target> is the project file with every differing, new and removed block
-#       applied — only the NAMEs given, if any; opted-out and unconfirmed zones only when
-#       named. A differing block is replaced, a removed zone is deleted with its content;
+#       the project lost: the user removed its markers), bare (a zone the base lacks
+#       whose content stands verbatim in the file outside every zone and the slot),
+#       unconfirmed (a zone the project lacks while the file has no base to tell new
+#       from opted-out), removed (a zone the project and its base have and SEEDS no
+#       longer has), unmarked (the file has no zone markers or no slot at all), local
+#       (only the project has it, or a removed zone with an override line), no-file,
+#       broken (unbalanced, nested or duplicate markers), skipped (skip row). A block
+#       that neither side has gets no line. OUT/<target> is the project file with every
+#       differing, new and removed block applied — only the NAMEs given, if any;
+#       opted-out, bare and unconfirmed zones only when named. A differing block is
+#       replaced, a removed zone is deleted with its content; a bare zone, and an
+#       opted-out one whose content still stands, gets its markers around that text;
 #       a new zone goes behind its nearest predecessor of the render order in the file,
 #       without one before its nearest successor, without both to the end; a new
 #       fragment goes behind its nearest predecessor in the slot (without one to the
@@ -1202,13 +1205,38 @@ zones_one() {  # TARGET SKIP
     function emit(i,   x) {
       for (x = BO["r", i]; x <= BC["r", i]; x++) print L["r", x] > o
     }
+    # First project line where the content of render block i stands verbatim outside
+    # every block and the slot and outside text found before (TK); 0 when nowhere. A block
+    # without a non-blank line is never searched. Found lines are taken.
+    function find_text(i,   n, s, x, ok) {
+      n = BC["r", i] - BO["r", i] - 1
+      ok = 0
+      for (x = 1; x <= n; x++) if (L["r", BO["r", i] + x] !~ /^[ \t]*$/) ok = 1
+      if (!ok) return 0
+      for (s = 1; s + n - 1 <= N["p"]; s++) {
+        ok = 1
+        for (x = 0; x < n && ok; x++)
+          if ((s + x) in TK || L["p", s + x] != L["r", BO["r", i] + 1 + x]) ok = 0
+        if (ok) {
+          for (x = 0; x < n; x++) TK[s + x] = 1
+          return s
+        }
+      }
+      return 0
+    }
     BEGIN {
       OFS = "\t"
       load(rf, "r"); scan("r")
       if (SB["r"]) exit 9
       for (i = 1; i <= NB["r"]; i++) if (BR["r", i]) exit 9
       hasp = (pf != "")
-      if (hasp) { load(pf, "p"); scan("p") }
+      if (hasp) {
+        load(pf, "p"); scan("p")
+        # Lines of blocks and the slot: text there is never taken for a missing zone.
+        for (j = 1; j <= NB["p"]; j++)
+          if (BO["p", j]) for (x = BO["p", j]; x <= BC["p", j]; x++) TK[x] = 1
+        if (SO["p"]) for (x = SO["p"]; x <= (SC["p"] ? SC["p"] : N["p"]); x++) TK[x] = 1
+      }
       # Without a base a missing zone cannot tell new from opted-out.
       hasb = (bf != "")
       if (hasb) { load(bf, "b"); scan("b") }
@@ -1236,13 +1264,19 @@ zones_one() {  # TARGET SKIP
         else if (j && same("r", i, "p", j)) st = "identical"
         else if (j) { st = "differs"; dump("r", i, tf); dump("p", j, pf2); from = pf2; to = tf }
         else if (k == "fragment") { st = "new"; dump("r", i, tf); from = empty; to = tf }
+        # A zone the base has was opted out of, also when its text stayed (TX: where it
+        # stands, so taking it back only wraps it). Text of another missing zone that
+        # stands unmarked is bare: wrapping it beats inserting it a second time.
+        else if (hasb && (("b", k, n) in ID)) {
+          st = "opted-out"; dump("r", i, tf); TX[i] = find_text(i)
+        }
+        else if ((TX[i] = find_text(i))) { st = "bare"; dump("r", i, tf) }
         else if (!HS["p"]) { st = "unmarked"; dump("r", i, tf) }
         else if (!hasb) { st = "unconfirmed"; dump("r", i, tf); from = empty; to = tf }
-        else if (("b", k, n) in ID) { st = "opted-out"; dump("r", i, tf) }
         else { st = "new"; dump("r", i, tf); from = empty; to = tf }
-        # Opted-out and unconfirmed zones only when named: a user may take one back.
+        # Opted-out, unconfirmed and bare zones only when named: the user decides.
         if (((st == "differs" || st == "new") && (sel == "" || named)) ||
-          ((st == "opted-out" || st == "unconfirmed") && named)) {
+          ((st == "opted-out" || st == "unconfirmed" || st == "bare") && named)) {
           AP[i] = 1; napplied++
           print n >> applied
         }
@@ -1278,6 +1312,12 @@ zones_one() {  # TARGET SKIP
         if (!AP[i]) continue
         k = K["r", i]; n = NM["r", i]
         if (("p", k, n) in ID) { REPL[BO["p", ID["p", k, n]]] = i; continue }
+        # A zone whose text stands unmarked only gets its markers around that text.
+        if (TX[i]) {
+          WO[TX[i]] = i; WC[TX[i] + BC["r", i] - BO["r", i] - 2] = i
+          AT[i] = "after"; AL[i] = TX[i] + BC["r", i] - BO["r", i] - 2
+          continue
+        }
         if (k == "section") {
           at = ""
           for (x = i - 1; x >= 1 && at == ""; x--) {
@@ -1339,7 +1379,9 @@ zones_one() {  # TARGET SKIP
           for (y = BO["r", x] + 1; y < BC["r", x]; y++) print L["r", y] > o
           i = BC["p", ID["p", K["r", x], NM["r", x]]]
         }
+        if (i in WO) print L["r", BO["r", WO[i]]] > o
         print L["p", i] > o
+        if (i in WC) print L["r", BC["r", WC[i]]] > o
         for (m = 1; m <= GN[i]; m++) {
           if (i == SO["p"]) { emit(G[i, m]); print "" > o }
           else { print "" > o; emit(G[i, m]) }
@@ -1398,7 +1440,7 @@ zones() {
   # Word splitting of the name list is intended.
   for zs_name in $ZSEL; do
     grep -qxF -- "$zs_name" "$WORK/applied" \
-      || die "$zs_name: no differing, new, removed, opted-out or unconfirmed block of that name to apply"
+      || die "$zs_name: no block of that name to apply (differs, new, removed, opted-out, bare, unconfirmed)"
   done
 }
 

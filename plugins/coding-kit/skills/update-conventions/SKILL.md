@@ -165,7 +165,7 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    **Übernehmen:** Das Ergebnis `<tmp>/zones/<Ziel>` enthält alle Blöcke mit `differs`,
    `new` und `removed`. Sind genau diese angenommen, es ins Projekt kopieren; sonst
    `zones` mit den Namen der angenommenen Blöcke in ein frisches `<tmp>/zones-ok` laufen
-   lassen und dieses Ergebnis kopieren — immer so, wenn eine `opted-out`- oder
+   lassen und dieses Ergebnis kopieren — immer so, wenn eine `opted-out`-, `bare`- oder
    `unconfirmed`-Zone hinein soll, denn die setzt das Skript nur per Name ein. Je
    Fragment-Zeile:
    - `differs` → Diff zeigen; **übernehmen** / **diesmal nicht**.
@@ -201,7 +201,12 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
      Render als Basis, eine nicht eingesetzte Zone gilt danach als abgewählt.
    - `opted-out` → die Basis kennt die Zone, ihr Markerpaar fehlt = **dauerhafter
      Opt-out**: nur auflisten, mit dem Angebot, sie zurückzuholen (Lauf mit dem Namen,
-     Schritt 6); nie ungefragt.
+     Schritt 6; steht ihr Text noch da, legt das Skript nur die Marker darum); nie
+     ungefragt.
+   - `bare` → die Basis kennt die Zone nicht, ihr Text steht aber wörtlich ohne Marker in
+     der Datei (Markerpaar gelöscht, Text behalten — oder eine Datei aus der Zeit vor den
+     Zonen): **Marker setzen** (Lauf mit dem Namen; das Skript legt die Marker um den
+     vorhandenen Text) / **so lassen** (Opt-out).
    - `unconfirmed` → die Datei hat noch keine Seed-Basis (Projekt aus der Zeit davor,
      Migration): Ob die Zone neu ist oder abgewählt wurde, lässt sich nicht sagen. Einmal
      fragen: **einsetzen** (Lauf mit dem Namen) / **abgewählt lassen**. Ab Schritt 9 hat
@@ -214,7 +219,8 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    - `override` → eine Override-Zeile schützt die Zone; nur auflisten. Steht statt `-`
      eine Zählung, hat das Template die Zone seit dem letzten Sync geändert: den Diff
      `.base` → `.template` **zur Info** zeigen; übernommen wird von Hand.
-   - `unmarked` → der Datei fehlen alle Markerpaare (Projekt vor dem Zonen-Vertrag): die
+   - `unmarked` → der Datei fehlen alle Markerpaare, und der Text der Zone steht nicht
+     wörtlich darin (Projekt vor dem Zonen-Vertrag, Text inzwischen geändert): die
      Marker-Migration aus A3 Schritt 4 anbieten.
    - `local` → weder Render noch Basis kennen die Zone (eine eigene Zone des Projekts),
      oder eine gestrichene Zone trägt eine Override-Zeile: melden, nicht anfassen. Ohne
@@ -334,9 +340,10 @@ dann A2 ab Schritt 3.
      die Migration zum Languages-Block anbieten — bisherige Doku-Sprache behalten, übrige
      Dimensionen englisch (bzw. Preset nach Wunsch); **prospektiv**: Bestandsinhalte
      werden nicht übersetzt, Struktur-Überschriften auf Wunsch.
-   - **section-Marker:** fehlen seed-Dateien die `section:NAME`-Markerpaare (in A2 meldet
-     `zones` sie als `unmarked`, den Template-Inhalt jeder Zone liefert
-     `<tmp>/zones/.zones/section/<Name>.template`), je Datei anbieten, sie aus dem
+   - **section-Marker:** fehlen seed-Dateien die `section:NAME`-Markerpaare: Zonen, deren
+     Text wörtlich dasteht, meldet `zones` als `bare` — die Marker setzt das Skript (A2
+     Schritt 7). Für die übrigen (`unmarked`; den Template-Inhalt jeder Zone liefert
+     `<tmp>/zones/.zones/section/<Name>.template`) je Datei anbieten, die Marker aus dem
      MANIFEST-Inventar um die wiedererkennbaren Zonen zu setzen — jeder Marker allein auf
      seiner Zeile, reine Wrapper, Inhalt unverändert; nicht Wiederauffindbares auslassen
      (Opt-out).
@@ -400,8 +407,11 @@ ist eine bewusste Wahl: nicht nachfragen. Werte nie selbst in die env-Datei schr
   - `override` → der Nutzer hat die Zone geschützt: nur auflisten; steht statt `-` eine
     Zählung, hat sich die Kit-Zone seit dem letzten Abgleich geändert — den Diff `.base`
     → `.template` zur Info zeigen.
-  - `opted-out` → die Basis kennt die Zone, ihr Markerpaar fehlt = dauerhafter Opt-out:
-    nur auflisten, mit dem Angebot, sie zurückzuholen (Lauf mit dem Namen).
+  - `opted-out` → die Basis kennt die Zone, ihr Markerpaar fehlt = dauerhafter Opt-out
+    (auch wenn alle Marker fehlen): nur auflisten, mit dem Angebot, sie zurückzuholen
+    (Lauf mit dem Namen; steht ihr Text noch da, setzt das Skript nur die Marker).
+  - `bare` → die Basis kennt die Zone nicht, ihr Text steht wörtlich ohne Marker in der
+    Datei: **Marker setzen** (Lauf mit dem Namen) / **so lassen** (Opt-out).
   - `unconfirmed` → es gibt keine Basis (G6 lief nie, oder der Datenordner des Plugins
     ist neu): einmal fragen — **einsetzen** (Lauf mit dem Namen) / **abgewählt lassen**.
   - `removed` → das Kit hat die Zone gestrichen: Inhalt `.project` mit dem Grund aus dem
@@ -409,8 +419,9 @@ ist eine bewusste Wahl: nicht nachfragen. Werte nie selbst in die env-Datei schr
     **behalten** (bleibt als eigener Text, ab dem nächsten Abgleich `local`).
   - `local` → eine Zone, die weder Kit-Datei noch Basis kennen, oder eine gestrichene
     mit Override-Zeile: melden, nicht anfassen.
-  - `unmarked` → die Datei hat keine Zonen mehr: mit Kennung hat der Nutzer alle
-    abgewählt (nur melden), ohne Kennung ist sie fremd (G1).
+  - `unmarked` → die Datei hat keine Zonen mehr, und weder Basis noch wörtlicher Text
+    helfen weiter: mit Kennung hat der Nutzer alle abgewählt (nur melden), ohne Kennung
+    ist sie fremd (G1).
   - `broken` → melden und die Reparatur von Hand anbieten; `identical` nur zählen.
     `no-file` und `skipped` kommen hier nicht vor: Der Abgleich läuft nur, wenn die
     Regeldatei existiert, und der Config-Ordner hat keine Registry.
@@ -418,8 +429,8 @@ ist eine bewusste Wahl: nicht nachfragen. Werte nie selbst in die env-Datei schr
   **Übernehmen** wie in A2 Schritt 6: Sind genau die Zonen mit `differs`, `new` und
   `removed` angenommen, `<tmp>/gzones/rules/coding-kit.md` nach
   `<config>/rules/coding-kit.md` kopieren; sonst `zones` mit den Namen der angenommenen
-  Zonen in ein frisches `<tmp>/gzones-ok` laufen lassen (`opted-out` und `unconfirmed`
-  nur so) und dieses Ergebnis kopieren. Nie selbst Zonen einsetzen, entfernen oder
+  Zonen in ein frisches `<tmp>/gzones-ok` laufen lassen (`opted-out`, `bare` und
+  `unconfirmed` nur so) und dieses Ergebnis kopieren. Nie selbst Zonen einsetzen, entfernen oder
   abschreiben.
 - Ist eine Zone `differs`, weil der Nutzer sie auf dem Rechner geändert hat, und nützt
   die Änderung allen: anbieten, sie dem Kit vorzuschlagen (`propose-to-template`, Art

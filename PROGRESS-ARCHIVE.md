@@ -16,6 +16,66 @@ zusammen:
 
 ---
 
+## F-049c — Text ohne Marker erkennen (2026-10-27)
+
+Teil von F-049 (Neue Zonen erkennen und anbieten; F-049a–b siehe darunter, F-049d folgt).
+
+**Problem:** Der erste Projekt-Testlauf (vor diesem Substep, 0,78 USD) fand eine Lücke:
+Wer eine Zone abwählt, löscht ihr Markerpaar und behält meist den Text. `zones` hätte
+eine solche Zone beim Einsetzen ein zweites Mal geschrieben — `progress-head` ohne Basis
+und ohne gemeinsame Zone sogar ans Dateiende hinter den FEATURE-INDEX. Der Lauf legte
+die Marker stattdessen von Hand um den Text (Marker-Migration aus A3); der Skill-Text
+verlangte diese Prüfung aber nirgends.
+
+**Was entstanden ist (1.7.0, unveröffentlicht):**
+
+- **`zones`:** sucht den Inhalt einer fehlenden Zone wörtlich und zusammenhängend in der
+  Datei, außerhalb aller Blöcke und des Slots und ohne Text, den schon eine andere Zone
+  gefunden hat; eine Zone ohne nicht-leere Zeile wird nicht gesucht. Kennt die Basis die
+  Zone nicht und steht ihr Text da → neuer Zustand `bare`. Kennt die Basis sie, bleibt
+  sie `opted-out` — jetzt auch in einer Datei ganz ohne Marker (bisher `unmarked`).
+  `bare` wird nur per Name angewendet: Das Skript legt die Marker der Zone um den
+  vorhandenen Text. Ebenso eine per Name zurückgeholte `opted-out`-Zone, deren Text noch
+  dasteht. Eine neue Zone hinter einer so umrahmten kommt hinter deren Endmarker.
+- **update-conventions:** A2 Schritt 7 und G3 bieten `bare` als **Marker setzen** /
+  **so lassen** an; beim Zurückholen einer abgewählten Zone setzt das Skript nur die
+  Marker. A3 Schritt 4: wörtlich gefundene Zonen umrahmt das Skript, von Hand bleibt nur
+  geänderter Text. `unmarked` heißt jetzt: keine Marker, keine Basis, kein wörtlicher
+  Text.
+- **MANIFEST § Seed sections:** Abwahl auch bei Datei ohne Marker; Text ohne Marker
+  bekommt auf Wunsch nur seine Marker.
+- **Tests:** `zones.sh` mit einem Block „text without markers" (ohne Basis, Datei ohne
+  Marker, Abwahl mit stehendem Text, alle Marker weg mit Basis, geänderter Text, leere
+  Zone, zwei Zonen mit gleichem Text, Text in einer anderen Zone, neue Zone hinter einer
+  umrahmten) und dem Fall aus dem Testlauf am echten Render (`progress-head`); in
+  `global.sh` erwartet der Fall ohne Basis jetzt `bare`.
+- Fehlermeldung bei einem Namen ohne passenden Block nennt alle anwendbaren Zustände.
+- CHANGELOG 1.7.0 ergänzt.
+- **PROGRESS:** Entscheidung „Text ohne Marker" im Elterneintrag, neuer Substep F-049c;
+  das bisherige F-049c (Testlauf und Release) heißt F-049d.
+
+**Verifikation:** `just check` grün mit 1800 Checks unter dash, bash und mawk (66 neu).
+Von Hand am Testprojekt aus dem ersten Lauf: `progress-head` `bare`, per Name nur die
+zwei Markerzeilen; `claude-workflow` per Name zurückgeholt ebenso. A2 Schritt 7 und G3
+nennen jeden Zustand (per Skript gezählt). Secrets- und Privacy-Scan samt Blocklist ohne
+Fund.
+
+**Notable decisions:**
+- Im Skript statt nur im Skill-Text (Nutzerentscheidung): Der Vergleich ist
+  deterministisch, und das Einsetzen gehört nach der Authoring-Regel ins Skript.
+- Nur wörtlicher Text zählt; geänderter Text bleibt Handarbeit (A3), damit das Skript
+  nie rät.
+- Eine Abwahl mit stehendem Text bleibt `opted-out`, nicht `bare` — sonst fragte jeder
+  Lauf erneut nach.
+- `bare` nur per Name, nie im Standard-Ergebnis: Ob der Text wieder eine Zone werden
+  soll, entscheidet der Nutzer.
+
+**Geänderte Dateien:** `plugins/coding-kit/scripts/template-sync.sh`,
+`tests/template-sync/zones.sh`, `tests/template-sync/global.sh`,
+`plugins/coding-kit/skills/update-conventions/SKILL.md`,
+`plugins/coding-kit/template/MANIFEST.md`, `plugins/coding-kit/CHANGELOG.md`,
+`PROGRESS.md`.
+
 ## F-049b — Skills anbinden (2026-10-27)
 
 Teil von F-049 (Neue Zonen erkennen und anbieten; F-049a siehe darunter, F-049c folgt).

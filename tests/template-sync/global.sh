@@ -280,8 +280,8 @@ run_global_cases() {
 
   check "zones: config folder without a base cannot tell an opt-out" \
     eval 'ts zones "$TMP/gzc" "$TMP/ga" "$TMP/gzcu" > "$TMP/gzcu.tsv" 2> "$TMP/gzcu.err"'
-  check "zones: config folder without a base, missing zone is unconfirmed" \
-    zone_is gzcu section global-workflow unconfirmed
+  check "zones: config folder without a base, the zone text without markers is bare" \
+    zone_is gzcu section global-workflow bare -
 
   # A zone the kit gained since the last sync: neither the rules file nor the base has it.
   copy_rules ga gzw

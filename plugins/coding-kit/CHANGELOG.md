@@ -39,6 +39,15 @@ Neue Zonen erreichen bestehende Projekte und Rechner (F-049, in Arbeit).
   die globalen Kit-Regeln (Teil G) gilt dasselbe; ihre Basis im Datenordner gibt es
   schon.
 - **`new-project`** setzt die Seed-Basen beim Anlegen mit.
+- **Text ohne Marker (`bare`, Fund aus dem ersten Testlauf):** Wer eine Zone abwählt,
+  löscht ihr Markerpaar und behält meist den Text. Steht der Inhalt einer fehlenden Zone
+  wörtlich außerhalb aller Zonen in der Datei und kennt die Basis sie nicht, meldet
+  `zones` sie als `bare`; per Name legt das Skript nur die Marker um den Text, statt die
+  Zone ein zweites Mal einzusetzen — ebenso beim Zurückholen einer abgewählten Zone.
+  Fehlen einer Datei alle Marker, gilt eine Zone, die die Basis kennt, als `opted-out`
+  statt `unmarked`. update-conventions bietet `bare` als **Marker setzen** / **so
+  lassen** an; die Marker-Migration von Hand (A3) bleibt für Text, der sich geändert
+  hat.
 - **Kit:** Tests für neue, abgewählte, entfernte und umbenannte Zonen, Dateien ohne
   Basis, alle Einsetz-Stellen, die Auswahl per Name, `snapshot --seeds`, Graphiti nach
   dem Einschalten und eine neue Zone in den globalen Regeln.
@@ -48,7 +57,9 @@ Neue Zonen erreichen bestehende Projekte und Rechner (F-049, in Arbeit).
 - MANIFEST § Base snapshot: seed-Dateien mit Zonen bekommen eine eigene Basis
   (`<Ziel>.seed` unter `.claude/template-base/`), die nur der Zonen-Abgleich liest.
 - MANIFEST § Seed sections: neue, abgewählte und entfernte Zonen und wo eine neue Zone
-  eingesetzt wird. Projekte ohne diese Basis werden einmal je fehlender Zone gefragt.
+  eingesetzt wird. Projekte ohne diese Basis werden einmal je fehlender Zone gefragt;
+  steht der Text einer Zone noch ohne Marker da, bekommt er auf Wunsch nur seine Marker
+  zurück.
 
 ## 1.6.0 — 2026-10-27
 

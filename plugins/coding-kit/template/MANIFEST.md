@@ -344,9 +344,13 @@ of updates; an override line inside a zone protects it (§ Markers). The plugin'
   template, or by an optional block the answers switched on since): offered and inserted
   behind its nearest predecessor of the render order that the file has, without one
   before its nearest successor, without both at the end of the file.
-- **Opted-out zone** — in the seed base, not in the file: listed only; inserted again only
-  on request. Without a seed base (projects synced before seed bases existed) a missing
-  zone is asked about once.
+- **Opted-out zone** — in the seed base, not in the file (also when the file lost all its
+  markers): listed only; taken back only on request. Without a seed base (projects
+  synced before seed bases existed) a missing zone is asked about once.
+- **Zone text without markers** — the base lacks the zone, but its content stands
+  verbatim in the file outside every zone (a marker pair deleted, the text kept): on
+  request only its markers are put around that text instead of inserting it a second
+  time; the same holds for an opted-out zone taken back.
 - **Removed zone** — in the file and its seed base, no longer in the render: removing it
   with its content is offered; with an override line it stays as project text. A
   renamed zone shows as one removed and one new zone.

@@ -165,6 +165,55 @@ run_zones_cases() {
     eval 'ts zones --base "$TMP/zp.base" "$TMP/zq" "$TMP/zq.seeds" "$TMP/zqb" > "$TMP/zqb.tsv"'
   check "seed base: without its base the missing zone is unconfirmed" zone_is zqb section d unconfirmed
 
+  # --- text without markers ------------------------------------------------------------
+  put zw.seeds/A.md '<!-- section:s1 -->\nS1\n<!-- /section:s1 -->\n<!-- section:s2 -->\nT1\nT2\n<!-- /section:s2 -->\n'
+  put zw/A.md '<!-- section:s1 -->\nS1\n<!-- /section:s1 -->\nmine\nT1\nT2\nend\n'
+  put zw.seeds/NOM.md '<!-- section:s3 -->\nN3\n<!-- /section:s3 -->\n'
+  put zw/NOM.md 'intro\nN3\noutro\n'
+  put zw.seeds/OPT.md '<!-- section:s5 -->\nF5\n<!-- /section:s5 -->\n<!-- section:s4 -->\nO4\n<!-- /section:s4 -->\n'
+  put zw/OPT.md '<!-- section:s5 -->\nF5\n<!-- /section:s5 -->\nO4\n'
+  put zw/.claude/template-base/OPT.md.seed '<!-- section:s5 -->\nF5\n<!-- /section:s5 -->\n<!-- section:s4 -->\nO4\n<!-- /section:s4 -->\n'
+  put zw.seeds/ALL.md '<!-- section:s6 -->\nA6\n<!-- /section:s6 -->\n'
+  put zw/ALL.md 'x\nA6\n'
+  put zw/.claude/template-base/ALL.md.seed '<!-- section:s6 -->\nA6\n<!-- /section:s6 -->\n'
+  put zw.seeds/CHG.md '<!-- section:sx -->\nX\n<!-- /section:sx -->\n<!-- section:s7 -->\nC7\nC8\n<!-- /section:s7 -->\n'
+  put zw/CHG.md '<!-- section:sx -->\nX\n<!-- /section:sx -->\nC7\nC9\n'
+  put zw.seeds/EMP.md '<!-- section:sy -->\nY\n<!-- /section:sy -->\n<!-- section:s8 -->\n\n<!-- /section:s8 -->\n'
+  put zw/EMP.md '<!-- section:sy -->\nY\n<!-- /section:sy -->\n\n\n'
+  put zw.seeds/TWO.md '<!-- section:sz -->\nZ\n<!-- /section:sz -->\n<!-- section:s9 -->\nSAME\n<!-- /section:s9 -->\n<!-- section:s10 -->\nSAME\n<!-- /section:s10 -->\n'
+  put zw/TWO.md '<!-- section:sz -->\nZ\n<!-- /section:sz -->\nSAME\n'
+  put zw.seeds/IN.md '<!-- section:s11 -->\nIN\n<!-- /section:s11 -->\n'
+  put zw/IN.md '<!-- section:loc -->\nIN\n<!-- /section:loc -->\n'
+  put zw.seeds/CH.md '<!-- section:s14 -->\nZ\n<!-- /section:s14 -->\n<!-- section:s12 -->\nW12\n<!-- /section:s12 -->\n<!-- section:s13 -->\nW13\n<!-- /section:s13 -->\n'
+  put zw/CH.md '<!-- section:s14 -->\nZ\n<!-- /section:s14 -->\nW12\ntail\n'
+  put zw/.claude/template-base/CH.md.seed '<!-- section:s14 -->\nZ\n<!-- /section:s14 -->\n'
+  check "zones with unmarked text runs" \
+    eval 'ts zones "$TMP/zw" "$TMP/zw.seeds" "$TMP/zwo" > "$TMP/zw.tsv" 2> "$TMP/zw.err"'
+  check "bare: zone text without markers, no base" zone_is zw section s2 bare -
+  check "bare: file without any marker" zone_is zw section s3 bare -
+  check "bare: an opt-out with its text stays opted-out" zone_is zw section s4 opted-out -
+  check "bare: all markers gone, the base has the zone: opted-out" zone_is zw section s6 opted-out -
+  check "bare: changed text is not bare" zone_is zw section s7 unconfirmed
+  check "bare: a zone without text is never searched" zone_is zw section s8 unconfirmed
+  check "bare: the first of two zones with the same text takes it" zone_is zw section s9 bare -
+  check "bare: text taken once, the second zone is not bare" zone_is zw section s10 unconfirmed
+  check "bare: text inside another zone is not taken" zone_is zw section s11 unconfirmed
+  check "bare: a zone the base lacks with its text standing" zone_is zw section s12 bare -
+  check "bare: template block file" file_is zwo/.zones/section/s2.template 'T1\nT2\n'
+  refute "bare: not applied without a name" test -e "$TMP/zwo/A.md"
+  check "bare zones applied by name" \
+    eval 'ts zones "$TMP/zw" "$TMP/zw.seeds" "$TMP/zwn" s2 s3 s4 s6 s12 s13 > /dev/null'
+  check "bare: markers around the text" file_is zwn/A.md \
+    '<!-- section:s1 -->\nS1\n<!-- /section:s1 -->\nmine\n<!-- section:s2 -->\nT1\nT2\n<!-- /section:s2 -->\nend\n'
+  check "bare: markers around the text of a file without markers" file_is zwn/NOM.md \
+    'intro\n<!-- section:s3 -->\nN3\n<!-- /section:s3 -->\noutro\n'
+  check "bare: an opt-out taken back gets markers only" file_is zwn/OPT.md \
+    '<!-- section:s5 -->\nF5\n<!-- /section:s5 -->\n<!-- section:s4 -->\nO4\n<!-- /section:s4 -->\n'
+  check "bare: markers in a file without any" file_is zwn/ALL.md \
+    'x\n<!-- section:s6 -->\nA6\n<!-- /section:s6 -->\n'
+  check "bare: a new zone goes behind a wrapped predecessor" file_is zwn/CH.md \
+    '<!-- section:s14 -->\nZ\n<!-- /section:s14 -->\n<!-- section:s12 -->\nW12\n<!-- /section:s12 -->\n\n<!-- section:s13 -->\nW13\n<!-- /section:s13 -->\ntail\n'
+
   # --- snapshot --seeds ----------------------------------------------------------------
   mkdir -p "$TMP/zq2" "$TMP/zq.none"
   check "snapshot --seeds runs" \
@@ -217,6 +266,19 @@ run_zones_cases() {
   check "zones after inserting the graphiti zone" \
     eval 'ts zones "$TMP/zgp" "$TMP/zg.seeds" "$TMP/zgn2" > "$TMP/zgn2.tsv"'
   check "graphiti inserted: its zone is identical" zone_is zgn2 section claude-graphiti identical -
+  # The head zone of PROGRESS.md opted out by deleting its markers, without a seed base,
+  # next to a zone of the project's own: its text stands, so it is bare.
+  mkdir -p "$TMP/zph"
+  awk '$0 != "<!-- section:progress-head -->" && $0 != "<!-- /section:progress-head -->"' \
+    "$TMP/zr/PROGRESS.md" > "$TMP/zph/PROGRESS.md"
+  printf '\n<!-- section:progress-notes -->\nOwn.\n<!-- /section:progress-notes -->\n' >> "$TMP/zph/PROGRESS.md"
+  { cat "$TMP/zr/PROGRESS.md"; printf '\n<!-- section:progress-notes -->\nOwn.\n<!-- /section:progress-notes -->\n'; } \
+    > "$TMP/zph.expected"
+  check "zones on a head zone without markers" \
+    eval 'ts zones "$TMP/zph" "$TMP/zr.seeds" "$TMP/zpho" progress-head > "$TMP/zph.tsv"'
+  check "head zone without markers is bare" zone_is zph section progress-head bare -
+  check "head zone by name: its markers back around the text, nothing else" \
+    cmp -s "$TMP/zpho/PROGRESS.md" "$TMP/zph.expected"
   check "graphiti inserted: before the startup zone" eval 'awk "
     /^<!-- section:claude-graphiti -->\$/ { g = NR }
     /^<!-- section:claude-startup -->\$/ { s = NR }
