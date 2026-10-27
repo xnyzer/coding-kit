@@ -51,6 +51,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-049c | Text ohne Marker erkennen → **`zones` findet den Text einer fehlenden Zone wörtlich in der Datei: ohne Basis-Eintrag `bare`, per Name legt das Skript nur die Marker darum — ebenso beim Zurückholen einer abgewählten Zone; eine Abwahl in einer Datei ganz ohne Marker bleibt `opted-out`; update-conventions bietet „Marker setzen" / „so lassen" an, die Marker-Migration von Hand bleibt für geänderten Text (Fund aus dem ersten Testlauf).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 | F-049d | Testlauf und Release → **drei Läufe mit `--plugin-dir` (zusammen 2,11 USD): Projekt mit neuer, abgewählter, entfernter und unbestätigter Zone — der erste fand „Text ohne Marker" (→ F-049c), der wiederholte setzte alles über `zones` um; global eine neue Kit-Zone eingesetzt, die Abwahl respektiert; Release 1.7.0 gepusht, CI grün, Plugin aktualisiert. F-049 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 | F-036a | Vorlagen und Index-Skript → **`features/INDEX.md` (seed, Zone `index-head` mit Titelregel und Status-Legende) und `features/F-000-template.md` (managed) ersetzen `PROGRESS.md`, `PROGRESS-ARCHIVE.md` und `REQUIREMENTS.md` im Template (erste Zeilen in „Removed and renamed targets"); `scripts/features-index.sh` erzeugt die Tabelle (`write`) und prüft Kopfblöcke, Nummern, Tabelle, `next-feature` und Reihenfolge (`check`) — in `just check` jeder justfile, als `just features-index` und im Pre-Commit-Hook; CLAUDE.md-Überblick mit Zielen, Nicht-Zielen und Rahmenbedingungen; MANIFEST § Features; Version 2.0.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
+| F-036b | Kern-Skills → **add-feature berät vor dem Anlegen (Problem vor Lösung, Gegenargument, Alternativen, vier Empfehlungen, DROPPED auf Wunsch) und legt `features/F-NNN-kurzname.md` an; prep-step schätzt die Größe aus drei Signalen, spezifiziert in der Tiefe je Größe (Interview, Example Mapping, Einbettung, darf abraten), prüft Ready und setzt PLANNED; build-step baut aus der Feature-Datei mit den Nicht-Zielen als Grenze; step-done verbucht Verlauf, Belege und Status statt Archiv; teach-step führt aus der Datei; alle fünf verweisen bei altem Format auf die Migration; Authoring-Doku, README, CHANGELOG.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 
 ---
 
@@ -225,33 +226,6 @@ KI-Coding (ai-coding-starter-kit mit `features/INDEX.md`, GitHub Spec Kit).
 **Abhängigkeiten:** F-039 und F-049 (erledigt — neue und entfernte Zonen erreichen
 bestehende Projekte). Berührt dieselben Skills wie F-034; F-034 und F-037 folgen danach.
 Entlastet F-029 und F-033.
-
-#### F-036b — Kern-Skills
-
-**Was:** add-feature (Beratung: Problem vor Lösung, Gegenargument, Alternativen, vier
-Empfehlungen, DROPPED auf Wunsch; legt Datei und Kopfblock an, erzeugt die Tabelle,
-schlägt einen Platz in der Reihenfolge vor). prep-step (Größe aus drei Signalen; Phase 1
-Spezifikation in der Tiefe je Größe — Interview, Example Mapping, drei Blickwinkel plus
-Sicherheit, Einbettung, Abraten erlaubt; Ready-Prüfung; Phase 2 Plan mit Substeps;
-PLANNED; lange Entwürfe nach `private/`). build-step (liest die Datei, Nicht-Ziele als
-Scope-Schutz, sammelt Abweichungen für step-done). step-done (Verlauf-Eintrag je Substep,
-Abnahmekriterien mit Beleg, IN-PROGRESS bzw. DONE, Tabelle erzeugen, Reihenfolge
-nachziehen; kein Archiv mehr). teach-step. Freigabe-Gate-Text in allen fünf und in
-`docs/skill-authoring.md`. Altformat: Bei einer `PROGRESS.md` mit FEATURE-INDEX und ohne
-`features/INDEX.md` auf die Migration verweisen. `/add-skill` läuft mit.
-
-**Dateien:** `plugins/coding-kit/skills/{add-feature,prep-step,build-step,step-done,teach-step}/SKILL.md`,
-`docs/skill-authoring.md`, `README.md`, `plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-036a.
-
-**Abnahmekriterien:**
-- [ ] Die fünf Skills lesen und schreiben nur noch `features/` und die Ziel-Abschnitte
-      der CLAUDE.md; jeder
-      Punkt aus „Entschieden" zu Beratung, Größe, Tiefe, Ready, Status und Verlauf ist
-      einem Skill zugeordnet.
-- [ ] Bei altem Format verweisen sie auf die Migration statt zu raten.
-- [ ] `just check` grün.
 
 #### F-036c — Anforderungs- und Randskills, Hook, Doku
 

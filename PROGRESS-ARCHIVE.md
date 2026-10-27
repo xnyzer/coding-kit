@@ -16,6 +16,77 @@ zusammen:
 
 ---
 
+## F-036b — Kern-Skills (2026-10-27)
+
+Teil von F-036 (Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt; F-036a
+siehe darunter, F-036c–e folgen).
+
+**Problem:** Mit F-036a hatte das Template Feature-Dateien und Index, aber die Skills des
+Alltags schrieben noch in `PROGRESS.md` und Archiv. Beratung vor dem Bau, eine
+gründliche Spezifikation und eine Größe, die die Tiefe steuert, verlangte keiner.
+
+**Was entstanden ist (2.0.0, unveröffentlicht):**
+
+- **add-feature:** hält zuerst das Problem fest (eine mitgebrachte Lösung wird Option),
+  prüft gegen Ziele und Nicht-Ziele im Überblick der CLAUDE.md und gegen die Tabelle
+  aller Features (auch DROPPED und SUPERSEDED), nennt das stärkste Gegenargument und
+  Alternativen bis „nichts bauen" und empfiehlt eine von vier Möglichkeiten — aufnehmen,
+  an Bestehendes anhängen, anders lösen, nicht aufnehmen (auf Wunsch als Datei mit
+  DROPPED). Er legt `features/F-NNN-kurzname.md` an (Kopfblock, Erfassung mit Ziel je
+  `type`), zählt `next-feature` hoch, erzeugt die Tabelle per Skript und schlägt einen
+  Platz in der Reihenfolge vor.
+- **prep-step:** Größe aus Aufwand, Unsicherheit und Reichweite (das höchste zählt,
+  nach der Spezifikation erneut geprüft); Spezifikation in der Tiefe je Größe — S ohne
+  Interview, M mit Fragen zu offenen Punkten, L mit vollem Interview und Example
+  Mapping — mit `AC-n`, `EC-n`, Nicht-Zielen, Tests, Einbettung, `[CLARIFY]` und
+  datierten Entscheidungen; Blickwinkel Nutzen, Umsetzung, Prüfung, Sicherheit; ab M eine
+  Alternative; darf abraten (DROPPED, SUPERSEDED), plant keinen Workaround, schlägt ein
+  ADR vor, wo eine Entscheidung über das Feature hinausgeht. Dann Plan (Größe, Ansatz,
+  Substeps; Spike zuerst bei großer Unsicherheit, mehr als fünf → eigene Nummern),
+  Ready-Prüfung, PLANNED, Vorschlag zur Reihenfolge. Die Erkennung (2a) blieb
+  inhaltlich gleich.
+- **build-step:** liest Spezifikation und Plan aus der Datei, die Nicht-Ziele sind Teil
+  des Scope-Schutzes, je Abnahmekriterium wird der Beleg genannt, Abweichungen und
+  Entscheidungen werden für step-done gesammelt; bei IN-PROGRESS geht es beim ersten
+  Substep ohne Verlauf-Eintrag weiter.
+- **step-done:** verbucht in der Feature-Datei — ein Verlauf-Eintrag je Substep
+  (Umgesetzt, Entscheidungen, Abweichung vom Plan, Funde), Abnahmekriterien mit Beleg
+  abgehakt, Status IN-PROGRESS bzw. DONE (S ohne Substeps direkt von PLANNED), Tabelle
+  per Skript, Reihenfolge nachgezogen, Done-Prüfung vor der Vorschau; kein Archiv mehr.
+- **teach-step:** führt aus Plan, Abnahmekriterien und Nicht-Zielen der Datei.
+- **Alle fünf** erkennen ein Projekt im alten Format (`PROGRESS.md` mit FEATURE-INDEX,
+  keine `features/INDEX.md`) und verweisen auf die Migration per update-conventions; das
+  Freigabe-Gate gilt für Feature-Dateien, den Index und die Ziel-Abschnitte der
+  CLAUDE.md, lange Entwürfe gehen nach `private/`.
+- **docs/skill-authoring.md:** neuer Baustein Dokumentmodell, Status-Konvention mit
+  allen sechs Status, Altformat-Erkennung, neuer Gate-Standardsatz. **README:** Zeilen
+  der fünf Skills, Zyklus und Freigabe. CHANGELOG.
+
+**Verifikation:** Eine Suche nach PROGRESS, REQUIREMENTS und FEATURE-INDEX in den fünf
+Skills findet nur die Altformat-Stelle (und das Wort IN-PROGRESS). Jeder Punkt aus
+„Entschieden" zu Beratung, Größe, Tiefe, Ready, Status und Verlauf per Suche einem Skill
+zugeordnet, ohne Lücke. `just check` grün (Validator mit Längen der Beschreibungen,
+1947 Script-Checks); Versionsregel grün; gitleaks, Privacy-Muster und Blocklist ohne
+Fund. Ein Modell-Lauf mit den neuen Texten steht in F-036e an.
+
+**Notable decisions:**
+- Bei M und L wird die Spezifikation vorab freigegeben und darf in die Datei, der Status
+  bleibt BACKLOG; erst der Plan setzt PLANNED — so braucht es keinen Status
+  „spezifiziert", prep-step erkennt den Stand an der Datei.
+- Jeder Skill legt nur die Abschnitte an, die er füllt (add-feature die Erfassung,
+  prep-step Spezifikation und Plan, step-done den Verlauf); das Gerüst kommt aus der
+  Vorlage des Projekts, ersatzweise aus dem Plugin.
+- teach-step schreibt nie; statt eines eigenen Gate-Absatzes sagt sein Abschluss, dass
+  für step-done das Freigabe-Gate gilt.
+
+**Abweichungen vom Plan:** keine im Umfang. Die README-Zeile zu define-requirements und
+der Absatz zum Stop-Hook blieben für F-036c, wo diese Teile umgebaut werden.
+
+**Geänderte Dateien:**
+`plugins/coding-kit/skills/{add-feature,prep-step,build-step,step-done,teach-step}/SKILL.md`,
+`docs/skill-authoring.md`, `README.md`, `plugins/coding-kit/CHANGELOG.md`,
+`PROGRESS.md`.
+
 ## F-036a — Vorlagen und Index-Skript (2026-10-27)
 
 Teil von F-036 (Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt; F-036b–e

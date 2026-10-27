@@ -1,60 +1,79 @@
 ---
 name: prep-step
-description: Aufgabe vor der Umsetzung vorbereiten. Hinterfragt die Lösungsskizze gegen den aktuellen Codestand, analysiert den Umfang, prüft neu eingeführte Frameworks, Sprachen und Toolchains per Erkennungs-Skript gegen Fragment-Katalog und Stack-Module, zerlegt bei Bedarf in Substeps und schreibt Plan + Status-Marker PLANNED nach Freigabe in die PROGRESS.md.
+description: Feature vor der Umsetzung spezifizieren und planen. Schätzt die Größe aus drei Signalen (Aufwand, Unsicherheit, Reichweite), spezifiziert in der Tiefe je Größe — Abnahmekriterien, Randfälle, Nicht-Ziele, Tests, Einbettung, bei Bedarf Interview und Example Mapping, darf abraten —, prüft neu eingeführte Frameworks, Sprachen und Toolchains per Erkennungs-Skript, plant Substeps und schreibt Spezifikation, Plan und Status PLANNED nach Freigabe in die Feature-Datei.
 argument-hint: "[F-Nummer]"
 disable-model-invocation: true
 user-invocable: true
 ---
 
-# Aufgabe vorbereiten
+# Feature vorbereiten
 
-Bevor eine Aufgabe umgesetzt wird: gründlich analysieren, bei Bedarf zerlegen, Plan in die
-`PROGRESS.md` schreiben.
+Bevor ein Feature umgesetzt wird: verstehen, spezifizieren, planen — so gründlich, wie es
+die Größe verlangt, und nicht gründlicher. Ergebnis sind die Abschnitte Spezifikation und
+Plan in `features/F-NNN-*.md` und der Status `PLANNED`.
 
-Argument: Nummer aus der `PROGRESS.md` — F-Nummer (z. B. „F-004") oder Alt-Format
-(„1.2", „F9" — tolerant lesen). Ohne Argument: die oberste offene Aufgabe nehmen.
+Argument: F-Nummer (z. B. „F-004"; Alt-Formate tolerant lesen). Ohne Argument: das erste
+Feature der empfohlenen Reihenfolge in `features/INDEX.md` vorschlagen und bestätigen
+lassen.
+
+**Freigabe-Gate:** Jede neue oder geänderte Feature-Datei (`features/F-NNN-*.md`), jede
+Änderung an `features/INDEX.md` und an den Ziel-Abschnitten im Überblick der
+`CLAUDE.md` wird zuerst als Vorschau gezeigt und erst nach ausdrücklichem OK des Nutzers
+geschrieben (ausgenommen: genau der zuvor freigegebene Text; die Tabelle erzeugt danach
+das Skript). Lange Entwürfe (etwa ab 40 Zeilen) gehen als Datei nach `private/` und
+werden nach dem Übernehmen gelöscht.
 
 ## 0. Projektkontext ermitteln
 
-Lies die **Projekt-CLAUDE.md**: Zweck/Scope, Sprache der lebenden Doku, Verweise auf
-`CODING-STANDARDS.md` / `REQUIREMENTS.md` / `THREAT-MODEL.md`, Graphiti-group_id
-(Graphiti optional — ohne MCP still überspringen). Nichts davon hardcoden.
+Lies die **Projekt-CLAUDE.md**: Überblick mit Zweck, Umfang, Zielen, Nicht-Zielen und
+Rahmenbedingungen; Sprache der lebenden Doku; Verweise auf `CODING-STANDARDS.md` /
+`THREAT-MODEL.md`; Graphiti-group_id (Graphiti optional — ohne MCP still überspringen).
+Nichts davon hardcoden.
+
+**Altes Format:** Hat das Projekt eine `PROGRESS.md` mit `FEATURE-INDEX`-Block, aber keine
+`features/INDEX.md`, arbeitet es noch mit dem Dokumentmodell vor coding-kit 2.0.0. Dann
+nicht planen und nichts schreiben: auf die Migration per `/coding-kit:update-conventions`
+verweisen.
 
 ## Kontext-Recovery
 
-Nach Kompaktierung oder Session-Neustart: (1) Projekt-CLAUDE.md und PROGRESS.md neu lesen
-(Done-Tabelle, offene Tasks, FEATURE-INDEX), (2) `git status` + `git diff` für den
-tatsächlichen Arbeitsstand, (3) beim aktuellen Schritt weitermachen — erledigte Arbeit
-nicht wiederholen, nichts raten.
+Nach Kompaktierung oder Session-Neustart: (1) Projekt-CLAUDE.md, `features/INDEX.md` und
+die Feature-Datei neu lesen — steht die Spezifikation schon, geht es mit dem Plan weiter,
+(2) `git status` + `git diff` für den tatsächlichen Arbeitsstand, (3) beim aktuellen
+Schritt weitermachen — erledigte Arbeit nicht wiederholen, nichts raten.
 
-## 1. Aufgabe lesen & verstehen
+## 1. Feature lesen & verstehen
 
-- Aufgabe aus der `PROGRESS.md` lesen: Beschreibung, Dateien, Abhängigkeiten,
-  Abnahmekriterien.
-- `CODING-STANDARDS.md` lesen (falls vorhanden und noch nicht im Kontext).
-- Abhängigkeiten prüfen: sind sie erledigt (Done-Tabelle oben + FEATURE-INDEX unten)?
-- Falls vorhanden: `REQUIREMENTS.md` und `THREAT-MODEL.md` für den vollen Kontext lesen.
+- Die Feature-Datei lesen: Kopfblock, Erfassung (Problem, Ziel, Lösungsskizze,
+  Abhängigkeiten), eine schon vorhandene Spezifikation.
+- **Status prüfen:** `BACKLOG` → planen. `PLANNED` → schon geplant; nur auf Wunsch neu
+  planen. `IN-PROGRESS` → läuft; Änderungen am Plan nur auf Wunsch, als datierte
+  Entscheidung. `DONE`, `DROPPED`, `SUPERSEDED` → abgeschlossen; Folgearbeit bekommt eine
+  neue Nummer (`/coding-kit:add-feature`).
+- **Abhängigkeiten** (`depends-on`, Erfassung): erledigt (Status `DONE` in der Tabelle)
+  oder in der Reihenfolge davor eingeplant? Sonst melden.
+- `CODING-STANDARDS.md` lesen (falls vorhanden und noch nicht im Kontext); bei
+  Security-Postur `THREAT-MODEL.md`. Grundsätzliche Entscheidungen stehen als ADR in
+  `docs/adr/` — die berührten lesen.
 
 ## 2. Lösungsskizze hinterfragen & Umfang analysieren
 
-- **Die Lösungsskizze im Eintrag ist ein Schnappschuss von der Erfassung — nicht der
-  Plan** (Alt-Einträge: „Mögliche Umsetzung"). Sie war ggf. schnell notiert und kann
-  veraltet sein: jede Annahme gegen den aktuellen Codestand verifizieren (gibt es die
-  genannten Stellen/Mechanismen noch?), nichts ungeprüft übernehmen.
-- **Eigene Ideen einbringen:** Siehst du heute einen besseren Ansatz, schlage ihn vor —
-  mit Begründung, was gegenüber der Skizze anders ist und warum.
-- Welche Dateien/Komponenten müssen entstehen oder geändert werden?
-- Gibt es bestehenden Code/Config zum Wiederverwenden?
+- **Die Lösungsskizze ist ein Schnappschuss von der Erfassung — nicht der Plan.** Jede
+  Annahme gegen den aktuellen Codestand verifizieren (gibt es die genannten
+  Stellen/Mechanismen noch?), nichts ungeprüft übernehmen.
+- **Eigene Ideen einbringen:** Siehst du einen besseren Ansatz, schlage ihn vor — mit
+  Begründung, was gegenüber der Skizze anders ist und warum.
+- Welche Dateien/Komponenten müssen entstehen oder geändert werden? Gibt es Bestehendes
+  zum Wiederverwenden?
 - Welche neue Config (Env-Vars), Endpunkte, Dependencies werden nötig? Neue Dependencies
   nur permissiv lizenziert (kein GPL/AGPL).
 - Bei Security-Postur (THREAT-MODEL.md vorhanden bzw. Security-/Auth-Charakter laut
   CLAUDE.md): bleibt das Design fail-closed? Eigenbau-Krypto (verboten — nur geprüfte
   Bibliotheken)? Berührt es Auth-, Token- oder Consent-Pfade?
-- Grober Umfang: wie viele Zeilen Code/Config ungefähr?
 
 ## 2a. Standards- und Modul-Abdeckung prüfen (Erkennung)
 
-Nur wenn die Analyse ergibt, dass die Aufgabe **neue Frameworks, Dependencies, Sprachen
+Nur wenn die Analyse ergibt, dass das Feature **neue Frameworks, Dependencies, Sprachen
 oder Toolchains einführt** — sonst still überspringen. Template und Skript wie
 `/choose-stack` § 0: `${CLAUDE_PLUGIN_ROOT}/template` und
 `${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh`, in Shell-Befehlen die aufgelösten
@@ -70,7 +89,7 @@ Pfade; Signale und Zustände beschreibt `MANIFEST.md` § Detection.
    dem Snapshot-Vertrag), prüft das Skript keine Module — dann auf die Migration per
    `/coding-kit:update-conventions` hinweisen.
 3. **Eigenschafts-Trigger** (`*characteristic:*`-Zeilen in
-   `modules/standards/README.md`) zeigt keine Datei: die Aufgabenbeschreibung selbst
+   `modules/standards/README.md`) zeigt keine Datei: die Feature-Beschreibung selbst
    dagegen halten (z. B. „service with user/admin mutations"), Treffer wie ein Fragment
    ohne `fragment:NAME`-Marker im Slot behandeln.
 4. **Fragment `missing`** → im Plan vorschlagen, das Katalog-Fragment anzuhängen
@@ -99,63 +118,123 @@ Pfade; Signale und Zustände beschreibt `MANIFEST.md` § Detection.
    - **Dauerhaft ablehnen**, wenn das Tool keine Konvention braucht: Rules-Zeile
      `tool:NAME` mit Grund im selben Schritt.
 7. **Nur vorschlagen, nie still einbauen** — die Entscheidung fällt mit der
-   Plan-Freigabe (Abschnitte 4–6 dieses Skills). Ein Vorschlag, den der Nutzer dauerhaft
-   ablehnt, wird zur Rules-Zeile `fragment:NAME`, `module:NAME` bzw. `tool:NAME` — dann
-   meldet ihn kein Skill mehr.
+   Plan-Freigabe (Schritt 7). Ein Vorschlag, den der Nutzer dauerhaft ablehnt, wird zur
+   Rules-Zeile `fragment:NAME`, `module:NAME` bzw. `tool:NAME` — dann meldet ihn kein
+   Skill mehr.
 
-## 3. Größe bewerten & ggf. zerlegen
+## 3. Größe schätzen (vor dem Interview)
 
-- **Klein** (< 200 Zeilen, < 5 Dateien): direkt machbar, keine Zerlegung — kurzer Plan.
-- **Mittel** (200–500 Zeilen, 5–15 Dateien): 2–3 logische Substeps, jeder für sich
-  lauffähig/sinnvoll.
-- **Groß** (> 500 Zeilen, > 15 Dateien): 3–5 Substeps mit eigenen Abnahmekriterien.
+Drei Signale, **das höchste zählt**:
 
-Substeps erben die Nummer der Elternaufgabe mit Buchstaben (F-004 → F-004a, F-004b …).
+| Signal | S | M | L |
+|--------|---|---|---|
+| Aufwand | unter 5 Dateien und 200 Zeilen | bis 15 Dateien und 500 Zeilen | darüber |
+| Unsicherheit | die Lösung liegt auf der Hand | einzelne offene Fragen | viele offene Fragen, neue Technik, ein Spike nötig |
+| Reichweite | eine Stelle | mehrere Teile des Projekts | Daten- oder Projektmigration, Sicherheits- oder Auth-Pfade, Vorlage für andere Projekte |
 
-## 4. Plan dem Nutzer vorstellen
+Die Größe mit einem Satz Begründung vorschlagen; der Nutzer kann sie ändern. Sie
+bestimmt die Tiefe in Schritt 4 und 5 — **nach oben begrenzt**, damit Kleines nicht
+lästig wird. Nach der Spezifikation erneut prüfen: Zeigt sie mehr (oder weniger), die
+Größe neu vorschlagen.
 
-```
-### [Nummer] — [Name]
+## 4. Phase 1 — Spezifikation
 
-**Einschätzung:** Klein / Mittel / Groß
-**Geschätzter Umfang:** ~N Zeilen, N Dateien
+In der Tiefe je Größe:
 
-**Bewertung der Lösungsskizze:** [was trägt, was ist überholt, was du anders
-vorschlägst — mit Begründung; entfällt, wenn der Eintrag keine Skizze hat]
+- **S:** kein Interview. Claude legt eine Mini-Spezifikation vor: 1–3 Abnahmekriterien,
+  Randfälle ausdrücklich „keine" oder 1–2.
+- **M:** Interview nur zu offenen Punkten (etwa 3–6 Fragen). Abnahmekriterien als
+  Gegeben/Wenn/Dann mit Negativfall; 3–5 Randfälle; 1–3 Nicht-Ziele; ein Testfall je
+  Abnahmekriterium; kurze Einbettungsprüfung.
+- **L:** volles Interview, **eine** Frage je Runde mit Empfehlung. **Example Mapping:** je
+  Regel Beispiele und Gegenbeispiele, offene Fragen getrennt sammeln. Stories
+  priorisiert; Randfälle systematisch (Daten, Zustände, Fehler, Sicherheit, Migration);
+  Nicht-Ziele Pflicht; Teststrategie; volle Einbettungsanalyse.
 
-**Substeps:** (nur bei Mittel/Groß)
-1. [Nummer]a — [Name]: [was, welche Dateien, Abnahmekriterium]
-2. …
+Fragen aus drei Blickwinkeln — **Nutzen** (wer hat was davon, woran merkt man es?),
+**Umsetzung** (was ist schwer, was bricht?), **Prüfung** (woran sieht man, dass es geht —
+und dass es nicht mehr tut als gewollt?) — plus **Sicherheit** (neue Eingaben,
+Berechtigungen, Secrets, Daten).
 
-**Neue Endpunkte/Config/Dependencies:** [welche?]
+**Einbettung prüfen:** Was berührt das Feature? Was muss mitgeändert werden? Was setzt die
+Anfrage stillschweigend voraus — einen Rückweg, eine Migration, eine Fehlermeldung, eine
+Berechtigung? Was Bestehendes muss angepasst werden — im Feature oder als Folge-F-Nummer?
+Widerspricht es Zielen, Nicht-Zielen (Überblick der CLAUDE.md) oder einem ADR?
 
-**Standards- und Modul-Abdeckung:** [ok / Fragment `<name>` fehlt → Anhängen
-vorgeschlagen / Modul `<name>` fehlt → `/choose-stack` oder Werkzeugsprache / Tool
-`<name>` ohne Vorlage bzw. kein Katalog-Fragment → von Hand im Projekt + Vorschlag fürs
-Template, oder `tool:NAME`; Zeile entfällt, wenn Schritt 2a übersprungen wurde]
+**Alternativen und Abraten:** Ab M mindestens eine Alternative zur Skizze nennen. Spricht
+mehr dagegen als dafür, abraten — mit Grund; einen Workaround planst du nicht. Die
+Entscheidung bleibt beim Nutzer: weitermachen, anders lösen, `DROPPED` (Grund in die
+Datei) oder `SUPERSEDED` (aufgehen in anderen Nummern, Feld `superseded-by`) — die beiden
+letzten mit Vorschau wie jede Änderung, `done:` auf heute.
 
-**Risiken / offene Fragen:**
-- …
-```
+**Abschnitt Spezifikation** der Feature-Datei (Gerüst aus der Vorlage
+`features/F-000-template.md`, Überschriften in der Sprache der lebenden Doku, Kürzel
+englisch):
 
-**Auf OK warten — NICHT mit der Umsetzung beginnen!**
+- **Abnahmekriterien:** `- [ ] AC-n — Gegeben …, wenn …, dann …`, Negativfälle
+  eingeschlossen; jedes prüfbar.
+- **Randfälle:** `EC-n — <Situation> → <erwartetes Verhalten>`.
+- **Nicht-Ziele:** was das Feature ausdrücklich nicht tut (→ F-NNN, wo ein anderes es
+  regelt).
+- **Tests:** je Abnahmekriterium ein automatischer Test, ein Check oder „manuell: wie".
+- **Einbettung:** Ergebnis der Prüfung oben, Folge-F-Nummern.
+- **Offene Fragen:** `- [ ] [CLARIFY] …`; eine blockierende hält das Feature vor
+  `PLANNED`.
+- **Entscheidungen:** datiert mit Grund; überstimmt der Nutzer eine Empfehlung, steht das
+  so da („Empfehlung war Z; entschieden X, weil …"). Eine Entscheidung, die das Projekt
+  über dieses Feature hinaus prägt, als ADR in `docs/adr/` vorschlagen; die Datei
+  verlinkt es.
 
-## 5. Plan & Status in der PROGRESS.md festhalten
+Bei M und L die Spezifikation zuerst allein zeigen und freigeben lassen; nach dem OK darf
+sie in die Datei, der Status bleibt `BACKLOG` — prep-step erkennt beim nächsten Lauf an
+der Datei, dass nur der Plan fehlt. Bei S kommen Spezifikation und Plan in eine Vorschau.
 
-Nach Freigabe (in der Sprache der lebenden Doku; Status-Token sprachinvariant):
+## 5. Phase 2 — Plan
 
-- **Immer — Status-Marker setzen:** die `**Status:**`-Zeile des Eintrags auf `PLANNED`
-  setzen (fehlt sie — Alt-Eintrag —, direkt unter der Überschrift anlegen) und die
-  Zeile der F-Nummer im `<!-- FEATURE-INDEX … -->` mit `(PLANNED)` markieren. Der
-  Marker zeigt, wo die Aufgabe steht: `BACKLOG` → prep-step, `PLANNED` → build-step.
-- **Immer — Skizze nachziehen:** Weicht der freigegebene Plan von der Lösungsskizze ab,
-  die Skizze im Eintrag kurz auf den beschlossenen Stand bringen.
-- **Klein:** sonst nichts ändern — der bestehende Eintrag genügt.
-- **Mittel/Groß:** Substeps direkt unter der Elternaufgabe einfügen, im vorhandenen Format
-  (Was / Dateien / Abhängigkeiten / Abnahmekriterien als Checkboxen). Elternaufgabe als
-  Überschrift/Kontext behalten. Neue Nummern immer als F-NNN mit Buchstaben-Substeps.
+**Abschnitt Plan** der Feature-Datei:
 
-## 6. Fragen, ob es losgeht
+- **Größe** mit der Begründung aus Schritt 3.
+- **Ansatz:** der gewählte Weg; ab M mit der verworfenen Alternative und warum nicht.
+- **Substeps** — S: der Plan in Stichpunkten, keine Substeps. M: 2–3 Substeps. L: 3–5,
+  bei großer Unsicherheit ein Spike zuerst. Braucht es mehr, in eigene F-Nummern teilen
+  (`/coding-kit:add-feature`; das Feature wird ggf. `SUPERSEDED`). Substeps heißen
+  `F-NNNa`, `F-NNNb` … und haben je eine Überschrift im Plan: was, welche Teile, welche
+  Abnahmekriterien er erfüllt — jeder für sich lauffähig.
+- Ergebnis der Erkennung (Schritt 2a), neue Endpunkte, Config und Dependencies.
 
-- Frage: „Soll ich mit [Nummer]a starten?"
+## 6. Ready prüfen
+
+`PLANNED` nur, wenn alles erfüllt ist — sonst sagen, was fehlt:
+
+- Problem und Ziel klar, Größe gesetzt;
+- jedes Abnahmekriterium prüfbar und mit Testidee;
+- Randfälle betrachtet; Nicht-Ziele ab M;
+- kein blockierendes `[CLARIFY]`;
+- Abhängigkeiten erledigt oder eingeplant;
+- Einbettung geprüft;
+- Plan steht.
+
+## 7. Vorstellen & festhalten
+
+Den Plan (bei S mit Spezifikation) als Vorschau zeigen: die neuen Abschnitte der
+Feature-Datei, die Änderungen im Kopfblock und an `features/INDEX.md`. **Auf OK warten —
+NICHT mit der Umsetzung beginnen!**
+
+Nach Freigabe, in der Sprache der lebenden Doku:
+
+- **Feature-Datei:** Spezifikation und Plan schreiben; im Kopfblock `status: PLANNED`,
+  `size`, ggf. `depends-on`. Weicht der Plan von der Lösungsskizze ab, die Skizze kurz
+  auf den beschlossenen Stand bringen. Hat sich der Zuschnitt geändert, den `title`
+  anpassen (höchstens 70 Zeichen; der Dateiname bleibt).
+- **Empfohlene Reihenfolge** in `features/INDEX.md`: verschiebt sich etwas (neue
+  Abhängigkeit, neue Folge-Nummer, Feature abgeraten), eine Änderung vorschlagen — in
+  derselben Vorschau, Stand-Datum auf heute.
+- Tabelle erzeugen: `just features-index` (ohne das Rezept
+  `sh scripts/features-index.sh write`); meldet das Skript etwas, beheben. Die Datei
+  re-lesen.
+- Lange Entwürfe aus `private/` nach dem Übernehmen löschen.
+
+## 8. Fragen, ob es losgeht
+
+- Frage: „Soll ich mit [Nummer]a starten?" (S: „Soll ich es umsetzen?")
 - **Erst nach explizitem OK implementieren.**

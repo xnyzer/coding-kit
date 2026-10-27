@@ -82,7 +82,7 @@ Meldung, auch einen Tippfehler. Der Validator lässt deshalb nur diese zu (`SKIL
   aktuelle Stände zur Laufzeit per Websuche verifizieren.
 - **Kein hartkodierter Projektzustand:** Skills dürfen nichts über ein konkretes Projekt
   wissen (Stack, Reifegrad, Feature-Stand). Alles Projektspezifische kommt zur Laufzeit
-  aus der Projekt-CLAUDE.md, dem justfile und der PROGRESS.md.
+  aus der Projekt-CLAUDE.md, dem justfile und den Feature-Dateien unter `features/`.
 
 ## Pflicht-Bausteine
 
@@ -102,23 +102,35 @@ Meldung, auch einen Tippfehler. Der Validator lässt deshalb nur diese zu (`SKIL
   Vorauswahl und legt kein eigenes Profil an. Die Personal-Config schreibt ein Skill nur
   über `template-sync.sh set-global`.
 - **M4 — Kontext-Recovery-Block** in jedem Skill, der über mehrere Schritte arbeitet:
-  Spec/PROGRESS re-lesen, `git status` + `git diff`, weitermachen ohne Doppelarbeit.
+  Feature-Datei re-lesen, `git status` + `git diff`, weitermachen ohne Doppelarbeit.
+- **Dokumentmodell (ab 2.0.0):** Jede Aufgabe ist eine Datei `features/F-NNN-kurzname.md`
+  mit Kopfblock, `features/INDEX.md` die Übersicht; Projektziele stehen im Überblick der
+  Projekt-CLAUDE.md. Felder, Status, Index und Skript beschreibt das Template-MANIFEST
+  § Features. Die Tabelle im Index erzeugt nur `scripts/features-index.sh write` im
+  Projekt (`just features-index`) — kein Skill schreibt Tabellenzeilen von Hand.
 - **F-Nummern-Toleranz:** Alt-Formate (F-9, F9, „1.2") lesen, Neues ausschließlich als
-  F-NNN (dreistellig, Substeps F-006a) schreiben; `next-feature:` aus dem
-  FEATURE-INDEX-Block.
-- **Status-Marker-Konvention:** PROGRESS-Einträge tragen unter der Überschrift eine
-  `**Status:**`-Zeile mit sprachinvariantem Token — `BACKLOG` (aufgenommen, setzt
-  add-feature) → `PLANNED` (geplant, setzt prep-step; zusätzlich `(PLANNED)` im
-  FEATURE-INDEX) → fertig = Done-Tabelle + `(DONE)` im Index (setzt step-done).
-  Alt-Einträge ohne Status-Zeile tolerant lesen (Substeps vorhanden ≈ geplant) und
-  die Zeile bei der nächsten Berührung nachziehen.
-- **Freigabe-Gate (jeder Skill, der in die PROGRESS schreibt):** an der Schreibstelle den
-  Standardsatz tragen — sinngemäß gleich in jedem Skill:
+  F-NNN (dreistellig, Substeps F-006a) schreiben; die nächste Nummer aus der Zeile
+  `next-feature:` in `features/INDEX.md`.
+- **Status-Konvention:** Der Kopfblock der Feature-Datei trägt den Status als
+  sprachinvariantes Token — `BACKLOG` (setzt add-feature) → `PLANNED` (prep-step) →
+  `IN-PROGRESS` (step-done, erster Substep) → `DONE` (step-done, alles verbucht und
+  belegt); aus jedem offenen Status `DROPPED` oder `SUPERSEDED` (add-feature, prep-step,
+  refine-requirements). Kürzel in der Spezifikation (`AC-n`, `EC-n`, `[CLARIFY]`) bleiben
+  ebenfalls englisch.
+- **Altes Format:** Jeder Skill, der Feature-Dateien liest oder schreibt, erkennt ein
+  Projekt vor 2.0.0 — `PROGRESS.md` mit `FEATURE-INDEX`-Block, keine `features/INDEX.md`
+  — und verweist dann auf die Migration per `/coding-kit:update-conventions`, statt zu
+  raten oder ins alte Format zu schreiben.
+- **Freigabe-Gate (jeder Skill, der Feature-Dateien, den Index oder die Projektziele
+  schreibt):** an der Schreibstelle den Standardsatz tragen — sinngemäß gleich in jedem
+  Skill:
 
-  > **Freigabe-Gate:** Jeder neue oder geänderte Eintrag in `PROGRESS.md`,
-  > `PROGRESS-ARCHIVE.md` oder im FEATURE-INDEX wird zuerst als Vorschau gezeigt und erst
-  > nach ausdrücklichem OK des Nutzers geschrieben (ausgenommen: genau der zuvor
-  > freigegebene Text).
+  > **Freigabe-Gate:** Jede neue oder geänderte Feature-Datei (`features/F-NNN-*.md`),
+  > jede Änderung an `features/INDEX.md` und an den Ziel-Abschnitten im Überblick der
+  > `CLAUDE.md` wird zuerst als Vorschau gezeigt und erst nach ausdrücklichem OK des
+  > Nutzers geschrieben (ausgenommen: genau der zuvor freigegebene Text; die Tabelle
+  > erzeugt danach das Skript). Lange Entwürfe (etwa ab 40 Zeilen) gehen als Datei nach
+  > `private/` und werden nach dem Übernehmen gelöscht.
 
   Der Satz steht im Skill selbst, nicht nur hier: diese Doku liegt nicht im Plugin-Cache,
   Skills können sie zur Laufzeit nicht lesen. Fragen bündeln, wo es geht (step-done: eine

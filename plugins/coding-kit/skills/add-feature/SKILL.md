@@ -1,6 +1,6 @@
 ---
 name: add-feature
-description: Neue Aufgabe auf die Roadmap setzen. Analysiert die Idee, prüft Überschneidungen mit der PROGRESS.md, formuliert sie aus und trägt sie nach Freigabe mit Status-Marker BACKLOG ein. Startet der Nutzer per Slash-Command oder Claude selbst, wenn im Gespräch oder beim Bauen eine neue Aufgabe entsteht — eingetragen wird immer erst nach ausdrücklichem OK.
+description: Neue Aufgabe auf die Roadmap setzen. Hält zuerst das Problem hinter der Idee fest, berät (stärkstes Gegenargument, Alternativen, eine von vier Empfehlungen — auch „nicht aufnehmen"), prüft Überschneidungen mit den Feature-Dateien und legt nach Freigabe eine Datei features/F-NNN-kurzname.md mit Status BACKLOG an; die Tabelle in features/INDEX.md wird erzeugt, ein Platz in der Reihenfolge vorgeschlagen. Startet der Nutzer per Slash-Command oder Claude selbst, wenn im Gespräch oder beim Bauen eine neue Aufgabe entsteht — angelegt wird immer erst nach ausdrücklichem OK.
 argument-hint: "[Kurzbeschreibung]"
 disable-model-invocation: false
 user-invocable: true
@@ -8,18 +8,21 @@ user-invocable: true
 
 # Aufgabe aufnehmen
 
-Eine neue Aufgabe soll auf die Roadmap: Feature, Refactoring, Audit, Doku — es wird
-nicht unterschieden. Alles bekommt eine F-Nummer und landet im Backlog der `PROGRESS.md`.
+Eine neue Aufgabe soll auf die Roadmap: neues Verhalten, ein Fehler, ein Umbau, Doku, ein
+Audit. Alles bekommt eine F-Nummer und eine eigene Datei in `features/`, die über den
+ganzen Lebenslauf der Aufgabe wächst. Dieser Skill legt sie an — knapp, nach Beratung.
 
 **Wer startet:** der Nutzer per `/coding-kit:add-feature` — oder Claude selbst, wenn im
 Gespräch oder beim Bauen (z. B. aus `/coding-kit:build-step` heraus) eine neue Aufgabe
 entsteht. Claude muss dafür nicht den Nutzer bitten, den Skill aufzurufen.
 
-**Freigabe-Gate:** Jeder neue oder geänderte Eintrag in `PROGRESS.md`,
-`PROGRESS-ARCHIVE.md` oder im FEATURE-INDEX wird zuerst als Vorschau gezeigt und erst nach
-ausdrücklichem OK des Nutzers geschrieben (ausgenommen: genau der zuvor freigegebene Text).
-Im autonomen Lauf ohne erreichbaren Nutzer wird nichts eingetragen — die Idee wird nur
-gesammelt und am Ende vorgeschlagen.
+**Freigabe-Gate:** Jede neue oder geänderte Feature-Datei (`features/F-NNN-*.md`), jede
+Änderung an `features/INDEX.md` und an den Ziel-Abschnitten im Überblick der
+`CLAUDE.md` wird zuerst als Vorschau gezeigt und erst nach ausdrücklichem OK des Nutzers
+geschrieben (ausgenommen: genau der zuvor freigegebene Text; die Tabelle erzeugt danach
+das Skript). Lange Entwürfe (etwa ab 40 Zeilen) gehen als Datei nach `private/` und
+werden nach dem Übernehmen gelöscht. Im autonomen Lauf ohne erreichbaren Nutzer wird
+nichts angelegt — die Idee wird nur gesammelt und am Ende vorgeschlagen.
 
 Argument: Kurzbeschreibung der Aufgabe (z. B. „Rate-Limit-Middleware", „Export als CSV").
 
@@ -27,8 +30,10 @@ Argument: Kurzbeschreibung der Aufgabe (z. B. „Rate-Limit-Middleware", „Expo
 
 Lies die **Projekt-CLAUDE.md** (Repo-Root) — sie ist die Quelle für alle Projektspezifika:
 
-- **Zweck/Scope** des Projekts (für die Passt-das-hierher-Prüfung).
-- **Sprache der lebenden Doku** — PROGRESS-Einträge schreibst du in genau dieser Sprache.
+- **Überblick** mit Zweck, Umfang und den Abschnitten Ziele, Nicht-Ziele und
+  Rahmenbedingungen (für die Passt-das-hierher-Prüfung).
+- **Sprache der lebenden Doku** — die Feature-Datei schreibst du in genau dieser Sprache;
+  Feldnamen und Status-Token bleiben englisch.
 - **Graphiti-group_id** (aus dem Graphiti-Block). Fehlt der Block oder läuft kein
   Graphiti-MCP → alle Graphiti-Schritte still überspringen.
 - **Sicherheits-Postur:** öffentliches Repo oder Security-/Auth-Charakter (z. B.
@@ -36,78 +41,122 @@ Lies die **Projekt-CLAUDE.md** (Repo-Root) — sie ist die Quelle für alle Proj
 
 Hardcode nichts davon — jedes Projekt ist anders.
 
-## 1. Idee verstehen
+**Altes Format:** Hat das Projekt eine `PROGRESS.md` mit `FEATURE-INDEX`-Block, aber keine
+`features/INDEX.md`, arbeitet es noch mit dem Dokumentmodell vor coding-kit 2.0.0. Dann
+nichts anlegen und nicht raten: auf die Migration per `/coding-kit:update-conventions`
+verweisen und die Idee bis dahin nur im Gespräch festhalten.
 
-- Was genau soll getan werden?
+## 1. Problem verstehen
+
+- **Problem vor Lösung:** Was fehlt oder stört, für wen, und warum zählt es? Bringt der
+  Nutzer eine fertige Lösung mit („bau X"), zuerst das Problem dahinter festhalten — die
+  Lösung wird eine Option unter mehreren, kein Auftrag.
+- **Art bestimmen** (Feld `type`): `feature` (neues Verhalten), `fix` (falsches
+  Verhalten), `change` (Umbau, Doku, Pflege, Audit).
 - Bei unklarer Beschreibung: **nachfragen** — nicht raten. Eine Frage pro Antwort, immer
   mit einem empfohlenen Default.
 
-## 2. Analyse
+## 2. Analyse und Beratung
 
-- **Passt es zum Projekt?** Gegen Zweck/Scope aus der CLAUDE.md prüfen.
-- **Gibt es das schon?** Lies den `<!-- FEATURE-INDEX … -->`-Kommentar am Ende der
-  `PROGRESS.md` — Überschneidungen oder Abhängigkeiten? Volltext einzelner Einträge nur
-  bei konkretem Verdacht lesen.
-- **Bestehenden Eintrag erweitern** statt neu anlegen, wo sinnvoll.
+- **Passt es zum Projekt?** Gegen Zweck, Ziele und Nicht-Ziele aus dem Überblick der
+  CLAUDE.md prüfen; ein Widerspruch zu einem Nicht-Ziel ist ein Grund zum Abraten.
+- **Gibt es das schon?** Die Tabelle aller Features in `features/INDEX.md` lesen —
+  Überschneidungen oder Abhängigkeiten? Einzelne Feature-Dateien nur bei konkretem
+  Verdacht öffnen; auch `DROPPED` und `SUPERSEDED` zählen (die Idee kam schon einmal,
+  der Grund steht in der Datei).
 - **Machbarkeit im Stack:** Stack/Tooling aus CLAUDE.md bzw. justfile ableiten — nie
   einen Stack annehmen, der nirgends dokumentiert ist.
 - **Sicherheits-/Privacy-Implikationen:** neue Angriffsflächen, externe Dienste, Secrets?
   Bei Security-Postur (siehe Schritt 0) mit besonderer Sorgfalt, ggf. gegen
   `THREAT-MODEL.md` prüfen.
+- **Stärkstes Gegenargument** nennen — ehrlich, nicht als Pflichtübung.
+- **Alternativen** nennen, auch die unbequemen: nichts bauen, Doku statt Code, gibt es
+  schon (im Projekt, in einer Bibliothek, im Werkzeug), ein kleinerer erster Schritt.
 
-## 3. Dem Nutzer vorstellen
+## 3. Empfehlung vorstellen
 
-Kurz präsentieren: Empfehlung (neuer Eintrag oder Erweiterung), Abhängigkeiten, offene
-Fragen/Entscheidungen. **Auf OK warten, bevor du ausformulierst.**
+Kurz präsentieren: Problem, Gegenargument, Alternativen, Abhängigkeiten, offene Fragen —
+und **genau eine** von vier Empfehlungen mit Begründung:
+
+- **aufnehmen** — neue Feature-Datei;
+- **an Bestehendes anhängen** — die Idee gehört in ein offenes Feature (dessen Datei wird
+  ergänzt, Vorschau wie unten);
+- **anders lösen** — eine Alternative statt der mitgebrachten Lösung aufnehmen;
+- **nicht aufnehmen** — auf Wunsch trotzdem als Datei mit Status `DROPPED` und Grund;
+  empfohlen, wenn die Idee wiederkommen kann, damit sie samt Begründung gefunden wird.
+
+Die Entscheidung trifft der Nutzer. **Auf OK warten, bevor du ausformulierst.**
 
 ## 4. Ausformulieren
 
-**F-Nummer:** Im `<!-- FEATURE-INDEX … -->`-Block die `next-feature:`-Zeile lesen, diese
-Nummer verwenden, dann: (1) `next-feature:` auf N+1 erhöhen, (2) neue Zeile im Index
-ergänzen.
+**Nummer:** die Zeile `next-feature: F-NNN` in `features/INDEX.md` lesen und diese Nummer
+verwenden; `next-feature` steigt auf die nächste. Neue Nummern immer als **F-NNN**
+(dreistellig); Alt-Formate (F-9, F9, „1.2") in Texten tolerant lesen, nie umnummerieren.
 
-**F-Nummern-Toleranz:** Lies Alt-Formate anstandslos (F-001, F-9, F9, Schritt „1.2");
-neue Einträge schreibst du ausschließlich als **F-NNN** (dreistellig; Substeps mit
-Buchstaben: F-006a). Fehlt der FEATURE-INDEX-Block, lege ihn an und übernimm bestehende
-Nummern unverändert — nichts umnummerieren.
+**Titel** (Feld `title`): höchstens 70 Zeichen; sagt, *was sich ändert* — nicht wie,
+nicht warum, kein Ergebnisbericht; kein Status, keine Version, keine Aufzählung in
+Klammern.
 
-**Status-Marker:** Jeder Eintrag trägt direkt unter der Überschrift eine
-`**Status:**`-Zeile mit einem sprachinvarianten Token: `BACKLOG` = nur aufgenommen
-(nächste Station `/coding-kit:prep-step`), `PLANNED` = geplant (bereit für
-`/coding-kit:build-step`). Fertiges wandert in die Done-Tabelle und wird im
-FEATURE-INDEX als `(DONE)` markiert. Neue Einträge bekommen immer `BACKLOG`.
+**Dateiname:** `features/F-NNN-kurzname.md` — Kurzname aus dem Titel, ASCII,
+Kleinbuchstaben, Ziffern und Bindestriche, Umlaute ausgeschrieben (ä → ae), etwa 40
+Zeichen. Er wird beim Anlegen festgelegt und nie geändert, auch wenn der Titel sich
+ändert.
 
-**Basisformat (immer, in der Sprache der lebenden Doku; Status-Token sprachinvariant):**
+**Gerüst:** aus der Vorlage `features/F-000-template.md` des Projekts (fehlt sie:
+`${CLAUDE_PLUGIN_ROOT}/template/core/features/F-000-template.md`). Dieser Skill schreibt
+den Kopfblock, die Überschrift und den Abschnitt **Erfassung**; Spezifikation, Plan und
+Verlauf legen prep-step und step-done an, wenn sie sie füllen. Überschriften und Text in
+der Sprache der lebenden Doku; die HTML-Kommentare der Vorlage fallen weg.
 
-```markdown
-### F-NNN — [Name]
+**Kopfblock** — nur einfache `feld: wert`-Zeilen, keine Anführungszeichen, Listen
+kommagetrennt:
 
-**Status:** BACKLOG
-
-**Problem:** [1–2 Sätze — was fehlt, warum es zählt]
-
-**Idee:** [2–3 Sätze Lösungsansatz]
-
-**Lösungsskizze:**
-- [Grobe Richtung: Ansatz, betroffene Bereiche — wenige Bullets, unverbindlich]
-- [Neue Endpunkte, Config, Dependencies — Dependencies nur permissiv lizenziert, kein GPL/AGPL]
-
-**Abhängigkeiten:** [Einträge, die vorher fertig sein müssen]
+```
+---
+id: F-NNN
+title: <Titel>
+type: feature | fix | change
+status: BACKLOG
+size:
+created: <heute, JJJJ-MM-TT>
+done:
+depends-on: <F-Nummern oder leer>
+superseded-by:
+---
 ```
 
-**Die Lösungsskizze ist unverbindlich** — eine grobe Richtung vom Zeitpunkt der
-Erfassung, keine Vorwegnahme der Planung: keine Dateilisten, keine Zerlegung in
-Schritte, keine Abnahmekriterien. Das macht `/coding-kit:prep-step` zur Umsetzungszeit
-gegen den dann aktuellen Codestand. Optionaler Zusatzabschnitt für komplexe Aufgaben:
-„Noch zu analysieren" (offene Fragen/Entscheidungen). Stil an bestehende Einträge
-anpassen; Alt-Einträge nutzen ggf. die Überschrift „Mögliche Umsetzung" — nicht
-umbenennen.
+Bei „nicht aufnehmen" mit Datei: `status: DROPPED`, `done:` auf heute, der Grund steht in
+der Erfassung.
+
+**Erfassung** (Überschriften übersetzt):
+
+- **Problem:** was fehlt oder falsch ist und warum es zählt (1–3 Sätze).
+- **Ziel:** je nach `type` — `feature`: „Als <Rolle> möchte ich <…>, damit <…>"; `fix`:
+  Ist, Soll, wie reproduzieren; `change`: Ziel und was gleich bleiben muss.
+- **Lösungsskizze:** unverbindliche Richtung in wenigen Stichpunkten; eine mitgebrachte
+  Lösung steht hier als Option. Keine Dateilisten, keine Zerlegung, keine
+  Abnahmekriterien — das macht `/coding-kit:prep-step` gegen den dann aktuellen
+  Codestand. Neue Dependencies nur permissiv lizenziert (kein GPL/AGPL).
+- **Abhängigkeiten:** F-Nummern (auch im Feld `depends-on`) oder „keine".
+- **Noch zu analysieren:** optional, offene Fragen und Entscheidungen.
+
+**Empfohlene Reihenfolge:** einen Platz in `features/INDEX.md` vorschlagen (eine Zeile mit
+Nummer und Halbsatz Begründung, das Stand-Datum auf heute) — oder ausdrücklich keinen,
+wenn die Aufgabe erst später dran ist. Nur offene Features gehören dorthin.
+
+**An Bestehendes anhängen:** statt einer neuen Datei die Erfassung des offenen Features
+ergänzen (Vorschau der geänderten Stelle); keine neue Nummer.
 
 ## 5. Festhalten
 
-- Entwurf dem Nutzer zeigen; **erst nach explizitem OK** in die `PROGRESS.md` unter das
-  Backlog eintragen.
-- **Vor dem Eintragen** den Text auf Secrets/Interna scannen (keine echten Tokens, IPs,
+- Entwurf zeigen — Datei, `next-feature`-Zeile und Vorschlag zur Reihenfolge in einer
+  Vorschau; **erst nach explizitem OK** schreiben.
+- **Vor dem Schreiben** den Text auf Secrets/Interna scannen (keine echten Tokens, IPs,
   Hostnames, Klarnamen, lokalen Pfade — lebende Doku bleibt publishbar).
+- Nach dem Schreiben die Tabelle erzeugen: `just features-index` (ohne das Rezept
+  `sh scripts/features-index.sh write`). Meldet das Skript etwas, beheben und erneut
+  laufen lassen; die Datei re-lesen.
 - Graphiti aktualisieren: `add_memory` mit der group_id aus der CLAUDE.md (falls
-  verfügbar, sonst still überspringen).
+  verfügbar, sonst still überspringen) — mit dem Pfad der Feature-Datei.
+- Nicht committen — das macht `/coding-kit:step-done` mit dem nächsten Abschluss, oder
+  der Nutzer entscheidet.

@@ -1,6 +1,6 @@
 ---
 name: teach-step
-description: Feature geführt selbst umsetzen. Leitet als Coding-Lehrer sokratisch durch die Umsetzung einer Aufgabe — der Nutzer schreibt allen Code selbst; der Skill liest Code, gibt gestufte Hinweise, prüft Änderungen und lässt Tests laufen. Schreibt nie Code oder Dateien. Nur manuell per /coding-kit:teach-step aufrufbar.
+description: Feature geführt selbst umsetzen. Leitet als Coding-Lehrer sokratisch durch die Umsetzung einer Aufgabe aus ihrer Feature-Datei (Plan, Abnahmekriterien, Nicht-Ziele) — der Nutzer schreibt allen Code selbst; der Skill liest Code, gibt gestufte Hinweise, prüft Änderungen und lässt Tests laufen. Schreibt nie Code oder Dateien. Nur manuell per /coding-kit:teach-step aufrufbar.
 argument-hint: "[F-Nummer]"
 disable-model-invocation: true
 user-invocable: true
@@ -12,9 +12,9 @@ disallowed-tools: Write, Edit, NotebookEdit
 Der Nutzer setzt eine Aufgabe **selbst** um; du bist sein Coding-Lehrer. Du leitest an,
 gibst Tipps, kontrollierst und erklärst — aber du implementierst nichts.
 
-Argument: Nummer aus der `PROGRESS.md` — F-Nummer (z. B. „F-004") oder Alt-Format
-(tolerant lesen). Ohne Argument: die oberste offene Aufgabe vorschlagen und bestätigen
-lassen.
+Argument: F-Nummer (z. B. „F-004") oder Alt-Format (tolerant lesen). Ohne Argument: das
+erste Feature der empfohlenen Reihenfolge in `features/INDEX.md` vorschlagen und
+bestätigen lassen.
 
 ## Grundregeln (nicht verhandelbar)
 
@@ -34,9 +34,14 @@ lassen.
 
 ## 0. Projektkontext ermitteln
 
-Lies die **Projekt-CLAUDE.md**: Zweck/Scope, Sprache der lebenden Doku, Verweise auf
-`CODING-STANDARDS.md` / `REQUIREMENTS.md` / `THREAT-MODEL.md`, Graphiti-group_id
-(Graphiti optional — ohne MCP still überspringen). Nichts davon hardcoden.
+Lies die **Projekt-CLAUDE.md**: Überblick mit Zweck, Zielen, Nicht-Zielen und
+Rahmenbedingungen, Sprache der lebenden Doku, Verweise auf `CODING-STANDARDS.md` /
+`THREAT-MODEL.md`, Graphiti-group_id (Graphiti optional — ohne MCP still überspringen).
+Nichts davon hardcoden.
+
+**Altes Format:** Hat das Projekt eine `PROGRESS.md` mit `FEATURE-INDEX`-Block, aber keine
+`features/INDEX.md`, arbeitet es noch mit dem Dokumentmodell vor coding-kit 2.0.0. Dann
+nicht anleiten: auf die Migration per `/coding-kit:update-conventions` verweisen.
 
 **Erklär-Niveau:** Stufe und Notiz des Nutzers stehen im Abschnitt Erklär-Niveau der
 globalen Kit-Regeln, die in jeder Session geladen sind (`/coding-kit:explain-level` legt
@@ -45,18 +50,22 @@ nicht, auch nicht in Graphiti. Fehlen sie, gelten die Vorauswahlen des Interview
 
 ## Kontext-Recovery
 
-Nach Kompaktierung oder Session-Neustart: (1) Projekt-CLAUDE.md und PROGRESS.md neu
-lesen, (2) `git status` + `git diff` für den tatsächlichen Arbeitsstand, (3) den Nutzer
+Nach Kompaktierung oder Session-Neustart: (1) Projekt-CLAUDE.md und die Feature-Datei
+neu lesen, (2) `git status` + `git diff` für den tatsächlichen Arbeitsstand, (3) den Nutzer
 kurz fragen, wo er steht und was unklar ist — dann beim aktuellen Häppchen weitermachen,
 nichts wiederholen.
 
 ## 1. Aufgabe & Plan laden
 
-- Aufgabe aus der `PROGRESS.md` lesen: Beschreibung, Dateien, Abhängigkeiten,
-  Abnahmekriterien; `CODING-STANDARDS.md` lesen (falls vorhanden).
-- Gibt es einen prep-step-Plan (Substeps), diesen als Gerüst nutzen. Ohne Plan: die
-  Aufgabe selbst in kleine, einzeln prüfbare **Lern-Häppchen** zerlegen (bei großen
-  Aufgaben zuerst `/coding-kit:prep-step` empfehlen).
+- Die Feature-Datei (`features/F-NNN-*.md`) lesen: Erfassung, Spezifikation
+  (Abnahmekriterien, Randfälle, Nicht-Ziele, Tests), Plan, Verlauf;
+  `CODING-STANDARDS.md` lesen (falls vorhanden).
+- Ist der Status `PLANNED` oder `IN-PROGRESS`, den Plan (Substeps; der Verlauf zeigt die
+  erledigten) als Gerüst nutzen. Bei `BACKLOG` gibt es noch keinen Plan: die Aufgabe
+  selbst in kleine, einzeln prüfbare **Lern-Häppchen** zerlegen (ab Größe M zuerst
+  `/coding-kit:prep-step` empfehlen). `DONE`, `DROPPED`, `SUPERSEDED` → nicht anleiten.
+- Die **Nicht-Ziele** gelten auch hier: Schlägt der Nutzer etwas vor, das dort steht,
+  darauf hinweisen statt es mitzuentwickeln.
 
 ## 2. Lern-Interview (M1)
 
@@ -127,7 +136,8 @@ Bescheid, wenn es zu knapp wird.").
 6. **Verständnis sichern:** gelegentlich eine Kontrollfrage („Warum funktioniert das?",
    „Was wäre, wenn …?") — kurz, nicht schulmeisterlich.
 
-Dann das nächste Häppchen, bis die Aufgabe die Abnahmekriterien erfüllt.
+Dann das nächste Häppchen, bis die Aufgabe die Abnahmekriterien erfüllt — je Kriterium
+mit einem Beleg (Test, Check, Befehl), den step-done beim Verbuchen braucht.
 
 ## 4. Abschluss
 
@@ -137,5 +147,8 @@ Dann das nächste Häppchen, bis die Aufgabe die Abnahmekriterien erfüllt.
   nicht mehr (z. B. ist der Stack jetzt vertraut), einen neuen Notiz-Text vorschlagen und
   auf `/coding-kit:explain-level` verweisen — dieser Skill schreibt die Personal-Config
   nicht.
-- PROGRESS-Pflege, Scans und Commit-Frage übernimmt `/coding-kit:step-done` — den
-  startet der Nutzer; dieser Skill schreibt keine Doku und committet nie.
+- Verlauf, abgehakte Abnahmekriterien, Status, Scans und Commit-Frage übernimmt
+  `/coding-kit:step-done` — den startet der Nutzer; dieser Skill schreibt keine Doku und
+  committet nie. Für die Feature-Datei, `features/INDEX.md` und die Ziel-Abschnitte der
+  CLAUDE.md gilt dort das **Freigabe-Gate**: erst Vorschau, geschrieben wird nur nach
+  ausdrücklichem OK.

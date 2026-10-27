@@ -1,14 +1,14 @@
 ---
 name: step-done
-description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS, Checks über just, Erkennungs-Backstop (neu eingeführte Frameworks ohne Fragment, Sprachen ohne Stack-Modul), Backstop für geänderte managed Dateien ohne Registry-Eintrag, Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Verbuchung und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), Graphiti-Update.
+description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS, Checks über just, Erkennungs-Backstop (neu eingeführte Frameworks ohne Fragment, Sprachen ohne Stack-Modul), Backstop für geänderte managed Dateien ohne Registry-Eintrag, Secrets-Scan, Privacy-Scan der lebenden Doku, Verbuchung in der Feature-Datei (Verlauf-Eintrag, Abnahmekriterien mit Beleg, Status IN-PROGRESS bzw. DONE, erzeugte Index-Tabelle, Vorschlag zur Reihenfolge) und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), Graphiti-Update.
 disable-model-invocation: false
 user-invocable: true
 ---
 
 # Abschluss-Checkliste
 
-Eine Aufgabe oder ein Substep ist fertig — gilt für F-Nummern (F-001, F-001a) und
-Alt-Formate (Schritt „1.2") gleichermaßen. Arbeite die Checkliste systematisch ab und
+Eine Aufgabe oder ein Substep ist fertig — ein Feature (F-001) oder einer seiner Substeps
+(F-001a); Alt-Formate (Schritt „1.2") in Texten tolerant lesen. Arbeite die Checkliste systematisch ab und
 erledige jeden Punkt selbst — **außer wo ausdrücklich eine Nutzerfrage verlangt ist**.
 Fasse am Ende zusammen, was du getan hast.
 
@@ -20,9 +20,16 @@ Graphiti-Block/MCP → Graphiti still überspringen), Sicherheits-Postur (öffen
 oder Security-/Auth-Charakter, z. B. `THREAT-MODEL.md` vorhanden → strengster Maßstab
 bei Secrets/Privacy). Nichts davon hardcoden.
 
+**Altes Format:** Hat das Projekt eine `PROGRESS.md` mit `FEATURE-INDEX`-Block, aber keine
+`features/INDEX.md`, arbeitet es noch mit dem Dokumentmodell vor coding-kit 2.0.0. Dann
+nichts verbuchen und nicht raten: auf die Migration per `/coding-kit:update-conventions`
+verweisen. Review, Checks und Scans (Schritte 1–3) laufen trotzdem; committen nur, wenn
+der Nutzer es ohne Verbuchung will.
+
 ## Kontext-Recovery
 
-Nach Kompaktierung oder Session-Neustart: (1) Projekt-CLAUDE.md und PROGRESS.md neu lesen,
+Nach Kompaktierung oder Session-Neustart: (1) Projekt-CLAUDE.md, `features/INDEX.md` und
+die Feature-Datei neu lesen,
 (2) `git status` + `git diff` für den tatsächlichen Arbeitsstand, (3) beim aktuellen
 Punkt der Checkliste weitermachen — erledigte Arbeit nicht wiederholen.
 
@@ -79,7 +86,7 @@ Signal-Datei (z. B. `Dockerfile`) einführt, soll das nicht ohne passende Vorlag
   meldet kein Skill den Vorschlag mehr. `*characteristic:*`-Trigger erkennt kein Skript —
   sie sind Planungsmaterie von prep-step 2a.
 - Der Abschluss wird dadurch **nicht blockiert**; lehnt der Nutzer nur für diesmal ab,
-  die offene Lücke im Archiv-Eintrag (Schritt 4) vermerken, damit sie sichtbar bleibt.
+  die offene Lücke im Verlauf-Eintrag (Schritt 4) vermerken, damit sie sichtbar bleibt.
 - Enthält der Diff einen **neu angelegten projektlokalen Fragment-Block**
   (`fragment:NAME` ohne Katalog-Pendant) → anbieten, ihn dem Template vorzuschlagen
   (`propose-to-template` mit dem Fund starten); rein informativ, abschicken tut der
@@ -107,7 +114,7 @@ und mit Grund festhalten, nicht erst beim nächsten Template-Update auffallen.
   Snapshot von Hand geändert — als Fehler melden und das Zurücknehmen anbieten
   (`git checkout -- <Pfad>`).
 - **Nicht blockierend:** Lehnt der Nutzer alles ab, geht der Abschluss weiter; die
-  unregistrierte Abweichung im Archiv-Eintrag (Schritt 4) vermerken.
+  unregistrierte Abweichung im Verlauf-Eintrag (Schritt 4) vermerken.
 
 ## 2. Secrets-Scan (KRITISCH)
 
@@ -124,8 +131,8 @@ etwas offen ist.**
 
 ## 3. Privacy-Scan der lebenden Doku
 
-Zusätzlich zum Secrets-Scan: die in diesem Schritt geänderte **lebende Doku** (PROGRESS.md,
-PROGRESS-ARCHIVE.md, REQUIREMENTS.md, CLAUDE.md, README …) auf Privatinfos prüfen —
+Zusätzlich zum Secrets-Scan: die in diesem Schritt geänderte **lebende Doku**
+(Feature-Datei, `features/INDEX.md`, CLAUDE.md, README …) auf Privatinfos prüfen —
 jedes Projekt muss jederzeit publishbar bleiben:
 
 - Klarnamen, Kunden-/Arbeitgebernamen, private E-Mail-Adressen.
@@ -138,44 +145,66 @@ GitHub-noreply-Adressen). Befunde **vor** dem Commit-Vorschlag beheben: Inhalt n
 `private/` verschieben **oder** neutral umformulieren (generische Platzhalter) — im
 Zweifel den Nutzer fragen, welche Variante er will.
 
-## 4. PROGRESS-Verbuchung vorbereiten (Vorschau)
+## 4. Verbuchung vorbereiten (Vorschau)
 
-**Freigabe-Gate:** Jeder neue oder geänderte Eintrag in `PROGRESS.md`,
-`PROGRESS-ARCHIVE.md` oder im FEATURE-INDEX wird zuerst als Vorschau gezeigt und erst
-nach ausdrücklichem OK des Nutzers geschrieben (ausgenommen: genau der zuvor
-freigegebene Text). In diesem Schritt also **nur vorbereiten, noch nicht schreiben** —
-die Vorschau geht in Schritt 5 zusammen mit der Commit-Message an den Nutzer.
+**Freigabe-Gate:** Jede neue oder geänderte Feature-Datei (`features/F-NNN-*.md`), jede
+Änderung an `features/INDEX.md` und an den Ziel-Abschnitten im Überblick der
+`CLAUDE.md` wird zuerst als Vorschau gezeigt und erst nach ausdrücklichem OK des Nutzers
+geschrieben (ausgenommen: genau der zuvor freigegebene Text; die Tabelle erzeugt danach
+das Skript). Lange Entwürfe (etwa ab 40 Zeilen) gehen als Datei nach `private/` und
+werden nach dem Übernehmen gelöscht. In diesem Schritt also **nur vorbereiten, noch
+nicht schreiben** — die Vorschau geht in Schritt 5 zusammen mit der Commit-Message an
+den Nutzer.
 
-Vorzubereiten, in der Sprache der lebenden Doku (siehe Schritt 0):
+Vorzubereiten in der Feature-Datei, in der Sprache der lebenden Doku (siehe Schritt 0);
+Feldnamen, Status-Token und Kürzel bleiben englisch:
 
-- **PROGRESS-ARCHIVE.md:** Den kompletten Abschnitt der fertigen Aufgabe aus der
-  `PROGRESS.md` übernehmen und ergänzen: welche Dateien tatsächlich entstanden/geändert,
-  was konkret umgesetzt, nennenswerte Entscheidungen/Abweichungen.
-- **PROGRESS.md:** Detailabschnitt **entfernen** und eine Zeile in die Done-Tabelle:
-  `| F-004a | Kurzbeschreibung | JJJJ-MM-TT |`
-- Bei komplett fertiger F-Nummer: Eintrag im `<!-- FEATURE-INDEX … -->` als `(DONE)`
-  markieren — ein `(PLANNED)`-Suffix wird ersetzt.
-- Eine `**Status:**`-Zeile (BACKLOG/PLANNED) wandert nicht mit ins Archiv — beim
-  Übernehmen entfernen; den Zustand „fertig" tragen Done-Tabelle und `(DONE)`-Marker.
-- **F-Nummern-Toleranz:** Alt-Formate lesen, aber alles Neue als F-NNN schreiben; fehlt
-  der FEATURE-INDEX-Block, anlegen und bestehende Nummern unverändert übernehmen.
+- **Verlauf-Eintrag** — je Substep einer, unter der Überschrift „F-NNNa — fertig
+  JJJJ-MM-TT" (ein Feature ohne Substeps: „F-NNN — fertig JJJJ-MM-TT") im Abschnitt
+  Verlauf (fehlt er, aus der Vorlage `features/F-000-template.md` anlegen), ältester
+  oben:
+  - **Umgesetzt:** was entstanden ist und wie es funktioniert, mit den wichtigen Dateien
+    und Stellen — keine vollständige Dateiliste, die hat der Commit.
+  - **Entscheidungen:** was entschieden wurde und warum, auch Nutzerentscheidungen;
+    Planungsentscheidungen stehen schon unter Spezifikation und werden nicht wiederholt.
+  - **Abweichung vom Plan:** was und warum (aus build-step gesammelt), oder „keine".
+  - **Funde:** neue Aufgaben (→ `/coding-kit:add-feature`, eigene Freigabe), offene
+    Lücken aus 1a/1b.
+  Das Problem steht nur oben in der Datei — der Verlauf wiederholt es nicht.
+- **Abnahmekriterien:** die des Substeps abhaken, mit Beleg in derselben Zeile
+  („— belegt: Test …", „— belegt: `just check`"). Ein Kriterium ohne Beleg bleibt offen
+  und wird gemeldet.
+- **Status** im Kopfblock: nach dem ersten verbuchten Substep `IN-PROGRESS`; nach dem
+  letzten — alle Substeps im Verlauf, **alle** Abnahmekriterien belegt — `DONE` mit
+  `done:` auf heute. Ein Feature ohne Substeps (S) geht von `PLANNED` direkt nach
+  `DONE`. `DONE` ist endgültig; Folgearbeit bekommt eine neue Nummer.
+- **Empfohlene Reihenfolge** in `features/INDEX.md`: ist das Feature fertig, fällt es
+  dort heraus; verschiebt sich sonst etwas (neue Abhängigkeit, ein Fund), eine Änderung
+  vorschlagen, Stand-Datum auf heute.
+- **Tabelle:** wird nach dem Schreiben per Skript erzeugt (Schritt 5) — nie von Hand.
+
+**Done-Prüfung** vor der Vorschau: Schritte 1–3 grün, die Abnahmekriterien des Substeps
+belegt, der Verlauf-Eintrag vorbereitet, die Index-Änderungen vorbereitet. Fehlt etwas,
+melden statt verbuchen.
 
 ## 5. Freigabe, Verbuchung und Commit
 
-- **Eine Frage für beides:** die Vorschau aus Schritt 4 (Done-Zeile, Archiv-Eintrag,
-  Index-Marker) und eine aussagekräftige Conventional-Commits-Message zeigen — Prosa in
-  der Commit-Sprache des Projekts (Languages-Block; ohne Block englisch),
-  Format-Tokens immer englisch. Antwortmöglichkeiten: verbuchen und committen / nur
-  verbuchen / Änderungen am Text.
-- **Nach OK:** PROGRESS-Dateien schreiben, re-lesen, `just check` erneut, dann (falls
-  freigegeben) committen. **Nie automatisch committen** und nie ohne OK verbuchen.
+- **Eine Frage für beides:** die Vorschau aus Schritt 4 (Verlauf-Eintrag, abgehakte
+  Abnahmekriterien, Status, Änderung der Reihenfolge) und eine aussagekräftige
+  Conventional-Commits-Message zeigen — Prosa in der Commit-Sprache des Projekts
+  (Languages-Block; ohne Block englisch), Format-Tokens immer englisch.
+  Antwortmöglichkeiten: verbuchen und committen / nur verbuchen / Änderungen am Text.
+- **Nach OK:** Feature-Datei und `features/INDEX.md` schreiben, die Tabelle erzeugen
+  (`just features-index`, ohne das Rezept `sh scripts/features-index.sh write`), alles
+  re-lesen, `just check` erneut, dann (falls freigegeben) committen. **Nie automatisch
+  committen** und nie ohne OK verbuchen. Einen Entwurf aus `private/` danach löschen.
 - **Ausnahme — autonomer Lauf:** Hat der Nutzer für den laufenden Lauf ausdrücklich
   Verbuchen und Commits freigegeben (beim Start von `/coding-kit:build-step … autonom`;
   die Freigabe muss im Verlauf dokumentiert sein), verbuche die geplanten Substeps und
   committe nach grünen Checks und Scans ohne erneute Nachfrage — **nie pushen, nie
-  ältere Historie ändern.** Neue Einträge (z. B. eine unterwegs entdeckte Idee) fallen
-  nicht darunter: sie werden nur gesammelt und am Ende des Laufs vorgeschlagen. Läuft
-  ein autonomer Lauf **ohne** solche Freigabe: Verbuchung und Commit-Message als
+  ältere Historie ändern.** Neue Feature-Dateien (z. B. eine unterwegs entdeckte Idee)
+  fallen nicht darunter: sie werden nur gesammelt und am Ende des Laufs vorgeschlagen.
+  Läuft ein autonomer Lauf **ohne** solche Freigabe: Verbuchung und Commit-Message als
   Vorschlag festhalten und weiterarbeiten, nicht auf eine Antwort warten.
 - Im Body Designentscheidungen kurz begründen (`Decision: X over Y because …`); hat der
   Nutzer abgewogen: „User chose X over Y because …".
@@ -216,5 +245,6 @@ freigegeben hat.
 
 - `add_memory` mit der group_id aus der Projekt-CLAUDE.md aufrufen (falls verfügbar,
   sonst still überspringen).
-- Beschreiben: was fertig wurde, welche Dateien/Komponenten, welche Config/Endpunkte/
-  Dependencies, welche Architektur-/Sicherheitsentscheidungen.
+- Beschreiben: was fertig wurde (mit dem Pfad der Feature-Datei), welche
+  Dateien/Komponenten, welche Config/Endpunkte/Dependencies, welche
+  Architektur-/Sicherheitsentscheidungen.

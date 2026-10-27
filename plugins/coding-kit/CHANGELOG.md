@@ -28,6 +28,35 @@ Skills dieser Version weiterarbeitet.
   oder zu niedrige `next-feature`-Zeile und Nummern in der empfohlenen Reihenfolge, die
   keine Datei haben oder nicht offen sind. Bei kaputtem Kopfblock schreibt `write`
   nichts.
+- **`add-feature`** berät vor dem Anlegen: erst das Problem hinter der Idee (eine
+  mitgebrachte Lösung wird Option), das stärkste Gegenargument, Alternativen bis „nichts
+  bauen", dann eine von vier Empfehlungen — aufnehmen, an Bestehendes anhängen, anders
+  lösen, nicht aufnehmen (auf Wunsch als Datei mit `DROPPED`). Er legt
+  `features/F-NNN-kurzname.md` mit Kopfblock und Erfassung an (Ziel je `type`: Story,
+  Ist/Soll, Ziel und was gleich bleibt), zählt `next-feature` hoch, erzeugt die Tabelle
+  und schlägt einen Platz in der Reihenfolge vor.
+- **`prep-step`** schätzt die Größe aus drei Signalen (Aufwand, Unsicherheit,
+  Reichweite; das höchste zählt) und spezifiziert in der Tiefe je Größe — S ohne
+  Interview, M mit Fragen zu offenen Punkten, L mit vollem Interview und Example
+  Mapping: Abnahmekriterien `AC-n` als Gegeben/Wenn/Dann, Randfälle `EC-n`, Nicht-Ziele,
+  Tests, Einbettung, offene Fragen `[CLARIFY]`, datierte Entscheidungen. Fragen aus den
+  Blickwinkeln Nutzen, Umsetzung, Prüfung und Sicherheit; ab M eine Alternative; er darf
+  abraten (`DROPPED`, `SUPERSEDED`). Danach der Plan mit Substeps, die Ready-Prüfung und
+  `PLANNED`; bei M und L wird die Spezifikation vorab freigegeben.
+- **`build-step`** liest Spezifikation und Plan aus der Feature-Datei, hält die
+  Nicht-Ziele als Grenze ein, nennt je Abnahmekriterium den Beleg und sammelt
+  Abweichungen und Entscheidungen für step-done; `IN-PROGRESS` macht beim ersten Substep
+  ohne Verlauf-Eintrag weiter.
+- **`step-done`** verbucht in der Feature-Datei statt in PROGRESS und Archiv: ein
+  Verlauf-Eintrag je Substep (Umgesetzt, Entscheidungen, Abweichung vom Plan, Funde),
+  die Abnahmekriterien mit Beleg abgehakt, Status `IN-PROGRESS` bzw. `DONE`, die
+  Tabelle per Skript erzeugt, die Reihenfolge nachgezogen.
+- **`teach-step`** führt aus der Feature-Datei (Plan, Abnahmekriterien, Nicht-Ziele).
+- **Alle fünf** erkennen ein Projekt im alten Format (`PROGRESS.md` mit FEATURE-INDEX,
+  keine `features/INDEX.md`) und verweisen auf die Migration; das Freigabe-Gate gilt für
+  Feature-Dateien, `features/INDEX.md` und die Ziel-Abschnitte der CLAUDE.md, lange
+  Entwürfe gehen nach `private/`. `docs/skill-authoring.md` beschreibt Dokumentmodell,
+  Status, Altformat und das neue Gate; die README den Zyklus.
 - **`define-requirements`:** Verweis auf die entfernte Template-Datei `REQUIREMENTS.md`
   gestrichen; der Skill selbst wird mit F-036c umgebaut.
 - **Kit:** Tests für Erzeugen und Prüfen unter dash und bash, mit System-awk und mawk;

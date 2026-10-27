@@ -173,12 +173,12 @@ Die Spalte **GitHub** sagt, was ohne GitHub bleibt: `–` = rein lokal über git
 | Skill | GitHub | Zweck |
 |-------|:------:|-------|
 | `/coding-kit:new-project` | teils | **Der Orchestrator:** Short-Info → Abfragen (Name/Lizenz/Stack/…, Sub-Skills aufrufbar) → Plan → leeres Repo anlegen und aus dem mitgelieferten Template befüllen (Renderer, Antworten-Datei und Basis-Snapshot im Erst-Commit), verifizieren, Erst-Commit nach OK. Trockenlauf: Argument `dry-run`. |
-| `/coding-kit:add-feature` | – | Neue Aufgabe analysieren und mit F-Nummer ins PROGRESS-Backlog aufnehmen (Status `BACKLOG`); Umsetzungsideen nur als grobe Lösungsskizze. Startest du oder Claude selbst, eingetragen wird nach deinem OK. |
-| `/coding-kit:prep-step` | – | Aufgabe vor der Umsetzung analysieren: Lösungsskizze gegen den aktuellen Codestand hinterfragen, neue Frameworks, Sprachen und Toolchains per Erkennungs-Skript gegen Fragment-Katalog und Stack-Module prüfen (Fragment- oder Modul-Vorschlag), ggf. in Substeps zerlegen, Plan festhalten (Status `PLANNED`). |
-| `/coding-kit:build-step` | – | Aufgabe plan-treu umsetzen: Substep für Substep mit Verifikation. Interaktiv endet jeder Substep mit einer step-done-Empfehlung (du prüfst und schließt selbst ab); nur im autonomen `/goal`-Lauf läuft step-done je Substep automatisch. Mit `autonom` bereitet er stattdessen einen `/goal`-Lauf vor. |
-| `/coding-kit:step-done` | teils | Abschluss-Checkliste: Review, `just check`, Erkennungs-Backstop (in diesem Schritt neue Frameworks ohne Fragment, Sprachen ohne Modul, Tools ohne Vorlage), Backstop für geänderte managed Dateien ohne Registry-Zeile, Secrets-Scan, Privacy-Scan der lebenden Doku, PROGRESS-Verbuchung und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben). |
+| `/coding-kit:add-feature` | – | Neue Aufgabe aufnehmen: erst das Problem, dann Beratung (stärkstes Gegenargument, Alternativen, eine von vier Empfehlungen — auch „nicht aufnehmen"), dann eine Datei `features/F-NNN-kurzname.md` mit Status `BACKLOG` und ein Vorschlag für die Reihenfolge; Umsetzungsideen nur als grobe Lösungsskizze. Startest du oder Claude selbst, angelegt wird nach deinem OK. |
+| `/coding-kit:prep-step` | – | Feature vor der Umsetzung spezifizieren und planen: Größe S/M/L aus Aufwand, Unsicherheit und Reichweite; Spezifikation in der Tiefe je Größe (Abnahmekriterien, Randfälle, Nicht-Ziele, Tests, Einbettung; ab M Interview, bei L Example Mapping), darf abraten; neue Frameworks, Sprachen und Toolchains per Erkennungs-Skript gegen Fragment-Katalog und Stack-Module prüfen; Substeps planen, Ready prüfen, Status `PLANNED`. |
+| `/coding-kit:build-step` | – | Aufgabe plan-treu aus ihrer Feature-Datei umsetzen: Substep für Substep mit Verifikation, Nicht-Ziele als Grenze, Abweichungen gesammelt für step-done. Interaktiv endet jeder Substep mit einer step-done-Empfehlung (du prüfst und schließt selbst ab); nur im autonomen `/goal`-Lauf läuft step-done je Substep automatisch. Mit `autonom` bereitet er stattdessen einen `/goal`-Lauf vor. |
+| `/coding-kit:step-done` | teils | Abschluss-Checkliste: Review, `just check`, Erkennungs-Backstop (in diesem Schritt neue Frameworks ohne Fragment, Sprachen ohne Modul, Tools ohne Vorlage), Backstop für geänderte managed Dateien ohne Registry-Zeile, Secrets-Scan, Privacy-Scan der lebenden Doku, Verbuchung in der Feature-Datei (Verlauf-Eintrag, Abnahmekriterien mit Beleg, Status `IN-PROGRESS` bzw. `DONE`, erzeugte Tabelle) und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben). |
 | `/coding-kit:audit-code` | – | Vollaudit (Code, Security, Deps, Deployment) → `AUDIT-RESULTS.md`, fixt nichts. |
-| `/coding-kit:teach-step` | – | Lehrer-Modus: Aufgabe selbst umsetzen, der Skill leitet sokratisch an, prüft und testet — schreibt nie Code. |
+| `/coding-kit:teach-step` | – | Lehrer-Modus: Aufgabe aus ihrer Feature-Datei selbst umsetzen, der Skill leitet sokratisch an, prüft und testet — schreibt nie Code. |
 | `/coding-kit:name-it` | teils | Namenskandidaten nach Kriterien + Verfügbarkeits-Checks (GitHub/npm/PyPI, Domain optional). |
 | `/coding-kit:choose-license` | – | Kurzinterview → Lizenz-Empfehlung (Default Apache-2.0, „TBD" gültig); im Bestandsprojekt zieht sie Antworten-Datei und lizenzabhängige managed Dateien nach. |
 | `/coding-kit:choose-stack` | – | Modul-Empfehlung für Neuanlage oder Nachrüsten/Wechsel EINES Moduls im Bestand (Empfehlung aus den Projektsignalen, Render und Drei-Wege-Merge, Diff + Bestätigung, Snapshot nachgezogen); baut die vom Modul deklarierten Standards-Fragmente komponierbar ein (an ihre Stelle aus dem Render, per Skript), Eigenschafts-Fragmente nachrüstbar auf Bestätigung; hält die Begleithandlungen, die einzelne Fragmente beim Einbau verlangen, samt `FRAGMENTS`-Eintrag und `keep`-Zeilen (referenziert von new-project, update-conventions, prep-step, step-done), und die Regel zum Erzeugen und Prüfen der `mise.lock` mit Plattform-Einträgen (Prüfung per `template-sync.sh lock-check`; referenziert von new-project, update-conventions). |
@@ -202,8 +202,7 @@ Was bei `teils` konkret entfällt — der Rest des Skills läuft lokal weiter:
   unter `$CODING_KIT_PROJECTS_DIR`.
 - **`name-it`:** der GitHub-Verfügbarkeitscheck; npm, PyPI und Domain bleiben.
 - **`step-done`:** allein die Zeile, die `git config user.email` auf die
-  GitHub-Noreply-Adresse setzt. Review, `just check`, Scans und PROGRESS-Pflege sind
-  lokal.
+  GitHub-Noreply-Adresse setzt. Review, `just check`, Scans und Verbuchung sind lokal.
 
 Die beiden `ja`-Skills: **`go-public`** dreht GitHub-Sichtbarkeit und -Settings, ist ohne
 GitHub also gegenstandslos; **`check-upstreams`** liest fremde GitHub-Repos (im Kit über
@@ -212,17 +211,21 @@ GitHub also gegenstandslos; **`check-upstreams`** liest fremde GitHub-Repos (im 
 Der übliche Zyklus: `add-feature` → `prep-step` → `build-step` → `step-done` (je
 Substep). Interaktiv rufst du `step-done` bewusst selbst auf, wenn du den Substep
 geprüft hast — build-step empfiehlt es nur; im autonomen `/goal`-Lauf läuft es
-automatisch durch. Die `**Status:**`-Zeile im PROGRESS-Eintrag zeigt die Station: `BACKLOG` =
-nur aufgenommen (→ prep-step), `PLANNED` = geplant (→ build-step), fertig =
-Done-Tabelle + `(DONE)` im FEATURE-INDEX. Für die Implementierungsphase gibt es drei
-Wege: `build-step` baut diszipliniert, `teach-step` leitet dich durch die eigene
-Umsetzung, oder du implementierst frei und schließt mit `step-done` ab.
+automatisch durch. Jede Aufgabe ist eine Datei `features/F-NNN-kurzname.md`, die
+mitwächst (Erfassung, Spezifikation, Plan, Verlauf); `features/INDEX.md` zeigt die
+empfohlene Reihenfolge und eine erzeugte Tabelle aller Features. Das Feld `status` im
+Kopfblock zeigt die Station: `BACKLOG` = nur aufgenommen (→ prep-step), `PLANNED` =
+geplant (→ build-step), `IN-PROGRESS` = erster Substep verbucht, `DONE` = fertig; dazu
+`DROPPED` und `SUPERSEDED` für Verworfenes und Aufgegangenes. Für die
+Implementierungsphase gibt es drei Wege: `build-step` baut diszipliniert, `teach-step`
+leitet dich durch die eigene Umsetzung, oder du implementierst frei und schließt mit
+`step-done` ab.
 
-**Freigabe für die PROGRESS:** Kein Skill schreibt ungefragt in `PROGRESS.md`,
-`PROGRESS-ARCHIVE.md` oder den FEATURE-INDEX — du siehst den Eintrag vorher und gibst
-ihn frei. `step-done` bündelt das mit der Commit-Frage; im autonomen `/goal`-Lauf gilt
-die Freigabe beim Start für die geplanten Substeps, neue Ideen werden gesammelt und am
-Ende vorgeschlagen.
+**Freigabe für Feature-Dateien:** Kein Skill schreibt ungefragt eine Feature-Datei,
+`features/INDEX.md` oder die Ziel-Abschnitte der Projekt-CLAUDE.md — du siehst den Text
+vorher und gibst ihn frei; lange Entwürfe liegen dafür in `private/`. `step-done`
+bündelt das mit der Commit-Frage; im autonomen `/goal`-Lauf gilt die Freigabe beim Start
+für die geplanten Substeps, neue Ideen werden gesammelt und am Ende vorgeschlagen.
 
 ### update-conventions: die Aufrufe
 
@@ -248,7 +251,8 @@ Ganze Features samt Substeps unbeaufsichtigt bauen lassen — über den eingebau
 Claude-Code-Befehl `/goal`, der die Session Turn für Turn weiterarbeiten lässt, bis
 eine Abschlussbedingung erfüllt ist:
 
-1. `/coding-kit:prep-step F-NNN` — Plan mit Substeps steht in der PROGRESS.md.
+1. `/coding-kit:prep-step F-NNN` — Spezifikation und Plan mit Substeps stehen in der
+   Feature-Datei.
 2. `/coding-kit:build-step F-NNN autonom` — lädt Plan und Disziplin-Regeln, fragt
    einmalig die Commit-Freigabe für den Lauf ab (je Substep ein Commit als
    Checkpoint; Push bleibt immer tabu) und gibt die fertige `/goal`-Zeile aus.
