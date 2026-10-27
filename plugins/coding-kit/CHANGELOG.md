@@ -13,9 +13,9 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 1.7.0 — unveröffentlicht
+## 1.7.0 — 2026-10-27
 
-Neue Zonen erreichen bestehende Projekte und Rechner (F-049, in Arbeit).
+Neue Zonen erreichen bestehende Projekte und Rechner (F-049).
 
 - **`scripts/template-sync.sh zones`** unterscheidet über eine Basis, ob eine fehlende
   Zone neu ist oder abgewählt wurde. Neue Zustände: `new` auch für Zonen (weder in der
