@@ -1,5 +1,5 @@
 {
-  "description": "coding-kit hooks — the stop hook reminds about uncommitted changes in kit-managed projects (detected via PROGRESS.md FEATURE-INDEX or .claude/template-version); the session-start hook adds one line when the kit's global rules need a sync (old kit copy in CLAUDE.md, kit or personal values changed since the last sync). Both are silent everywhere else.",
+  "description": "coding-kit hooks — the stop hook reminds about uncommitted changes in kit-managed projects (detected via .claude/template-version, features/INDEX.md or, before the migration, PROGRESS.md with a FEATURE-INDEX block); the session-start hook adds one line when the kit's global rules need a sync (old kit copy in CLAUDE.md, kit or personal values changed since the last sync). Both are silent everywhere else.",
   "hooks": {
     "SessionStart": [
       {

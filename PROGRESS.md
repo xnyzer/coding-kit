@@ -52,6 +52,7 @@ Seit 1.0.0 (F-039). Ältere Aufgaben — Kit bis 0.20.0, Template bis 0.16.0
 | F-049d | Testlauf und Release → **drei Läufe mit `--plugin-dir` (zusammen 2,11 USD): Projekt mit neuer, abgewählter, entfernter und unbestätigter Zone — der erste fand „Text ohne Marker" (→ F-049c), der wiederholte setzte alles über `zones` um; global eine neue Kit-Zone eingesetzt, die Abwahl respektiert; Release 1.7.0 gepusht, CI grün, Plugin aktualisiert. F-049 damit komplett.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 | F-036a | Vorlagen und Index-Skript → **`features/INDEX.md` (seed, Zone `index-head` mit Titelregel und Status-Legende) und `features/F-000-template.md` (managed) ersetzen `PROGRESS.md`, `PROGRESS-ARCHIVE.md` und `REQUIREMENTS.md` im Template (erste Zeilen in „Removed and renamed targets"); `scripts/features-index.sh` erzeugt die Tabelle (`write`) und prüft Kopfblöcke, Nummern, Tabelle, `next-feature` und Reihenfolge (`check`) — in `just check` jeder justfile, als `just features-index` und im Pre-Commit-Hook; CLAUDE.md-Überblick mit Zielen, Nicht-Zielen und Rahmenbedingungen; MANIFEST § Features; Version 2.0.0 (unveröffentlicht).** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 | F-036b | Kern-Skills → **add-feature berät vor dem Anlegen (Problem vor Lösung, Gegenargument, Alternativen, vier Empfehlungen, DROPPED auf Wunsch) und legt `features/F-NNN-kurzname.md` an; prep-step schätzt die Größe aus drei Signalen, spezifiziert in der Tiefe je Größe (Interview, Example Mapping, Einbettung, darf abraten), prüft Ready und setzt PLANNED; build-step baut aus der Feature-Datei mit den Nicht-Zielen als Grenze; step-done verbucht Verlauf, Belege und Status statt Archiv; teach-step führt aus der Datei; alle fünf verweisen bei altem Format auf die Migration; Authoring-Doku, README, CHANGELOG.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
+| F-036c | Anforderungs- und Randskills, Hook, Doku → **define-requirements füllt Ziele, Nicht-Ziele und Rahmenbedingungen im Überblick der CLAUDE.md und legt je Kern-Feature eine Datei mit BACKLOG an (Auflöse-Regel entfällt); refine-requirements teilt und streicht über SUPERSEDED und DROPPED, datiert Entscheidungen in der Feature-Datei oder als ADR, plant die Reihenfolge um; new-project, handoff, audit-code, check-upstreams umgestellt; update-conventions und Stop-Hook erkennen `features/INDEX.md` (mit Tests); globale Kit-Regeln, Kit-README, add-skill.** Details in `PROGRESS-ARCHIVE.md`. | 2026-10-27 |
 
 ---
 
@@ -226,32 +227,6 @@ KI-Coding (ai-coding-starter-kit mit `features/INDEX.md`, GitHub Spec Kit).
 **Abhängigkeiten:** F-039 und F-049 (erledigt — neue und entfernte Zonen erreichen
 bestehende Projekte). Berührt dieselben Skills wie F-034; F-034 und F-037 folgen danach.
 Entlastet F-029 und F-033.
-
-#### F-036c — Anforderungs- und Randskills, Hook, Doku
-
-**Was:** define-requirements (Interview → Ziel-Abschnitte im Überblick der CLAUDE.md, je
-Kern-Feature eine schlanke Datei mit BACKLOG, Reihenfolge, Tabelle;
-Eigenschafts-Trigger als Rahmenbedingung; Auflöse-Regel entfällt). refine-requirements
-(arbeitet auf den Ziel-Abschnitten der CLAUDE.md, Feature-Dateien und ADRs; Teilen und
-Streichen über SUPERSEDED und DROPPED; Umplanung der Reihenfolge).
-new-project, handoff, audit-code, check-upstreams auf die neuen Dateien;
-update-conventions erkennt Kit-Projekte auch an `features/INDEX.md`; der Stop-Hook
-ebenso. Globale Kit-Regeln (Satz zu F-Nummern in `PROGRESS.md`), Kit-README,
-`.claude/skills/add-skill`. `/add-skill` läuft mit.
-
-**Dateien:** `plugins/coding-kit/skills/{define-requirements,refine-requirements,new-project,handoff,audit-code,check-upstreams,update-conventions}/SKILL.md`,
-`plugins/coding-kit/hooks/stop-reminder.sh`, `tests/template-sync/hook.sh`,
-`plugins/coding-kit/global/coding-kit.md`, `README.md`, `.claude/skills/add-skill/SKILL.md`,
-`plugins/coding-kit/CHANGELOG.md`.
-
-**Abhängigkeiten:** F-036b.
-
-**Abnahmekriterien:**
-- [ ] Eine Suche nach `PROGRESS`, `REQUIREMENTS` und `FEATURE-INDEX` über Plugin und
-      Template findet nur noch Migration, Altformat-Erkennung und CHANGELOG.
-- [ ] Test: Der Stop-Hook meldet sich in einem Projekt mit `features/INDEX.md` und
-      offenen Änderungen und bleibt in einem fremden Repo still.
-- [ ] `just check` grün.
 
 #### F-036d — Migration
 

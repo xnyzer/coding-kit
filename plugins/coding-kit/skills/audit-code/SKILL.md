@@ -36,8 +36,10 @@ Vor dem Start den Nutzer um alle Berechtigungen bitten, die das gesamte Audit br
 1. **Projekt-CLAUDE.md** lesen: Zweck/Scope, Stack, Sicherheits-Postur (öffentliches Repo?
    Security-/Auth-Charakter?), Verweise auf weitere Schlüsseldokumente.
 2. `CODING-STANDARDS.md` lesen — Referenz für Stil und Architektur (falls vorhanden).
-3. Falls vorhanden: `REQUIREMENTS.md` und `THREAT-MODEL.md` — Sicherheitsmodell und
-   Anforderungen sind der Vertrag.
+3. Ziele, Nicht-Ziele und Rahmenbedingungen im Überblick der Projekt-CLAUDE.md und,
+   falls vorhanden, `THREAT-MODEL.md` — Sicherheitsmodell und Anforderungen sind der
+   Vertrag; für ein einzelnes Feature die Spezifikation in seiner Datei
+   (`features/F-NNN-*.md`).
 4. Versionsstände ermitteln: Lockfiles/Manifeste, gepinnte Image-Tags, `mise.toml`.
 5. Deployment-relevante Dateien lesen, soweit vorhanden: `Dockerfile*`,
    `docker-compose*.yml`, Reverse-Proxy-Config, Beispiel-Env.

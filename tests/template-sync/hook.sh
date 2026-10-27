@@ -1,8 +1,40 @@
-# SessionStart hook cases for tests/template-sync/run.sh — sourced after global.sh, uses
-# its helpers. The hook runs with $SH against a stand-in Claude config folder
+# Hook cases for tests/template-sync/run.sh — sourced after global.sh, uses its helpers.
+# The SessionStart hook runs with $SH against a stand-in Claude config folder
 # (CLAUDE_CONFIG_DIR) and plugin data folder (CLAUDE_PLUGIN_DATA); it must never fail.
+# The Stop hook runs with $SH in stand-in git repositories (CLAUDE_PROJECT_DIR).
 
 HOOK=$ROOT/plugins/coding-kit/hooks/session-start.sh
+STOP_HOOK=$ROOT/plugins/coding-kit/hooks/stop-reminder.sh
+
+# stop_hook NAME [STDIN] — runs the Stop hook for the repository $TMP/NAME; stdout in
+# $TMP/NAME.out, exit status in $TMP/NAME.rc.
+stop_hook() {
+  sh_input='{"hook_event_name": "Stop"}'
+  [ $# -gt 1 ] && sh_input=$2
+  printf '%s' "$sh_input" |
+    CLAUDE_PROJECT_DIR="$TMP/$1" $SH "$STOP_HOOK" > "$TMP/$1.out" 2> "$TMP/$1.err"
+  echo $? > "$TMP/$1.rc"
+}
+
+# repo NAME [FILE…] — a git repository with the files (empty content), all committed.
+repo() {
+  rp_name=$1
+  shift
+  rm -rf "${TMP:?}/$rp_name"
+  mkdir -p "$TMP/$rp_name"
+  git -C "$TMP/$rp_name" init -q
+  for rp_file in "$@"; do
+    mkdir -p "$(dirname "$TMP/$rp_name/$rp_file")"
+    : > "$TMP/$rp_name/$rp_file"
+  done
+  git -C "$TMP/$rp_name" add -A
+  git -C "$TMP/$rp_name" -c user.name=test -c user.email=test@example.com \
+    commit -q --allow-empty -m init
+}
+
+blocks() {  # NAME — exit 0 and the block decision in the output
+  [ "$(cat "$TMP/$1.rc")" = 0 ] && grep -q '"decision": "block"' "$TMP/$1.out"
+}
 
 # hook NAME — runs the hook for $TMP/NAME.cfg and $TMP/NAME.data; stdout in
 # $TMP/NAME.out, exit status in $TMP/NAME.rc.
@@ -41,6 +73,35 @@ synced() {
 }
 
 run_hook_cases() {
+  # Stop hook: a project with features/INDEX.md and open changes gets one reminder
+  repo s-feat features/INDEX.md
+  printf 'change\n' > "$TMP/s-feat/features/INDEX.md"
+  stop_hook s-feat
+  check "stop hook: features/INDEX.md with open changes blocks once" blocks s-feat
+  check "stop hook: the reminder names step-done" says s-feat '/coding-kit:step-done'
+  stop_hook s-feat '{"stop_hook_active": true}'
+  check "stop hook: never blocks twice in one stop cycle" silent s-feat
+  repo s-clean features/INDEX.md
+  stop_hook s-clean
+  check "stop hook: features/INDEX.md, nothing open: silent" silent s-clean
+  repo s-new features/INDEX.md
+  : > "$TMP/s-new/untracked.txt"
+  stop_hook s-new
+  check "stop hook: an untracked file counts as open" blocks s-new
+  repo s-old PROGRESS.md
+  printf '<!-- FEATURE-INDEX\nnext-feature: F-002\n-->\n' > "$TMP/s-old/PROGRESS.md"
+  stop_hook s-old
+  check "stop hook: old format before the migration still blocks" blocks s-old
+  repo s-stamp .claude/template-version
+  : > "$TMP/s-stamp/work.txt"
+  stop_hook s-stamp
+  check "stop hook: a stamped project blocks" blocks s-stamp
+  repo s-foreign README.md
+  printf 'change\n' > "$TMP/s-foreign/README.md"
+  : > "$TMP/s-foreign/PROGRESS.md"
+  stop_hook s-foreign
+  check "stop hook: a foreign repository stays silent" silent s-foreign
+
   # The header of the former template, shortened to the part the hook looks for.
   OLD_COPY='# Globale House-Defaults — Claude Code\n\n> Gepflegt als Vorlage im coding-kit; auf neuen Rechnern richtet der Installer sie ein.\n\n## Sprache & Stil\n'
 

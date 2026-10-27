@@ -40,7 +40,7 @@ Je Eintrag kurz berichten: Was ist neu? Was davon ist für Kit/Template relevant
 (gemessen am `why` des Eintrags)? Konkrete Übernahme-Vorschläge als Empfehlung mit
 Aufwand/Nutzen — z. B. „neues Muster X in Skill Y einarbeiten" oder „Scanner-Wechsel
 vorbereiten". **Übernahme nur auf Entscheidung des Nutzers**; beschlossene Arbeiten via
-`/coding-kit:add-feature` als F-Nummer ins Kit-PROGRESS aufnehmen.
+`/coding-kit:add-feature` als F-Nummer in die Aufgabenliste des Kits aufnehmen.
 
 ## 3. Ref persistieren
 

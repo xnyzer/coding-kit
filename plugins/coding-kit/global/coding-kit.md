@@ -116,9 +116,10 @@ dem Niveau.
 
 - Nachfragen statt raten. **Write-then-Verify:** nach jedem Edit re-lesen; nichts als
   erledigt melden, was nicht per Tool-Ausgabe belegt ist.
-- Aufgaben laufen als F-Nummern in `PROGRESS.md`; Workflow-Skills kommen aus dem
-  coding-kit-Plugin (`/coding-kit:new-project`, `:add-feature`, `:prep-step`,
-  `:step-done`, `:audit-code`, …).
+- Aufgaben laufen als F-Nummern, je eine Datei in `features/` (Übersicht
+  `features/INDEX.md`); Workflow-Skills kommen aus dem coding-kit-Plugin
+  (`/coding-kit:new-project`, `:add-feature`, `:prep-step`, `:step-done`,
+  `:audit-code`, …).
 - Secrets und Privates nie ins Repo: operative Interna nach `private/` (gitignored);
   lebende Doku bleibt frei von Klarnamen, lokalen Pfaden und IPs — jedes Projekt bleibt
   jederzeit publishbar.

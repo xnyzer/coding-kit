@@ -1,6 +1,6 @@
 ---
 name: add-skill
-description: Skill im coding-kit anlegen oder ändern — Plugin-Skill (plugins/coding-kit/skills/) oder repo-lokaler Skill (.claude/skills/). Führt durch die Authoring-Konvention, die leicht vergessenen Begleit-Änderungen (Plugin — plugin.json-Version und -Description, CHANGELOG, README; repo-lokal — kein Bump) und den Abschluss inkl. PROGRESS/ARCHIVE-Pflege. Immer nutzen, wenn in diesem Repo ein Skill entstehen oder sich ändern soll. Claude darf ihn selbst starten; PROGRESS-Einträge entstehen nur nach Freigabe.
+description: Skill im coding-kit anlegen oder ändern — Plugin-Skill (plugins/coding-kit/skills/) oder repo-lokaler Skill (.claude/skills/). Führt durch die Authoring-Konvention, die leicht vergessenen Begleit-Änderungen (Plugin — plugin.json-Version und -Description, CHANGELOG, README; repo-lokal — kein Bump) und den Abschluss inkl. Verbuchung in der Aufgabenliste des Kits. Immer nutzen, wenn in diesem Repo ein Skill entstehen oder sich ändern soll. Claude darf ihn selbst starten; Einträge in der Aufgabenliste entstehen nur nach Freigabe.
 disable-model-invocation: false
 user-invocable: true
 ---
@@ -16,24 +16,27 @@ die Prozedur und die Vollständigkeits-Checkliste, er dupliziert keine Regeln.
 Claude darf den Skill selbst starten, z. B. wenn beim Bauen einer Aufgabe ein Skill
 entstehen oder sich ändern soll — der Nutzer muss ihn dafür nicht aufrufen.
 
-**Freigabe-Gate:** Jeder neue oder geänderte Eintrag in `PROGRESS.md`,
-`PROGRESS-ARCHIVE.md` oder im FEATURE-INDEX wird zuerst als Vorschau gezeigt und erst
-nach ausdrücklichem OK des Nutzers geschrieben (ausgenommen: genau der zuvor
-freigegebene Text).
+**Aufgabenliste des Kits:** wo sie liegt und wie sie geführt wird, sagt die
+Kit-CLAUDE.md (Abschnitt Workflow & Skills) — dieser Skill nennt sie deshalb nur
+allgemein.
+
+**Freigabe-Gate:** Jeder neue oder geänderte Eintrag in der Aufgabenliste des Kits wird
+zuerst als Vorschau gezeigt und erst nach ausdrücklichem OK des Nutzers geschrieben
+(ausgenommen: genau der zuvor freigegebene Text).
 
 ## 0. Kontext laden
 
 - `docs/skill-authoring.md` vollständig lesen — immer, auch bei kleinen Änderungen
   (Frontmatter, Sprache und Publishing-Hygiene gelten auch repo-lokal).
 - Die Projekt-CLAUDE.md ist im Kontext; relevant: Versionsregel, Sprachgrenze,
-  Publishing-Hygiene, Freigabe-Regel für die PROGRESS.
-- `PROGRESS.md` prüfen: Läuft die Arbeit schon als F-Nummer? Wenn nicht, **vor dem
+  Publishing-Hygiene, Freigabe-Regel für die Aufgabenliste.
+- Die Aufgabenliste prüfen: Läuft die Arbeit schon als F-Nummer? Wenn nicht, **vor dem
   Bauen** über `/coding-kit:add-feature` anlegen — Entwurf zeigen, Eintrag erst nach
   Freigabe.
 
 ## Kontext-Recovery
 
-Nach Kompaktierung oder Neustart: `PROGRESS.md` (die laufende F-Nummer) neu lesen,
+Nach Kompaktierung oder Neustart: die laufende F-Nummer in der Aufgabenliste neu lesen,
 `git status` + `git diff` für den Stand von Skill-Datei und Begleit-Änderungen, dann
 bei der ersten offenen Position der Checkliste in Schritt 3 weitermachen.
 
@@ -53,8 +56,9 @@ Auftrag schon klar ist:
    ausdrücklich gesetzt. Nimmt der Skill ein Argument → `argument-hint`.
    `disallowed-tools` (Tools, die der Skill nie nutzen darf)?
 6. Welche Pflicht-Bausteine greifen? (Workflow-Skill → Projektkontext-Schritt + M4;
-   Skill braucht Eingaben → M1; Skill schreibt in die PROGRESS → Freigabe-Gate;
-   Details in der Authoring-Doku.)
+   Skill braucht Eingaben → M1; Skill liest oder schreibt Feature-Dateien → Altformat-
+   Erkennung; Skill schreibt Feature-Dateien, den Index oder die Projektziele →
+   Freigabe-Gate; Details in der Authoring-Doku.)
 
 ## 2. Bauen bzw. ändern
 
@@ -114,14 +118,14 @@ Auftrag schon klar ist:
   sichtbar. Repo-lokal: Der Skill erscheint in der laufenden Session in der
   Skill-Liste, sonst nach Session-Neustart.
 
-## 5. Abschließen — PROGRESS und ARCHIVE gehören dazu
+## 5. Abschließen — die Verbuchung gehört dazu
 
 Auch Skill-Arbeit läuft als F-Nummer und wird verbucht wie jede andere Aufgabe:
 
 - Fehlt die F-Nummer noch: über `/coding-kit:add-feature` anlegen — Entwurf zeigen,
   **erst nach ausdrücklichem OK eintragen**.
 - `/coding-kit:step-done` ausführen bzw. empfehlen (interaktiv schließt der Nutzer
-  selbst ab) — der zeigt Done-Zeile, Archiv-Eintrag und Commit-Message als Vorschau,
-  verbucht nach Freigabe, macht Scans und Graphiti-Update.
+  selbst ab) — der zeigt die Verbuchung und die Commit-Message als Vorschau, verbucht
+  nach Freigabe, macht Scans und Graphiti-Update.
 - Skill-Datei und **alle** Begleit-Änderungen aus Schritt 3 gehören in denselben
   Commit. Nie automatisch committen.

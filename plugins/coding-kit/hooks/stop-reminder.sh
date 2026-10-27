@@ -4,8 +4,10 @@
 # commit question) is not forgotten.
 #
 # Project detection — fires ONLY when at least one of these exists:
-#   - PROGRESS.md containing a FEATURE-INDEX block
 #   - .claude/template-version (stamped by /new-project)
+#   - features/INDEX.md (the feature index since coding-kit 2.0.0)
+#   - PROGRESS.md containing a FEATURE-INDEX block (the format before 2.0.0, until the
+#     project is migrated)
 # In any other repository the hook stays completely silent.
 #
 # Loop protection: when stdin carries "stop_hook_active": true this stop was
@@ -23,7 +25,7 @@ DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 
 # --- project detection -------------------------------------------------------
 is_kit_project=false
-if [ -f "$DIR/.claude/template-version" ]; then
+if [ -f "$DIR/.claude/template-version" ] || [ -f "$DIR/features/INDEX.md" ]; then
   is_kit_project=true
 elif [ -f "$DIR/PROGRESS.md" ] && grep -q "FEATURE-INDEX" "$DIR/PROGRESS.md" 2>/dev/null; then
   is_kit_project=true
@@ -46,7 +48,7 @@ fi
 cat <<'JSON'
 {
   "decision": "block",
-  "reason": "[coding-kit] Uncommitted changes in this project. If the current task is finished, run /coding-kit:step-done (checks, secrets scan, PROGRESS docs, commit question). If work is still in progress, briefly tell the user this reminder was deferred and continue. Never commit without explicit user approval."
+  "reason": "[coding-kit] Uncommitted changes in this project. If the current task is finished, run /coding-kit:step-done (checks, secrets scan, booking in the feature file, commit question). If work is still in progress, briefly tell the user this reminder was deferred and continue. Never commit without explicit user approval."
 }
 JSON
 exit 0

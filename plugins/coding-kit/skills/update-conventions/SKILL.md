@@ -20,7 +20,8 @@ Fragmente nie selbst zusammenführen, einsetzen oder aus dem Template abschreibe
 **Argumente** (optional, kombinierbar):
 
 - **ohne Projektangabe:** nur das Projekt im aktuellen Arbeitsverzeichnis (Kit-Projekt =
-  `.claude/template-version` oder `PROGRESS.md` mit FEATURE-INDEX). Ist es keins: fragen
+  `.claude/template-version`, `features/INDEX.md` oder — altes Format vor 2.0.0 —
+  `PROGRESS.md` mit FEATURE-INDEX). Ist es keins: fragen
   (Pfad, `alle` oder `global`) — nie von selbst Projektordner durchsuchen.
 - **Projektpfad oder -name:** genau dieses Projekt.
 - **`alle`:** alle Projekte (A1).
@@ -76,9 +77,10 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
 - **Standard:** das Projekt im aktuellen Ordner (siehe Argumente).
 - **`alle`:** GitHub-Discovery über das Marker-Topic
   (`gh search repos "user:$(gh api user --jq .login) topic:coding-kit" --json name`) plus
-  lokale Ordner unter `$CODING_KIT_PROJECTS_DIR` mit `.claude/template-version` oder
-  `PROGRESS.md` mit FEATURE-INDEX. Liste zeigen, Auswahl bestätigen lassen; nur lokale
-  Checkouts bearbeiten (fehlt einer: klonen anbieten).
+  lokale Ordner unter `$CODING_KIT_PROJECTS_DIR` mit `.claude/template-version`,
+  `features/INDEX.md` oder (altes Format) `PROGRESS.md` mit FEATURE-INDEX. Liste zeigen,
+  Auswahl bestätigen lassen; nur lokale Checkouts bearbeiten (fehlt einer: klonen
+  anbieten).
 - Je Projekt: Liegen `.claude/template-answers` **und** `.claude/template-base/` vor →
   A2. Sonst zuerst A3 (Migration), dann A2.
 - **Nach dem letzten Projekt:** Teil G, sofern die globalen Kit-Regeln eingerichtet sind
@@ -226,8 +228,8 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
      oder eine gestrichene Zone trägt eine Override-Zeile: melden, nicht anfassen. Ohne
      Seed-Basis landet hier auch `claude-graphiti`, wenn `OPTIONAL` kein `graphiti`
      enthält (mit Basis kommt sie als `removed`) — mit Schritt 2 abgleichen.
-   - `no-file` → die seed-Datei fehlt (z. B. eine aufgelöste `REQUIREMENTS.md`): nur
-     melden. `broken` → melden; `identical` und `skipped` nur zählen.
+   - `no-file` → die seed-Datei fehlt (vom Projekt gelöscht, oder ein Projekt im alten
+     Format ohne `features/INDEX.md`): nur melden. `broken` → melden; `identical` und `skipped` nur zählen.
 
    Eine Zone, die weder Projekt noch Render haben (`claude-graphiti` ohne Graphiti),
    meldet das Skript nicht.

@@ -66,7 +66,8 @@ merken — sie wird gestempelt und füllt `TEMPLATE_VERSION`.
 6. **Graphiti-group_id?** _(Default: Projektname)_ — „kein Graphiti" entfernt den
    optionalen Graphiti-Block.
 7. **Anforderungen jetzt oder später?** _(Default: jetzt via `/define-requirements`)_ —
-   „später" lässt das REQUIREMENTS-Skelett unangetastet.
+   „später" lässt die Ziel-Abschnitte der CLAUDE.md mit ihren Platzhaltern und
+   `features/INDEX.md` leer, wie gerendert.
 
 Bereits Bekanntes (aus Argument/Verlauf) nicht erneut abfragen.
 
@@ -120,7 +121,10 @@ Temp-Verzeichnis (`mktemp -d`, im Folgenden `<tmp>`).
    bleiben, wie sie sind.
 3. **Was der Renderer offen lässt, jetzt konkretisieren:**
    - **`<!-- template:adapt: … -->`**-Stellen aus der Short-Info konkretisieren (Zweck/
-     Scope in CLAUDE.md, README-Intro, Status-Zeile) und den Marker entfernen. Für jede
+     Scope in CLAUDE.md, README-Intro, Status-Zeile) und den Marker entfernen. Die
+     Ziel-Abschnitte im Überblick der CLAUDE.md (Goals, Non-goals, Constraints) füllt
+     `/define-requirements` in 4e; bei „später" (Schritt 2.7) bleiben ihre Marker
+     stehen. Für jede
      **managed** Datei mit konkretisierter Stelle (z. B. `SECURITY.md`) eine Zeile mit
      Art `adapt` in die Files-Tabelle der `.claude/convention-overrides.md`.
    - **LICENSE:** kanonischen Text der gewählten Lizenz einsetzen; bei **TBD** die
@@ -170,8 +174,10 @@ prüfen. Die Lock-Datei wird mitcommittet.
 
 ### 4e. Anforderungen
 
-Je Schritt 2.7: jetzt `/define-requirements` mit der Short-Info aufrufen (schreibt
-REQUIREMENTS.md + initiale F-Nummern in PROGRESS.md) — oder Skelett belassen.
+Je Schritt 2.7: jetzt `/define-requirements` mit der Short-Info aufrufen (füllt Ziele,
+Nicht-Ziele und Rahmenbedingungen im Überblick der CLAUDE.md, legt je Kern-Feature eine
+Datei in `features/` an, schlägt die Reihenfolge vor und erzeugt die Tabelle) — oder die
+Platzhalter belassen.
 
 ### 4f. Abschlussprüfung + Erst-Commit (nur nach OK)
 

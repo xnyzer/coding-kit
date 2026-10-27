@@ -44,9 +44,9 @@ oder erneut fragen?** Wenn nein — weglassen.
    Gespräch nicht sicher hervorgeht; beides in **einem** Aufruf bündeln:
    - Git-Repo: `git status --short && git log --oneline -5`.
    - Aufgabenliste des Projekts (aus CLAUDE.md oder Session bekannt, z. B.
-     `PROGRESS.md`): nur Überschriften nach einer Reihenfolge-Vorgabe durchsuchen, z. B.
-     `grep -niE -A2 '^#+ .*(reihenfolge|order)' PROGRESS.md` — Muster an die
-     Doku-Sprache anpassen, die Datei nicht lesen.
+     `features/INDEX.md`): nur den Abschnitt mit der empfohlenen Reihenfolge ausgeben,
+     z. B. `awk '/^## .*([Rr]eihenfolge|[Oo]rder)/,/^<!-- features-index -->/' features/INDEX.md`
+     — Muster an die Doku-Sprache anpassen, die Tabelle nicht lesen.
 
    Sonst keine Tool-Aufrufe, keine Dateien lesen.
 2. **Handoff schreiben** nach der Gliederung unten, in der Sprache des bisherigen

@@ -57,8 +57,25 @@ Skills dieser Version weiterarbeitet.
   Feature-Dateien, `features/INDEX.md` und die Ziel-Abschnitte der CLAUDE.md, lange
   Entwürfe gehen nach `private/`. `docs/skill-authoring.md` beschreibt Dokumentmodell,
   Status, Altformat und das neue Gate; die README den Zyklus.
-- **`define-requirements`:** Verweis auf die entfernte Template-Datei `REQUIREMENTS.md`
-  gestrichen; der Skill selbst wird mit F-036c umgebaut.
+- **`define-requirements`** schreibt keine `REQUIREMENTS.md` mehr: Das Interview füllt
+  Ziele, Nicht-Ziele und Rahmenbedingungen im Überblick der Projekt-CLAUDE.md (mit den
+  bejahten Eigenschafts-Triggern als Rahmenbedingung), legt je Kern-Feature eine schlanke
+  Datei mit `BACKLOG` an, schlägt die Reihenfolge vor und erzeugt die Tabelle;
+  Grundsatzentscheidungen werden als ADR vorgeschlagen. Die Auflöse-Regel entfällt.
+- **`refine-requirements`** arbeitet auf den Ziel-Abschnitten der CLAUDE.md, den
+  Feature-Dateien und ADRs: Teilen und Zusammenlegen über `SUPERSEDED`, Streichen über
+  `DROPPED`, Entscheidungen datiert in der Feature-Datei oder als ADR, Umplanung der
+  Reihenfolge.
+- **`new-project`, `handoff`, `audit-code`, `check-upstreams`** auf die neuen Dateien
+  umgestellt; **`update-conventions`** und der **Stop-Hook** erkennen Kit-Projekte auch an
+  `features/INDEX.md` (das alte Format weiter bis zur Migration), die Erinnerung des
+  Stop-Hooks nennt die Verbuchung in der Feature-Datei.
+- **Globale Kit-Regeln:** Aufgaben laufen als F-Nummern mit je einer Datei in
+  `features/` (kommt über `update-conventions global`).
+- **Kit:** Tests für den Stop-Hook (Projekt mit `features/INDEX.md`, altes Format,
+  Stempel, sauberer Baum, unversionierte Datei, zweiter Stopp, fremdes Repo); der
+  repo-lokale Skill `add-skill` nennt die Aufgabenliste des Kits nur noch allgemein — wo
+  sie liegt, sagt die Kit-CLAUDE.md.
 - **Kit:** Tests für Erzeugen und Prüfen unter dash und bash, mit System-awk und mawk;
   der Validator verlangt Prüfung und Erzeugen in jeder justfile des Templates und die
   Prüfung im Pre-Commit-Hook; der Test-Helfer für Markerpaare zählt nur Marker allein auf

@@ -16,6 +16,75 @@ zusammen:
 
 ---
 
+## F-036c — Anforderungs- und Randskills, Hook, Doku (2026-10-27)
+
+Teil von F-036 (Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt; F-036a–b
+siehe darunter, F-036d–e folgen).
+
+**Problem:** Nach F-036b arbeiteten die Kern-Skills mit Feature-Dateien, aber
+define-requirements schrieb noch eine `REQUIREMENTS.md`, refine-requirements und die
+übrigen Skills lasen PROGRESS und REQUIREMENTS, und der Stop-Hook erkannte ein Projekt
+nur an der alten `PROGRESS.md`.
+
+**Was entstanden ist (2.0.0, unveröffentlicht):**
+
+- **define-requirements:** Das Interview (Ziele, Kern-Features mit dem Problem zuerst,
+  Nicht-Ziele, Rahmenbedingungen, Eigenschafts-Trigger, neu: Reihenfolge) füllt die drei
+  Ziel-Abschnitte im Überblick der Projekt-CLAUDE.md (Sprache der CLAUDE.md-Prosa,
+  Eigenschafts-Treffer als Rahmenbedingung), legt je Kern-Feature eine schlanke Datei mit
+  BACKLOG an (Format wie add-feature, ohne dessen Beratung), setzt die Reihenfolge und
+  erzeugt die Tabelle. Grundsatzentscheidungen werden als ADR vorgeschlagen, offene
+  Fragen landen mit `[CLARIFY]` in der betroffenen Datei oder unter den
+  Rahmenbedingungen. Ohne `features/` legt er den Index aus dem Plugin-Template an und
+  nutzt dessen Skript. Die Auflöse-Regel der REQUIREMENTS.md entfällt.
+- **refine-requirements:** arbeitet auf Ziel-Abschnitten, Feature-Dateien und ADRs;
+  Teilen und Zusammenlegen über SUPERSEDED mit `superseded-by`, Streichen über DROPPED
+  (ggf. auch als Nicht-Ziel), DONE bleibt unangetastet; Entscheidungen datiert in der
+  Feature-Datei oder als neues ADR; Umplanung der Reihenfolge; Tabelle per Skript.
+- **new-project:** „später" lässt Ziel-Abschnitte und Index wie gerendert; 4e beschreibt,
+  was define-requirements jetzt schreibt. **handoff:** liest nur die Reihenfolge aus
+  `features/INDEX.md`. **audit-code:** Ziele, Nicht-Ziele und Rahmenbedingungen als
+  Vertrag, für ein Feature seine Spezifikation. **check-upstreams:** „Aufgabenliste des
+  Kits" statt Kit-PROGRESS.
+- **update-conventions:** erkennt Kit-Projekte auch an `features/INDEX.md` (ohne Argument
+  und bei `alle`), das alte Format weiter; Beispiel bei `no-file` angepasst. Die
+  Migration selbst folgt in F-036d.
+- **Stop-Hook:** erkennt Projekte an `.claude/template-version`, `features/INDEX.md` oder
+  bis zur Migration an `PROGRESS.md` mit FEATURE-INDEX; die Erinnerung nennt die
+  Verbuchung in der Feature-Datei; `hooks.json` beschreibt das.
+- **Globale Kit-Regeln:** Aufgaben laufen als F-Nummern mit je einer Datei in
+  `features/`.
+- **Kit-README:** Zeilen zu define- und refine-requirements, Absatz zum Stop-Hook.
+  **add-skill:** nennt die Aufgabenliste des Kits nur allgemein (wo sie liegt, sagt die
+  Kit-CLAUDE.md), Pflicht-Bausteine um Altformat-Erkennung und das neue Gate ergänzt.
+- **Tests:** `hook.sh` mit acht Fällen für den Stop-Hook.
+
+**Verifikation:** Die Suche nach PROGRESS, REQUIREMENTS und FEATURE-INDEX über Plugin und
+Template findet außerhalb des CHANGELOG nur die Altformat-Erkennung (Skills, Stop-Hook,
+`hooks.json`) und die drei Migrationszeilen im MANIFEST. Der Stop-Hook meldet sich mit
+`features/INDEX.md` und offenen Änderungen (auch bei einer neuen Datei, beim alten Format
+und bei einem gestempelten Projekt) und bleibt still bei sauberem Baum, im zweiten Stopp
+und in einem fremden Repo — Gegenprobe: der Hook aus HEAD schweigt bei einem Projekt nur
+mit `features/INDEX.md`. `just check` grün mit 1971 Checks (8 neu je Durchgang);
+Versionsregel grün; gitleaks, Privacy-Muster und Blocklist ohne Fund.
+
+**Notable decisions:**
+- add-skill nennt die Aufgabenliste des Kits nur allgemein: Das Kit zieht erst in
+  F-036e um, so stimmt der Skill vorher und nachher ohne Übergangstext.
+- Die Ziel-Abschnitte stehen in der Sprache der CLAUDE.md-Prosa, nicht der lebenden
+  Doku — sie gehören zur CLAUDE.md.
+- Der Stop-Hook erkennt das alte Format weiter, damit Projekte bis zur Migration erinnert
+  werden.
+
+**Abweichungen vom Plan:** keine im Umfang. Die README-Teile zur Struktur des Kits und
+zu dessen eigener `PROGRESS.md` bleiben für F-036e.
+
+**Geänderte Dateien:**
+`plugins/coding-kit/skills/{define-requirements,refine-requirements,new-project,handoff,audit-code,check-upstreams,update-conventions}/SKILL.md`,
+`plugins/coding-kit/hooks/stop-reminder.sh`, `plugins/coding-kit/hooks/hooks.json`,
+`tests/template-sync/hook.sh`, `plugins/coding-kit/global/coding-kit.md`, `README.md`,
+`.claude/skills/add-skill/SKILL.md`, `plugins/coding-kit/CHANGELOG.md`, `PROGRESS.md`.
+
 ## F-036b — Kern-Skills (2026-10-27)
 
 Teil von F-036 (Dokumentmodell neu: Feature-Dateien statt Übergangs-Artefakt; F-036a
