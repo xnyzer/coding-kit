@@ -88,8 +88,17 @@ Skills dieser Version weiterarbeitet.
   Index, `REQUIREMENTS.md` verteilen (Ziele in die CLAUDE.md, Entscheidungen als ADR oder
   in die Feature-Datei, Kern-Features ohne Nummer als neue Dateien), Unzugeordnetes
   klären, lange Titel kürzen —, Tabelle erzeugen, Vorschau gruppenweise mit Stichproben,
-  übernehmen und erst danach die Altdateien löschen. Das Argument `features` macht nur
+  übernehmen und erst danach die Altdateien löschen; Verweise auf die Altdateien in
+  anderen Projektdateien stellt er mit Vorschau um. Das Argument `features` macht nur
   diese Migration, auch in einem Repo ohne Template-Antworten.
+- **Testläufe** mit `--plugin-dir` an Stellvertreter-Projekten (zusammen 5,58 USD):
+  define-requirements an einem neuen Projekt, add-feature mit Abraten (DROPPED),
+  prep-step für ein S- und ein L-Feature, step-done für einen ersten Substep
+  (IN-PROGRESS) und ein S-Feature (DONE), Migration eines Bestandsprojekts mit
+  update-conventions — alle ohne Handarbeit, Endstand per Skript geprüft. Funde: prep-step
+  nahm einmal einen leeren Abschnitt Verlauf aus der Vorlage mit (jetzt ausdrücklich
+  ausgeschlossen); die Migration zog Verweise auf die Altdateien ohne Regel nach (jetzt
+  A4 Schritt 7).
 - **Kit:** Tests für den Stop-Hook (Projekt mit `features/INDEX.md`, altes Format,
   Stempel, sauberer Baum, unversionierte Datei, zweiter Stopp, fremdes Repo); der
   repo-lokale Skill `add-skill` nennt die Aufgabenliste des Kits nur noch allgemein — wo

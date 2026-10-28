@@ -428,7 +428,13 @@ werden nach dem Übernehmen gelöscht.
    `PROGRESS-ARCHIVE.md` und `REQUIREMENTS.md` löschen (Git behält sie). Registry-Zeilen,
    die diese Dateien nennen, zum Austragen vormerken (A2 Schritt 10). Danach `sh
    <projekt>/scripts/features-index.sh check` — muss grün sein.
-7. **Weiter:** im Abgleich mit A2 Schritt 6 (die Zone `index-head` ist dann `identical`,
+7. **Verweise nachziehen:** Projektdateien, die die Altdateien nennen, suchen — z. B.
+   `git grep -n -e PROGRESS -e REQUIREMENTS -- ':!features/' ':!.claude/template-base/'`
+   (Template-Dateien zeigen nach dem Abgleich schon auf `features/`). Je Fundstelle die
+   neue Stelle vorschlagen — die Feature-Datei der genannten Nummer, `features/INDEX.md`
+   oder die Ziel-Abschnitte der CLAUDE.md — und mit Vorschau und Bestätigung umstellen;
+   sonst nichts an diesen Dateien ändern.
+8. **Weiter:** im Abgleich mit A2 Schritt 6 (die Zone `index-head` ist dann `identical`,
    die Zonen der CLAUDE.md zeigen auf `features/`); Schritt 9 setzt die Seed-Basis von
    `features/INDEX.md`. Mit dem Argument `features` endet der Lauf hier: `just check`
    (falls vorhanden) grün, Commit-Vorschlag (z. B. `docs: move tasks to feature files`)

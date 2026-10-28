@@ -222,9 +222,11 @@ NICHT mit der Umsetzung beginnen!**
 
 Nach Freigabe, in der Sprache der lebenden Doku:
 
-- **Feature-Datei:** Spezifikation und Plan schreiben; im Kopfblock `status: PLANNED`,
-  `size`, ggf. `depends-on`. Weicht der Plan von der Lösungsskizze ab, die Skizze kurz
-  auf den beschlossenen Stand bringen. Hat sich der Zuschnitt geändert, den `title`
+- **Feature-Datei:** Spezifikation und Plan schreiben — nur diese beiden Abschnitte;
+  einen leeren Abschnitt Verlauf aus der Vorlage nicht mitnehmen, den legt step-done an.
+  Im Kopfblock `status: PLANNED`, `size`, ggf. `depends-on`. Weicht der Plan von der
+  Lösungsskizze ab, die Skizze kurz auf den beschlossenen Stand bringen. Hat sich der
+  Zuschnitt geändert, den `title`
   anpassen (höchstens 70 Zeichen; der Dateiname bleibt).
 - **Empfohlene Reihenfolge** in `features/INDEX.md`: verschiebt sich etwas (neue
   Abhängigkeit, neue Folge-Nummer, Feature abgeraten), eine Änderung vorschlagen — in
