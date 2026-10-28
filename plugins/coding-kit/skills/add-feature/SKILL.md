@@ -95,7 +95,9 @@ verwenden; `next-feature` steigt auf die nächste. Neue Nummern immer als **F-NN
 
 **Titel** (Feld `title`): höchstens 70 Zeichen; sagt, *was sich ändert* — nicht wie,
 nicht warum, kein Ergebnisbericht; kein Status, keine Version, keine Aufzählung in
-Klammern.
+Klammern. Kein Doppelpunkt und kein `#`, am Anfang kein Anführungszeichen, keine Klammer
+und kein Strich: Markdown-Vorschauen lesen den Kopfblock als YAML, und daran bricht er —
+statt des Doppelpunkts einen Gedankenstrich.
 
 **Dateiname:** `features/F-NNN-kurzname.md` — Kurzname aus dem Titel, ASCII,
 Kleinbuchstaben, Ziffern und Bindestriche, Umlaute ausgeschrieben (ä → ae), etwa 40

@@ -63,7 +63,7 @@ otherwise.
 | `<!-- module:coding-standards -->` … `<!-- /module:coding-standards -->` | Slot in `CODING-STANDARDS.md` §13 where standards fragments are **appended** (each wrapped in `fragment:NAME`), not single-inserted. |
 | `<!-- fragment:NAME -->` … `<!-- /fragment:NAME -->` | Wraps one self-contained standards fragment inside the `module:coding-standards` slot. `NAME` = a catalog fragment (`modules/standards/`) or a stack module's own module fragment. See § Standards fragments. |
 | `<!-- section:NAME -->` … `<!-- /section:NAME -->` | Marks a template-owned zone inside a **seed** file that `/update-conventions` may diff and offer individually — never the whole file. Names are lowercase-kebab, unique across the template. See § Seed sections. |
-| `<!-- features-index -->` … `<!-- /features-index -->` | The generated table of all features in `features/INDEX.md`; only `scripts/features-index.sh write` writes between them (§ Features). |
+| `<!-- features-index -->` … `<!-- /features-index -->` | The generated tables of all features in `features/INDEX.md`, open and closed; only `scripts/features-index.sh write` writes between them (§ Features). |
 | `# module:gitignore` / `# module:ci-jobs` | Append points for module parts in non-HTML files. |
 | `<!-- override: reason -->` | Project-local deviation inside a seed zone or a standards fragment: `/update-conventions` leaves that zone or fragment alone. Whole files are registered in § Deviation registry instead. |
 
@@ -352,7 +352,7 @@ overview. A project's goals, non-goals and constraints live in the overview of `
 | Field | Value | Required |
 |-------|-------|----------|
 | `id` | `F-NNN`, the number of the file name | yes |
-| `title` | at most 70 characters; says what changes — not how, not why | yes |
+| `title` | at most 70 characters; says what changes — not how, not why; no colon, no `#`, no special character at the start (the header block stays valid YAML for Markdown previews) | yes |
 | `type` | `feature` (new behaviour), `fix` (wrong behaviour), `change` (rework, docs, upkeep, audit) | yes |
 | `status` | see below | yes |
 | `size` | `S`, `M`, `L`; empty until `/prep-step` sets it | — |
@@ -371,17 +371,22 @@ through and who sets what: the zone `index-head` of `features/INDEX.md`.
 specification, plan, history — the template carries them with their hints.
 
 **Index.** `features/INDEX.md` has the zone `index-head`, then the recommended order
-(written by hand; only open features), then the table of all features between the marker
-lines `<!-- features-index -->` and `<!-- /features-index -->`, then the line
-`next-feature: F-NNN`. The table is generated, never edited by hand: one row per feature,
-sorted by number — ID linked to the file, title, status (`SUPERSEDED → F-NNN`), done date.
+(written by hand; only open features), then the tables of all features between the
+marker lines `<!-- features-index -->` and `<!-- /features-index -->`, then the line
+`next-feature: F-NNN`. The tables are generated, never edited by hand: first the open
+features by number, then the closed ones (`DONE`, `DROPPED`, `SUPERSEDED`) with the latest
+done date first, each under a heading; one row per feature — ID linked to the file, the
+title exactly as in its header block, status (`SUPERSEDED → F-NNN`), done date. Headings
+and table head may be translated; the script keeps them. The title rule is checked in the
+feature file, never adjusted in the table. `write` also links the F-numbers of the
+recommended order to their files.
 
-**Script.** `scripts/features-index.sh` (managed, POSIX sh + awk) is the only writer of the
-table: `write` regenerates it, `check` reports broken header blocks, duplicate numbers, a
-stale table, a missing or too low `next-feature` and recommended-order entries that are not
-open. Every justfile runs `check` in `just check` and `write` as `just features-index`
-(§ Module contract); the pre-commit hook runs `check` when files in `features/` are staged
-and never writes.
+**Script.** `scripts/features-index.sh` (managed, POSIX sh + awk) is the only writer of
+the tables: `write` regenerates them, `check` reports broken header blocks (a title that
+breaks the rule among them), duplicate numbers, stale tables or order links, a missing or
+too low `next-feature` and recommended-order entries that are not open. Every justfile
+runs `check` in `just check` and `write` as `just features-index` (§ Module contract); the
+pre-commit hook runs `check` when files in `features/` are staged and never writes.
 
 **Migration from the model before 2.0.0.** A project with `PROGRESS.md` (and its
 `FEATURE-INDEX` block), `PROGRESS-ARCHIVE.md` and possibly `REQUIREMENTS.md` moves once,

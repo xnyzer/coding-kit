@@ -17,5 +17,8 @@ pre-commit:
         - "plugins/coding-kit/template/*"
         - "plugins/coding-kit/template/**/*"
         - "tests/template-sync/*"
+    - name: features-index
+      run: just features
+      glob: "features/*"
     - name: version-rule
       run: just version-rule --staged

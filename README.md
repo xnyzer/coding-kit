@@ -208,16 +208,16 @@ Die beiden `ja`-Skills: **`go-public`** dreht GitHub-Sichtbarkeit und -Settings,
 GitHub also gegenstandslos; **`check-upstreams`** liest fremde GitHub-Repos (im Kit über
 `gh api`) — ohne `gh` bleibt nur manuelles Nachsehen.
 
-Der übliche Zyklus: `add-feature` → `prep-step` → `build-step` → `step-done` (je
-Substep). Interaktiv rufst du `step-done` bewusst selbst auf, wenn du den Substep
-geprüft hast — build-step empfiehlt es nur; im autonomen `/goal`-Lauf läuft es
-automatisch durch. Jede Aufgabe ist eine Datei `features/F-NNN-kurzname.md`, die
-mitwächst (Erfassung, Spezifikation, Plan, Verlauf); `features/INDEX.md` zeigt die
-empfohlene Reihenfolge und eine erzeugte Tabelle aller Features. Das Feld `status` im
-Kopfblock zeigt die Station: `BACKLOG` = nur aufgenommen (→ prep-step), `PLANNED` =
-geplant (→ build-step), `IN-PROGRESS` = erster Substep verbucht, `DONE` = fertig; dazu
-`DROPPED` und `SUPERSEDED` für Verworfenes und Aufgegangenes. Für die
-Implementierungsphase gibt es drei Wege: `build-step` baut diszipliniert, `teach-step`
+Der übliche Zyklus: `add-feature` → `prep-step` → `build-step` → `step-done` (je Substep).
+Interaktiv rufst du `step-done` bewusst selbst auf, wenn du den Substep geprüft hast —
+build-step empfiehlt es nur; im autonomen `/goal`-Lauf läuft es automatisch durch. Jede
+Aufgabe ist eine Datei `features/F-NNN-kurzname.md`, die mitwächst (Erfassung,
+Spezifikation, Plan, Verlauf); `features/INDEX.md` zeigt die empfohlene Reihenfolge
+(Nummern verlinkt) und erzeugte Tabellen aller Features — offene oben, erledigte darunter.
+Das Feld `status` im Kopfblock zeigt die Station: `BACKLOG` = nur aufgenommen (→
+prep-step), `PLANNED` = geplant (→ build-step), `IN-PROGRESS` = erster Substep verbucht,
+`DONE` = fertig; dazu `DROPPED` und `SUPERSEDED` für Verworfenes und Aufgegangenes. Für
+die Implementierungsphase gibt es drei Wege: `build-step` baut diszipliniert, `teach-step`
 leitet dich durch die eigene Umsetzung, oder du implementierst frei und schließt mit
 `step-done` ab.
 
@@ -415,12 +415,12 @@ plugins/coding-kit/               Das Plugin
   template/                       Projekt-Template (englisch): MANIFEST.md, core/, modules/
 default.json                      Renovate-Shareable-Preset (Root = Preset-Konvention)
 upstreams.json                    Watchliste für /check-upstreams (persistierte Refs)
-docs/                             Pflege-Doku (Skill-Authoring, Renovate-Preset)
+docs/                             Pflege-Doku (Skill-Authoring, Renovate-Preset, Verlauf der TPL-Reihe)
 install.sh                        Neuer-Rechner-Bootstrap (idempotent)
 scripts/validate.py               Validator für Kit, Template und Vertrag (`just check` + CI)
 scripts/version-rule.py           Versionsregel (Pre-Commit + CI, `just version-rule`)
 tests/template-sync/              Tests des Skripts und des Session-Hinweises unter dash und bash, dazu mawk/gawk (`just test`)
-PROGRESS.md, PROGRESS-ARCHIVE.md  Aufgaben (F-NNN); das Archiv führt auch die TPL-Reihe
+features/                         Aufgaben (F-NNN): je Feature eine Datei, INDEX.md als Übersicht
 private/                          Gitignoriert — private Notizen/Quellen
 ```
 
@@ -444,8 +444,9 @@ private/                          Gitignoriert — private Notizen/Quellen
   gawk: Die Skript-Tests laufen dann zusätzlich mit ihnen. mawk ist das Standard-awk auf
   Debian und Ubuntu, gawk auf Fedora und Arch, und das macOS-awk nimmt mehr hin als beide.
   Beide bleiben optionale lokale Werkzeuge (GPL), nicht Teil der Toolchain.
-- Aufgaben laufen als F-Nummern in `PROGRESS.md` — das Kit nutzt seine eigenen Skills
-  (Dogfooding).
+- Aufgaben laufen als F-Nummern in `features/` — das Kit nutzt seine eigenen Skills
+  (Dogfooding). `just features-index` erzeugt die Tabelle in `features/INDEX.md`; das
+  Skript kommt aus dem Template (`plugins/coding-kit/template/core/scripts/`).
 
 ## Lizenz
 

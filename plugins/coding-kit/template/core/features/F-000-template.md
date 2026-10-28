@@ -18,7 +18,7 @@ created. Headings and text are written in the language of the living docs; field
 and status tokens stay English. The hints in HTML comments go once a section is filled.
 
 Header block: plain `key: value` lines only — no quotes; lists comma-separated.
-- title: at most 70 characters; says what changes (rules in INDEX.md)
+- title: at most 70 characters; says what changes; no colon, no `#` (rules in INDEX.md)
 - type: feature (new behaviour) | fix (wrong behaviour) | change (rework, docs, upkeep,
   audit); it decides the goal line below, the number stays F-NNN
 - status: BACKLOG | PLANNED | IN-PROGRESS | DONE | DROPPED | SUPERSEDED (INDEX.md)

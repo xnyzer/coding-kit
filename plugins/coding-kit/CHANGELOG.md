@@ -13,6 +13,43 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 2.1.0 — unveröffentlicht
+
+Der Feature-Index wird übersichtlicher, und Titel halten den Kopfblock als YAML lesbar
+(F-036).
+
+- **`scripts/features-index.sh write`** erzeugt zwei Tabellen statt einer: oben die
+  offenen Features nach Nummer, darunter die abgeschlossenen (`DONE`, `DROPPED`,
+  `SUPERSEDED`), das zuletzt Fertige zuerst, ohne Datum zuletzt. Jede Tabelle steht unter
+  einer Überschrift; Überschriften und Tabellenkopf darf ein Projekt übersetzen, das
+  Skript behält sie. Der Titel kommt unverändert aus dem Kopfblock der Feature-Datei.
+- **Links in der empfohlenen Reihenfolge:** `write` verlinkt jede F-Nummer dort auf ihre
+  Datei und erneuert veraltete Ziele; eine Nummer, die an einem Wort, Pfad oder
+  Code-Span hängt (z. B. ein Substep `F-001a`), bleibt Text. `check` meldet fehlende
+  Links. Die Skills rufen `just features-index` nach jedem Schreiben schon auf.
+- **Titelregel:** `check` meldet Titel mit Doppelpunkt, mit `#` oder mit einem
+  Sonderzeichen am Anfang (Anführungszeichen, Klammer, Strich, Backtick u. a.) an der
+  Feature-Datei. Markdown-Vorschauen lesen den Kopfblock als YAML-Front-Matter: Ein
+  Titel wie „install.sh: …" machte ihn dort ungültig, „… #12" schnitt ihn still ab.
+  Solange ein Titel die Regel bricht, schreibt `write` keine Tabelle.
+- **add-feature** nennt die Regel in der Titelregel, **prep-step** verweist darauf.
+  **update-conventions** A4: Migrierte Titel mit Doppelpunkt (sie entstehen oft aus
+  Überschriften wie „Bereich: Thema") werden wie zu lange Titel umformuliert und als
+  Vorschlag gezeigt.
+- Skript-Tests: 30 neue Prüfungen (Titelregel, Sortierung, Links, übersetzte
+  Überschriften).
+
+### Template
+
+- **`scripts/features-index.sh`:** zwei Tabellen, Links in der Reihenfolge, Titelregel.
+  Nach dem Update meldet `just check` die alte Tabelle als veraltet — `just
+  features-index` erzeugt das neue Format; Titel mit Doppelpunkt vorher in den
+  Feature-Dateien umformulieren (Gedankenstrich statt Doppelpunkt).
+- **`features/INDEX.md`**, Zone `index-head`: Titelregel um Doppelpunkt, `#` und
+  Sonderzeichen am Anfang ergänzt; der Punkt zu den Tabellen beschreibt Ordnung,
+  Übersetzung und Links. Der erzeugte Block der Vorlage hat die zwei leeren Tabellen.
+  **`features/F-000-template.md`** und MANIFEST § Features nennen die Regel.
+
 ## 2.0.0 — 2026-10-28
 
 Neues Dokumentmodell: eine Datei je Feature statt `PROGRESS.md`, Archiv und

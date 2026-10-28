@@ -4,5 +4,5 @@ Alles in diesem Ordner (außer dieser README) ist **gitignoriert** und bleibt lo
 private Notizen, Quellmaterial mit Personen-/Infrastrukturbezug, archivierte
 Arbeitsdokumente.
 
-Konvention: Lebende Doku (PROGRESS, README, Skills) wird grundsätzlich frei von privaten
+Konvention: Lebende Doku (Feature-Dateien, README, Skills) wird grundsätzlich frei von privaten
 Infos formuliert — was Privatbezug hat, gehört hierher.

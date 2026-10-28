@@ -18,9 +18,36 @@ Renovate-Preset + Installer** — das ganze Scaffolding-System. Das Template lag
 im eigenen Repo project-template; seit 1.0.0 liegt es mit importierter Historie im Plugin.
 Details: `README.md`.
 
+### Ziele
+
+- Neue Projekte mit einem Befehl aufsetzen — Repo, Template, Stack-Modul, Lizenz,
+  Anforderungen (`/coding-kit:new-project`).
+- Bestandsprojekte aktuell halten, ohne ihre eigenen Anpassungen zu verlieren
+  (`/coding-kit:update-conventions`).
+- Jede Aufgabe durch denselben Zyklus führen — aufnehmen, spezifizieren, bauen,
+  abschließen — mit Checks, Scans und Freigaben.
+- Die globalen Kit-Regeln und die Personal-Config auf jeden Rechner bringen.
+
+### Nicht-Ziele
+
+- Kein Produkt für fremde Teams: das Kit dient primär dem Eigenbedarf; das Repo ist
+  öffentlich und nachnutzbar.
+- Keine Inhalte konkreter Projekte: Downstream-Projekte werden weder genannt noch vom
+  Kit aus geändert — ein Projekt holt Änderungen selbst.
+
+### Rahmenbedingungen
+
+- Läuft als Claude-Code-Plugin; Plugin, Template und globale Regeln teilen eine Version
+  und ein CHANGELOG.
+- Baut auf GitHub auf (Marketplace, Plugin, `gh`); ohne GitHub fallen diese Teile weg,
+  der Arbeitszyklus läuft lokal über git und just weiter.
+- Öffentliches Repo — Publishing-Hygiene und Sprachgrenze siehe Strukturregeln.
+- Skripte in POSIX-Shell und awk; die Tests laufen unter dash und bash, mit dem
+  System-awk und mawk.
+
 ## Strukturregeln (verbindlich)
 
-- **Repo-Root = dieses Repo selbst** (eigene Doku, CI, PROGRESS). Das **Plugin** lebt
+- **Repo-Root = dieses Repo selbst** (eigene Doku, CI, `features/`). Das **Plugin** lebt
   vollständig unter `plugins/coding-kit/`; der Marketplace zeigt per relativem `source`
   darauf. `default.json` im Root ist das Renovate-Preset (Pfad-Konvention von Renovate —
   nicht verschieben).
@@ -44,7 +71,7 @@ Details: `README.md`.
   Hook-Ausgaben, das Renovate-Preset.
 - **Publishing-Hygiene (Repo ist public):** keine Personendaten, keine absoluten lokalen
   Pfade, keine privaten IPs/Hostnames; konkrete Downstream-Projekte nie beim Namen nennen,
-  auch nicht in PROGRESS, Archiv oder CHANGELOG („ein Downstream-Projekt"). Identität nie
+  auch nicht in Feature-Dateien, Verlauf oder CHANGELOG („ein Downstream-Projekt"). Identität nie
   hardcoden — zur Laufzeit ermitteln (`git config`, `gh api user`) oder aus
   `~/.claude/coding-kit.env` (Personal-Config, nie committed); im Template nur
   registrierte Platzhalter (MANIFEST § Placeholders). `just check` lintet das samt
@@ -63,17 +90,21 @@ Details: `README.md`.
   `just version-rule` prüft das vor jedem Commit und in der CI.
 - Neue Skills folgen `docs/skill-authoring.md` — erst lesen, dann bauen. Anlage und
   Änderung laufen über den repo-lokalen Skill `/add-skill` (`.claude/skills/`): er
-  führt durch Konvention, Begleit-Änderungen und Abschluss inkl. PROGRESS-Pflege —
+  führt durch Konvention, Begleit-Änderungen und Abschluss inkl. Pflege der Feature-Datei —
   für Plugin-Skills wie für repo-lokale. Claude darf ihn selbst starten.
-- **PROGRESS nur mit Freigabe:** Jeder neue oder geänderte Eintrag in `PROGRESS.md`,
-  `PROGRESS-ARCHIVE.md` oder im FEATURE-INDEX wird zuerst als Vorschau gezeigt und erst
-  nach ausdrücklichem OK des Nutzers geschrieben — auch wenn ein Skill ihn anlegt.
-  Claude darf add-feature und add-skill selbst starten; die Freigabe gilt dem Eintrag.
-  Die Plugin-Skills tragen die Regel als Freigabe-Gate (`docs/skill-authoring.md`).
-- **Nummern:** Aufgaben sind `F-NNN` (FEATURE-INDEX in der `PROGRESS.md`), auch für
-  Template-Arbeit. `TPL-NNN` sind die Aufgaben des früheren project-template-Repos — sie
-  stehen nur im Archiv und in der importierten Historie und bekommen keine neuen
-  Nummern.
+- **Feature-Dateien nur mit Freigabe:** Jede neue oder geänderte Feature-Datei
+  (`features/F-NNN-*.md`), jede Änderung an `features/INDEX.md` und an den
+  Ziel-Abschnitten im Überblick wird zuerst als Vorschau gezeigt und erst nach
+  ausdrücklichem OK des Nutzers geschrieben — auch wenn ein Skill sie anlegt. Lange
+  Entwürfe gehen nach `private/` und werden nach dem Übernehmen gelöscht. Claude darf
+  add-feature und add-skill selbst starten; die Freigabe gilt dem Eintrag. Die
+  Plugin-Skills tragen die Regel als Freigabe-Gate (`docs/skill-authoring.md`).
+- **Nummern:** Aufgaben sind `F-NNN`, je eine Datei `features/F-NNN-kurzname.md`, auch
+  für Template-Arbeit; `features/INDEX.md` führt Reihenfolge, Tabelle und nächste
+  Nummer. Die Tabelle erzeugt `just features-index`, `just check` prüft sie. `TPL-NNN`
+  sind die Aufgaben des früheren project-template-Repos — sie stehen nur in
+  `docs/project-template-history.md` und in der importierten Historie und bekommen
+  keine neuen Nummern.
 
 ## Konventionen
 
@@ -87,7 +118,7 @@ Details: `README.md`.
 
 ## Workflow & Skills
 
-Aufgaben sind F-Nummern in `PROGRESS.md` (+ `FEATURE-INDEX`-Block). Das Kit nutzt seine
+Aufgaben sind F-Nummern in `features/` (Übersicht: `features/INDEX.md`). Das Kit nutzt seine
 eigenen Plugin-Skills (Dogfooding): `/coding-kit:add-feature` → `/coding-kit:prep-step` →
 `/coding-kit:build-step` → `/coding-kit:step-done` (je Substep); Audits via
 `/coding-kit:audit-code`.

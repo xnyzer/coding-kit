@@ -411,8 +411,9 @@ werden nach dem Übernehmen gelöscht.
      kein Datum zu finden: fragen.
    - `type feature <Anzahl>` — alle Dateien tragen `type: feature`; erwähnen, Änderungen
      nur auf Wunsch.
-   Titel über 70 Zeichen (meldet Schritt 4) nach der Titelregel kürzen und als Vorschlag
-   zeigen. Geändert werden in `<tmp>/migrate` nur Kopfblöcke, die Reihenfolge und vom
+   Titel, die Schritt 4 meldet (über 70 Zeichen, Doppelpunkt, `#` oder Sonderzeichen am
+   Anfang — aus Überschriften wie „F-012 — Bereich: Thema" entstehen solche oft), nach der
+   Titelregel umformulieren und als Vorschlag zeigen. Geändert werden in `<tmp>/migrate` nur Kopfblöcke, die Reihenfolge und vom
    Nutzer bestätigte Zuordnungen — der übernommene Text bleibt wortgetreu.
 4. **Tabelle und Prüfung:** `sh <projekt>/scripts/features-index.sh write
    <tmp>/migrate/features` (ohne das Skript im Projekt: das aus dem Template,

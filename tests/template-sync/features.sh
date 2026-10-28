@@ -66,34 +66,41 @@ run_features_cases() {
   check "render with seeds for the features cases" render fx-render docs-only private --seeds
   check "fresh render: the features check passes" fx_ok fx-render
   check "fresh render: template file left out of the check" has fx-render/features/F-000-template.md
-  check "fresh render: empty table" eval '[ "$(fx_block fx-render | wc -l | tr -d " ")" = 4 ]'
+  check "fresh render: two empty tables" eval '[ "$(fx_block fx-render | wc -l | tr -d " ")" = 11 ]'
   for fx_h in '### Goals' '### Non-goals' '### Constraints'; do
     check "fresh render: CLAUDE.md overview has $fx_h" contains fx-render/CLAUDE.md "$fx_h"
   done
   check "ts-node render with seeds" render fx-ts ts-node public --seeds
   check "fresh ts-node render: the features check passes" fx_ok fx-ts
 
-  # write: rows from the header blocks, sorted by number, the rest untouched
+  # write: open table by number, closed table by latest done; the order gets its links
   fx_base fxw
   fx_feature fxw 003 BACKLOG 'Pipe | im Titel'
   fx_feature fxw 1000 PLANNED 'Above 999' 'size: M' 'depends-on: F-003, F-001'
   fx_feature fxw 001 DONE 'Größe ändern' 'done: 2026-10-05'
   fx_feature fxw 002 SUPERSEDED 'Merged' 'superseded-by: F-001,F-003'
+  fx_feature fxw 004 DONE 'Later done' 'done: 2026-10-07'
+  fx_feature fxw 005 DROPPED 'Dropped early' 'done: 2026-10-01'
   sed 's/^next-feature: .*/next-feature: F-1001/' "$TMP/fxw/features/INDEX.md" > "$TMP/fxw.index"
   mv "$TMP/fxw.index" "$TMP/fxw/features/INDEX.md"
-  fx_order fxw '1. F-003 — first; then F-1000 (needs F-003).'
-  fx_outside fxw > "$TMP/fxw.outside"
-  check "before write: the check reports the stale table" fx_finds fxw "out of date"
+  fx_order fxw '1. F-003 — first; then F-1000 (needs F-003a, see `F-003`, [F-1000](old-name.md)).'
+  fx_outside fxw | sed 's#^1\. F-003 — first; then F-1000 (needs F-003a, see `F-003`, \[F-1000\](old-name.md))\.$#1. [F-003](F-003-demo-003.md) — first; then [F-1000](F-1000-demo-1000.md) (needs F-003a, see `F-003`, [F-1000](F-1000-demo-1000.md)).#' > "$TMP/fxw.outside"
+  check "before write: the check reports the stale tables" fx_finds fxw "out of date"
+  check "before write: the check reports the missing order links" fx_finds fxw "has no link to its file"
   check "write succeeds" fx_run fxw write
-  printf '%s\n' '<!-- features-index -->' '| ID | Title | Status | Done |' \
+  printf '%s\n' '<!-- features-index -->' '### Open' '' '| ID | Title | Status | Done |' \
     '|----|-------|--------|------|' \
-    '| [F-001](F-001-demo-001.md) | Größe ändern | DONE | 2026-10-05 |' \
-    '| [F-002](F-002-demo-002.md) | Merged | SUPERSEDED → F-001, F-003 |  |' \
     '| [F-003](F-003-demo-003.md) | Pipe \| im Titel | BACKLOG |  |' \
     '| [F-1000](F-1000-demo-1000.md) | Above 999 | PLANNED |  |' \
+    '' '### Closed' '' '| ID | Title | Status | Done |' \
+    '|----|-------|--------|------|' \
+    '| [F-004](F-004-demo-004.md) | Later done | DONE | 2026-10-07 |' \
+    '| [F-001](F-001-demo-001.md) | Größe ändern | DONE | 2026-10-05 |' \
+    '| [F-005](F-005-demo-005.md) | Dropped early | DROPPED | 2026-10-01 |' \
+    '| [F-002](F-002-demo-002.md) | Merged | SUPERSEDED → F-001, F-003 |  |' \
     '<!-- /features-index -->' > "$TMP/fxw.expected"
-  check "write: rows sorted by number, linked, status and date" fx_block_is fxw "$TMP/fxw.expected"
-  check "write: head, order and next-feature untouched" fx_same_outside fxw "$TMP/fxw.outside"
+  check "write: open by number, closed by latest done, titles as in the files" fx_block_is fxw "$TMP/fxw.expected"
+  check "write: order linked, glued and code numbers kept, rest untouched" fx_same_outside fxw "$TMP/fxw.outside"
   check "after write: the check passes" fx_ok fxw
   cp "$TMP/fxw/features/INDEX.md" "$TMP/fxw.written"
   check "write again" fx_run fxw write
@@ -106,6 +113,12 @@ run_features_cases() {
   check "translated head: write succeeds" fx_run fxw write
   check "translated head: kept" contains fxw/features/INDEX.md '| ID | Titel | Status | Fertig |'
   check "translated head: the check passes" fx_ok fxw
+  sed -e 's/^### Open$/### Offen/' -e 's/^### Closed$/### Erledigt/' \
+    "$TMP/fxw/features/INDEX.md" > "$TMP/fxw.index"
+  mv "$TMP/fxw.index" "$TMP/fxw/features/INDEX.md"
+  check "translated headings: write succeeds" fx_run fxw write
+  check "translated headings: kept" eval 'fx_block fxw | grep -qx "### Offen" && fx_block fxw | grep -qx "### Erledigt"'
+  check "translated headings: the check passes" fx_ok fxw
 
   # A hand edit in the table is reported
   sed 's/| Merged |/| Merged by hand |/' "$TMP/fxw/features/INDEX.md" > "$TMP/fxw.index"
@@ -170,6 +183,21 @@ run_features_cases() {
   fx_base fxq
   fx_feature fxq 001 BACKLOG '"Quoted"'
   check "quoted value" fx_finds fxq 'the value of `title` is quoted'
+
+  # Titles that would break the header block as YAML front matter in a preview.
+  fx_base fxy
+  fx_feature fxy 001 BACKLOG 'install.sh: missing login'
+  fx_feature fxy 002 BACKLOG 'Issue #12 fixed'
+  fx_feature fxy 003 BACKLOG '[draft] Title'
+  fx_feature fxy 004 BACKLOG '`code` first'
+  fx_feature fxy 005 BACKLOG '- dash first'
+  fx_feature fxy 006 BACKLOG 'Plain title - with dash, comma and v2.0'
+  check "colon in the title" fx_finds fxy 'F-001-demo-001.md: the title contains a colon'
+  check "# in the title" fx_finds fxy 'F-002-demo-002.md: the title contains `#`'
+  check "bracket at the title start" fx_finds fxy 'F-003-demo-003.md: the title starts with `[`'
+  check "backtick at the title start" fx_finds fxy 'F-004-demo-004.md: the title starts with `'
+  check "dash at the title start" fx_finds fxy 'F-005-demo-005.md: the title starts with `-`'
+  check "plain title with dash and comma passes" eval '! grep -qF "F-006-demo-006.md" "$TMP/fxy.out"'
 
   fx_base fxu
   fx_feature fxu 001 BACKLOG 'Fine' 'priority: high'

@@ -227,7 +227,7 @@ Nach Freigabe, in der Sprache der lebenden Doku:
   Im Kopfblock `status: PLANNED`, `size`, ggf. `depends-on`. Weicht der Plan von der
   Lösungsskizze ab, die Skizze kurz auf den beschlossenen Stand bringen. Hat sich der
   Zuschnitt geändert, den `title`
-  anpassen (höchstens 70 Zeichen; der Dateiname bleibt).
+  anpassen (Titelregel wie in `/coding-kit:add-feature`; der Dateiname bleibt).
 - **Empfohlene Reihenfolge** in `features/INDEX.md`: verschiebt sich etwas (neue
   Abhängigkeit, neue Folge-Nummer, Feature abgeraten), eine Änderung vorschlagen — in
   derselben Vorschau, Stand-Datum auf heute.
