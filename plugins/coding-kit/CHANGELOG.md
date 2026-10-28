@@ -13,10 +13,10 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 2.0.0 — unveröffentlicht
+## 2.0.0 — 2026-10-28
 
 Neues Dokumentmodell: eine Datei je Feature statt `PROGRESS.md`, Archiv und
-`REQUIREMENTS.md` (F-036, in Arbeit). Jedes Projekt muss migrieren, bevor es mit den
+`REQUIREMENTS.md` (F-036). Jedes Projekt muss migrieren, bevor es mit den
 Skills dieser Version weiterarbeitet.
 
 - **`scripts/features-index.sh`** (Template, POSIX-Shell und awk): `write` erzeugt die
