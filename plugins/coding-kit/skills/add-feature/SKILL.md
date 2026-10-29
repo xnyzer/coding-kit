@@ -21,8 +21,7 @@ entsteht. Claude muss dafür nicht den Nutzer bitten, den Skill aufzurufen.
 `CLAUDE.md` wird zuerst als Vorschau gezeigt und erst nach ausdrücklichem OK des Nutzers
 geschrieben (ausgenommen: genau der zuvor freigegebene Text; die Tabelle erzeugt danach
 das Skript). Lange Entwürfe (etwa ab 40 Zeilen) gehen als Datei nach `private/` und
-werden nach dem Übernehmen gelöscht. Im autonomen Lauf ohne erreichbaren Nutzer wird
-nichts angelegt — die Idee wird nur gesammelt und am Ende vorgeschlagen.
+werden nach dem Übernehmen gelöscht.
 
 Argument: Kurzbeschreibung der Aufgabe (z. B. „Rate-Limit-Middleware", „Export als CSV").
 

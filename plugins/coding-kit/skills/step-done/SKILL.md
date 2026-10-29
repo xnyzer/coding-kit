@@ -198,14 +198,8 @@ melden statt verbuchen.
   (`just features-index`, ohne das Rezept `sh scripts/features-index.sh write`), alles
   re-lesen, `just check` erneut, dann (falls freigegeben) committen. **Nie automatisch
   committen** und nie ohne OK verbuchen. Einen Entwurf aus `private/` danach löschen.
-- **Ausnahme — autonomer Lauf:** Hat der Nutzer für den laufenden Lauf ausdrücklich
-  Verbuchen und Commits freigegeben (beim Start von `/coding-kit:build-step … autonom`;
-  die Freigabe muss im Verlauf dokumentiert sein), verbuche die geplanten Substeps und
-  committe nach grünen Checks und Scans ohne erneute Nachfrage — **nie pushen, nie
-  ältere Historie ändern.** Neue Feature-Dateien (z. B. eine unterwegs entdeckte Idee)
-  fallen nicht darunter: sie werden nur gesammelt und am Ende des Laufs vorgeschlagen.
-  Läuft ein autonomer Lauf **ohne** solche Freigabe: Verbuchung und Commit-Message als
-  Vorschlag festhalten und weiterarbeiten, nicht auf eine Antwort warten.
+- **Nie pushen, nie ältere Historie ändern** (kein Amend, kein Rebase) — gepusht wird
+  nur auf ausdrückliche Bitte des Nutzers.
 - Im Body Designentscheidungen kurz begründen (`Decision: X over Y because …`); hat der
   Nutzer abgewogen: „User chose X over Y because …".
 

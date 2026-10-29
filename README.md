@@ -175,7 +175,7 @@ Die Spalte **GitHub** sagt, was ohne GitHub bleibt: `–` = rein lokal über git
 | `/coding-kit:new-project` | teils | **Der Orchestrator:** Short-Info → Abfragen (Name/Lizenz/Stack/…, Sub-Skills aufrufbar) → Plan → leeres Repo anlegen und aus dem mitgelieferten Template befüllen (Renderer, Antworten-Datei und Basis-Snapshot im Erst-Commit), verifizieren, Erst-Commit nach OK. Trockenlauf: Argument `dry-run`. |
 | `/coding-kit:add-feature` | – | Neue Aufgabe aufnehmen: erst das Problem, dann Beratung (stärkstes Gegenargument, Alternativen, eine von vier Empfehlungen — auch „nicht aufnehmen"), dann eine Datei `features/F-NNN-kurzname.md` mit Status `BACKLOG` und ein Vorschlag für die Reihenfolge; Umsetzungsideen nur als grobe Lösungsskizze. Startest du oder Claude selbst, angelegt wird nach deinem OK. |
 | `/coding-kit:prep-step` | – | Feature vor der Umsetzung spezifizieren und planen: Größe S/M/L aus Aufwand, Unsicherheit und Reichweite; Spezifikation in der Tiefe je Größe (Abnahmekriterien, Randfälle, Nicht-Ziele, Tests, Einbettung; ab M Interview, bei L Example Mapping), darf abraten; neue Frameworks, Sprachen und Toolchains per Erkennungs-Skript gegen Fragment-Katalog und Stack-Module prüfen; Substeps planen, Ready prüfen, Status `PLANNED`. |
-| `/coding-kit:build-step` | – | Aufgabe plan-treu aus ihrer Feature-Datei umsetzen: Substep für Substep mit Verifikation, Nicht-Ziele als Grenze, Abweichungen gesammelt für step-done. Interaktiv endet jeder Substep mit einer step-done-Empfehlung (du prüfst und schließt selbst ab); nur im autonomen `/goal`-Lauf läuft step-done je Substep automatisch. Mit `autonom` bereitet er stattdessen einen `/goal`-Lauf vor. |
+| `/coding-kit:build-step` | – | Aufgabe plan-treu aus ihrer Feature-Datei umsetzen: Substep für Substep mit Verifikation, Nicht-Ziele als Grenze, Abweichungen gesammelt für step-done. Jeder Substep endet mit einer step-done-Empfehlung (du prüfst und schließt selbst ab). |
 | `/coding-kit:step-done` | teils | Abschluss-Checkliste: Review, `just check`, Erkennungs-Backstop (in diesem Schritt neue Frameworks ohne Fragment, Sprachen ohne Modul, Tools ohne Vorlage), Backstop für geänderte managed Dateien ohne Registry-Zeile, Secrets-Scan, Privacy-Scan der lebenden Doku, Verbuchung in der Feature-Datei (Verlauf-Eintrag, Abnahmekriterien mit Beleg, Status `IN-PROGRESS` bzw. `DONE`, erzeugte Tabelle) und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben). |
 | `/coding-kit:audit-code` | – | Vollaudit (Code, Security, Deps, Deployment) → `AUDIT-RESULTS.md`, fixt nichts. |
 | `/coding-kit:teach-step` | – | Lehrer-Modus: Aufgabe aus ihrer Feature-Datei selbst umsetzen, der Skill leitet sokratisch an, prüft und testet — schreibt nie Code. |
@@ -209,10 +209,9 @@ GitHub also gegenstandslos; **`check-upstreams`** liest fremde GitHub-Repos (im 
 `gh api`) — ohne `gh` bleibt nur manuelles Nachsehen.
 
 Der übliche Zyklus: `add-feature` → `prep-step` → `build-step` → `step-done` (je Substep).
-Interaktiv rufst du `step-done` bewusst selbst auf, wenn du den Substep geprüft hast —
-build-step empfiehlt es nur; im autonomen `/goal`-Lauf läuft es automatisch durch. Jede
-Aufgabe ist eine Datei `features/F-NNN-kurzname.md`, die mitwächst (Erfassung,
-Spezifikation, Plan, Verlauf); `features/INDEX.md` zeigt die empfohlene Reihenfolge
+`step-done` rufst du bewusst selbst auf, wenn du den Substep geprüft hast — build-step
+empfiehlt es nur. Jede Aufgabe ist eine Datei `features/F-NNN-kurzname.md`, die mitwächst
+(Erfassung, Spezifikation, Plan, Verlauf); `features/INDEX.md` zeigt die empfohlene Reihenfolge
 (Nummern verlinkt) und erzeugte Tabellen aller Features — offene oben, erledigte darunter.
 Das Feld `status` im Kopfblock zeigt die Station: `BACKLOG` = nur aufgenommen (→
 prep-step), `PLANNED` = geplant (→ build-step), `IN-PROGRESS` = erster Substep verbucht,
@@ -224,8 +223,12 @@ leitet dich durch die eigene Umsetzung, oder du implementierst frei und schließ
 **Freigabe für Feature-Dateien:** Kein Skill schreibt ungefragt eine Feature-Datei,
 `features/INDEX.md` oder die Ziel-Abschnitte der Projekt-CLAUDE.md — du siehst den Text
 vorher und gibst ihn frei; lange Entwürfe liegen dafür in `private/`. `step-done`
-bündelt das mit der Commit-Frage; im autonomen `/goal`-Lauf gilt die Freigabe beim Start
-für die geplanten Substeps, neue Ideen werden gesammelt und am Ende vorgeschlagen.
+bündelt das mit der Commit-Frage. Gepusht wird nie von einem Skill, nur auf deine Bitte.
+
+Alle Skills sind **stack-agnostisch**: Sie rufen nur die just-Standardrezepte
+(`just check` / `test` / `lint`) auf und lesen Projektspezifika (Graphiti-group_id,
+Sprache der lebenden Doku, Sicherheits-Postur) aus der Projekt-CLAUDE.md — nichts ist
+hartkodiert.
 
 ### update-conventions: die Aufrufe
 
@@ -244,29 +247,6 @@ Abschnitt:
 
 `global <ordner>` nimmt einen anderen Ordner als `~/.claude` — gedacht für Tests, das
 echte `~/.claude` bleibt dabei unberührt.
-
-### Autonomer Lauf (build-step + /goal)
-
-Ganze Features samt Substeps unbeaufsichtigt bauen lassen — über den eingebauten
-Claude-Code-Befehl `/goal`, der die Session Turn für Turn weiterarbeiten lässt, bis
-eine Abschlussbedingung erfüllt ist:
-
-1. `/coding-kit:prep-step F-NNN` — Spezifikation und Plan mit Substeps stehen in der
-   Feature-Datei.
-2. `/coding-kit:build-step F-NNN autonom` — lädt Plan und Disziplin-Regeln, fragt
-   einmalig die Commit-Freigabe für den Lauf ab (je Substep ein Commit als
-   Checkpoint; Push bleibt immer tabu) und gibt die fertige `/goal`-Zeile aus.
-3. Die ausgegebene `/goal`-Zeile absenden — der Lauf startet sofort. `/goal` ohne
-   Argument zeigt den Status, `/goal clear` bricht ab.
-
-Für unbeaufsichtigte Läufe zusätzlich den Auto-Modus aktivieren (sonst stoppt der
-Lauf am ersten Permission-Prompt). Der Stop-Hook des Kits meldet sich während des
-Laufs weiter — die Arbeits-Turns schieben die Erinnerung planmäßig auf.
-
-Alle Skills sind **stack-agnostisch**: Sie rufen nur die just-Standardrezepte
-(`just check` / `test` / `lint`) auf und lesen Projektspezifika (Graphiti-group_id,
-Sprache der lebenden Doku, Sicherheits-Postur) aus der Projekt-CLAUDE.md — nichts ist
-hartkodiert.
 
 ### Stop-Hook
 

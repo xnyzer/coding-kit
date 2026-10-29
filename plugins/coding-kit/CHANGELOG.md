@@ -13,6 +13,25 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.0.0 — unveröffentlicht
+
+Der autonome `/goal`-Lauf entfällt (F-050): build-step baut nur noch Substep für Substep
+mit dir, und jeder Commit braucht deine Freigabe. Der Modus passte nicht zu einer
+Arbeitsweise, in der jedes Ergebnis geprüft wird, brauchte Sonderregeln in mehreren
+Skills und hing am Verhalten eines eingebauten Claude-Code-Befehls. Hauptversion, weil
+ein Argument wegfällt. Projekte müssen nichts tun.
+
+- **build-step:** Das Argument `autonom`, der Abschnitt zum autonomen Lauf und die
+  Unterscheidung der Modi entfallen; jeder Substep endet mit der Empfehlung für
+  step-done. Ein Argument, das der Skill nicht kennt (etwa `autonom` aus einem alten
+  Prompt), nennt er und fragt nach.
+- **step-done:** Die Ausnahme, unter der im autonomen Lauf ohne Nachfrage verbucht und
+  committet wurde, entfällt. Neu steht ausdrücklich da: nie pushen, nie ältere Historie
+  ändern — gepusht wird nur auf Bitte.
+- **add-feature:** Der Sonderfall „autonomer Lauf ohne erreichbaren Nutzer" im
+  Freigabe-Gate entfällt.
+- **README:** Die Anleitung „Autonomer Lauf" und die Hinweise darauf entfallen.
+
 ## 2.1.0 — 2026-10-28
 
 Der Feature-Index wird übersichtlicher, und Titel halten den Kopfblock als YAML lesbar

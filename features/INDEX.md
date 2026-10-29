@@ -73,7 +73,7 @@ bzw. ohne GitHub zuerst.
 | [F-034](F-034-senior-massstab-in-den-bau-skills.md) | Senior-Maßstab in den Bau-Skills | PLANNED |  |
 | [F-037](F-037-unabhaengiges-review-in-step-done.md) | Unabhängiges Review in step-done (Reviewer mit frischem Kontext) | BACKLOG |  |
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
-| [F-050](F-050-autonomen-goal-lauf-aus-build-step.md) | Autonomen /goal-Lauf aus build-step entfernen | PLANNED |  |
+| [F-050](F-050-autonomen-goal-lauf-aus-build-step.md) | Autonomen /goal-Lauf aus build-step entfernen | IN-PROGRESS |  |
 
 ### Closed
 

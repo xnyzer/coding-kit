@@ -2,7 +2,7 @@
 id: F-050
 title: Autonomen /goal-Lauf aus build-step entfernen
 type: change
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-10-29
 done:
@@ -44,18 +44,22 @@ Verbuchung und Commit und „Push nur auf Bitte".
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben build-step nach der Änderung, dann gibt es kein Argument „autonom",
+- [x] AC-1 — Gegeben build-step nach der Änderung, dann gibt es kein Argument „autonom",
   keinen Abschnitt zum autonomen Lauf und keine Unterscheidung der Modi mehr: Jeder
   Substep endet mit der Empfehlung für `/coding-kit:step-done`, der nächste folgt erst
   nach dem Abschluss durch den Nutzer. Negativ: `autonom` und `/goal` kommen im Skill
-  nicht mehr vor, auch nicht in Beschreibung und `argument-hint`.
-- [ ] AC-2 — Gegeben build-step bekommt neben der F-Nummer ein Argument, das er nicht
+  nicht mehr vor, auch nicht in Beschreibung und `argument-hint` — belegt:
+  `grep -rn -i "autonom\|/goal" plugins/coding-kit/skills README.md` ist leer; build-step
+  nach dem Edit neu gelesen.
+- [x] AC-2 — Gegeben build-step bekommt neben der F-Nummer ein Argument, das er nicht
   kennt (z. B. „autonom" aus einem alten Prompt), dann nennt er es und fragt nach, statt
-  zu raten. Negativ: Er baut nicht still los und ignoriert das Argument nicht.
-- [ ] AC-3 — Gegeben step-done, dann entfällt die Ausnahme für den autonomen Lauf: Jede
+  zu raten. Negativ: Er baut nicht still los und ignoriert das Argument nicht — belegt:
+  Textprüfung build-step, Einleitung (Regel für unbekannte Argumente).
+- [x] AC-3 — Gegeben step-done, dann entfällt die Ausnahme für den autonomen Lauf: Jede
   Verbuchung und jeder Commit braucht die eine Freigabe aus Schritt 5, und der Skill sagt
   ausdrücklich, dass er nie pusht — gepusht wird nur auf Bitte des Nutzers. Negativ: kein
-  Weg mehr, ohne Freigabe zu verbuchen oder zu committen.
+  Weg mehr, ohne Freigabe zu verbuchen oder zu committen — belegt: Textprüfung step-done,
+  Schritt 5.
 - [ ] AC-4 — Gegeben add-feature, `docs/skill-authoring.md` und die README, dann nennen
   sie keinen autonomen Lauf mehr: kein Sonderfall im Freigabe-Gate, keine Anleitung
   „Autonomer Lauf", der Zyklus und die Freigabe für Feature-Dateien sind nur interaktiv
@@ -163,3 +167,27 @@ Dependencies. Version 3.0.0; F-034 teilt sie, solange sie unveröffentlicht ist.
 - Globale Regeln, Abschnitt Git & Commits: die neue Commit- und Push-Regel (AC-5).
 - CHANGELOG-Eintrag vervollständigen; die Prüfungen aus Tests: Suche nach `autonom` und
   `/goal`, `render-global` in einen Scratchpad-Ordner, `just check` (AC-4, AC-5, AC-6).
+
+## Verlauf
+
+### F-050a — fertig 2026-10-30
+
+**Umgesetzt:** build-step kennt nur noch einen Ablauf — Substep bauen, prüfen,
+step-done empfehlen; Argument „autonom", der Abschnitt zum autonomen Lauf und die
+Modus-Erkennung sind entfallen, ein unbekanntes Argument nennt der Skill und fragt nach
+(Einleitung). step-done, Schritt 5, hat keine Commit-Ausnahme mehr und sagt
+ausdrücklich: nie pushen, nie ältere Historie ändern, gepusht wird nur auf Bitte.
+add-feature verliert den Sonderfall im Freigabe-Gate. Die README verliert die Anleitung
+„Autonomer Lauf" und die Hinweise in Zyklus, Freigabe-Absatz und Skill-Tabelle. Version
+3.0.0, CHANGELOG-Eintrag „unveröffentlicht".
+
+**Entscheidungen:** In build-step heißt die Klammer bei „Nie pushen" jetzt „kein Amend,
+kein Rebase" statt „über den Lauf hinaus" — ohne Lauf gibt es keine Ausnahme mehr.
+
+**Abweichung vom Plan:** Die README-Änderungen kamen aus F-050b vor, weil die
+`/add-skill`-Checkliste README-Zeile und -Prosa im selben Commit wie den Skill verlangt.
+Der Absatz „Alle Skills sind stack-agnostisch", der unter der gestrichenen Anleitung
+stand, sitzt jetzt bei den allgemeinen Skill-Absätzen. F-050b behält globale Regeln,
+Skill-Konvention, CHANGELOG und Tests.
+
+**Funde:** keine.
