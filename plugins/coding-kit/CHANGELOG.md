@@ -15,12 +15,16 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
 
 ## 3.0.0 — unveröffentlicht
 
-Der autonome `/goal`-Lauf entfällt (F-050): build-step baut nur noch Substep für Substep
-mit dir, und jeder Commit braucht deine Freigabe. Der Modus passte nicht zu einer
+Zwei Themen: Der autonome `/goal`-Lauf entfällt (F-050), und die Bau-Skills arbeiten
+nach einem Senior-Maßstab (F-034). Hauptversion, weil ein Argument von build-step
+wegfällt. Projekte holen die geänderte Vorlage per `/coding-kit:update-conventions`; auf
+jedem Rechner holt `/coding-kit:update-conventions global` die geänderten globalen
+Regeln.
+
+**Autonomer Lauf entfällt (F-050).** build-step baut nur noch Substep für Substep mit
+dir, und jeder Commit braucht deine Freigabe. Der Modus passte nicht zu einer
 Arbeitsweise, in der jedes Ergebnis geprüft wird, brauchte Sonderregeln in mehreren
-Skills und hing am Verhalten eines eingebauten Claude-Code-Befehls. Hauptversion, weil
-ein Argument wegfällt. Projekte müssen nichts tun; auf jedem Rechner holt
-`/coding-kit:update-conventions global` die geänderten globalen Regeln.
+Skills und hing am Verhalten eines eingebauten Claude-Code-Befehls.
 
 - **build-step:** Das Argument `autonom`, der Abschnitt zum autonomen Lauf und die
   Unterscheidung der Modi entfallen; jeder Substep endet mit der Empfehlung für
@@ -37,6 +41,28 @@ ein Argument wegfällt. Projekte müssen nichts tun; auf jedem Rechner holt
   diesem Satz und steht jetzt für sich.
 - **README** und Skill-Konvention: Die Anleitung „Autonomer Lauf" und die Hinweise darauf
   entfallen.
+
+**Senior-Maßstab (F-034).** Die Skills regeln den Ablauf, die `CODING-STANDARDS.md` des
+Projekts den Inhalt; fehlt sie, gelten die Abschnitte Mindset, Control flow und Secure
+coding der Vorlage aus dem Plugin.
+
+- **build-step:** Vor der Fertig-Meldung prüft ein Selbst-Review den Diff nach fünf
+  Fragen: verständlich, einfach, sicher, lesbar (nie minifiziert), kein Workaround.
+  Funde werden behoben, der Bericht nennt das Ergebnis. Vorhandene Fehler im berührten
+  Code behebt der Skill gleich mit, mit Test und Vermerk; bei großen Korrekturen, bei
+  geändertem Verhalten oder in einem anderen Projektteil fragt er vorher. Lässt der Plan
+  keine saubere Lösung zu, hält er an und nennt Grund und Wege, statt einen Workaround zu
+  bauen.
+- **README:** Die Zeile zu build-step nennt Selbst-Review, Fehler-Regel und
+  Workaround-Stopp.
+
+### Template
+
+- **`CODING-STANDARDS.md`**, § 6 Control flow: neue Regel „Human-readable source, never
+  minified" — nichts wird komprimiert oder auf eine Zeile gepresst, auch nicht JSON, CSS
+  oder Konfiguration; Minifiziertes entsteht nur als Ausgabe des Build-Werkzeugs.
+- **`HOW-TO-CODE-WITH-CLAUDE.md`:** Die Zeile zu `/build-step` nennt Selbst-Review,
+  Fehler-Regel und Workaround-Stopp.
 
 ## 2.1.0 — 2026-10-28
 

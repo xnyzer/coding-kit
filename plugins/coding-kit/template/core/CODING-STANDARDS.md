@@ -77,6 +77,10 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 - **Readable over clever.** No dense one-liners, long chains (nested comprehensions, stream
   pipelines) or nested loops that must be decoded before they can be changed — name the
   intermediate steps or extract a helper function.
+- **Human-readable source, never minified.** Nothing is compressed or squeezed onto one
+  line — JSON, CSS and configuration included — so a reviewer can check every change in
+  the diff. Minified output comes only from the build tool and is never written or edited
+  by hand.
 - **Exhaustive handling** of enums/variants — no silent fall-through.
 
 ---

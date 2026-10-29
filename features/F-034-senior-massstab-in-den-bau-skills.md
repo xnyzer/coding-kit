@@ -2,7 +2,7 @@
 id: F-034
 title: Senior-Maßstab in den Bau-Skills
 type: feature
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-10-20
 done:
@@ -81,11 +81,14 @@ abstimmen.
   (`${CLAUDE_PLUGIN_ROOT}/template/core/CODING-STANDARDS.md`) und sagen einmal, dass
   dieser Ersatz gilt. Negativ: Mit vorhandener `CODING-STANDARDS.md` wird die Vorlage
   nicht zusätzlich herangezogen.
-- [ ] AC-5 — Gegeben die CODING-STANDARDS-Vorlage, dann steht in § 6 bei „Readable over
+- [x] AC-5 — Gegeben die CODING-STANDARDS-Vorlage, dann steht in § 6 bei „Readable over
   clever" die Regel: Quelltext bleibt menschenlesbar — nie minifiziert, komprimiert oder
   auf eine Zeile gepresst, auch nicht JSON, CSS oder Konfiguration; Minifiziertes
   entsteht nur als Ausgabe des Build-Werkzeugs und wird nie von Hand geschrieben oder
-  bearbeitet. Der CHANGELOG-Eintrag hat einen Abschnitt `### Template`.
+  bearbeitet. Der CHANGELOG-Eintrag hat einen Abschnitt `### Template` — belegt: Regel in
+  § 6 der Vorlage (`CODING-STANDARDS.md`, „Human-readable source, never minified");
+  CHANGELOG 3.0.0 mit `### Template`; `version-rule.py --since origin/main` OK;
+  `just check` grün.
 - [ ] AC-6 — Gegeben step-done reviewt einen Schritt, dann prüft es ausdrücklich dieselben
   fünf Prüffragen gegen denselben Maßstab und behebt vorhandene Fehler nach der Regel aus
   AC-3; teach-step kontrolliert die Änderung des Nutzers nach denselben Fragen und zeigt
@@ -216,3 +219,27 @@ Hauptversion von F-050; ist die schon veröffentlicht, die nächste Minor-Versio
   ohne `CODING-STANDARDS.md` (Aufbau wie unter Tests); Kosten vorher schätzen, danach
   nennen; Funde zeigen, der Nutzer entscheidet.
 - Belegt AC-1 bis AC-4 im echten Lauf; Feinschliff an den Skill-Texten aus den Funden.
+
+## Verlauf
+
+### F-034a — fertig 2026-10-30
+
+**Umgesetzt:** Die CODING-STANDARDS-Vorlage hat in § 6 die Regel „Human-readable
+source, never minified". build-step lädt den Maßstab (Abschnitt 1): die
+`CODING-STANDARDS.md` des Projekts, ohne sie die Abschnitte Mindset, Control flow und
+Secure coding der Vorlage aus dem Plugin, mit einmaligem Hinweis. Zwei neue Leitplanken:
+vorhandene Fehler im berührten Code mitbeheben (Test, Vermerk; vorher fragen bei großen
+Korrekturen, geändertem Verhalten oder anderem Projektteil; vendorten oder erzeugten
+Code nur melden) und „Kein Workaround" (anhalten, Grund und Wege nennen). Neuer Schritt
+2.4 Selbst-Review mit den fünf Prüffragen verständlich, einfach, sicher, lesbar, kein
+Workaround; Funde beheben, Ergebnis in einer Zeile. README- und HOW-TO-Zeile zu
+build-step nachgezogen, CHANGELOG 3.0.0 mit F-034-Teil und `### Template`.
+
+**Entscheidungen:** keine neuen.
+
+**Abweichung vom Plan:** Die Einleitung des CHANGELOG-Eintrags 3.0.0 gliedert jetzt
+zwei Themen (F-050, F-034); der Satz „Projekte müssen nichts tun" stimmte nicht mehr,
+weil sich die Vorlage ändert. AC-1 bis AC-4 sind geschrieben, belegt werden sie wie
+geplant erst im Testlauf (F-034c).
+
+**Funde:** keine.
