@@ -42,17 +42,18 @@ with its reasons.
 
 ## Recommended order
 
-Stand 2026-10-28.
+Stand 2026-10-29.
 
-1. **[F-034](F-034-senior-massstab-in-den-bau-skills.md) + [F-037](F-037-unabhaengiges-review-in-step-done.md)** — Qualitätsstrang auf dem neuen prep-step/step-done.
-2. **[F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md) → [F-033](F-033-betrieb-ohne-graphiti-absichern.md) → [F-030](F-030-graphiti-episodenverlust-erkennen-und.md)** — Graphiti-Strang ([F-030](F-030-graphiti-episodenverlust-erkennen-und.md) ohne den `install.sh`-Teil).
-3. **[F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) → [F-024](F-024-commit-adresse-aus-der-personal-config.md) → [F-025](F-025-install-sh-fehlender-gh-login-und.md)** — Host-Strang; [F-025](F-025-install-sh-fehlender-gh-login-und.md) nimmt den `install.sh`-Teil von [F-030](F-030-graphiti-episodenverlust-erkennen-und.md)
+1. **[F-050](F-050-autonomen-goal-lauf-aus-build-step.md)** — streicht den autonomen Lauf, bevor [F-034](F-034-senior-massstab-in-den-bau-skills.md) die Bau-Skills umbaut.
+2. **[F-034](F-034-senior-massstab-in-den-bau-skills.md) + [F-037](F-037-unabhaengiges-review-in-step-done.md)** — Qualitätsstrang auf dem neuen prep-step/step-done.
+3. **[F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md) → [F-033](F-033-betrieb-ohne-graphiti-absichern.md) → [F-030](F-030-graphiti-episodenverlust-erkennen-und.md)** — Graphiti-Strang ([F-030](F-030-graphiti-episodenverlust-erkennen-und.md) ohne den `install.sh`-Teil).
+4. **[F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) → [F-024](F-024-commit-adresse-aus-der-personal-config.md) → [F-025](F-025-install-sh-fehlender-gh-login-und.md)** — Host-Strang; [F-025](F-025-install-sh-fehlender-gh-login-und.md) nimmt den `install.sh`-Teil von [F-030](F-030-graphiti-episodenverlust-erkennen-und.md)
    mit.
-4. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
-5. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+5. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
+6. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
-Strang 2 und 3 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 3 und 4 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ## All features
@@ -69,9 +70,10 @@ bzw. ohne GitHub zuerst.
 | [F-030](F-030-graphiti-episodenverlust-erkennen-und.md) | Graphiti-Episodenverlust erkennen und wiederherstellbar halten | BACKLOG |  |
 | [F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) | Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git) | BACKLOG |  |
 | [F-033](F-033-betrieb-ohne-graphiti-absichern.md) | Betrieb ohne Graphiti absichern | BACKLOG |  |
-| [F-034](F-034-senior-massstab-in-den-bau-skills.md) | Senior-Maßstab in den Bau-Skills | BACKLOG |  |
+| [F-034](F-034-senior-massstab-in-den-bau-skills.md) | Senior-Maßstab in den Bau-Skills | PLANNED |  |
 | [F-037](F-037-unabhaengiges-review-in-step-done.md) | Unabhängiges Review in step-done (Reviewer mit frischem Kontext) | BACKLOG |  |
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
+| [F-050](F-050-autonomen-goal-lauf-aus-build-step.md) | Autonomen /goal-Lauf aus build-step entfernen | PLANNED |  |
 
 ### Closed
 
@@ -118,4 +120,4 @@ bzw. ohne GitHub zuerst.
 | [F-035](F-035-repo-uebergreifende-uebergabe-statt.md) | Repo-übergreifende Übergabe statt Parallelarbeit | SUPERSEDED → F-039 |  |
 <!-- /features-index -->
 
-next-feature: F-050
+next-feature: F-051

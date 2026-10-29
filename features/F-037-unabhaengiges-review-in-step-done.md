@@ -6,7 +6,7 @@ status: BACKLOG
 size:
 created: 2026-10-23
 done:
-depends-on:
+depends-on: F-034
 superseded-by:
 ---
 
@@ -42,5 +42,7 @@ dazu Security und Lesbarkeit.
 **Abhängigkeiten:** F-036 (Feature-Spec als Prüfgrundlage; ohne sie nur Prüfung gegen
 den PROGRESS-Eintrag). Zusammen mit F-034 umsetzen — dessen Review-Kriterien
 (verständlich, einfach, Secure Coding) sind der Prüfmaßstab des Reviewers.
+Vorhandene Fehler, die der Reviewer findet, meldet er; der Haupt-Agent behebt sie nach
+der Regel aus F-034 (AC-3).
 Template-Seite: HOW-TO-Abschnitt „What `/step-done` does in detail" um den Review-Schritt
 ergänzen — im selben Commit.
