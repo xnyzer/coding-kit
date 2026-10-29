@@ -19,7 +19,8 @@ Der autonome `/goal`-Lauf entfällt (F-050): build-step baut nur noch Substep f�
 mit dir, und jeder Commit braucht deine Freigabe. Der Modus passte nicht zu einer
 Arbeitsweise, in der jedes Ergebnis geprüft wird, brauchte Sonderregeln in mehreren
 Skills und hing am Verhalten eines eingebauten Claude-Code-Befehls. Hauptversion, weil
-ein Argument wegfällt. Projekte müssen nichts tun.
+ein Argument wegfällt. Projekte müssen nichts tun; auf jedem Rechner holt
+`/coding-kit:update-conventions global` die geänderten globalen Regeln.
 
 - **build-step:** Das Argument `autonom`, der Abschnitt zum autonomen Lauf und die
   Unterscheidung der Modi entfallen; jeder Substep endet mit der Empfehlung für
@@ -30,7 +31,12 @@ ein Argument wegfällt. Projekte müssen nichts tun.
   ändern — gepusht wird nur auf Bitte.
 - **add-feature:** Der Sonderfall „autonomer Lauf ohne erreichbaren Nutzer" im
   Freigabe-Gate entfällt.
-- **README:** Die Anleitung „Autonomer Lauf" und die Hinweise darauf entfallen.
+- **Globale Regeln**, Abschnitt Git & Commits: Die erste Regel lautet jetzt „Nie
+  automatisch committen — erst fragen. Gepusht wird nur auf ausdrückliche Bitte." Die
+  Lauf-Freigabe, die als Fragen zählte, entfällt; die Push-Regel stand bisher nur in
+  diesem Satz und steht jetzt für sich.
+- **README** und Skill-Konvention: Die Anleitung „Autonomer Lauf" und die Hinweise darauf
+  entfallen.
 
 ## 2.1.0 — 2026-10-28
 

@@ -134,9 +134,7 @@ Meldung, auch einen Tippfehler. Der Validator lässt deshalb nur diese zu (`SKIL
 
   Der Satz steht im Skill selbst, nicht nur hier: diese Doku liegt nicht im Plugin-Cache,
   Skills können sie zur Laufzeit nicht lesen. Fragen bündeln, wo es geht (step-done: eine
-  Frage für Verbuchung und Commit). Im autonomen `/goal`-Lauf deckt die beim Start
-  erteilte Lauf-Freigabe nur die Verbuchung der geplanten Substeps; neue Einträge werden
-  gesammelt und am Ende vorgeschlagen.
+  Frage für Verbuchung und Commit).
 - **Nie automatisch committen** — Commits werden vorbereitet und vorgeschlagen, der
   Nutzer entscheidet.
 

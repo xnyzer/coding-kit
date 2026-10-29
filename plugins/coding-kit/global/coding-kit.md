@@ -84,9 +84,8 @@ dem Niveau.
 <!-- section:global-git -->
 ## Git & Commits (projektübergreifend)
 
-- **Nie automatisch committen — erst fragen.** Eine ausdrückliche, laufbezogene
-  Freigabe (z. B. für einen autonomen /goal-Lauf) zählt als Fragen; Push bleibt auch
-  dann tabu. Vor Commits müssen die Projekt-Checks grün sein (`just check`, falls
+- **Nie automatisch committen — erst fragen. Gepusht wird nur auf ausdrückliche
+  Bitte.** Vor Commits müssen die Projekt-Checks grün sein (`just check`, falls
   vorhanden).
 - Conventional Commits, englisch, Imperativ; Body endet mit
   `Co-Authored-By: Claude <noreply@anthropic.com>`.

@@ -2,10 +2,10 @@
 id: F-050
 title: Autonomen /goal-Lauf aus build-step entfernen
 type: change
-status: IN-PROGRESS
+status: DONE
 size: M
 created: 2026-10-29
-done:
+done: 2026-10-30
 depends-on:
 superseded-by:
 ---
@@ -60,19 +60,25 @@ Verbuchung und Commit und „Push nur auf Bitte".
   ausdrücklich, dass er nie pusht — gepusht wird nur auf Bitte des Nutzers. Negativ: kein
   Weg mehr, ohne Freigabe zu verbuchen oder zu committen — belegt: Textprüfung step-done,
   Schritt 5.
-- [ ] AC-4 — Gegeben add-feature, `docs/skill-authoring.md` und die README, dann nennen
+- [x] AC-4 — Gegeben add-feature, `docs/skill-authoring.md` und die README, dann nennen
   sie keinen autonomen Lauf mehr: kein Sonderfall im Freigabe-Gate, keine Anleitung
   „Autonomer Lauf", der Zyklus und die Freigabe für Feature-Dateien sind nur interaktiv
   beschrieben. Negativ: `grep` nach `autonom` und `/goal` in Skills, globalen Regeln,
-  README und Skill-Konvention findet nichts.
-- [ ] AC-5 — Gegeben die globalen Regeln, Abschnitt Git & Commits, dann lautet die erste
+  README und Skill-Konvention findet nichts — belegt: `grep -rn -i "autonom\|/goal"` über
+  `plugins/coding-kit/skills`, `plugins/coding-kit/global`, `README.md` und
+  `docs/skill-authoring.md` ist leer.
+- [x] AC-5 — Gegeben die globalen Regeln, Abschnitt Git & Commits, dann lautet die erste
   Regel „Nie automatisch committen — erst fragen. Gepusht wird nur auf ausdrückliche
   Bitte." ohne Lauf-Freigabe; der Rest des Punkts (Checks vor Commits) bleibt. Negativ:
-  keine Ausnahme, unter der ohne Nachfrage committet wird.
-- [ ] AC-6 — Gegeben das Release, dann steht die Version auf 3.0.0, und der
+  keine Ausnahme, unter der ohne Nachfrage committet wird — belegt:
+  `template-sync.sh render-global` mit leerer Personal-Config in einen Scratchpad-Ordner;
+  der Abschnitt Git & Commits hat den neuen Text, die gerenderte Datei nennt weder
+  „autonom" noch „/goal".
+- [x] AC-6 — Gegeben das Release, dann steht die Version auf 3.0.0, und der
   CHANGELOG-Eintrag nennt die Streichung, ihren Grund und die einzige Folge-Handlung
   (`/coding-kit:update-conventions global` auf jedem Rechner); er hat keinen Abschnitt
-  `### Template`. `just check` ist grün.
+  `### Template`. `just check` ist grün — belegt: `plugin.json` 3.0.0, CHANGELOG-Eintrag
+  ohne `### Template`, `version-rule.py --since origin/main` OK, `just check` grün.
 
 ### Randfälle
 
@@ -189,5 +195,19 @@ kein Rebase" statt „über den Lauf hinaus" — ohne Lauf gibt es keine Ausnahm
 Der Absatz „Alle Skills sind stack-agnostisch", der unter der gestrichenen Anleitung
 stand, sitzt jetzt bei den allgemeinen Skill-Absätzen. F-050b behält globale Regeln,
 Skill-Konvention, CHANGELOG und Tests.
+
+**Funde:** keine.
+
+### F-050b — fertig 2026-10-30
+
+**Umgesetzt:** Die globalen Regeln sagen im Abschnitt Git & Commits jetzt „Nie
+automatisch committen — erst fragen. Gepusht wird nur auf ausdrückliche Bitte." — die
+Lauf-Freigabe ist weg, die Push-Regel steht für sich. In `docs/skill-authoring.md`
+entfällt der Satz zum autonomen Lauf im Freigabe-Gate. Der CHANGELOG-Eintrag 3.0.0 nennt
+die globalen Regeln und die Folge-Handlung `/coding-kit:update-conventions global`.
+
+**Entscheidungen:** keine neuen.
+
+**Abweichung vom Plan:** keine — die README war schon mit F-050a erledigt.
 
 **Funde:** keine.
