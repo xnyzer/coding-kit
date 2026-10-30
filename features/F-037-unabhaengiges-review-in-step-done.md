@@ -2,10 +2,10 @@
 id: F-037
 title: Unabhängiges Review in step-done (Reviewer mit frischem Kontext)
 type: feature
-status: IN-PROGRESS
+status: DONE
 size: M
 created: 2026-10-23
-done:
+done: 2026-10-30
 depends-on: F-034
 superseded-by:
 ---
@@ -45,28 +45,39 @@ ergänzen — im selben Commit.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben ein Abschluss mit grünen Checks, wenn step-done läuft, dann startet
+- [x] AC-1 — Gegeben ein Abschluss mit grünen Checks, wenn step-done läuft, dann startet
   es genau einen Reviewer `coding-kit:reviewer` mit frischem Kontext — vor Secrets-Scan,
   Verbuchung und Commit, bei jeder Größe. Der Auftrag enthält nur F-Nummer, Substep, den
   Diff des Schritts und die Liste neuer Dateien; keine Zusammenfassung vom Bauen.
-  Negativ: Sind die Checks rot, startet kein Reviewer — erst wird repariert.
+  Negativ: Sind die Checks rot, startet kein Reviewer — erst wird repariert. — belegt:
+  Headless-Lauf A (`claude -p "/coding-kit:step-done" --plugin-dir …`, Testprojekt): genau
+  ein Agent-Aufruf `coding-kit:reviewer`, nach eigenem Review und grünen Checks, vor
+  Secrets-Scan und Vorschau; Auftrag mit F-Nummer, Diff, neuen Dateien und Maßstab-Pfad,
+  ohne Bau-Zusammenfassung.
 - [x] AC-2 — Gegeben die Agent-Datei des Reviewers, wenn man ihre Werkzeuge liest, dann
   sind es nur `Read`, `Grep`, `Glob`. Negativ: ein Schreib- oder Shell-Werkzeug (`Write`,
   `Edit`, `NotebookEdit`, `Bash`) oder eine fehlende `tools`-Zeile meldet der Validator
   als Fehler. — belegt: `just check` (Validator OK); Gegenprobe an einer Repo-Kopie meldet
   `Bash` in `tools`, `Write` in einer YAML-Liste, fehlende `tools`-Zeile, falschen Namen
   und `permissionMode` als Fehler.
-- [ ] AC-3 — Gegeben ein Diff, wenn der Reviewer prüft, dann liest er selbst die
+- [x] AC-3 — Gegeben ein Diff, wenn der Reviewer prüft, dann liest er selbst die
   Feature-Datei und den Maßstab (`CODING-STANDARDS.md`, ohne sie die drei Abschnitte der
   Vorlage) und meldet Befunde zu: Abnahmekriterien des Substeps erfüllt, Randfälle
   behandelt, Nicht-Ziele unberührt, die fünf Prüffragen, vorhandene Fehler im berührten
   Code. Jeder Befund nennt Datei bzw. Stelle, Art und Grund. Negativ: Ohne Befund
-  antwortet er ausdrücklich „keine Befunde", nicht mit Lob oder Zusammenfassung.
-- [ ] AC-4 — Gegeben die Befunde, wenn der Haupt-Agent sie bewertet, dann behebt er
+  antwortet er ausdrücklich „keine Befunde", nicht mit Lob oder Zusammenfassung. —
+  belegt: Lauf A — Reviewer liest Feature-Datei, Diff und Maßstab selbst, antwortet genau
+  „keine Befunde"; Lauf B (Reviewer allein, Diff mit eingebautem `load_host`) — „Befunde
+  (2)" mit Stelle, Art und Grund: Nicht-Ziel „Keine weiteren Einstellungen" und
+  ungeprüfte Eingabe (`sicher`).
+- [x] AC-4 — Gegeben die Befunde, wenn der Haupt-Agent sie bewertet, dann behebt er
   jeden oder verwirft ihn mit Begründung; vorhandene Fehler nach der Regel aus F-034.
   Die ganze Liste (Befund, Entscheidung, Grund) steht in der Vorschau von Schritt 5;
   behobene laufen durch die Checks. Negativ: Meldet der Reviewer ein Abnahmekriterium
-  als nicht erfüllt und wird es nicht behoben, wird es nicht abgehakt.
+  als nicht erfüllt und wird es nicht behoben, wird es nicht abgehakt. — belegt: Lauf A —
+  das Review-Ergebnis steht in der Vorschau vor der Commit-Frage; das Beheben oder
+  Verwerfen einzelner Befunde kam in keinem Lauf vor und ist durch den Skill-Text
+  abgedeckt.
 - [x] AC-5 — Gegeben ein Projekt aus dem Template, wenn es per `/update-conventions`
   die HOW-TO holt, dann beschreibt „What `/step-done` does in detail" den Review-Schritt;
   README und Authoring-Doku (Zeile `context`, `agent`, `background` und Abschnitt zu
@@ -233,3 +244,23 @@ zitiert. Richtwert 1500 Zeilen für den Wechsel vom Diff zur Dateiliste.
 
 **Funde:** Dieser Abschluss lief mit dem installierten Plugin, also ohne unabhängiges
 Review — der erste echte Lauf ist F-037c.
+
+### F-037c — fertig 2026-10-30
+
+**Umgesetzt:** Zwei Headless-Läufe im Testprojekt `portcfg` mit dem Arbeitsstand des
+Plugins (`--plugin-dir`), nur lesende git-Befehle erlaubt. Lauf A: ganzes step-done auf
+F-001 mit eingebautem `load_host` (Verstoß gegen das Nicht-Ziel) — 1,09 US-Dollar.
+Lauf B: nur der Reviewer mit demselben Auftrag und `load_host` im Diff, der Diff im
+Auftragstext — 0,46 US-Dollar.
+
+**Entscheidungen:** Lauf B prüft den Reviewer allein, statt einen weiteren step-done-Lauf
+mit unauffälligerem Fehler zu versuchen — der Ausgang wäre unsicher und teurer gewesen
+(Entscheidung des Nutzers).
+
+**Abweichung vom Plan:** In Lauf A fand schon das eigene Review des Haupt-Agenten den
+eingebauten Verstoß und entfernte ihn; der Reviewer sah ihn nicht mehr. Deshalb kam
+Lauf B dazu. Den Diff übergab step-done in Lauf A als Datei statt im Auftragstext; beides
+funktioniert, der Skill-Text bleibt.
+
+**Funde:** Der Reviewer meldete in Lauf B ungefragt einen zweiten, zutreffenden Befund
+(ungeprüfte Eingabe in `load_host`).
