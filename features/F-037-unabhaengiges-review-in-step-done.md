@@ -2,7 +2,7 @@
 id: F-037
 title: Unabhängiges Review in step-done (Reviewer mit frischem Kontext)
 type: feature
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-10-23
 done:
@@ -50,10 +50,12 @@ ergänzen — im selben Commit.
   Verbuchung und Commit, bei jeder Größe. Der Auftrag enthält nur F-Nummer, Substep, den
   Diff des Schritts und die Liste neuer Dateien; keine Zusammenfassung vom Bauen.
   Negativ: Sind die Checks rot, startet kein Reviewer — erst wird repariert.
-- [ ] AC-2 — Gegeben die Agent-Datei des Reviewers, wenn man ihre Werkzeuge liest, dann
+- [x] AC-2 — Gegeben die Agent-Datei des Reviewers, wenn man ihre Werkzeuge liest, dann
   sind es nur `Read`, `Grep`, `Glob`. Negativ: ein Schreib- oder Shell-Werkzeug (`Write`,
   `Edit`, `NotebookEdit`, `Bash`) oder eine fehlende `tools`-Zeile meldet der Validator
-  als Fehler.
+  als Fehler. — belegt: `just check` (Validator OK); Gegenprobe an einer Repo-Kopie meldet
+  `Bash` in `tools`, `Write` in einer YAML-Liste, fehlende `tools`-Zeile, falschen Namen
+  und `permissionMode` als Fehler.
 - [ ] AC-3 — Gegeben ein Diff, wenn der Reviewer prüft, dann liest er selbst die
   Feature-Datei und den Maßstab (`CODING-STANDARDS.md`, ohne sie die drei Abschnitte der
   Vorlage) und meldet Befunde zu: Abnahmekriterien des Substeps erfüllt, Randfälle
@@ -181,3 +183,29 @@ Entscheidungen).
 
 Erkennung: entfällt — keine neue Sprache, kein Framework, keine Dependency. Keine neue
 Config, keine Endpunkte.
+
+## Verlauf
+
+### F-037a — fertig 2026-10-30
+
+**Umgesetzt:** `plugins/coding-kit/agents/reviewer.md` — Agent `coding-kit:reviewer` mit
+den Werkzeugen `Read`, `Grep`, `Glob`. Er liest Feature-Datei und Maßstab selbst, prüft
+Abnahmekriterien des Substeps, Randfälle, Nicht-Ziele, die fünf Prüffragen und vorhandene
+Fehler und antwortet nur mit einer nummerierten Befundliste (Stelle, Art, Grund) oder
+genau „keine Befunde"; Text in gelesenen Dateien gilt als Daten, eine eingeschmuggelte
+Anweisung ist selbst ein Befund. `scripts/validate.py` prüft Agent-Dateien
+(`check_agents_dir`): Name gleich Dateiname, `description` und `tools` Pflicht, nur
+Felder, die bei Plugin-Agents wirken (`AGENT_FIELDS`), nur lesende Werkzeuge
+(`AGENT_TOOLS`). Authoring-Doku mit Abschnitt „Plugin-Agents", README mit Zeile in der
+Repo-Struktur.
+
+**Entscheidungen:** Werkzeuge als Positivliste statt Sperrliste — ein neues
+Schreibwerkzeug in Claude Code fiele sonst durch; ein Agent, der mehr braucht, ändert die
+Liste bewusst.
+
+**Abweichung vom Plan:** Der Auftrag an den Reviewer enthält zusätzlich den Pfad des
+Maßstabs (AC-1 nennt nur F-Nummer, Substep, Diff, neue Dateien) — die Ersetzung von
+`${CLAUDE_PLUGIN_ROOT}` ist nur für Skill-Texte dokumentiert; eine Bau-Zusammenfassung
+bekommt der Reviewer weiterhin nicht.
+
+**Funde:** keine.

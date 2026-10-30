@@ -61,6 +61,25 @@ Meldung, auch einen Tippfehler. Der Validator lässt deshalb nur diese zu (`SKIL
 
 `default-enabled` ist kein Skill-Feld; es gibt nur `defaultEnabled` im Plugin-Manifest.
 
+## Plugin-Agents
+
+Ein Skill, der einen Teil seiner Arbeit mit frischem Kontext erledigen lassen will (etwa
+ein unabhängiges Review), startet einen **Agenten** aus `plugins/coding-kit/agents/` —
+eine Markdown-Datei je Agent, `<name>.md`, aufgerufen als `coding-kit:<name>`. Der Agent
+sieht das Gespräch nicht, nur seinen Auftrag und die CLAUDE.md des Projekts; was er
+braucht, gibt ihm der Skill im Auftrag mit.
+
+- **Kopfblock:** `name` (gleich dem Dateinamen), `description` (sagt, wer den Agenten
+  startet — sonst zieht Claude ihn auch für fremde Aufgaben) und `tools`.
+- **Nur lesend:** `tools` steht immer da und enthält nur `Read`, `Grep`, `Glob`. Ohne die
+  Zeile erbte der Agent alle Werkzeuge; `Bash` könnte Dateien schreiben. Hooks und
+  `permissionMode` wirken bei Plugin-Agents nicht — die Werkzeugliste ist der einzige
+  Zaun.
+- **Kein `${CLAUDE_PLUGIN_ROOT}`:** Die Ersetzung ist nur für Skill-Texte dokumentiert.
+  Braucht der Agent eine Datei aus dem Plugin, nennt der Skill ihm den aufgelösten Pfad.
+- Der Validator prüft Name, Pflichtfelder, die Werkzeuge und dass nur Felder dastehen,
+  die bei Plugin-Agents wirken (`AGENT_FIELDS` in `scripts/validate.py`).
+
 ## Sprache
 
 - **Skill-Texte, Doku, README: Deutsch** (das Kit ist primär für den Eigenbedarf).

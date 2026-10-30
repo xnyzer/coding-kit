@@ -389,6 +389,7 @@ plugins/coding-kit/               Das Plugin
   .claude-plugin/plugin.json      Name, Version (gilt für Skills und Template), Beschreibung
   CHANGELOG.md                    Ein CHANGELOG ab 1.0.0, darunter die eingefrorenen Reihen
   skills/<name>/SKILL.md          Die Skills (ein Ordner je Skill)
+  agents/<name>.md                Prüf-Agenten mit frischem Kontext, nur lesend (Reviewer für step-done)
   hooks/hooks.json + *.sh         Projekterkennender Stop-Hook und Session-Hinweis
   global/coding-kit.md            Globale Kit-Regeln (→ ~/.claude/rules/coding-kit.md, deutsch)
   scripts/template-sync.sh        Rendern, Drei-Wege-Merge, Snapshot und Erkennung (von Skills aufgerufen)

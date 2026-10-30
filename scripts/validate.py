@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Repo validation: file syntax, plugin/marketplace/skill contracts, privacy lint, the
+"""Repo validation: file syntax, plugin/marketplace/skill/agent contracts, privacy lint, the
 bundled template (placeholder registry, paired fragment/section markers, the
 standards-fragment catalog, detection signals, and the contract between skills and
 MANIFEST), the kit's global rules, and the repo setting that keeps the template's
@@ -156,6 +156,19 @@ SKILL_FLAGS = ("disable-model-invocation", "user-invocable")
 # Claude Code truncates description plus when_to_use in the skill listing above this.
 SKILL_LISTING_CAP = 1536
 REPO_SKILLS_DIR = REPO_ROOT / ".claude" / "skills"
+
+# Plugin agents (docs/skill-authoring.md § Plugin-Agents). The fields Claude Code honours
+# for an agent shipped in a plugin (code.claude.com/docs/en/sub-agents.md); it ignores
+# permissionMode, hooks, mcpServers and initialPrompt there, so those are rejected rather
+# than relied on.
+AGENTS_DIR = PLUGIN_ROOT / "agents"
+AGENT_FIELDS = {
+    "name", "description", "tools", "disallowedTools", "model", "effort", "maxTurns",
+    "skills", "memory", "background", "isolation", "color", "omitClaudeMd",
+}
+# The kit's agents only read. A plugin agent cannot be fenced in by a hook, so the tool
+# list is the only fence; anything beyond these needs a deliberate change here.
+AGENT_TOOLS = {"Read", "Grep", "Glob"}
 
 
 def iter_files() -> list[Path]:
@@ -929,6 +942,46 @@ def check_skills_dir(skills_dir: Path, findings: list[str]) -> None:
             )
 
 
+def agent_tools(value: object) -> list[str]:
+    """The tool names of an agent's `tools` field — a comma list or a YAML list."""
+    if isinstance(value, str):
+        return [tool.strip() for tool in value.split(",") if tool.strip()]
+    if isinstance(value, list):
+        return [str(tool).strip() for tool in value]
+    return []
+
+
+def check_agents_dir(findings: list[str]) -> None:
+    """Every plugin agent: name equal to the file name, a description, only fields that
+    take effect in a plugin, and an explicit tool list with read-only tools."""
+    if not AGENTS_DIR.is_dir():
+        return
+    for agent_md in sorted(AGENTS_DIR.glob("*.md")):
+        rel = display_path(agent_md)
+        fm = parse_frontmatter(agent_md, findings)
+        if fm is None:
+            continue
+        for field in ("name", "description", "tools"):
+            if fm.get(field) in (None, "", []):
+                findings.append(f"{rel}: frontmatter missing '{field}'")
+        if fm.get("name") and fm["name"] != agent_md.stem:
+            findings.append(
+                f"{rel}: frontmatter name '{fm['name']}' != file name '{agent_md.stem}'"
+            )
+        for field in fm:
+            if field not in AGENT_FIELDS:
+                findings.append(
+                    f"{rel}: frontmatter field '{field}' has no effect in a plugin agent "
+                    "(unknown, or ignored for plugin agents)"
+                )
+        extra = [tool for tool in agent_tools(fm.get("tools")) if tool not in AGENT_TOOLS]
+        if extra:
+            findings.append(
+                f"{rel}: tools {', '.join(extra)} not allowed — the kit's agents only read "
+                f"({', '.join(sorted(AGENT_TOOLS))})"
+            )
+
+
 def check_plugin_contracts(findings: list[str]) -> None:
     # marketplace.json: name/owner/plugins present, every relative source exists
     marketplace_path = REPO_ROOT / ".claude-plugin" / "marketplace.json"
@@ -968,6 +1021,9 @@ def check_plugin_contracts(findings: list[str]) -> None:
     for skills_dir in (PLUGIN_ROOT / "skills", REPO_SKILLS_DIR):
         if skills_dir.is_dir():
             check_skills_dir(skills_dir, findings)
+
+    # agents: frontmatter per § Plugin-Agents of the authoring doc
+    check_agents_dir(findings)
 
     # hooks.json: known event names, referenced scripts exist and are executable
     hooks_path = PLUGIN_ROOT / "hooks" / "hooks.json"
