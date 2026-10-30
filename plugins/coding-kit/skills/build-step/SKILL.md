@@ -95,6 +95,10 @@ wiederholen.
 
 ## 2. Umsetzung — je Substep
 
+Substeps sind nur die Überschriften `F-NNNa`, `F-NNNb` … im Plan. Ein Feature ohne sie
+(Größe S: der Plan in Stichpunkten) ist **ein einziger Schritt** — alle Stichpunkte
+umsetzen, dann einmal abschließen; die Stichpunkte sind keine Substeps.
+
 1. Substep-Ziel und Abnahmekriterien kurz nennen.
 2. Umsetzen — Code-Kommentare/Docstrings in der Kommentar-Sprache des Projekts
    (Languages-Block der CLAUDE.md; ohne Block englisch). **Write-then-Verify:** nach
@@ -116,7 +120,9 @@ wiederholen.
 
    Fragen ohne Bezug entfallen (etwa „sicher" bei einem Tippfehler), „lesbar" gilt
    immer. Funde beheben und die Checks erneut laufen lassen; ein Substep mit offenem Fund
-   ist nicht fertig. Das Ergebnis in einer Zeile nennen („Selbst-Review: …").
+   ist nicht fertig. Das Ergebnis in einer Zeile nennen, mit dem Maßstab darin:
+   „Selbst-Review gegen die `CODING-STANDARDS.md`: …" bzw. „Selbst-Review gegen den
+   Ersatz aus der Vorlage (Mindset, Control flow, Secure coding): …".
 5. Die Abnahmekriterien des Substeps einzeln gegen Tool-Ausgaben prüfen und je
    Kriterium den Beleg nennen (Test, Check, Befehl).
 6. **Substep abschließen:** step-done *nicht* automatisch starten. Den Substep als

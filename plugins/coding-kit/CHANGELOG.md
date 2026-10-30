@@ -48,14 +48,17 @@ coding der Vorlage aus dem Plugin.
 
 - **build-step:** Vor der Fertig-Meldung prüft ein Selbst-Review den Diff nach fünf
   Fragen: verständlich, einfach, sicher, lesbar (nie minifiziert), kein Workaround.
-  Funde werden behoben, der Bericht nennt das Ergebnis. Vorhandene Fehler im berührten
-  Code behebt der Skill gleich mit, mit Test und Vermerk; bei großen Korrekturen, bei
-  geändertem Verhalten oder in einem anderen Projektteil fragt er vorher. Lässt der Plan
-  keine saubere Lösung zu, hält er an und nennt Grund und Wege, statt einen Workaround zu
-  bauen.
+  Funde werden behoben, die Ergebniszeile nennt den Maßstab (Projektdatei oder Ersatz).
+  Vorhandene Fehler im berührten Code behebt der Skill gleich mit, mit Test und Vermerk;
+  bei großen Korrekturen, bei geändertem Verhalten oder in einem anderen Projektteil
+  fragt er vorher. Lässt der Plan keine saubere Lösung zu, hält er an und nennt Grund und
+  Wege, statt einen Workaround zu bauen. Behoben: Ein Feature ohne Substeps (Größe S)
+  setzt er als einen einzigen Schritt um — bisher hielt er die Stichpunkte des Plans für
+  Substeps und stoppte nach dem ersten.
 - **step-done:** Das Review prüft nach denselben fünf Fragen gegen denselben Maßstab und
   behebt vorhandene Fehler im berührten Code nach derselben Regel; sie stehen im
-  Verlauf-Eintrag unter Funde.
+  Verlauf-Eintrag unter Funde. Die Zusammenfassung nennt das Review samt Maßstab in einer
+  Zeile.
 - **teach-step:** Die Kontrolle im Lehr-Loop prüft nach denselben fünf Fragen; vorhandene
   Fehler zeigt der Skill als Hinweis oder Frage, beheben tut sie der Nutzer.
 - **prep-step:** lädt denselben Maßstab und plant als Ansatz die einfachste tragfähige

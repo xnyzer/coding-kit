@@ -52,6 +52,9 @@ Punkt der Checkliste weitermachen — erledigte Arbeit nicht wiederholen.
   - **kein Workaround:** keine Umgehung, kein `HACK`, kein „später richtig"?
 
   Fragen ohne Bezug entfallen (etwa „sicher" bei einem Tippfehler), „lesbar" gilt immer.
+  In der Zusammenfassung das Review in einer Zeile nennen, mit dem Maßstab darin:
+  „Review gegen die `CODING-STANDARDS.md`: …" bzw. „Review gegen den Ersatz aus der
+  Vorlage (Mindset, Control flow, Secure coding): …".
 - **Kommentar-/Docstring-Sprache** gegen den Languages-Block prüfen (ohne Block:
   englisch).
 - **Verstöße direkt beheben** — nicht als Frage an den Nutzer zurückspielen.

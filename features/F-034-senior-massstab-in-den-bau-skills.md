@@ -2,10 +2,10 @@
 id: F-034
 title: Senior-Maßstab in den Bau-Skills
 type: feature
-status: IN-PROGRESS
+status: DONE
 size: M
 created: 2026-10-20
-done:
+done: 2026-10-30
 depends-on: F-050
 superseded-by:
 ---
@@ -58,29 +58,39 @@ abstimmen.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben ein Substep in build-step, wenn er umgesetzt ist und die Checks
+- [x] AC-1 — Gegeben ein Substep in build-step, wenn er umgesetzt ist und die Checks
   grün sind, dann folgt vor der Fertig-Meldung ein Selbst-Review des Diffs nach fünf
   Prüffragen — verständlich, einfach, sicher, lesbar (nie minifiziert), kein Workaround —
   gegen den Maßstab aus AC-4; Funde werden behoben, der Bericht nennt das Ergebnis in
-  einer Zeile. Negativ: Ein Substep mit offenem Fund wird nicht als fertig gemeldet.
-- [ ] AC-2 — Gegeben die saubere Lösung ist im Plan nicht machbar (sie bräuchte mehr
+  einer Zeile. Negativ: Ein Substep mit offenem Fund wird nicht als fertig gemeldet —
+  belegt: Testlauf (Kontroll-Lauf, `claude -p --plugin-dir`) — die einzeilige,
+  handgeschriebene `settings.json` wurde lesbar formatiert, Ergebniszeile
+  „Selbst-Review gegen …" vorhanden.
+- [x] AC-2 — Gegeben die saubere Lösung ist im Plan nicht machbar (sie bräuchte mehr
   Umfang oder eine andere Architektur, oder sie bricht ein Nicht-Ziel), dann hält
   build-step an, nennt Grund und Wege (Plan per datierter Entscheidung anpassen, neue
   F-Nummer, anders lösen) und wartet auf den Nutzer. Negativ: kein Hack, kein
-  `HACK`/`TODO: fix later`, kein stilles Umgehen.
-- [ ] AC-3 — Gegeben build-step findet im berührten Code einen vorhandenen Fehler
+  `HACK`/`TODO: fix later`, kein stilles Umgehen — belegt: Testlauf B — Plan mit
+  Live-Kursen bei verbotenem Netzwerk: kein Code gebaut, Widerspruch benannt, drei Wege,
+  gewartet.
+- [x] AC-3 — Gegeben build-step findet im berührten Code einen vorhandenen Fehler
   (falsches Verhalten, Sicherheitslücke, roter Check, Warnung), dann behebt er ihn im
   selben Substep, belegt die Korrektur mit einem Test und nennt sie als Fund für den
   Verlauf. Ist die Korrektur groß, ändert sie Verhalten, auf das sich anderes verlässt,
   oder liegt sie in einem anderen Teil des Projekts, fragt er vorher — auf Wunsch wird
   daraus eine eigene F-Nummer vom Typ `fix`. Negativ: Verbesserungen ohne Fehler werden
-  nicht mitgebaut (weiter über `/coding-kit:add-feature`).
-- [ ] AC-4 — Gegeben ein Projekt ohne `CODING-STANDARDS.md`, wenn build-step, step-done,
+  nicht mitgebaut (weiter über `/coding-kit:add-feature`) — belegt: Testlauf A2 und
+  Kontroll-Lauf — `parse_port` auf 1–65535 korrigiert, Grenztest, als Fund genannt,
+  Rückfrage zur geänderten Bedeutung.
+- [x] AC-4 — Gegeben ein Projekt ohne `CODING-STANDARDS.md`, wenn build-step, step-done,
   teach-step oder prep-step den Maßstab brauchen, dann lesen sie die Abschnitte
   Mindset, Control flow und Secure coding der Vorlage aus dem Plugin
   (`${CLAUDE_PLUGIN_ROOT}/template/core/CODING-STANDARDS.md`) und sagen einmal, dass
   dieser Ersatz gilt. Negativ: Mit vorhandener `CODING-STANDARDS.md` wird die Vorlage
-  nicht zusätzlich herangezogen.
+  nicht zusätzlich herangezogen — belegt: Kontroll-Lauf — Vorlage gelesen und
+  „Selbst-Review gegen den Ersatz aus der Vorlage (Mindset, Control flow, Secure
+  coding)" genannt; step-done, teach-step und prep-step tragen denselben Absatz
+  „Maßstab laden" (Textprüfung).
 - [x] AC-5 — Gegeben die CODING-STANDARDS-Vorlage, dann steht in § 6 bei „Readable over
   clever" die Regel: Quelltext bleibt menschenlesbar — nie minifiziert, komprimiert oder
   auf eine Zeile gepresst, auch nicht JSON, CSS oder Konfiguration; Minifiziertes
@@ -271,3 +281,24 @@ nachgezogen, weil die `/add-skill`-Checkliste das für jeden geänderten Skill v
 Zeilen zu prep-step bleiben, dort änderte sich nur eine Formulierung zum Ansatz.
 
 **Funde:** keine.
+
+### F-034c — fertig 2026-10-30
+
+**Umgesetzt:** Testlauf mit `claude -p --plugin-dir plugins/coding-kit` in einem
+Wegwerf-Projekt ohne `CODING-STANDARDS.md` (Python, `just check`, zwei geplante
+Features): F-001 mit einzeiliger, handgeschriebener `settings.json` und einem
+vorhandenen Bereichsfehler in `parse_port`, F-002 mit einem Plan, der nur mit Hack
+aufgeht. Vier Läufe, zusammen 2,40 US-Dollar (je höchstens 3 US-Dollar gedeckelt). Aus
+den Funden: build-step setzt ein Feature ohne Substeps (Größe S) als einen einzigen
+Schritt um (Abschnitt 2); die Ergebniszeile des Reviews nennt in build-step und
+step-done den Maßstab (Projektdatei oder Ersatz). CHANGELOG 3.0.0 nennt beides.
+
+**Entscheidungen:** Nutzer entschied, beide Funde zu beheben und mit einem Lauf zu
+kontrollieren, statt sie als eigene F-Nummer zu führen oder AC-4 abzuschwächen.
+
+**Abweichung vom Plan:** Vier Läufe statt zwei — der erste Lauf A hatte kein
+vollständiges Protokoll und blieb wegen des S-Fehlers halb; dazu kam der Kontroll-Lauf
+für den Maßstab-Hinweis.
+
+**Funde:** build-step hielt die Stichpunkte eines S-Plans für Substeps und stoppte nach
+dem ersten (behoben); der Ersatz-Maßstab wurde gelesen, aber nicht genannt (behoben).
