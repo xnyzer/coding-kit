@@ -33,8 +33,9 @@ Lies die **Projekt-CLAUDE.md** (Repo-Root) — sie ist die Quelle für alle Proj
   Rahmenbedingungen (für die Passt-das-hierher-Prüfung).
 - **Sprache der lebenden Doku** — die Feature-Datei schreibst du in genau dieser Sprache;
   Feldnamen und Status-Token bleiben englisch.
-- **Graphiti-group_id** (aus dem Graphiti-Block). Fehlt der Block oder läuft kein
-  Graphiti-MCP → alle Graphiti-Schritte still überspringen.
+- **Graphiti-group_id** (aus dem Graphiti-Block), zum Nachschlagen im Graph. Fehlt der
+  Block oder läuft kein Graphiti-MCP → still überspringen. Ein neues Feature kommt nicht
+  in den Graph; einen Wegweiser gibt es erst, wenn es endet (§ 5).
 - **Sicherheits-Postur:** öffentliches Repo oder Security-/Auth-Charakter (z. B.
   `THREAT-MODEL.md` vorhanden) → erhöhte Scan-Schärfe und Extra-Sicherheitsanalyse.
 
@@ -157,7 +158,8 @@ ergänzen (Vorschau der geänderten Stelle); keine neue Nummer.
 - Nach dem Schreiben die Tabelle erzeugen: `just features-index` (ohne das Rezept
   `sh scripts/features-index.sh write`). Meldet das Skript etwas, beheben und erneut
   laufen lassen; die Datei re-lesen.
-- Graphiti aktualisieren: `add_memory` mit der group_id aus der CLAUDE.md (falls
-  verfügbar, sonst still überspringen) — mit dem Pfad der Feature-Datei.
+- Graphiti (falls verfügbar): nur bei „nicht aufnehmen" mit Datei (`DROPPED`) ein kurzer
+  Wegweiser nach der Graphiti-Regel der globalen Kit-Regeln: F-Nummer, Titel, Pfad der
+  Feature-Datei, Grund. Sonst nichts in den Graph.
 - Nicht committen — das macht `/coding-kit:step-done` mit dem nächsten Abschluss, oder
   der Nutzer entscheidet.

@@ -169,7 +169,9 @@ Widerspricht es Zielen, Nicht-Zielen (Überblick der CLAUDE.md) oder einem ADR?
 mehr dagegen als dafür, abraten — mit Grund; einen Workaround planst du nicht. Die
 Entscheidung bleibt beim Nutzer: weitermachen, anders lösen, `DROPPED` (Grund in die
 Datei) oder `SUPERSEDED` (aufgehen in anderen Nummern, Feld `superseded-by`) — die beiden
-letzten mit Vorschau wie jede Änderung, `done:` auf heute.
+letzten mit Vorschau wie jede Änderung, `done:` auf heute. Nach dem Schreiben dann ein
+kurzer Graphiti-Wegweiser (falls verfügbar) nach der Graphiti-Regel der globalen
+Kit-Regeln: F-Nummer, Titel, Pfad der Feature-Datei, Grund bzw. Nachfolger.
 
 **Abschnitt Spezifikation** der Feature-Datei (Gerüst aus der Vorlage
 `features/F-000-template.md`, Überschriften in der Sprache der lebenden Doku, Kürzel

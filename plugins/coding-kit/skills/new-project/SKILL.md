@@ -190,11 +190,11 @@ Platzhalter belassen.
   Body mit den Kernentscheidungen (Lizenz, Sichtbarkeit, Modul), Abschluss
   `Co-Authored-By: Claude <noreply@anthropic.com>`. Danach Push (bestätigt).
 
-### 4g. Graphiti-Seeding (falls MCP verfügbar)
+### 4g. Graphiti-Gründungsepisode (falls MCP verfügbar)
 
-`add_memory` mit `group_id` aus Schritt 2.6: Foundational-Episode aus der Short-Info
-(Zweck, Scope, Zielnutzer, Kernentscheidungen, gewähltes Modul, Template-Version).
-Ohne MCP still überspringen.
+`add_memory` mit `group_id` aus Schritt 2.6, nach der Graphiti-Regel der globalen
+Kit-Regeln (Abschnitt Graphiti Memory): eine kurze Episode aus der Short-Info — Zweck,
+Zielnutzer, gewähltes Modul. Ohne MCP still überspringen.
 
 ## Abschlussbericht
 

@@ -29,6 +29,16 @@ Template-Block per `/coding-kit:update-conventions`.
   Commit-Hashes, Testzahlen oder Konstantennamen außer als Thema. Die Anweisungen
   „dichte Inhalte in mehrere Episoden splitten“ und „Veraltetes per `delete_entity_edge`
   ersetzen“ entfallen.
+- **step-done:** schreibt nur noch, wenn ein Feature `DONE` wird — einen kurzen Wegweiser
+  mit F-Nummer, Titel, Pfad der Feature-Datei und Ergebnis. Bei einem Substep, nach dem
+  das Feature `IN-PROGRESS` bleibt, schreibt es nichts.
+- **add-feature, refine-requirements:** schreiben nicht mehr beim Anlegen oder Ändern.
+- **add-feature, prep-step, refine-requirements:** Setzen sie ein Feature auf `DROPPED`
+  oder `SUPERSEDED`, schreiben sie einen kurzen Wegweiser mit Grund bzw. Nachfolger;
+  prep-step hat diesen Schreibschritt neu. Die Migration in update-conventions schreibt
+  keinen.
+- **new-project** (Gründungsepisode) und **go-public:** schreiben nach der neuen Regel —
+  kurz, ohne Versionsstände.
 
 ### Template
 
@@ -36,7 +46,7 @@ Template-Block per `/coding-kit:update-conventions`.
   der globalen Kit-Regeln; die Regel „Split dense content into multiple episodes“
   entfällt.
 - **`HOW-TO-CODE-WITH-CLAUDE.md`:** Schritt 6 von „What `/step-done` does in detail“
-  schreibt nur noch beim Abschluss eines Features eine kurze Episode in den Graph.
+  schreibt nur noch eine kurze Episode in den Graph, wenn das Feature `DONE` wird.
 
 ## 3.0.0 — 2026-10-30
 

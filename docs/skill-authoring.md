@@ -108,6 +108,13 @@ braucht, gibt ihm der Skill im Auftrag mit.
 - **Projektkontext-Schritt (alle Workflow-Skills):** Projekt-CLAUDE.md lesen —
   Graphiti-group_id (Graphiti optional, ohne MCP still überspringen), Sprache der
   lebenden Doku, Scope, Sicherheits-Postur.
+- **Graphiti schreiben:** nur nach der Graphiti-Regel der globalen Kit-Regeln (Abschnitt
+  Graphiti Memory); der Skill verweist darauf, statt eine eigene Inhaltsliste zu führen.
+  Von sich aus schreiben nur: step-done einen Wegweiser, wenn ein Feature `DONE` wird;
+  der Skill, der `DROPPED` oder `SUPERSEDED` setzt (add-feature, prep-step,
+  refine-requirements), einen Wegweiser mit Grund bzw. Nachfolger; new-project die
+  Gründungsepisode; go-public eine kurze Episode zum Wechsel auf public. Die Migration in
+  update-conventions setzt `DROPPED` nur als Buchhaltung und schreibt nichts.
 - **Stack-Agnostik:** Checks nur über die just-Standardrezepte (`just check` / `test` /
   `lint` / `format`); ohne justfile die projektüblichen Checks aus CLAUDE.md/README
   ermitteln — nie einen Stack raten.

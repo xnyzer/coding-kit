@@ -101,5 +101,7 @@ umschreiben: alte Einträge bleiben, neue supersedieren („ersetzt Entscheidung
 - Vor dem Schreiben: Privacy-Kurzcheck (keine Klarnamen, Pfade, IPs, Kundennamen).
 - Nach dem Schreiben die Tabelle erzeugen: `just features-index` (ohne das Rezept
   `sh scripts/features-index.sh write`); meldet das Skript etwas, beheben.
-- Graphiti: `add_memory` mit der group_id aus der CLAUDE.md (falls verfügbar) —
-  Entscheidungen sind genau das, was in den Graph gehört.
+- Graphiti (falls verfügbar): nur für Features, die dabei `DROPPED` oder `SUPERSEDED`
+  werden, je Feature ein kurzer Wegweiser nach der Graphiti-Regel der globalen
+  Kit-Regeln: F-Nummer, Titel, Pfad der Feature-Datei, Grund bzw. Nachfolger. Sonst
+  nichts in den Graph — Entscheidungen stehen in den Feature-Dateien und ADRs.

@@ -112,13 +112,15 @@ gelten. Je Feature entstehen heute 3–11 Episoden.
   „Veraltetes per `delete_entity_edge` ersetzen“ stehen nicht mehr darin. — belegt: Zone
   gezählt (15 Zeilen), grep findet keine Split- und Löschanweisung, `render-global`
   übernimmt die Zone unverändert, `just check` (Validator OK).
-- [ ] AC-3 — Gegeben ein Feature-Abschluss, wenn step-done das Feature auf `DONE`
+- [x] AC-3 — Gegeben ein Feature-Abschluss, wenn step-done das Feature auf `DONE`
   setzt, dann schreibt es genau eine Wegweiser-Episode nach der Konvention: F-Nummer,
   Titel, Pfad der Feature-Datei und das Ergebnis in wenigen Sätzen. Negativ: Bei einem
   Substep, nach dem das Feature `IN-PROGRESS` bleibt, schreibt step-done nichts. Ein
   Fund von allgemeinem Wert, etwa eine Stolperfalle, darf als eigene Episode nach der
-  Konvention dazukommen.
-- [ ] AC-4 — Gegeben add-feature, refine-requirements, new-project und go-public, wenn
+  Konvention dazukommen. — belegt: zwei Headless-Läufe von step-done im Testprojekt am
+  2026-10-30. Lauf 1 (Substep, bleibt `IN-PROGRESS`) ohne `add_memory`, Lauf 2 (letzter
+  Substep, `DONE`) mit genau einem Wegweiser.
+- [x] AC-4 — Gegeben add-feature, refine-requirements, new-project und go-public, wenn
   man ihre Graphiti-Schritte liest, dann gilt:
   - add-feature und refine-requirements schreiben nicht mehr automatisch.
   - new-project schreibt die Gründungs-Episode nach der Konvention.
@@ -126,7 +128,9 @@ gelten. Je Feature entstehen heute 3–11 Episoden.
 
   Alle verweisen auf die Konvention der Kit-Regeln, statt eigene Inhaltslisten zu
   führen. Negativ: Ein grep nach `add_memory` in den Skills findet keine Stelle ohne
-  diesen Verweis.
+  diesen Verweis. — belegt: grep über `plugins/coding-kit/skills/`, jede Schreibstelle
+  verweist auf die Graphiti-Regel der Kit-Regeln. add-feature und refine-requirements
+  schreiben nur noch beim Beenden eines Features (Entscheidung im Verlauf F-029c).
 - [x] AC-5 — Gegeben ein Projekt aus dem Template, wenn es per `/update-conventions`
   den Block `claude-graphiti` holt, dann verweist der Block für das Schreiben auf die
   Konvention der Kit-Regeln. Die Abfrage-Hinweise bleiben, die Split-Regel fehlt. Die
@@ -396,5 +400,53 @@ Die Testgruppen wurden nach Bestätigung gelöscht.
 - Die README bleibt unverändert. Sie nennt die Graphiti-Regeln nur allgemein.
 - Bis F-029c schreibt step-done noch bei jedem Substep, während HOW-TO und Regeln schon
   „nur beim Abschluss“ sagen. F-029c gleicht das vor dem Release aus.
+
+**Funde:** keine.
+
+### F-029c — fertig 2026-10-30
+
+**Umgesetzt:**
+
+- step-done § 6 schreibt nur noch, wenn die Verbuchung das Feature auf `DONE` setzt. Der
+  Eintrag ist ein Wegweiser mit F-Nummer, Titel, Pfad der Feature-Datei und Ergebnis,
+  dazu kann ein Fund von allgemeinem Wert kommen. Bei `IN-PROGRESS` schreibt step-done
+  nichts. Die Beschreibung im Frontmatter ist angepasst.
+- add-feature und refine-requirements schreiben beim Anlegen oder Ändern nichts mehr.
+- Setzen add-feature, prep-step oder refine-requirements ein Feature auf `DROPPED` oder
+  `SUPERSEDED`, schreiben sie einen kurzen Wegweiser mit Grund bzw. Nachfolger.
+- new-project (Gründungsepisode) und go-public verweisen auf die Graphiti-Regel der
+  Kit-Regeln.
+- Begleitend:
+  - `docs/skill-authoring.md` hat den neuen Baustein „Graphiti schreiben“.
+  - Die HOW-TO sagt: step-done schreibt nur bei `DONE`.
+  - Der repo-lokale add-skill nennt den Wegweiser statt „Graphiti-Update“.
+- Testlauf: ein Testprojekt aus dem Template (docs-only, eigene Graphiti-Gruppe nur für
+  den Test) und zwei Headless-Läufe von `/coding-kit:step-done` mit `--plugin-dir`.
+  - Lauf 1 (Substep): Status `IN-PROGRESS`, kein Graph-Eintrag, 0,96 US-Dollar.
+  - Lauf 2 (letzter Substep): Status `DONE`, genau ein Wegweiser mit 250 Zeichen,
+    0,92 US-Dollar.
+  - Die Testgruppe wurde nach Bestätigung gelöscht.
+
+**Entscheidungen:**
+
+- 2026-10-30: Den Wegweiser für `DROPPED` und `SUPERSEDED` schreibt der Skill, der den
+  Status setzt (add-feature, prep-step, refine-requirements). step-done setzt diese
+  Status nie.
+  - AC-4 gilt damit so: add-feature und refine-requirements schreiben nicht beim
+    Anlegen oder Ändern, nur beim Beenden eines Features.
+  - Empfehlung war, nur bei `DONE` zu schreiben. Entschieden wurde der Wegweiser auch
+    bei `DROPPED` und `SUPERSEDED`, wie EC-2 es vorsieht.
+- Die Migration in update-conventions setzt `DROPPED` nur als Buchhaltung für leere
+  Nummern und schreibt keinen Wegweiser. Das kam als Befund aus dem unabhängigen Review.
+- Vor dem Testlauf wurden die neuen globalen Regeln in die lokale Regeldatei
+  eingespielt, damit die alte Regel keine zusätzlichen Einträge erzeugt. Das war die
+  Entscheidung des Nutzers.
+
+**Abweichung vom Plan:**
+
+- prep-step kam dazu, weil es `DROPPED` und `SUPERSEDED` setzt.
+- Das Testprojekt aus F-037c gab es nicht mehr; ein neues entstand aus dem Template.
+- In Lauf 1 hat die Rechte-Vorgabe drei zusammengesetzte Shell-Befehle abgelehnt. Der
+  Lauf hat die Schritte danach einzeln ausgeführt, ohne Einfluss auf das Ergebnis.
 
 **Funde:** keine.

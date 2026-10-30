@@ -126,6 +126,7 @@ Auch Skill-Arbeit läuft als F-Nummer und wird verbucht wie jede andere Aufgabe:
   **erst nach ausdrücklichem OK eintragen**.
 - `/coding-kit:step-done` ausführen bzw. empfehlen (interaktiv schließt der Nutzer
   selbst ab) — der zeigt die Verbuchung und die Commit-Message als Vorschau, verbucht
-  nach Freigabe, macht Scans und Graphiti-Update.
+  nach Freigabe und macht die Scans; den Graphiti-Wegweiser schreibt es, wenn das
+  Feature `DONE` wird.
 - Skill-Datei und **alle** Begleit-Änderungen aus Schritt 3 gehören in denselben
   Commit. Nie automatisch committen.

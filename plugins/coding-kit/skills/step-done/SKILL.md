@@ -1,6 +1,6 @@
 ---
 name: step-done
-description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS (ohne sie gegen drei Abschnitte der Vorlage) nach fünf Prüffragen — verständlich, einfach, sicher, lesbar, kein Workaround — samt Behebung vorhandener Fehler im berührten Code, Checks über just, unabhängiges Review durch einen nur lesenden Reviewer-Agenten mit frischem Kontext (Befunde behoben oder mit Grund verworfen), Erkennungs-Backstop (neu eingeführte Frameworks ohne Fragment, Sprachen ohne Stack-Modul), Backstop für geänderte managed Dateien ohne Registry-Eintrag, Secrets-Scan, Privacy-Scan der lebenden Doku, Verbuchung in der Feature-Datei (Verlauf-Eintrag, Abnahmekriterien mit Beleg, Status IN-PROGRESS bzw. DONE, erzeugte Index-Tabelle, Vorschlag zur Reihenfolge) und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), Graphiti-Update.
+description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS (ohne sie gegen drei Abschnitte der Vorlage) nach fünf Prüffragen — verständlich, einfach, sicher, lesbar, kein Workaround — samt Behebung vorhandener Fehler im berührten Code, Checks über just, unabhängiges Review durch einen nur lesenden Reviewer-Agenten mit frischem Kontext (Befunde behoben oder mit Grund verworfen), Erkennungs-Backstop (neu eingeführte Frameworks ohne Fragment, Sprachen ohne Stack-Modul), Backstop für geänderte managed Dateien ohne Registry-Eintrag, Secrets-Scan, Privacy-Scan der lebenden Doku, Verbuchung in der Feature-Datei (Verlauf-Eintrag, Abnahmekriterien mit Beleg, Status IN-PROGRESS bzw. DONE, erzeugte Index-Tabelle, Vorschlag zur Reihenfolge) und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), beim Abschluss des Features ein kurzer Graphiti-Wegweiser.
 disable-model-invocation: false
 user-invocable: true
 ---
@@ -292,11 +292,16 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ## 6. Graphiti-Wissensgraph
 
-Erst nach der Verbuchung aus Schritt 5 — der Graph soll nur festhalten, was der Nutzer
-freigegeben hat.
+Nur wenn diese Verbuchung das Feature auf `DONE` setzt, und erst nach Schritt 5 — der
+Graph soll nur festhalten, was der Nutzer freigegeben hat. Bleibt das Feature
+`IN-PROGRESS`, schreibt step-done nichts in den Graph. (`DROPPED` und `SUPERSEDED` setzen
+add-feature, prep-step und refine-requirements; den Wegweiser dafür schreiben sie. Die
+Migration in update-conventions schreibt keinen.)
 
-- `add_memory` mit der group_id aus der Projekt-CLAUDE.md aufrufen (falls verfügbar,
-  sonst still überspringen).
-- Beschreiben: was fertig wurde (mit dem Pfad der Feature-Datei), welche
-  Dateien/Komponenten, welche Config/Endpunkte/Dependencies, welche
-  Architektur-/Sicherheitsentscheidungen.
+- `add_memory` mit der group_id aus der Projekt-CLAUDE.md (falls verfügbar, sonst still
+  überspringen), nach der Graphiti-Regel der globalen Kit-Regeln (Abschnitt Graphiti
+  Memory).
+- Inhalt ist ein **Wegweiser**: F-Nummer, Titel, Pfad der Feature-Datei und das Ergebnis
+  in wenigen Sätzen. Die Details stehen in der Feature-Datei.
+- Ein Fund von allgemeinem Wert (etwa eine Stolperfalle) darf als eigene kurze Episode
+  dazukommen.

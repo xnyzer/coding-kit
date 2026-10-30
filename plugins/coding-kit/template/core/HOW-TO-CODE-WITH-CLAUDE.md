@@ -133,8 +133,8 @@ substeps, M a short interview and 2–3 substeps, L the full interview and 3–5
    Conventional Commits message; you choose *book and commit*, *book only*, or *change
    the text*. Only then are the feature file and `features/INDEX.md` written, `just check`
    re-run and the commit made (commit email verified as a GitHub noreply address).
-6. **Graphiti** — only when the feature ends (`DONE`, `DROPPED` or `SUPERSEDED`): one
-   short pointer episode in the knowledge graph (if configured).
+6. **Graphiti** — only when the booking sets the feature to `DONE`: one short pointer
+   episode in the knowledge graph (if configured).
 
 ---
 

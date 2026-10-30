@@ -160,5 +160,6 @@ Schritt (Languages-Block editieren; prospektive Semantik wie bei
   Push-Protection aktiv (soweit vom Plan unterstützt).
 - **Checks:** `just check` grün.
 - Ergebnis als kurze Zusammenfassung ausgeben (Fall, Gates, Befund-Entscheidungen,
-  Commits, Settings). Graphiti-Update mit der group_id des Projekts (falls
-  verfügbar): Projekt ist public, wesentliche Entscheidungen des Laufs.
+  Commits, Settings). Graphiti mit der group_id des Projekts (falls verfügbar): eine
+  kurze Episode nach der Graphiti-Regel der globalen Kit-Regeln — das Projekt ist
+  public. Die Entscheidungen des Laufs stehen in der Zusammenfassung, nicht im Graph.
