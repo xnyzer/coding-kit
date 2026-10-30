@@ -1,6 +1,6 @@
 ---
 name: step-done
-description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS (ohne sie gegen drei Abschnitte der Vorlage) nach fünf Prüffragen — verständlich, einfach, sicher, lesbar, kein Workaround — samt Behebung vorhandener Fehler im berührten Code, Checks über just, Erkennungs-Backstop (neu eingeführte Frameworks ohne Fragment, Sprachen ohne Stack-Modul), Backstop für geänderte managed Dateien ohne Registry-Eintrag, Secrets-Scan, Privacy-Scan der lebenden Doku, Verbuchung in der Feature-Datei (Verlauf-Eintrag, Abnahmekriterien mit Beleg, Status IN-PROGRESS bzw. DONE, erzeugte Index-Tabelle, Vorschlag zur Reihenfolge) und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), Graphiti-Update.
+description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS (ohne sie gegen drei Abschnitte der Vorlage) nach fünf Prüffragen — verständlich, einfach, sicher, lesbar, kein Workaround — samt Behebung vorhandener Fehler im berührten Code, Checks über just, unabhängiges Review durch einen nur lesenden Reviewer-Agenten mit frischem Kontext (Befunde behoben oder mit Grund verworfen), Erkennungs-Backstop (neu eingeführte Frameworks ohne Fragment, Sprachen ohne Stack-Modul), Backstop für geänderte managed Dateien ohne Registry-Eintrag, Secrets-Scan, Privacy-Scan der lebenden Doku, Verbuchung in der Feature-Datei (Verlauf-Eintrag, Abnahmekriterien mit Beleg, Status IN-PROGRESS bzw. DONE, erzeugte Index-Tabelle, Vorschlag zur Reihenfolge) und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), Graphiti-Update.
 disable-model-invocation: false
 user-invocable: true
 ---
@@ -73,6 +73,38 @@ Punkt der Checkliste weitermachen — erledigte Arbeit nicht wiederholen.
   Tests trotzdem fixen oder explizit melden.
 - **Write-then-Verify:** Nach jedem Edit die Datei re-lesen; nichts als erledigt melden,
   was nicht per Tool-Ausgabe belegt ist.
+
+### Unabhängiges Review
+
+Nach dem eigenen Review und grünen Checks prüft ein zweiter Blick mit frischem Kontext:
+der Agent `coding-kit:reviewer` (`${CLAUDE_PLUGIN_ROOT}/agents/reviewer.md`). Er liest nur
+und kennt das Gespräch nicht — deshalb sieht er, was dem Autor selbstverständlich scheint.
+Bei jeder Größe genau ein Lauf.
+
+1. **Auftrag zusammenstellen** — nur diese Angaben, keine Zusammenfassung vom Bauen und
+   keine Begründungen:
+   - F-Nummer und Substep (ohne Substeps die F-Nummer allein);
+   - den Diff des Schritts (`git diff HEAD`); ist er sehr groß (Richtwert: über 1500
+     Zeilen), stattdessen die geänderten Dateien mit Zeilenzahlen
+     (`git diff HEAD --stat`);
+   - die neuen, noch nicht versionierten Dateien
+     (`git ls-files --others --exclude-standard`);
+   - den Maßstab: den Pfad der `CODING-STANDARDS.md` des Projekts — fehlt sie, den
+     aufgelösten Pfad von `${CLAUDE_PLUGIN_ROOT}/template/core/CODING-STANDARDS.md` mit
+     dem Hinweis, dass nur die Abschnitte Mindset, Control flow und Secure coding gelten.
+2. **Starten:** den Agenten `coding-kit:reviewer` mit diesem Auftrag aufrufen und seine
+   Antwort abwarten.
+3. **Befunde bewerten:** jeden Befund beheben oder mit Begründung verwerfen — vorhandene
+   Fehler nach der Regel oben. Wird ein Befund zu einem Abnahmekriterium nicht behoben,
+   wird das Kriterium in Schritt 4 nicht abgehakt. Nach Korrekturen die Checks erneut;
+   **kein zweiter Reviewer-Lauf** — die Korrekturen prüft das eigene Review.
+4. **Liste festhalten** für die Vorschau in Schritt 5: je Befund Stelle, Art,
+   Entscheidung (behoben oder verworfen) und Grund — oder „keine Befunde".
+
+**Reviewer nicht verfügbar** (Agent-Werkzeug fehlt, Agent nicht geladen, Lauf bricht ab):
+das ausdrücklich sagen, mit dem eigenen Review weitermachen und im Verlauf-Eintrag unter
+Funde „ohne unabhängiges Review" mit Grund vermerken. Der Abschluss wird dadurch nicht
+blockiert.
 
 ## 1a. Standards- und Modul-Abdeckung (Backstop)
 
@@ -215,7 +247,8 @@ melden statt verbuchen.
 ## 5. Freigabe, Verbuchung und Commit
 
 - **Eine Frage für beides:** die Vorschau aus Schritt 4 (Verlauf-Eintrag, abgehakte
-  Abnahmekriterien, Status, Änderung der Reihenfolge) und eine aussagekräftige
+  Abnahmekriterien, Status, Änderung der Reihenfolge), die Befundliste des unabhängigen
+  Reviews (Schritt 1) und eine aussagekräftige
   Conventional-Commits-Message zeigen — Prosa in der Commit-Sprache des Projekts
   (Languages-Block; ohne Block englisch), Format-Tokens immer englisch.
   Antwortmöglichkeiten: verbuchen und committen / nur verbuchen / Änderungen am Text.

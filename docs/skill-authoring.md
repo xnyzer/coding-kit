@@ -55,7 +55,7 @@ Meldung, auch einen Tippfehler. Der Validator lässt deshalb nur diese zu (`SKIL
 | `argument-hint` | Pflicht, wenn der Skill ein Argument nimmt — in Anführungszeichen, z. B. `argument-hint: "[F-Nummer]"`; ohne sie wäre `[…]` eine YAML-Liste. |
 | `disallowed-tools` | Wenn ein Skill bestimmte Tools nie nutzen darf (teach-step, handoff). |
 | `model`, `effort` | Noch nicht — die Entscheidung hängt an der Verbrauchsmessung (F-046). |
-| `context`, `agent`, `background` | Noch nicht — `context: fork` (Skill im Subagenten) prüft das unabhängige Review (F-037). |
+| `context`, `agent`, `background` | Nicht genutzt — das unabhängige Review (F-037) läuft als Plugin-Agent (§ Plugin-Agents), weil die Doku offen lässt, ob ein Skill mit `context: fork` aus einem laufenden Skill heraus startet. |
 | `shell` | Noch nicht — prüft der Windows-Betrieb (F-027). |
 | `when_to_use`, `allowed-tools`, `hooks`, `paths`, `arguments`, `metadata`, `license`, `compatibility` | Nicht genutzt. |
 

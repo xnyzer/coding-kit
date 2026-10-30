@@ -15,8 +15,9 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
 
 ## 3.0.0 — unveröffentlicht
 
-Zwei Themen: Der autonome `/goal`-Lauf entfällt (F-050), und die Bau-Skills arbeiten
-nach einem Senior-Maßstab (F-034). Hauptversion, weil ein Argument von build-step
+Drei Themen: Der autonome `/goal`-Lauf entfällt (F-050), die Bau-Skills arbeiten nach
+einem Senior-Maßstab (F-034), und step-done lässt jeden Schritt von einem unabhängigen
+Reviewer prüfen (F-037). Hauptversion, weil ein Argument von build-step
 wegfällt. Projekte holen die geänderte Vorlage per `/coding-kit:update-conventions`; auf
 jedem Rechner holt `/coding-kit:update-conventions global` die geänderten globalen
 Regeln.
@@ -66,6 +67,25 @@ coding der Vorlage aus dem Plugin.
 - **README:** Die Zeilen zu build-step, step-done und teach-step nennen die fünf Fragen
   und die Fehler-Regel, build-step dazu den Workaround-Stopp.
 
+**Unabhängiges Review (F-037).** Wer den Code geschrieben hat, bestätigt beim Review
+leicht seine eigenen Entscheidungen. Jetzt prüft ein zweiter Blick ohne die Begründungen
+vom Bauen.
+
+- **Neuer Agent `reviewer`** (`agents/reviewer.md`, der erste Agent des Plugins): darf
+  nur lesen und suchen, kennt das Gespräch nicht, prüft den Diff gegen die Feature-Datei
+  (Abnahmekriterien, Randfälle, Nicht-Ziele) und den Maßstab (die fünf Fragen,
+  vorhandene Fehler) und antwortet nur mit einer Befundliste oder „keine Befunde".
+- **step-done:** startet nach dem eigenen Review und grünen Checks genau einen Reviewer,
+  bei jeder Größe. Er bekommt F-Nummer, Substep, Diff, neue Dateien und den Pfad des
+  Maßstabs, keine Zusammenfassung vom Bauen. Jeder Befund wird behoben oder mit Grund
+  verworfen; die Liste steht in der Vorschau vor dem Commit. Ein Lauf je Schritt, kein
+  zweiter nach den Korrekturen. Ist der Reviewer nicht verfügbar, sagt step-done das und
+  vermerkt es im Verlauf.
+- **Validator:** prüft Agent-Dateien — Name gleich Dateiname, `description` und `tools`
+  Pflicht, nur Felder, die bei Plugin-Agents wirken, nur lesende Werkzeuge.
+- **README** und Skill-Konvention: Zeile zu step-done, Repo-Struktur, neuer Abschnitt
+  „Plugin-Agents".
+
 ### Template
 
 - **`CODING-STANDARDS.md`**, § 6 Control flow: neue Regel „Human-readable source, never
@@ -74,6 +94,8 @@ coding der Vorlage aus dem Plugin.
 - **`HOW-TO-CODE-WITH-CLAUDE.md`:** Die Zeilen zu `/build-step`, `/step-done` und
   `/teach-step` nennen die fünf Prüffragen und die Fehler-Regel, `/build-step` dazu den
   Workaround-Stopp; „What `/step-done` does in detail" beschreibt das Review entsprechend.
+  Dazu beschreiben die Zeile zu `/step-done` und derselbe Abschnitt das unabhängige
+  Review durch den Reviewer-Agenten (F-037).
 
 ## 2.1.0 — 2026-10-28
 

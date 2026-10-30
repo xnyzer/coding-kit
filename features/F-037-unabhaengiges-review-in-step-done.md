@@ -67,10 +67,13 @@ ergänzen — im selben Commit.
   Die ganze Liste (Befund, Entscheidung, Grund) steht in der Vorschau von Schritt 5;
   behobene laufen durch die Checks. Negativ: Meldet der Reviewer ein Abnahmekriterium
   als nicht erfüllt und wird es nicht behoben, wird es nicht abgehakt.
-- [ ] AC-5 — Gegeben ein Projekt aus dem Template, wenn es per `/update-conventions`
+- [x] AC-5 — Gegeben ein Projekt aus dem Template, wenn es per `/update-conventions`
   die HOW-TO holt, dann beschreibt „What `/step-done` does in detail" den Review-Schritt;
   README und Authoring-Doku (Zeile `context`, `agent`, `background` und Abschnitt zu
-  Plugin-Agents) nennen den Reviewer.
+  Plugin-Agents) nennen den Reviewer. — belegt: grep — HOW-TO nennt den Reviewer-Agenten
+  in der Tabellenzeile `/step-done` und in „What `/step-done` does in detail"; README in
+  der Zeile step-done und der Repo-Struktur; `docs/skill-authoring.md` mit Abschnitt
+  „Plugin-Agents" und Zeile `context`, `agent`, `background`; `just check`.
 
 ### Randfälle
 
@@ -209,3 +212,24 @@ Maßstabs (AC-1 nennt nur F-Nummer, Substep, Diff, neue Dateien) — die Ersetzu
 bekommt der Reviewer weiterhin nicht.
 
 **Funde:** keine.
+
+### F-037b — fertig 2026-10-30
+
+**Umgesetzt:** step-done hat am Ende von § 1 den Abschnitt „Unabhängiges Review": Auftrag
+zusammenstellen (F-Nummer, Substep, `git diff HEAD` bzw. bei über etwa 1500 Zeilen
+`--stat`, neue Dateien per `git ls-files --others --exclude-standard`, Pfad des
+Maßstabs), `coding-kit:reviewer` starten, jeden Befund beheben oder mit Grund verwerfen —
+ein nicht behobener Befund zu einem Abnahmekriterium verhindert dessen Abhaken —, kein
+zweiter Lauf, die Liste geht in die Vorschau von § 5; ist der Reviewer nicht verfügbar,
+sagt step-done das und vermerkt es im Verlauf. Dazu Beschreibung von step-done,
+README-Zeile, `plugin.json`-Beschreibung, HOW-TO (Tabellenzeile und „What `/step-done`
+does in detail"), Zeile `context`, `agent`, `background` der Authoring-Doku und
+CHANGELOG 3.0.0 mit F-037 als drittem Thema und Hinweis unter `### Template`.
+
+**Entscheidungen:** Abschnitt am Ende von § 1 statt neuer Nummer — „§ 1a" wird anderswo
+zitiert. Richtwert 1500 Zeilen für den Wechsel vom Diff zur Dateiliste.
+
+**Abweichung vom Plan:** keine.
+
+**Funde:** Dieser Abschluss lief mit dem installierten Plugin, also ohne unabhängiges
+Review — der erste echte Lauf ist F-037c.
