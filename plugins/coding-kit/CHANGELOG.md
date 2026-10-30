@@ -13,7 +13,7 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 3.1.0 — unveröffentlicht
+## 3.1.0 — 2026-10-30
 
 Schlankere Graphiti-Schreibzugriffe (F-029). Ein Testlauf zeigte: Kurze Episoden mit
 einem Thema halbieren die Entitäten und senken die Serverkosten um rund zwei Drittel,
