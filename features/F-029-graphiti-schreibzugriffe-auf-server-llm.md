@@ -95,7 +95,7 @@ gelten. Je Feature entstehen heute 3–11 Episoden.
   Entscheidung nennt den Grund. — belegt: Testlauf 2026-10-30, Ergebnis im Verlauf
   F-029a: v2 mit 48 % weniger Entitäten und 5 von 5 Suchfragen mindestens so gut wie die
   Originale.
-- [ ] AC-2 — Gegeben die globalen Kit-Regeln (Zone `global-graphiti`), wenn man sie
+- [x] AC-2 — Gegeben die globalen Kit-Regeln (Zone `global-graphiti`), wenn man sie
   liest, dann regeln sie in höchstens 15 Zeilen:
   - Was in den Graph gehört: Wissen ohne Ort im Repo, also Stolperfallen,
     Infra-Fakten, Präferenzen und Projektübergreifendes, dazu je abgeschlossenem
@@ -109,7 +109,9 @@ gelten. Je Feature entstehen heute 3–11 Episoden.
   - `reference_time` bei vergangenen Ereignissen.
 
   Negativ: Die Anweisungen „dichte Inhalte in mehrere Episoden splitten“ und
-  „Veraltetes per `delete_entity_edge` ersetzen“ stehen nicht mehr darin.
+  „Veraltetes per `delete_entity_edge` ersetzen“ stehen nicht mehr darin. — belegt: Zone
+  gezählt (15 Zeilen), grep findet keine Split- und Löschanweisung, `render-global`
+  übernimmt die Zone unverändert, `just check` (Validator OK).
 - [ ] AC-3 — Gegeben ein Feature-Abschluss, wenn step-done das Feature auf `DONE`
   setzt, dann schreibt es genau eine Wegweiser-Episode nach der Konvention: F-Nummer,
   Titel, Pfad der Feature-Datei und das Ergebnis in wenigen Sätzen. Negativ: Bei einem
@@ -125,12 +127,15 @@ gelten. Je Feature entstehen heute 3–11 Episoden.
   Alle verweisen auf die Konvention der Kit-Regeln, statt eigene Inhaltslisten zu
   führen. Negativ: Ein grep nach `add_memory` in den Skills findet keine Stelle ohne
   diesen Verweis.
-- [ ] AC-5 — Gegeben ein Projekt aus dem Template, wenn es per `/update-conventions`
+- [x] AC-5 — Gegeben ein Projekt aus dem Template, wenn es per `/update-conventions`
   den Block `claude-graphiti` holt, dann verweist der Block für das Schreiben auf die
   Konvention der Kit-Regeln. Die Abfrage-Hinweise bleiben, die Split-Regel fehlt. Die
   HOW-TO sagt in Schritt 6 von step-done „nur beim Feature-Abschluss“. Die
   CLAUDE.md des Kits folgt derselben Regel. Negativ: `just check` ist grün, und der
-  CHANGELOG-Eintrag hat einen Abschnitt `### Template`.
+  CHANGELOG-Eintrag hat einen Abschnitt `### Template`. — belegt: `just check`
+  (Validator OK, 2133 Skript-Tests, darunter der Render eines Projekts mit
+  Graphiti-Block, aus dem `/update-conventions` die Zonen übernimmt); Template-Block,
+  HOW-TO und Kit-CLAUDE.md gelesen; CHANGELOG 3.1.0 mit `### Template`.
 - [ ] AC-6 — Gegeben mindestens 7 Tage Arbeit nach dem Release, wenn die Ledger-Daten
   wie in der Auswertung ausgewertet werden, dann haben Episoden aus Kit-Projektgruppen
   im Schnitt mindestens 40 % weniger Entitäten als in der Basis (coding-kit: 12,6), und
@@ -360,3 +365,36 @@ Die Testgruppen wurden nach Bestätigung gelöscht.
   gewordene Fakten ab. F-029b bekommt deshalb die Regel: Zustände, die weiter gelten, im
   Präsens.
 - Attribut-Aufrufe entstehen nur für Entitäten mit Typ.
+
+### F-029b — fertig 2026-10-30
+
+**Umgesetzt:**
+
+- Die Zone `global-graphiti` in `plugins/coding-kit/global/coding-kit.md` ist neu
+  geschrieben, 15 Zeilen. Sie regelt:
+  - Graph zuerst fragen, wie bisher.
+  - Ohne Nachfrage wird nur Wissen ohne Ort im Repo gespeichert, dazu je
+    abgeschlossenem Feature ein Wegweiser.
+  - Entscheidungen und Details stehen in Feature-Datei und ADR.
+  - Auf Bitte des Nutzers wird gespeichert, in derselben Form.
+  - Form-Regel: ein Thema, 2–4 Sätze, höchstens etwa 450 Zeichen, Präsens,
+    `reference_time` bei Vergangenem, keine Hashes, Testzahlen, Konstantennamen oder
+    Versionsstände außer als Thema, keine Extraktionsparameter.
+- Der Template-Block `claude-graphiti` verweist zum Schreiben auf die Kit-Regeln.
+- Die HOW-TO schreibt in Schritt 6 von step-done nur noch beim Ende eines Features.
+- Die CLAUDE.md des Kits folgt derselben Regel.
+- Version 3.1.0, CHANGELOG mit `### Template`.
+
+**Entscheidungen:**
+
+- Der Template-Block verweist nur auf die Kit-Regeln, statt die Form-Regel zu
+  wiederholen. So gibt es eine Quelle, und zwei Texte müssen nicht abgeglichen werden.
+- Die Regeln zu den group_ids sind zusammengefasst, damit die Zone in 15 Zeilen passt.
+
+**Abweichung vom Plan:**
+
+- Die README bleibt unverändert. Sie nennt die Graphiti-Regeln nur allgemein.
+- Bis F-029c schreibt step-done noch bei jedem Substep, während HOW-TO und Regeln schon
+  „nur beim Abschluss“ sagen. F-029c gleicht das vor dem Release aus.
+
+**Funde:** keine.

@@ -5,7 +5,8 @@
 
 - Erst den Graph fragen, dann Dateien durchsuchen:
   `search_memory_facts(query="…", group_ids=["coding-kit"])`.
-- Nach signifikanten Änderungen via `add_memory` aktualisieren (`group_id: "coding-kit"`).
+- Schreiben nach der Graphiti-Regel der globalen Kit-Regeln (`group_id: "coding-kit"`):
+  Wissen ohne Ort im Repo und je abgeschlossenem Feature ein kurzer Wegweiser.
 - Wissen zum Template bis 0.16.0 liegt noch unter der group_id `project-template` — bei
   Template-Fragen beide abfragen (`group_ids=["coding-kit", "project-template"]`), neu
   gespeichert wird nur unter `coding-kit`.

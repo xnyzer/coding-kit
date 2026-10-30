@@ -100,14 +100,17 @@ dem Niveau.
 
 - **Erst den Graph fragen, dann Dateien durchsuchen** — zu Sessionbeginn und laufend als
   Nachschlagewerk (`search_memory_facts`, `search_nodes`). Gefundenes still anwenden.
-- **group_ids:** Projektwissen → group_id aus der **Root-CLAUDE.md des Projekts**
-  (Konvention: Projektname). Persönliches und Übergreifendes (Präferenzen, Infra) → `main`.
-- Fehlt die group_id im Projekt: erst im Graph suchen, sonst den Nutzer fragen und die
-  bestätigte group_id in die Root-CLAUDE.md des Projekts eintragen.
-- **Speichern ohne Nachfrage** (`add_memory`): getroffene Entscheidungen, gelöste
-  Probleme, geäußerte Präferenzen, Infra-Fakten — dichte Inhalte in mehrere Episoden
-  splitten. Nicht speichern: Trivia, temporäres Debugging, bereits Vorhandenes.
-  Veraltetes ersetzen (`delete_entity_edge`, dann neu speichern).
+- **group_ids:** Projektwissen → group_id aus der Root-CLAUDE.md des Projekts (fehlt sie:
+  im Graph suchen, sonst den Nutzer fragen und eintragen); Übergreifendes → `main`.
+- **Ohne Nachfrage speichern** (`add_memory`) nur Wissen ohne Ort im Repo — Stolperfallen,
+  Infra-Fakten, Präferenzen, Projektübergreifendes — und je abgeschlossenem Feature einen
+  Wegweiser (F-Nummer, Titel, Pfad der Feature-Datei, Ergebnis). Entscheidungen und
+  Details stehen in Feature-Datei und ADR. Auf Bitte des Nutzers: speichern, gleiche Form.
+- **Form:** ein Thema, 2–4 Sätze, höchstens etwa 450 Zeichen; Geltendes im Präsens,
+  `reference_time` bei Vergangenem. Commit-Hashes, Testzahlen, Funktions- und
+  Konstantennamen, Versionsstände nur, wenn sie das Thema sind — jede Nennung wird eine
+  Entität, die der Server einzeln bezahlt. Keine Extraktionsparameter; Überholtes regelt
+  der Graph über seine Zeitstempel.
 <!-- /section:global-graphiti -->
 
 <!-- section:global-workflow -->

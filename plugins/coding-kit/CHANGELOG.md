@@ -13,6 +13,31 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.1.0 — unveröffentlicht
+
+Schlankere Graphiti-Schreibzugriffe (F-029). Ein Testlauf zeigte: Kurze Episoden mit
+einem Thema halbieren die Entitäten und senken die Serverkosten um rund zwei Drittel,
+ohne dass die Suche schlechter wird. Auf jedem Rechner holt
+`/coding-kit:update-conventions global` die geänderten globalen Regeln, Projekte holen den
+Template-Block per `/coding-kit:update-conventions`.
+
+- **Globale Regeln**, Abschnitt Graphiti Memory: Ohne Nachfrage gespeichert wird nur
+  Wissen ohne Ort im Repo (Stolperfallen, Infra-Fakten, Präferenzen,
+  Projektübergreifendes) und je abgeschlossenem Feature ein kurzer Wegweiser;
+  Entscheidungen und Details stehen in Feature-Datei und ADR. Neu ist eine Form-Regel:
+  ein Thema, 2–4 Sätze, höchstens etwa 450 Zeichen, Geltendes im Präsens, keine
+  Commit-Hashes, Testzahlen oder Konstantennamen außer als Thema. Die Anweisungen
+  „dichte Inhalte in mehrere Episoden splitten“ und „Veraltetes per `delete_entity_edge`
+  ersetzen“ entfallen.
+
+### Template
+
+- **`CLAUDE.md`**, Abschnitt `claude-graphiti`: Das Schreiben folgt der Graphiti-Regel
+  der globalen Kit-Regeln; die Regel „Split dense content into multiple episodes“
+  entfällt.
+- **`HOW-TO-CODE-WITH-CLAUDE.md`:** Schritt 6 von „What `/step-done` does in detail“
+  schreibt nur noch beim Abschluss eines Features eine kurze Episode in den Graph.
+
 ## 3.0.0 — 2026-10-30
 
 Drei Themen: Der autonome `/goal`-Lauf entfällt (F-050), die Bau-Skills arbeiten nach

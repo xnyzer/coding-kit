@@ -8,8 +8,9 @@
 - **Query the graph first** before searching files:
   `search_memory_facts(query="…", group_ids=["{{GROUP_ID}}"])`,
   `search_nodes(query="…", group_ids=["{{GROUP_ID}}"])`.
-- **After significant changes**, update via `add_memory` (`group_id: "{{GROUP_ID}}"`,
-  `source: "text"`, descriptive `name`). Split dense content into multiple episodes.
+- **Write** via `add_memory` (`group_id: "{{GROUP_ID}}"`) following the Graphiti section
+  of the coding-kit global rules: knowledge with no place in the repo, plus one short
+  pointer per finished feature; details stay in the feature file.
 - Requires a running Graphiti MCP server — skip silently if none is available.
 <!-- /section:claude-graphiti -->
 <!-- /template:optional:graphiti -->
