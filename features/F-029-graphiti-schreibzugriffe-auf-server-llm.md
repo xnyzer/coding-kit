@@ -2,7 +2,7 @@
 id: F-029
 title: Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren
 type: feature
-status: PLANNED
+status: IN-PROGRESS
 size: L
 created: 2026-10-09
 done:
@@ -84,7 +84,7 @@ gelten. Je Feature entstehen heute 3–11 Episoden.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben vier echte coding-kit-Episoden aus dem Messzeitraum, wenn sie in
+- [x] AC-1 — Gegeben vier echte coding-kit-Episoden aus dem Messzeitraum, wenn sie in
   einer Testgruppe in vier Varianten eingespielt werden (wie heute; neue Form; neue Form
   mit Extraktionsanweisung; zusätzlich ohne Typ `Document`), dann liegt je Variante eine
   Tabelle mit Entitäten, Beziehungen und Kosten aus dem Ledger vor. Dazu kommt das
@@ -92,7 +92,9 @@ gelten. Je Feature entstehen heute 3–11 Episoden.
   gewählte Variante als Entscheidung fest. Negativ: Erreicht keine Variante mindestens
   40 % weniger Entitäten als „wie heute“ bei mindestens 4 von 5 gleich gut beantworteten
   Suchfragen, gilt nur die Episoden-Form ohne Extraktionsparameter, und die
-  Entscheidung nennt den Grund.
+  Entscheidung nennt den Grund. — belegt: Testlauf 2026-10-30, Ergebnis im Verlauf
+  F-029a: v2 mit 48 % weniger Entitäten und 5 von 5 Suchfragen mindestens so gut wie die
+  Originale.
 - [ ] AC-2 — Gegeben die globalen Kit-Regeln (Zone `global-graphiti`), wenn man sie
   liest, dann regeln sie in höchstens 15 Zeilen:
   - Was in den Graph gehört: Wissen ohne Ort im Repo, also Stolperfallen,
@@ -305,3 +307,56 @@ Verworfen:
 Neue Config, Endpunkte oder Dependencies gibt es nicht. Die Parameter
 `custom_extraction_instructions` und `excluded_entity_types` bieten beide
 Graphiti-Verbindungen schon an.
+
+## Verlauf
+
+### F-029a — fertig 2026-10-30
+
+**Umgesetzt:** Testlauf in vier leeren Testgruppen, eine je Variante, nacheinander
+verarbeitet. Getestet wurden vier coding-kit-Episoden aus dem Messzeitraum: ein
+Abschluss (F-037a), eine Planung (F-034), eine Aufnahme (F-050) und eine Stolperfalle
+(mawk). Die Varianten:
+
+- v1: die Originale
+- v2: neue Form, also ein Thema, Verweis auf die Feature-Datei, ohne Hashes, Testzahlen
+  und Konstantennamen
+- v3: wie v2 mit `custom_extraction_instructions`
+- v4: wie v3, zusätzlich `excluded_entity_types: ["Document"]`
+
+Entitäten und Beziehungen kommen aus dem Graph, die Kosten aus dem Ledger-Export, dazu
+fünf Suchfragen.
+
+| Variante | Entitäten | Beziehungen | Kosten | LLM-Aufrufe | Suchfragen mind. so gut wie v1 |
+|---|---|---|---|---|---|
+| v1 | 48 | 49 | 0,0450 € | 114 | — |
+| v2 | 25 (−48 %) | 21 | 0,0147 € (−67 %) | 42 | 5/5 |
+| v3 | 25 (−48 %) | 18 | 0,0135 € (−70 %) | 40 | 4/5 |
+| v4 | 15 (−69 %) | 12 | 0,0091 € (−80 %) | 27 | 2/5 |
+
+Die Testgruppen wurden nach Bestätigung gelöscht.
+
+**Entscheidungen:**
+
+- Gewählt ist Variante v2: die neue Form ohne Extraktionsparameter.
+- Die Anweisung (v3) spart keine Entität, Dateipfade werden trotzdem Entitäten, und die
+  Aussage „mawk lehnt NF ab“ fehlt.
+- Der Ausschluss von `Document` (v4) entfernt auch die Werkzeuge des Reviewers, die Pfade
+  der Feature-Dateien und den mawk-Fakt.
+- Richtwert für die Konvention (AC-2): ein Thema, 2–4 Sätze, höchstens etwa 450 Zeichen.
+  Extraktionsparameter entfallen.
+
+**Abweichung vom Plan:**
+
+- v3 und v4 wurden nicht per Suche abgefragt, sondern über ihre vorhandenen Fakten
+  bewertet. `search_nodes` kam in keiner Variante zum Einsatz.
+- Ein ✗ wegen eines fehlenden Fakts ist sicher, ein ✓ nur eine Obergrenze. Die
+  Entscheidung stützt sich auf die sicheren ✗ und auf die fehlende Ersparnis von v3.
+- Kosten sind nur zwischen den Varianten verglichen, nicht gegen die Basis. In einer
+  leeren Gruppe entfällt der Abgleich der ersten Episode (EC-4).
+
+**Funde:**
+
+- Vergangenheitsformen wie „hing am“ oder „war Teil von“ legt Graphiti als ungültig
+  gewordene Fakten ab. F-029b bekommt deshalb die Regel: Zustände, die weiter gelten, im
+  Präsens.
+- Attribut-Aufrufe entstehen nur für Entitäten mit Typ.

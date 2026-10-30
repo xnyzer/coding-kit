@@ -65,7 +65,7 @@ bzw. ohne GitHub zuerst.
 | [F-024](F-024-commit-adresse-aus-der-personal-config.md) | Commit-Adresse aus der Personal-Config statt hart aus gh | BACKLOG |  |
 | [F-025](F-025-install-sh-fehlender-gh-login-und.md) | install.sh — fehlender gh-Login und Plattform-Abdeckung | BACKLOG |  |
 | [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) | Stop-Hook plattformfähig machen (Windows greift ins WSL) | BACKLOG |  |
-| [F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md) | Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren | PLANNED |  |
+| [F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md) | Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren | IN-PROGRESS |  |
 | [F-030](F-030-graphiti-episodenverlust-erkennen-und.md) | Graphiti-Episodenverlust erkennen und wiederherstellbar halten | BACKLOG |  |
 | [F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) | Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git) | BACKLOG |  |
 | [F-033](F-033-betrieb-ohne-graphiti-absichern.md) | Betrieb ohne Graphiti absichern | BACKLOG |  |
