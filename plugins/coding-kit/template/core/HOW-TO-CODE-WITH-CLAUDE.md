@@ -41,8 +41,8 @@ above all) work without the plugin.
 | `/add-feature` | Put a new task on the roadmap — you start it, or Claude does when a new task comes up while building | Advice first: the problem behind the idea, the strongest counter-argument, alternatives (including not building it) and one recommendation → write-up → your OK → a new file in `features/` (status **BACKLOG**) and its row in the index |
 | `/prep-step` | Plan a task before building it | Sizes the feature (S, M or L) and specifies it to fit — acceptance criteria, edge cases, non-goals, tests, how it fits the project; may advise against it — then plans the substeps → specification and plan in the feature file (status **PLANNED**). If the task introduces a new framework, dependency, language or toolchain, checks the planned signals with the detection script against the fragment catalog and the stack modules — plus the catalog's characteristic triggers — and proposes appending missing catalog fragments, adding a missing module via `/choose-stack` (or keeping the language as a tool language), or, where the template has nothing for it (a tool without any module or fragment), building it by hand in the project — a project-local fragment or a hand-built toolchain — with an adoption proposal for the template, or declining the tool for good with a `tool:NAME` row. A fragment that also requires a change in the project itself brings that change into the plan |
 | `/build-step` | Implement a planned task | Works the plan substep by substep, verifying each and reviewing its own diff (understandable, simple, secure, readable, no workaround) against `CODING-STANDARDS.md`; fixes bugs it finds in the code it touches (asks first when the fix is large); stops and offers ways forward instead of building a workaround; ends every substep with a `/step-done` recommendation |
-| `/step-done` | After finishing a task/substep | Code review → `just check` → detection backstop (a framework without its fragment, a language without its module or a tool the template has no convention for, new in this step) → managed-files backstop (a changed template file without a row in `.claude/convention-overrides.md` is reported, with the choice to register it, revert it or propose it for the template — never blocking) → secrets & privacy scan → preview of the booking (history entry, acceptance criteria with their proof, status, index) with the commit message → one approval → booking + commit |
-| `/teach-step` | Implement it yourself, guided | Socratic guidance — you write all the code; Claude reads it, gives graded hints, runs tests, writes nothing itself |
+| `/step-done` | After finishing a task/substep | Code review along five questions (understandable, simple, secure, readable, no workaround), fixing bugs it finds in the touched code → `just check` → detection backstop (a framework without its fragment, a language without its module or a tool the template has no convention for, new in this step) → managed-files backstop (a changed template file without a row in `.claude/convention-overrides.md` is reported, with the choice to register it, revert it or propose it for the template — never blocking) → secrets & privacy scan → preview of the booking (history entry, acceptance criteria with their proof, status, index) with the commit message → one approval → booking + commit |
+| `/teach-step` | Implement it yourself, guided | Socratic guidance — you write all the code; Claude reads it, checks it along the same five questions as `/step-done`, points out bugs it finds as hints, gives graded hints, runs tests, writes nothing itself |
 | `/audit-code` | One-off audit of existing code | Check (optionally scoped to an area or path) → results in AUDIT-RESULTS.md (gitignored) |
 
 **Occasional project maintenance:**
@@ -106,8 +106,12 @@ substeps, M a short interview and 2–3 substeps, L the full interview and 3–5
 
 ## What `/step-done` does in detail
 
-1. **Code review & checks** — changed files against `CODING-STANDARDS.md`; `just check`
-   must be green.
+1. **Code review & checks** — changed files against `CODING-STANDARDS.md` (without it:
+   the Mindset, Control flow and Secure coding sections of the kit's template), along five
+   questions: understandable, simple, secure, readable (never minified), no workaround.
+   Findings are fixed; a bug that was already in the touched code is fixed too, with a
+   test, and noted in the history (large fixes only after asking). `just check` must be
+   green.
 2. **Secrets & privacy scan** — working tree + commit draft for secrets/keys/IPs/private
    emails; living docs for private info (names, customers, local paths). Findings are
    fixed or moved to `private/` before any commit is proposed.

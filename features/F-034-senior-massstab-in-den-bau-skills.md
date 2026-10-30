@@ -89,15 +89,20 @@ abstimmen.
   § 6 der Vorlage (`CODING-STANDARDS.md`, „Human-readable source, never minified");
   CHANGELOG 3.0.0 mit `### Template`; `version-rule.py --since origin/main` OK;
   `just check` grün.
-- [ ] AC-6 — Gegeben step-done reviewt einen Schritt, dann prüft es ausdrücklich dieselben
+- [x] AC-6 — Gegeben step-done reviewt einen Schritt, dann prüft es ausdrücklich dieselben
   fünf Prüffragen gegen denselben Maßstab und behebt vorhandene Fehler nach der Regel aus
   AC-3; teach-step kontrolliert die Änderung des Nutzers nach denselben Fragen und zeigt
   vorhandene Fehler (als Hinweis oder Frage, nie als Fix); prep-step plant die
   einfachste tragfähige Lösung gegen denselben Maßstab. Negativ: Kein Skill führt eigene
-  Inhaltsregeln neben der `CODING-STANDARDS.md` bzw. dem Ersatz.
-- [ ] AC-7 — Gegeben die Doku, dann nennen README (Skill-Tabelle) und die Template-HOW-TO
+  Inhaltsregeln neben der `CODING-STANDARDS.md` bzw. dem Ersatz — belegt: `grep` zeigt
+  alle fünf Prüffragen fett in build-step, step-done und teach-step; prep-step verweist
+  im Ansatz auf denselben Maßstab; der Absatz „Maßstab laden" steht gleichlautend in
+  allen vier Skills.
+- [x] AC-7 — Gegeben die Doku, dann nennen README (Skill-Tabelle) und die Template-HOW-TO
   (build-step-Zeile, „What `/step-done` does in detail") Selbst-Review,
-  Workaround-Stopp und das Mitbeheben vorhandener Fehler; `just check` ist grün.
+  Workaround-Stopp und das Mitbeheben vorhandener Fehler; `just check` ist grün —
+  belegt: die Zeilen zu build-step, step-done und teach-step in README und HOW-TO sowie
+  „What `/step-done` does in detail" neu gelesen; `just check` grün.
 
 ### Randfälle
 
@@ -241,5 +246,28 @@ build-step nachgezogen, CHANGELOG 3.0.0 mit F-034-Teil und `### Template`.
 zwei Themen (F-050, F-034); der Satz „Projekte müssen nichts tun" stimmte nicht mehr,
 weil sich die Vorlage ändert. AC-1 bis AC-4 sind geschrieben, belegt werden sie wie
 geplant erst im Testlauf (F-034c).
+
+**Funde:** keine.
+
+### F-034b — fertig 2026-10-30
+
+**Umgesetzt:** step-done (Abschnitt 1) lädt den Maßstab samt Ersatz, prüft ausdrücklich
+die fünf Prüffragen im Wortlaut von build-step und hat die Regel „Vorhandene Fehler"
+(beheben, Test, unter Funde nennen; vorher fragen bei großen Korrekturen; vendorten oder
+erzeugten Code nur melden); die Beschreibung im Kopfblock nennt das. teach-step lädt
+denselben Maßstab und kontrolliert im Lehr-Loop nach denselben fünf Fragen; vorhandene
+Fehler zeigt der Skill als Hinweis oder Frage, beheben tut sie der Nutzer. prep-step
+lädt denselben Maßstab und plant als Ansatz die einfachste tragfähige Lösung, ohne
+Abstraktion auf Vorrat und ohne Workaround. HOW-TO und README beschreiben step-done und
+teach-step entsprechend, die HOW-TO dazu „What `/step-done` does in detail"; der
+CHANGELOG 3.0.0 nennt alle drei Skills.
+
+**Entscheidungen:** Die Erklärungen der fünf Fragen stehen in build-step und step-done
+wortgleich, teach-step führt sie knapp — Skills können sich zur Laufzeit nicht
+gegenseitig lesen (wie beim Freigabe-Gate).
+
+**Abweichung vom Plan:** Auch die Zeilen zu teach-step in README und HOW-TO sind
+nachgezogen, weil die `/add-skill`-Checkliste das für jeden geänderten Skill verlangt; die
+Zeilen zu prep-step bleiben, dort änderte sich nur eine Formulierung zum Ansatz.
 
 **Funde:** keine.

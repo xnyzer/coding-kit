@@ -52,7 +52,11 @@ Schritt weitermachen — erledigte Arbeit nicht wiederholen, nichts raten.
   neue Nummer (`/coding-kit:add-feature`).
 - **Abhängigkeiten** (`depends-on`, Erfassung): erledigt (Status `DONE` in der Tabelle)
   oder in der Reihenfolge davor eingeplant? Sonst melden.
-- `CODING-STANDARDS.md` lesen (falls vorhanden und noch nicht im Kontext); bei
+- **Maßstab laden:** die `CODING-STANDARDS.md` des Projekts lesen (falls noch nicht im
+  Kontext); sie gilt, auch wo sie von der Vorlage abweicht. Fehlt sie, gelten als Ersatz
+  die Abschnitte Mindset, Control flow und Secure coding der Vorlage
+  `${CLAUDE_PLUGIN_ROOT}/template/core/CODING-STANDARDS.md` — einmal sagen, dass dieser
+  Ersatz gilt. Mit Projektdatei wird die Vorlage nicht zusätzlich herangezogen. Bei
   Security-Postur `THREAT-MODEL.md`. Grundsätzliche Entscheidungen stehen als ADR in
   `docs/adr/` — die berührten lesen.
 
@@ -194,7 +198,9 @@ der Datei, dass nur der Plan fehlt. Bei S kommen Spezifikation und Plan in eine 
 **Abschnitt Plan** der Feature-Datei:
 
 - **Größe** mit der Begründung aus Schritt 3.
-- **Ansatz:** der gewählte Weg; ab M mit der verworfenen Alternative und warum nicht.
+- **Ansatz:** der gewählte Weg — die einfachste tragfähige Lösung gegen den Maßstab
+  (Schritt 1), ohne Abstraktion auf Vorrat und ohne Workaround; ab M mit der verworfenen
+  Alternative und warum nicht.
 - **Substeps** — S: der Plan in Stichpunkten, keine Substeps. M: 2–3 Substeps. L: 3–5,
   bei großer Unsicherheit ein Spike zuerst. Braucht es mehr, in eigene F-Nummern teilen
   (`/coding-kit:add-feature`; das Feature wird ggf. `SUPERSEDED`). Substeps heißen

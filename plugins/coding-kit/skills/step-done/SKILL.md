@@ -1,6 +1,6 @@
 ---
 name: step-done
-description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS, Checks über just, Erkennungs-Backstop (neu eingeführte Frameworks ohne Fragment, Sprachen ohne Stack-Modul), Backstop für geänderte managed Dateien ohne Registry-Eintrag, Secrets-Scan, Privacy-Scan der lebenden Doku, Verbuchung in der Feature-Datei (Verlauf-Eintrag, Abnahmekriterien mit Beleg, Status IN-PROGRESS bzw. DONE, erzeugte Index-Tabelle, Vorschlag zur Reihenfolge) und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), Graphiti-Update.
+description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS (ohne sie gegen drei Abschnitte der Vorlage) nach fünf Prüffragen — verständlich, einfach, sicher, lesbar, kein Workaround — samt Behebung vorhandener Fehler im berührten Code, Checks über just, Erkennungs-Backstop (neu eingeführte Frameworks ohne Fragment, Sprachen ohne Stack-Modul), Backstop für geänderte managed Dateien ohne Registry-Eintrag, Secrets-Scan, Privacy-Scan der lebenden Doku, Verbuchung in der Feature-Datei (Verlauf-Eintrag, Abnahmekriterien mit Beleg, Status IN-PROGRESS bzw. DONE, erzeugte Index-Tabelle, Vorschlag zur Reihenfolge) und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), Graphiti-Update.
 disable-model-invocation: false
 user-invocable: true
 ---
@@ -35,11 +35,33 @@ Punkt der Checkliste weitermachen — erledigte Arbeit nicht wiederholen.
 
 ## 1. Code-Review & Checks
 
-- `CODING-STANDARDS.md` lesen (falls vorhanden und noch nicht im Kontext).
-- **Alle in diesem Schritt geänderten/neuen Dateien** gegen die Regeln prüfen.
+- **Maßstab laden:** die `CODING-STANDARDS.md` des Projekts lesen (falls noch nicht im
+  Kontext); sie gilt, auch wo sie von der Vorlage abweicht. Fehlt sie, gelten als Ersatz
+  die Abschnitte Mindset, Control flow und Secure coding der Vorlage
+  `${CLAUDE_PLUGIN_ROOT}/template/core/CODING-STANDARDS.md` — einmal sagen, dass dieser
+  Ersatz gilt. Mit Projektdatei wird die Vorlage nicht zusätzlich herangezogen.
+- **Alle in diesem Schritt geänderten/neuen Dateien** gegen den Maßstab prüfen,
+  ausdrücklich nach fünf Prüffragen:
+  - **verständlich:** Versteht jemand, der neu im Code ist, die Änderung ohne Erklärung?
+  - **einfach:** Ist es die einfachste tragfähige Lösung, ohne Abstraktion auf Vorrat?
+  - **sicher:** Eingaben an Vertrauensgrenzen geprüft, keine Injection, Zugriffe
+    berechtigt, keine Secrets?
+  - **lesbar:** menschenlesbarer Quelltext, nie minifiziert oder auf eine Zeile gepresst
+    (auch JSON, CSS, Konfiguration)? Minifiziertes aus einem Build-Werkzeug ist kein
+    Fund, von Hand bearbeitetes schon — im Zweifel melden statt umformatieren.
+  - **kein Workaround:** keine Umgehung, kein `HACK`, kein „später richtig"?
+
+  Fragen ohne Bezug entfallen (etwa „sicher" bei einem Tippfehler), „lesbar" gilt immer.
 - **Kommentar-/Docstring-Sprache** gegen den Languages-Block prüfen (ohne Block:
   englisch).
 - **Verstöße direkt beheben** — nicht als Frage an den Nutzer zurückspielen.
+- **Vorhandene Fehler:** Stößt das Review im berührten Code auf einen Fehler, der schon
+  vorher da war (falsches Verhalten, Sicherheitslücke, roter Check, Warnung), gleich
+  beheben, mit einem Test belegen und im Verlauf-Eintrag unter Funde nennen. Vorher
+  fragen, wenn die Korrektur groß ist, Verhalten ändert, auf das sich anderes verlässt,
+  oder in einem anderen Teil des Projekts liegt; auf Wunsch wird daraus eine F-Nummer
+  vom Typ `fix`. Fehler in vendortem oder erzeugtem Code (Fremdbibliothek,
+  Build-Ausgabe) nur melden — die Korrektur gehört an die Quelle.
 - Checks stack-agnostisch über die just-Standardrezepte ausführen: **`just check`** ist
   das Vollgate; bei Bedarf gezielt `just test` / `just lint`. Gibt es kein justfile:
   projektübliche Checks aus CLAUDE.md/README ermitteln — nie einen Stack raten. Bei

@@ -53,16 +53,24 @@ coding der Vorlage aus dem Plugin.
   geändertem Verhalten oder in einem anderen Projektteil fragt er vorher. Lässt der Plan
   keine saubere Lösung zu, hält er an und nennt Grund und Wege, statt einen Workaround zu
   bauen.
-- **README:** Die Zeile zu build-step nennt Selbst-Review, Fehler-Regel und
-  Workaround-Stopp.
+- **step-done:** Das Review prüft nach denselben fünf Fragen gegen denselben Maßstab und
+  behebt vorhandene Fehler im berührten Code nach derselben Regel; sie stehen im
+  Verlauf-Eintrag unter Funde.
+- **teach-step:** Die Kontrolle im Lehr-Loop prüft nach denselben fünf Fragen; vorhandene
+  Fehler zeigt der Skill als Hinweis oder Frage, beheben tut sie der Nutzer.
+- **prep-step:** lädt denselben Maßstab und plant als Ansatz die einfachste tragfähige
+  Lösung, ohne Abstraktion auf Vorrat und ohne Workaround.
+- **README:** Die Zeilen zu build-step, step-done und teach-step nennen die fünf Fragen
+  und die Fehler-Regel, build-step dazu den Workaround-Stopp.
 
 ### Template
 
 - **`CODING-STANDARDS.md`**, § 6 Control flow: neue Regel „Human-readable source, never
   minified" — nichts wird komprimiert oder auf eine Zeile gepresst, auch nicht JSON, CSS
   oder Konfiguration; Minifiziertes entsteht nur als Ausgabe des Build-Werkzeugs.
-- **`HOW-TO-CODE-WITH-CLAUDE.md`:** Die Zeile zu `/build-step` nennt Selbst-Review,
-  Fehler-Regel und Workaround-Stopp.
+- **`HOW-TO-CODE-WITH-CLAUDE.md`:** Die Zeilen zu `/build-step`, `/step-done` und
+  `/teach-step` nennen die fünf Prüffragen und die Fehler-Regel, `/build-step` dazu den
+  Workaround-Stopp; „What `/step-done` does in detail" beschreibt das Review entsprechend.
 
 ## 2.1.0 — 2026-10-28
 

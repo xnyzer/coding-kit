@@ -58,8 +58,12 @@ nichts wiederholen.
 ## 1. Aufgabe & Plan laden
 
 - Die Feature-Datei (`features/F-NNN-*.md`) lesen: Erfassung, Spezifikation
-  (Abnahmekriterien, Randfälle, Nicht-Ziele, Tests), Plan, Verlauf;
-  `CODING-STANDARDS.md` lesen (falls vorhanden).
+  (Abnahmekriterien, Randfälle, Nicht-Ziele, Tests), Plan, Verlauf.
+- **Maßstab laden:** die `CODING-STANDARDS.md` des Projekts lesen; sie gilt, auch wo sie
+  von der Vorlage abweicht. Fehlt sie, gelten als Ersatz die Abschnitte Mindset, Control
+  flow und Secure coding der Vorlage
+  `${CLAUDE_PLUGIN_ROOT}/template/core/CODING-STANDARDS.md` — einmal sagen, dass dieser
+  Ersatz gilt. Mit Projektdatei wird die Vorlage nicht zusätzlich herangezogen.
 - Ist der Status `PLANNED` oder `IN-PROGRESS`, den Plan (Substeps; der Verlauf zeigt die
   erledigten) als Gerüst nutzen. Bei `BACKLOG` gibt es noch keinen Plan: die Aufgabe
   selbst in kleine, einzeln prüfbare **Lern-Häppchen** zerlegen (ab Größe M zuerst
@@ -127,9 +131,16 @@ Bescheid, wenn es zu knapp wird.").
 2. **Arbeitsauftrag:** was zu tun ist, als Auftrag plus Leitfrage — nicht als Code.
 3. **Nutzer codet.** Fragen beantworten nach der gestuften Hilfe (Grundregeln).
 4. **Kontrollieren:** meldet der Nutzer „fertig", die Änderung per `git diff` und
-   Re-Lesen der Dateien prüfen — Korrektheit, Verständlichkeit, CODING-STANDARDS.
-   Feedback didaktisch: erst würdigen, was gut ist; Probleme als Fragen oder Hinweise
-   („Was passiert hier bei leerer Eingabe?"), nicht als Fix.
+   Re-Lesen der Dateien prüfen — Korrektheit und die fünf Prüffragen gegen den Maßstab
+   (Abschnitt 1): **verständlich** (ohne Erklärung nachvollziehbar), **einfach**
+   (einfachste tragfähige Lösung), **sicher** (Eingaben geprüft, keine Injection, keine
+   Secrets), **lesbar** (nie minifiziert oder auf eine Zeile gepresst),
+   **kein Workaround**. Fragen ohne Bezug entfallen, „lesbar" gilt immer. Ein **vorhandener
+   Fehler** im berührten Code, der schon vor dem Häppchen da war, wird gezeigt — als
+   Hinweis oder Frage; beheben tut ihn der Nutzer, bei großen Korrekturen nach
+   Absprache als eigene Aufgabe. Feedback didaktisch: erst würdigen, was gut ist;
+   Probleme als Fragen oder Hinweise („Was passiert hier bei leerer Eingabe?"), nicht
+   als Fix.
 5. **Testen:** passende just-Rezepte laufen lassen (`just test`, `just check`) oder den
    Nutzer ausführen lassen; Ausgabe gemeinsam interpretieren. Rot → zurück zu Schritt 3
    mit Diagnose-Anleitung.
