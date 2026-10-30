@@ -69,7 +69,7 @@ bzw. ohne GitHub zuerst.
 | [F-030](F-030-graphiti-episodenverlust-erkennen-und.md) | Graphiti-Episodenverlust erkennen und wiederherstellbar halten | BACKLOG |  |
 | [F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) | Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git) | BACKLOG |  |
 | [F-033](F-033-betrieb-ohne-graphiti-absichern.md) | Betrieb ohne Graphiti absichern | BACKLOG |  |
-| [F-037](F-037-unabhaengiges-review-in-step-done.md) | Unabhängiges Review in step-done (Reviewer mit frischem Kontext) | BACKLOG |  |
+| [F-037](F-037-unabhaengiges-review-in-step-done.md) | Unabhängiges Review in step-done (Reviewer mit frischem Kontext) | PLANNED |  |
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
 
 ### Closed
