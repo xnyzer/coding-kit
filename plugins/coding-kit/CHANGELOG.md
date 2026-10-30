@@ -13,7 +13,7 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 3.0.0 — unveröffentlicht
+## 3.0.0 — 2026-10-30
 
 Drei Themen: Der autonome `/goal`-Lauf entfällt (F-050), die Bau-Skills arbeiten nach
 einem Senior-Maßstab (F-034), und step-done lässt jeden Schritt von einem unabhängigen
