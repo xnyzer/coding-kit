@@ -70,10 +70,13 @@
 #       unconfirmed (a zone the project lacks while the file has no base to tell new
 #       from opted-out), removed (a zone the project and its base have and SEEDS no
 #       longer has), unmarked (the file has no zone markers or no slot at all), local
-#       (only the project has it, or a removed zone with an override line), no-file,
-#       broken (unbalanced, nested or duplicate markers), skipped (skip row). A block
+#       (only the project has it, or a removed zone with an override line), no-file
+#       (the project deleted the file: it has a base, or the block is a fragment),
+#       new-file (a seed file the project lacks and has no base for: the template added
+#       it), broken (unbalanced, nested or duplicate markers), skipped (skip row). A block
 #       that neither side has gets no line. OUT/<target> is the project file with every
-#       differing, new and removed block applied — only the NAMEs given, if any;
+#       differing, new and removed block applied — only the NAMEs given, if any; for a
+#       new-file it is the whole rendered file;
 #       opted-out, bare and unconfirmed zones only when named. A differing block is
 #       replaced, a removed zone is deleted with its content; a bare zone, and an
 #       opted-out one whose content still stands, gets its markers around that text;
@@ -1283,7 +1286,10 @@ zones_one() {  # TARGET SKIP
         tf = zdir "/" k "/" n ".template"; pf2 = zdir "/" k "/" n ".project"
         from = "-"; to = "-"
         if (skip == 1) st = "skipped"
-        else if (!hasp) st = "no-file"
+        # A missing seed file with a base was deleted; without one the template added
+        # it. Fragments live in a managed file, which merge creates.
+        else if (!hasp && (hasb || k == "fragment")) st = "no-file"
+        else if (!hasp) { st = "new-file"; dump("r", i, tf); from = empty; to = tf }
         else if (k == "fragment" && SB["p"]) st = "broken"
         else if (k == "fragment" && !SO["p"]) { st = "unmarked"; dump("r", i, tf) }
         else if (j && BR["p", j]) st = "broken"
@@ -1309,6 +1315,11 @@ zones_one() {  # TARGET SKIP
         else if (!HS["p"]) { st = "unmarked"; dump("r", i, tf) }
         else if (!hasb) { st = "unconfirmed"; dump("r", i, tf); from = empty; to = tf }
         else { st = "new"; dump("r", i, tf); from = empty; to = tf }
+        # A new file comes whole from the render as soon as one of its zones is taken.
+        if (st == "new-file" && (sel == "" || named)) {
+          newfile = 1; napplied++
+          print n >> applied
+        }
         # Opted-out, unconfirmed and bare zones only when named: the user decides.
         if (((st == "differs" || st == "new") && (sel == "" || named)) ||
           ((st == "opted-out" || st == "unconfirmed" || st == "bare") && named)) {
@@ -1337,6 +1348,12 @@ zones_one() {  # TARGET SKIP
       }
       close(applied)
       if (!napplied) exit 0
+      if (newfile) {
+        printf "" > o
+        for (x = 1; x <= N["r"]; x++) print L["r", x] > o
+        close(o)
+        exit 0
+      }
 
       # Differing blocks are replaced in place. A new zone goes behind its nearest
       # predecessor in the render order that is in the file (or arrives with it), without
@@ -1475,7 +1492,7 @@ zones() {
   # Word splitting of the name list is intended.
   for zs_name in $ZSEL; do
     grep -qxF -- "$zs_name" "$WORK/applied" \
-      || die "$zs_name: no block of that name to apply (differs, new, removed, opted-out, bare, unconfirmed)"
+      || die "$zs_name: no block of that name to apply (differs, new, new-file, removed, opted-out, bare, unconfirmed)"
   done
 }
 

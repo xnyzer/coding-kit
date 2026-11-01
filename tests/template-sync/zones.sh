@@ -62,7 +62,7 @@ run_zones_cases() {
   check "zones: marker with text before it is prose" no_zone z zeta
   check "zones: marker with text behind it is prose" no_zone z eta
   check "zones: file without zone markers is unmarked" zone_is z section solo unmarked
-  check "zones: project without the file" zone_is z section gone no-file
+  check "zones: project without the file and its base: new file" zone_is z section gone new-file "+1 -0"
   check "zones: unclosed zone is broken" zone_is z section brk broken
   check "zones: skip row" zone_is z section sk skipped
   check "zones: fragment differs" zone_is z fragment mod differs "+1 -1"
@@ -81,6 +81,8 @@ run_zones_cases() {
     "x\n$S\n<!-- fragment:pa -->\nA\n<!-- /fragment:pa -->\n\n<!-- fragment:pb -->\nB\n<!-- /fragment:pb -->\n$E\n"
   check "zones: new fragment without predecessor goes to the slot start" file_is zo/START.md \
     "$S\n<!-- fragment:first -->\nF\n<!-- /fragment:first -->\n\n<!-- fragment:second -->\nS2\n<!-- /fragment:second -->\n$E\n"
+  check "zones: a new file comes whole from the render" file_is zo/GONE.md \
+    '<!-- section:gone -->\nG\n<!-- /section:gone -->\n'
   refute "zones: skipped file not written" test -e "$TMP/zo/SKIP.md"
   refute "zones: file without applied blocks not written" test -e "$TMP/zo/PLAIN.md"
   refute "zones: file without markers not listed" grep -q '^none.md' "$TMP/z.tsv"
@@ -94,11 +96,14 @@ run_zones_cases() {
 
   # --- the base: snapshot stand-in, --base ----------------------------------------
   put zp.snap/STD.md.base "intro\n$S\n<!-- fragment:ov -->\nO1\n<!-- /fragment:ov -->\n$E\n"
+  put zp.snap/GONE.md.seed '<!-- section:gone -->\nG\n<!-- /section:gone -->\n'
   check "zones --snapshot runs" \
     eval 'ts zones --snapshot "$TMP/zp.snap" "$TMP/zp" "$TMP/zp.seeds" "$TMP/zs" > "$TMP/zs.tsv"'
   check "zones: override fragment counts the template change since the base" \
     zone_is zs fragment ov override "+1 -1"
   check "zones: base block file" file_is zs/.zones/fragment/ov.base 'O1\n'
+  check "zones: a missing file with a seed base was deleted" zone_is zs section gone no-file
+  refute "zones: a deleted file is not written again" test -e "$TMP/zs/GONE.md"
   put zp.base/STD.md "intro\n$S\n<!-- fragment:ov -->\nO2\n<!-- /fragment:ov -->\n$E\n"
   check "zones --base runs" eval 'ts zones --base "$TMP/zp.base" "$TMP/zp" "$TMP/zp.seeds" "$TMP/zb" > "$TMP/zb.tsv"'
   check "zones: template unchanged since the base: no count" zone_is zb fragment ov override -
@@ -111,6 +116,19 @@ run_zones_cases() {
   check "zones: only the named fragment inserted" file_is zn/STD.md \
     "intro\n$S\n<!-- fragment:mod -->\nM0\n<!-- /fragment:mod -->\n\n$FLANG\n\n$FOV_P\n\n$FMINE\nsee <!-- fragment:zfrag -->\n$E\ntail\nproject text\n"
   refute "zones: file without a named block not written" test -e "$TMP/zn/PH.md"
+  refute "zones: a new file without its name not written" test -e "$TMP/zn/GONE.md"
+  check "zones: a named new file is written" \
+    eval 'ts zones "$TMP/zp" "$TMP/zp.seeds" "$TMP/zn7" gone > /dev/null'
+  check "zones: the named new file comes from the render" file_is zn7/GONE.md \
+    '<!-- section:gone -->\nG\n<!-- /section:gone -->\n'
+  refute "zones: naming a new file applies nothing else" test -e "$TMP/zn7/DOC.md"
+  # A fragment lives in a managed file, which merge creates: no new file here.
+  put zf.seeds/FRAG.md "$S\n<!-- fragment:fx -->\nX\n<!-- /fragment:fx -->\n$E\n"
+  mkdir -p "$TMP/zf"
+  check "zones: project without the managed file runs" \
+    eval 'ts zones "$TMP/zf" "$TMP/zf.seeds" "$TMP/zfo" > "$TMP/zf.tsv"'
+  check "zones: fragment of a missing file is no-file" zone_is zf fragment fx no-file
+  refute "zones: a missing managed file is not written" test -e "$TMP/zfo/FRAG.md"
   check "zones: the report lists every block" zone_is zn section eps differs
   check "zones: an inserted predecessor anchors the next new fragment" \
     eval 'ts zones "$TMP/zp" "$TMP/zp.seeds" "$TMP/zn2" extra > /dev/null'

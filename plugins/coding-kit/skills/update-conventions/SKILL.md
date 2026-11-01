@@ -172,7 +172,8 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    aus. Diffs zeigen aus `<tmp>/zones/.zones/<Art>/<Name>.project` → `.template`; nie
    selbst Blöcke herausschneiden, einsetzen, entfernen oder abschreiben.
    **Übernehmen:** Das Ergebnis `<tmp>/zones/<Ziel>` enthält alle Blöcke mit `differs`,
-   `new` und `removed`. Sind genau diese angenommen, es ins Projekt kopieren; sonst
+   `new` und `removed`, bei `new-file` die ganze Datei aus dem Render. Sind genau diese
+   angenommen, es ins Projekt kopieren; sonst
    `zones` mit den Namen der angenommenen Blöcke in ein frisches `<tmp>/zones-ok` laufen
    lassen und dieses Ergebnis kopieren — immer so, wenn eine `opted-out`-, `bare`- oder
    `unconfirmed`-Zone hinein soll, denn die setzt das Skript nur per Name ein. Je
@@ -200,7 +201,7 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    seine Anforderung enthielt, wird sonst von keinem Skill je eingeholt.
 7. **seed-Zonen** (Zeilen `section` aus dem `zones`-Lauf von Schritt 6, übernommen wie
    dort). **Nie die ganze Datei ersetzen oder neu anlegen** — das Ergebnis des Skripts
-   ändert nur die Zonen. Je Zeile:
+   ändert nur die Zonen; einzige Ausnahme ist `new-file`. Je Zeile:
    - `differs` → Diff zeigen; **übernehmen** / **diesmal nicht**.
    - `new` → Datei und Basis kennen die Zone nicht: Das Template hat sie neu, oder ein
      eingeschalteter Optional-Block bringt sie (z. B. `claude-graphiti` nach Schritt 2).
@@ -235,9 +236,14 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
      oder eine gestrichene Zone trägt eine Override-Zeile: melden, nicht anfassen. Ohne
      Seed-Basis landet hier auch `claude-graphiti`, wenn `OPTIONAL` kein `graphiti`
      enthält (mit Basis kommt sie als `removed`) — mit Schritt 2 abgleichen.
-   - `no-file` → die seed-Datei fehlt (vom Projekt gelöscht, oder ein Projekt im alten
-     Format ohne `features/INDEX.md` — dann zuerst A4): nur melden. `broken` → melden;
-     `identical` und `skipped` nur zählen.
+   - `new-file` → das Template hat die seed-Datei neu, das Projekt hatte sie nie (keine
+     Seed-Basis; z. B. `docs/notes.md`): die Datei aus dem Render (`<tmp>/zones/<Ziel>`)
+     mit dem Grund aus dem Update-Fenster zeigen. **anlegen** (übernommen wie in
+     Schritt 6; das Ergebnis ist die ganze Datei) / **diesmal nicht** (der nächste Lauf
+     fragt wieder) / **dauerhaft ablehnen** (`skip`-Zeile mit Grund in der Registry).
+     Ein Projekt im alten Format ohne `features/INDEX.md` → zuerst A4.
+   - `no-file` → die seed-Datei fehlt, hat aber eine Basis (vom Projekt gelöscht): nur
+     melden. `broken` → melden; `identical` und `skipped` nur zählen.
 
    Eine Zone, die weder Projekt noch Render haben (`claude-graphiti` ohne Graphiti),
    meldet das Skript nicht.
@@ -255,9 +261,10 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    Basis; „dauerhaft abgelehnt" zählt ab jetzt als Projektabweichung. `removed`-Ziele
    verlieren ihre Basis über denselben Aufruf. **Seed-Basen:** `sh <skript> snapshot
    --seeds <projekt> <tmp>/seeds <Ziele…>` für jede seed-Datei mit `section`-Zeilen aus
-   Schritt 7 außer `no-file` und `skipped` — immer, auch wenn Zonen abgelehnt wurden: Die
-   Basis hält fest, was angeboten wurde; `differs` bietet der nächste Lauf ohnehin
-   wieder an.
+   Schritt 7 außer `no-file`, nicht angelegten `new-file`-Dateien (mit Basis hielte der
+   nächste Lauf sie für gelöscht) und `skipped` — immer, auch wenn Zonen abgelehnt
+   wurden: Die Basis hält fest, was angeboten wurde; `differs` bietet der nächste Lauf
+   ohnehin wieder an.
 10. **Registry-Revision** (jeder Lauf; Modus `revise` macht nur diesen Schritt):
     `sh <skript> status <projekt>` und die Files-Tabelle der
     `.claude/convention-overrides.md` nebeneinanderlegen —
@@ -516,8 +523,8 @@ ist eine bewusste Wahl: nicht nachfragen. Werte nie selbst in die env-Datei schr
     helfen weiter: mit Kennung hat der Nutzer alle abgewählt (nur melden), ohne Kennung
     ist sie fremd (G1).
   - `broken` → melden und die Reparatur von Hand anbieten; `identical` nur zählen.
-    `no-file` und `skipped` kommen hier nicht vor: Der Abgleich läuft nur, wenn die
-    Regeldatei existiert, und der Config-Ordner hat keine Registry.
+    `no-file`, `new-file` und `skipped` kommen hier nicht vor: Der Abgleich läuft nur,
+    wenn die Regeldatei existiert, und der Config-Ordner hat keine Registry.
 
   **Übernehmen** wie in A2 Schritt 6: Sind genau die Zonen mit `differs`, `new` und
   `removed` angenommen, `<tmp>/gzones/rules/coding-kit.md` nach

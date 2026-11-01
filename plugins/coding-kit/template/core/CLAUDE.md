@@ -11,7 +11,9 @@
 - **Write** via `add_memory` (`group_id: "{{GROUP_ID}}"`) following the Graphiti section
   of the coding-kit global rules: knowledge with no place in the repo, plus one short
   pointer per finished feature; details stay in the feature file.
-- Requires a running Graphiti MCP server — skip silently if none is available.
+- Requires a running Graphiti MCP server. Without one, reading is skipped silently;
+  anything that should have been written is reported with its text, never redirected to
+  `docs/notes.md`.
 <!-- /section:claude-graphiti -->
 <!-- /template:optional:graphiti -->
 
@@ -49,6 +51,8 @@ work on that feature or need the reasons behind a finished one — not all of th
 startup. **To continue: take the first feature of the recommended order, run `/prep-step`
 to specify and plan it, `/build-step` to implement it, then `/step-done` to finish each
 substep.**
+
+Project notes — knowledge with no other place in the repo: @docs/notes.md
 <!-- /section:claude-startup -->
 
 <!-- section:claude-conventions -->

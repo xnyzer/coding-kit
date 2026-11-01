@@ -10,7 +10,9 @@
 - Wissen zum Template bis 0.16.0 liegt noch unter der group_id `project-template` — bei
   Template-Fragen beide abfragen (`group_ids=["coding-kit", "project-template"]`), neu
   gespeichert wird nur unter `coding-kit`.
-- Optional — ohne laufenden Graphiti-MCP still überspringen.
+- Optional: Ohne laufenden Graphiti-MCP wird das Lesen still übersprungen; was
+  geschrieben werden sollte, wird mit Text gemeldet. Die Auto-Memory von Claude Code ist
+  im Kit-Repo aus (`.claude/settings.json`) — Wissen liegt im Graph oder im Repo.
 
 ## Überblick
 

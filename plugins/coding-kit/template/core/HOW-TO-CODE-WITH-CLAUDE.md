@@ -19,8 +19,13 @@ Guide for working with Claude Code in the {{PROJECT_NAME}} project.
    just setup     # dependencies + git hooks
    just check     # must be green
    ```
-4. *(Optional)* **Graphiti memory** — if a Graphiti MCP server is configured, the project
-   uses the group id documented in `CLAUDE.md`. Without one, the skills skip it silently.
+4. *(Optional)* **Graphiti memory** — if `CLAUDE.md` has a Graphiti block, knowledge
+   with no place in the repo goes to the graph under the group id documented there;
+   without the block it goes to `docs/notes.md`, which `CLAUDE.md` loads in every
+   session. The project decides, not the machine: if the block is there but the Graphiti
+   MCP server is not, the skills say what they could not write. Claude Code's auto
+   memory is switched off for the project (`.claude/settings.json`) — it lives on one
+   machine only.
 
 ---
 
@@ -134,7 +139,8 @@ substeps, M a short interview and 2–3 substeps, L the full interview and 3–5
    the text*. Only then are the feature file and `features/INDEX.md` written, `just check`
    re-run and the commit made (commit email verified as a GitHub noreply address).
 6. **Graphiti** — only when the booking sets the feature to `DONE`: one short pointer
-   episode in the knowledge graph (if configured).
+   episode in the knowledge graph (if the project has a Graphiti block; if the server is
+   unreachable, the summary says so and gives the text).
 
 ---
 

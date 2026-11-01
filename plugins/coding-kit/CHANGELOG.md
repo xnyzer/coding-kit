@@ -13,6 +13,41 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.2.0 — 2026-11-01
+
+Betrieb ohne Graphiti, Auto-Memory abgelöst (F-033). Projekte sollen auf jedem Rechner
+gleich laufen. Wissen ohne Ort im Repo liegt deshalb im Graph, den mehrere Rechner
+erreichen, oder in der getrackten `docs/notes.md`, nie in der Auto-Memory von Claude
+Code, die nur auf einem Rechner liegt. Auf jedem Rechner holt
+`/coding-kit:update-conventions global` die geänderten globalen Regeln, Projekte holen
+die Vorlage per `/coding-kit:update-conventions`.
+
+- **Globale Regeln**, Abschnitt Graphiti Memory (jetzt „Graphiti Memory und
+  Projektnotizen“): Die Ablage wählt das Projekt, nicht der Rechner — mit Graphiti-Block
+  der Graph, sonst `docs/notes.md`. Ohne Graphiti gibt es keine Wegweiser je Feature,
+  das leistet `features/INDEX.md`. Hat ein Projekt einen Block, ist der Graph aber nicht
+  erreichbar, wird nicht mehr still übersprungen: Was geschrieben werden sollte, meldet
+  Claude in einem Satz mit dem Text zum Nachtragen. Die Auto-Memory wird in Projekten
+  nie genutzt.
+- **update-conventions:** Eine seed-Datei, die das Template neu hat und das Projekt nie
+  hatte, wird zum Anlegen angeboten (bisher nur gemeldet); eine gelöschte bleibt beim
+  Melden. Dafür kennt `template-sync.sh zones` den Zustand `new-file` — die Datei fehlt
+  und hat keine Seed-Basis; das Ergebnis ist dann die ganze Datei aus dem Render.
+
+### Template
+
+- **`.claude/settings.json`:** `"autoMemoryEnabled": false` — die Auto-Memory von Claude
+  Code ist im Projekt aus, auch wenn sie global an ist. `.claude/README.md` erklärt den
+  Grund.
+- **`docs/notes.md`** (neu, seed): Projektnotizen für Wissen ohne anderen Ort im Repo,
+  mit einem Kopf (Zone `notes-head`), der sagt, was hinein gehört und was nicht.
+  Bestandsprojekte bekommen die Datei zum Anlegen angeboten.
+- **`CLAUDE.md`:** Die Zone `claude-startup` lädt `docs/notes.md` per `@docs/notes.md`;
+  die Zone `claude-graphiti` meldet nicht Geschriebenes statt es still zu überspringen.
+- **`HOW-TO-CODE-WITH-CLAUDE.md`:** Schritt 4 der Einrichtung beschreibt Graph,
+  Projektnotizen und die abgeschaltete Auto-Memory; Schritt 6 von step-done nennt die
+  Meldung bei nicht erreichbarem Graph.
+
 ## 3.1.0 — 2026-10-30
 
 Schlankere Graphiti-Schreibzugriffe (F-029). Ein Testlauf zeigte: Kurze Episoden mit

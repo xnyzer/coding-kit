@@ -181,6 +181,7 @@ contains itself, is offered for removal.
 | `core/scripts/features-index.sh` | same path | managed |
 | `core/docs/adr/README.md` | same path | managed |
 | `core/docs/adr/0000-template.md` | same path | managed |
+| `core/docs/notes.md` | same path | seed |
 
 ## Removed and renamed targets
 
@@ -427,6 +428,9 @@ of updates; an override line inside a zone protects it (§ Markers). The plugin'
 - **Removed zone** — in the file and its seed base, no longer in the render: removing it
   with its content is offered; with an override line it stays as project text. A
   renamed zone shows as one removed and one new zone.
+- **New seed file** — the project lacks the file and has no seed base for it (the
+  template added the file since): creating it from the render is offered. With a seed
+  base the project deleted the file; that is only listed.
 
 This manifest defines the contract and the inventory:
 
@@ -436,6 +440,7 @@ This manifest defines the contract and the inventory:
 | `core/features/INDEX.md` | `index-head` |
 | `core/README.md` | `readme-getting-started` |
 | `core/.claude/convention-overrides.md` | `overrides-head` |
+| `core/docs/notes.md` | `notes-head` |
 
 ## Version stamp
 

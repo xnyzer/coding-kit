@@ -8,6 +8,12 @@ Hardened permissions: a tight allow-list (`just`, `mise`, read-only git, hooks/s
 plus a deny-list for secret material (`.env*`, key files, `.ssh/`, `.aws/`, `secrets/`,
 `credentials/`) and for `git push --force`.
 
+**Auto memory is off** (`"autoMemoryEnabled": false`). Claude Code keeps its auto memory
+in the home folder of one machine, so what it saved there would not travel with the
+project. Knowledge with no other place in the repo goes to the Graphiti graph (when
+`CLAUDE.md` has a Graphiti block) or to `docs/notes.md`. The project setting wins over a
+user setting that turns auto memory on.
+
 **Why the env deny rules look the way they do.** Deny beats allow and a deny rule cannot
 carry an exception, so a broad `Read(**/.env*)` would shadow the `.env.example` allow entry
 and make the tracked placeholder unusable. Narrowing the deny to a list of known names is

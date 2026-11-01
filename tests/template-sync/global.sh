@@ -313,5 +313,5 @@ run_global_cases() {
   mkdir -p "$TMP/gzn"
   check "zones: config folder without the rules file runs" \
     eval 'ts zones "$TMP/gzn" "$TMP/ga" "$TMP/gzno" > "$TMP/gzn.tsv" 2> "$TMP/gzn.err"'
-  check "zones: config folder without the rules file is no-file" all_zones gzn no-file
+  check "zones: config folder without the rules file is new-file" all_zones gzn new-file
 }

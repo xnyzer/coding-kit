@@ -61,6 +61,9 @@ run_render_cases() {
   refute "python: marker file stays empty" test -s "$TMP/py/src/demo_app/py.typed"
   check "python: seed file" has py/pyproject.toml
   check "python: graphiti zone kept" contains py/CLAUDE.md "<!-- section:claude-graphiti -->"
+  check "python: auto memory off" contains py/.claude/settings.json '"autoMemoryEnabled": false'
+  check "python: project notes" contains py/docs/notes.md "<!-- section:notes-head -->"
+  check "python: CLAUDE.md imports the project notes" contains py/CLAUDE.md "@docs/notes.md"
   refute "python: optional markers removed" grep -rq "template:optional" "$TMP/py"
   check "python: description taken literally" contains py/README.md 'Demo & tools / a\b | c'
   check "python: blank line between fragments" line_after py/CODING-STANDARDS.md "<!-- /fragment:python -->" ""
@@ -84,6 +87,9 @@ run_render_cases() {
   check "without graphiti renders (no GROUP_ID)" render nog docs-only private --seeds -GROUP_ID
   refute "without graphiti: zone dropped" contains nog/CLAUDE.md "section:claude-graphiti"
   check "without graphiti: no placeholder left" no_placeholders nog
+  check "without graphiti: auto memory off" contains nog/.claude/settings.json '"autoMemoryEnabled": false'
+  check "without graphiti: project notes" contains nog/docs/notes.md "<!-- section:notes-head -->"
+  check "without graphiti: CLAUDE.md imports the project notes" contains nog/CLAUDE.md "@docs/notes.md"
 
   # license blocks follow LICENSE_SPDX
   check "license chosen: license sentence" contains docs/CONTRIBUTING.md 'licensed under **Apache-2.0** (see `LICENSE`)'

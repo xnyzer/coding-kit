@@ -2,7 +2,7 @@
 id: F-033
 title: Betrieb ohne Graphiti absichern und Auto-Memory ablösen
 type: feature
-status: PLANNED
+status: IN-PROGRESS
 size: L
 created: 2026-10-19
 done:
@@ -55,7 +55,7 @@ new-project schlägt auch auf Rechnern ohne Graphiti eine group_id vor.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben die globalen Kit-Regeln (Zone `global-graphiti`), wenn man sie
+- [x] AC-1 — Gegeben die globalen Kit-Regeln (Zone `global-graphiti`), wenn man sie
   liest, dann regeln sie:
   - Die Ablage wählt das Projekt, nicht der Rechner: Projekt mit Graphiti-Block →
     Graphiti wie bisher; Projekt ohne Block → dasselbe Wissen in derselben Form in
@@ -68,7 +68,10 @@ new-project schlägt auch auf Rechnern ohne Graphiti eine group_id vor.
   - In Projekten nie die Auto-Memory von Claude Code nutzen.
 
   Negativ: Für das Schreiben steht kein „still überspringen“ mehr darin, und die
-  Auto-Memory ist nirgends als Ablage genannt.
+  Auto-Memory ist nirgends als Ablage genannt. — belegt: Zone gelesen (24 Zeilen), grep:
+  „still“ nur noch beim Lesen, Auto-Memory nur als Verbot genannt;
+  `template-sync.sh render-global` übernimmt die Zone; `just check` (Validator OK, 2181
+  Skript-Tests).
 - [ ] AC-2 — Gegeben ein frisch gerendertes Projekt, mit und ohne Graphiti, wenn man es
   liest, dann:
   - steht in `.claude/settings.json` `"autoMemoryEnabled": false`;
@@ -415,3 +418,66 @@ Verworfen:
 Sprachen dazu; die Skript-Teile bleiben POSIX-Shell und awk. Neue Config, Endpunkte oder
 Dependencies gibt es nicht. Gelesen werden `CLAUDE_CONFIG_DIR` und die Settings von
 Claude Code.
+
+## Verlauf
+
+### F-033a — fertig 2026-11-01
+
+**Umgesetzt:**
+
+- Kit-Regeln, Zone `global-graphiti`, jetzt „Graphiti Memory und Projektnotizen“:
+  - Die Ablage richtet sich nach dem Projekt: mit Graphiti-Block der Graph, sonst
+    `docs/notes.md`.
+  - Es gibt Form-Regeln für beide Ablagen.
+  - Ist der Graph bei einem Schreibanlass nicht erreichbar, meldet Claude das, statt
+    still zu überspringen.
+  - In Projekten wird keine Auto-Memory genutzt.
+- Template:
+  - `docs/notes.md` ist neu (seed, Zone `notes-head`).
+  - Die Zone `claude-startup` importiert sie per `@docs/notes.md`.
+  - `.claude/settings.json` setzt `"autoMemoryEnabled": false`; `.claude/README.md`
+    erklärt den Grund.
+  - Die Zone `claude-graphiti` und die HOW-TO sind angepasst.
+  - Das MANIFEST führt Datei, Zone und den Fall „neue Seed-Datei“.
+- `template-sync.sh zones` kennt den Zustand `new-file`: Die Seed-Datei fehlt im
+  Projekt, und es gibt keine Seed-Basis. Das Ergebnis ist dann die ganze Datei aus dem
+  Render. update-conventions bietet sie zum Anlegen an (Schritt 7, Seed-Basen in
+  Schritt 9).
+- Tests:
+  - Zonen: neue Datei, gelöschte Datei mit Basis, Auswahl per Name, Fragment in einer
+    fehlenden Datei.
+  - Render mit und ohne Graphiti: Settings-Zeile, Notizdatei und Import.
+- Kit-Repo:
+  - Die Auto-Memory ist aus, der Graphiti-Block der CLAUDE.md ist angepasst.
+  - Die vorhandene Auto-Memory-Notiz liegt jetzt in Graphiti (`main`); ihr Ordner ist
+    gelöscht.
+- Headless-Test in einem gerenderten Projekt: Die Session kannte ein Testwort aus
+  `docs/notes.md`, ohne ein Werkzeug zu nutzen, und hatte keinen Auto-Memory-Abschnitt.
+- Version 3.2.0, CHANGELOG mit `### Template`.
+
+**Entscheidungen:**
+
+- `docs/notes.md` hat eine Zone `notes-head`, wie `features/INDEX.md`. So kann das Kit
+  den Erklärtext nachziehen, und Bestandsprojekte bekommen die Datei über den
+  Zonen-Abgleich.
+- `new-file` gilt nur für Zonen in Seed-Dateien. Ein Fragment in einer fehlenden Datei
+  bleibt `no-file`: Die Datei ist managed, und der Merge legt sie an.
+- Die Regel „fehlt die group_id: im Graph suchen, sonst fragen und eintragen“ entfällt.
+  Ohne Block gilt `docs/notes.md`; gefragt wird nur, wenn Datei oder Import fehlen.
+- Die Notiz des Kit-Repos ging nach `main`, weil sie für alle Projekte gilt.
+
+**Abweichung vom Plan:**
+
+- Die Zone `notes-head` und der Skript-Zustand `new-file` kamen dazu; der Plan hatte den
+  Weg offengelassen.
+- Die Notiz ging nach `main` statt nach `coding-kit`.
+- Statt `/context` lief eine Headless-Frage an die Session.
+
+**Funde:**
+
+- Die Projekt-Settings schalten die Auto-Memory auch in einem Ordner ab, dem Claude Code
+  noch nicht vertraut. Die Rechte-Liste derselben Datei ignoriert es dort.
+- Ein älteres Projekt ohne Seed-Basen bekommt eine selbst gelöschte Seed-Datei einmal
+  erneut angeboten. Dauerhaft ablehnen geht mit einer `skip`-Zeile.
+- Unabhängiges Review: zwei Befunde, beide behoben (Fehlermeldung im Skript, Erklärung in
+  `.claude/README.md`).

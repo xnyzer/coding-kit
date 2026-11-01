@@ -96,21 +96,30 @@ dem Niveau.
 <!-- /section:global-git -->
 
 <!-- section:global-graphiti -->
-## Graphiti Memory (falls MCP läuft — sonst still überspringen)
+## Graphiti Memory und Projektnotizen
 
-- **Erst den Graph fragen, dann Dateien durchsuchen** — zu Sessionbeginn und laufend als
-  Nachschlagewerk (`search_memory_facts`, `search_nodes`). Gefundenes still anwenden.
-- **group_ids:** Projektwissen → group_id aus der Root-CLAUDE.md des Projekts (fehlt sie:
-  im Graph suchen, sonst den Nutzer fragen und eintragen); Übergreifendes → `main`.
-- **Ohne Nachfrage speichern** (`add_memory`) nur Wissen ohne Ort im Repo — Stolperfallen,
-  Infra-Fakten, Präferenzen, Projektübergreifendes — und je abgeschlossenem Feature einen
-  Wegweiser (F-Nummer, Titel, Pfad der Feature-Datei, Ergebnis). Entscheidungen und
-  Details stehen in Feature-Datei und ADR. Auf Bitte des Nutzers: speichern, gleiche Form.
-- **Form:** ein Thema, 2–4 Sätze, höchstens etwa 450 Zeichen; Geltendes im Präsens,
-  `reference_time` bei Vergangenem. Commit-Hashes, Testzahlen, Funktions- und
-  Konstantennamen, Versionsstände nur, wenn sie das Thema sind — jede Nennung wird eine
-  Entität, die der Server einzeln bezahlt. Keine Extraktionsparameter; Überholtes regelt
-  der Graph über seine Zeitstempel.
+- **Ablage je Projekt, nicht je Rechner:** Hat die Root-CLAUDE.md einen Graphiti-Block,
+  gilt der Graph mit dessen group_id; sonst `docs/notes.md` im Repo (die CLAUDE.md lädt
+  sie per Import; fehlen Datei oder Import, den Nutzer fragen). Übergreifendes → Gruppe
+  `main`, ohne Graphiti kein Ersatz. Die Auto-Memory von Claude Code in Projekten nie
+  nutzen — sie liegt nur auf einem Rechner.
+- **Erst den Graph fragen, dann Dateien durchsuchen** (falls der MCP läuft, sonst still)
+  — zu Sessionbeginn und laufend (`search_memory_facts`, `search_nodes`). Gefundenes
+  still anwenden.
+- **Ohne Nachfrage speichern** nur Wissen ohne Ort im Repo — Stolperfallen, Infra-Fakten,
+  Präferenzen, Projektübergreifendes — und im Graph je abgeschlossenem Feature einen
+  Wegweiser (F-Nummer, Titel, Pfad der Feature-Datei, Ergebnis); ohne Graphiti ist
+  `features/INDEX.md` der Wegweiser. Entscheidungen und Details stehen in Feature-Datei
+  und ADR. Auf Bitte des Nutzers: speichern, gleiche Form.
+- **Form:** ein Thema, 2–4 Sätze, höchstens etwa 450 Zeichen; Geltendes im Präsens.
+  Commit-Hashes, Testzahlen, Funktions- und Konstantennamen, Versionsstände nur, wenn sie
+  das Thema sind — im Graph wird jede Nennung eine Entität, die der Server einzeln
+  bezahlt. Graph (`add_memory`): `reference_time` bei Vergangenem, keine
+  Extraktionsparameter, Überholtes regelt er über seine Zeitstempel. `docs/notes.md`:
+  Überholtes ersetzen statt anhängen; nur Publizierbares, Privates nach `private/`.
+- **Graph nicht erreichbar**, obwohl das Projekt einen Block hat: Was geschrieben werden
+  sollte, weder still verwerfen noch nach `docs/notes.md` umleiten — im Abschluss in
+  einem Satz melden, mit dem Text zum Nachtragen.
 <!-- /section:global-graphiti -->
 
 <!-- section:global-workflow -->
