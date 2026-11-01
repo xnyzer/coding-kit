@@ -6,7 +6,7 @@ status: BACKLOG
 size:
 created: 2026-10-09
 done:
-depends-on:
+depends-on: F-033
 superseded-by:
 ---
 
@@ -20,21 +20,14 @@ erneut verarbeitet; wiederherstellen lassen sie sich nur aus den lokalen
 Claude-Code-Transkripten. Die löscht Claude Code standardmäßig nach 30 Tagen — danach
 ist ein Verlust endgültig.
 
-**Idee:** Zwei Teile: Das Kit setzt die Aufbewahrungsdauer der Transkripte auf jedem
-Rechner hoch (Empfehlung: 365 Tage), und ein Skill prüft an passender Stelle, ob die
-zuletzt geschriebenen eigenen Episoden angekommen sind.
+**Idee:** Ein Skill prüft an passender Stelle, ob die zuletzt geschriebenen eigenen
+Episoden angekommen sind. Die Aufbewahrung der Transkripte (365 Tage) setzt F-033.
 
 **Lösungsskizze:**
 - Erfolgskontrolle: z. B. zu Sessionbeginn oder in `step-done` die letzten Episoden der
   Gruppe abrufen und mit den zuletzt geschriebenen abgleichen; Fehlendes melden (nicht
   automatisch nachschreiben). Leseaufrufe kosten keine Extraktion.
-- `cleanupPeriodDays` in den Nutzer-Settings von Claude Code setzen — über `install.sh`,
-  ohne bestehende Settings zu überschreiben (vorhandenen Wert respektieren oder
-  nachfragen).
-- Schlüssel und Default zur Laufzeit gegen die aktuelle Claude-Code-Doku prüfen.
-- In den globalen Kit-Regeln bzw. im README kurz begründen, warum der Wert gesetzt
-  wird.
-- Speicherbedarf der Transkripte bei längerer Aufbewahrung im Blick behalten.
+- `cleanupPeriodDays` → F-033 (AC-8).
 
-**Abhängigkeiten:** keine. Thematische Nähe zu F-029 (Graphiti). Den
-`install.sh`-Teil (`cleanupPeriodDays`) zusammen mit F-025 bauen.
+**Abhängigkeiten:** F-033 (setzt die Aufbewahrung der Transkripte). Thematische Nähe zu
+F-029 (Graphiti).

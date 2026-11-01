@@ -44,10 +44,9 @@ with its reasons.
 
 Stand 2026-10-30.
 
-1. **[F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md) → [F-033](F-033-betrieb-ohne-graphiti-absichern.md) → [F-030](F-030-graphiti-episodenverlust-erkennen-und.md)** — Graphiti-Strang ([F-030](F-030-graphiti-episodenverlust-erkennen-und.md) ohne den `install.sh`-Teil); [F-033](F-033-betrieb-ohne-graphiti-absichern.md) kann starten, während
+1. **[F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md) → [F-033](F-033-betrieb-ohne-graphiti-absichern.md) → [F-030](F-030-graphiti-episodenverlust-erkennen-und.md)** — Graphiti-Strang (die Aufbewahrung der Transkripte aus [F-030](F-030-graphiti-episodenverlust-erkennen-und.md) setzt [F-033](F-033-betrieb-ohne-graphiti-absichern.md)); [F-033](F-033-betrieb-ohne-graphiti-absichern.md) kann starten, während
    F-029d die 7 Tage Nachmessung abwartet.
-2. **[F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) → [F-024](F-024-commit-adresse-aus-der-personal-config.md) → [F-025](F-025-install-sh-fehlender-gh-login-und.md)** — Host-Strang; [F-025](F-025-install-sh-fehlender-gh-login-und.md) nimmt den `install.sh`-Teil von [F-030](F-030-graphiti-episodenverlust-erkennen-und.md)
-   mit.
+2. **[F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) → [F-024](F-024-commit-adresse-aus-der-personal-config.md) → [F-025](F-025-install-sh-fehlender-gh-login-und.md)** — Host-Strang.
 3. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
 4. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
@@ -68,7 +67,7 @@ bzw. ohne GitHub zuerst.
 | [F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md) | Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren | IN-PROGRESS |  |
 | [F-030](F-030-graphiti-episodenverlust-erkennen-und.md) | Graphiti-Episodenverlust erkennen und wiederherstellbar halten | BACKLOG |  |
 | [F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) | Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git) | BACKLOG |  |
-| [F-033](F-033-betrieb-ohne-graphiti-absichern.md) | Betrieb ohne Graphiti absichern | BACKLOG |  |
+| [F-033](F-033-betrieb-ohne-graphiti-absichern.md) | Betrieb ohne Graphiti absichern und Auto-Memory ablösen | PLANNED |  |
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
 
 ### Closed
