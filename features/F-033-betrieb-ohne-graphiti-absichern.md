@@ -530,3 +530,57 @@ Claude Code.
 - Mit `--strict-mcp-config` sieht eine Session auch die Graphiti-Verbindung über
   claude.ai nicht. Damit lässt sich ein Betrieb ohne Graphiti zuverlässig testen.
 - Unabhängiges Review: ein Befund (Verweis in go-public), behoben.
+
+### F-033c — fertig 2026-11-01
+
+**Umgesetzt:**
+
+- `template-sync.sh`, drei neue Befehle mit einem kleinen JSON-Leser in awk als
+  gemeinsamem Kern:
+  - `settings` liest `autoMemoryEnabled` und `cleanupPeriodDays` aus den
+    Nutzer-Settings.
+  - `set-settings` schreibt sie in einen Ausgabeordner. Ein vorhandener Wert wird an Ort
+    und Stelle ersetzt, ein fehlender mit der Einrückung der Datei vorn eingefügt, sonst
+    bleibt jedes Byte. Ungültiges JSON, doppelte Schlüssel und Werte außerhalb der
+    erlaubten Liste werden abgelehnt.
+  - `memory-dir` findet den Auto-Memory-Ordner eines Projekts. Reihenfolge:
+    `autoMemoryDirectory` (lokal, Projekt, Nutzer), `CLAUDE_CODE_PROJECT_DIR_NAME`, der
+    Name nach der Regel (Pfad wie angegeben und mit aufgelösten Symlinks, Worktrees
+    teilen den Ordner des Hauptrepos), zuletzt die Transkripte. Gemeldet wird auch, ob
+    sich mehrere Projekte den Ordner teilen.
+- update-conventions, Teil G, neuer Abschnitt G7: bietet die beiden Werte einzeln mit
+  Grund und Diff an. Er läuft nur mit `global` und auch bei einer fremden Regeldatei.
+- README-Kasten zu den globalen Einstellungen und CHANGELOG nennen beide Werte.
+- Tests in `tests/template-sync/settings.sh`: 2421 Prüfungen, alle grün. Ein absichtlich
+  eingebauter Fehler fiel in allen drei Durchläufen auf.
+- Stichprobe an zehn echten Repos, nur lesend: achtmal gefunden, einmal korrekt leer
+  (Kit-Repo), einmal ohne Ordner (nie mit Claude geöffnet).
+
+**Entscheidungen:**
+
+- G7 läuft nur mit `global`, damit nicht jeder Projektlauf erneut nach den Settings
+  fragt.
+- `shared` heißt: ein Namenszwilling, also ein anderer Pfad, den die Regel auf denselben
+  Ordner abbildet. Ein `cd` während einer Session oder ein Start im übergeordneten Ordner
+  zählt nicht, das zeigte die Stichprobe.
+- `autoMemoryDirectory` wird auch aus den Projekt-Settings gelesen, wie Claude Code es
+  laut Doku tut. Empfehlung des Reviewers war, das nicht zu tun; verworfen. F-033d zeigt
+  vor jedem Löschen Ordner und Dateien.
+
+**Abweichung vom Plan:**
+
+- Neu ist die Stufe `CLAUDE_CODE_PROJECT_DIR_NAME` vor der Namensregel. Quelle ist die
+  Doku zur Auto-Memory; ein so gesetzter Ordner gilt als geteilt.
+- Die Befehle heißen `settings`, `set-settings` und `memory-dir`.
+- Der Praxislauf von `update-conventions global` an einem Test-Ordner wurde vom
+  automatischen Rechte-Check abgelehnt. AC-8 bleibt offen, bis der Nutzer G7 mit
+  `--plugin-dir` an den eigenen Settings durchlaufen hat.
+
+**Funde:**
+
+- Transkripte protokollieren jeden Wechsel des Arbeitsordners, auch ins Scratchpad. Wer
+  aus ihnen das Projekt ableitet, darf nur exakte Pfade vergleichen.
+- Ein `case` innerhalb von `$( … )` braucht die Schreibweise `(muster)`, sonst scheitert
+  die Shell an der Klammer.
+- Unabhängiges Review: sechs Befunde, vier behoben, einer verworfen, einer als
+  Abweichung festgehalten (siehe oben).

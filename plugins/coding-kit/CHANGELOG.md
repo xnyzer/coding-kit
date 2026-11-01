@@ -40,6 +40,17 @@ die Vorlage per `/coding-kit:update-conventions`.
 - **new-project:** Die Frage nach der group_id ist mit dem Projektnamen vorbelegt, wenn
   die Session Graphiti-Werkzeuge hat, sonst mit „kein Graphiti"; der Hinweis nennt
   `docs/notes.md` und den Weg, den Block später nachzurüsten.
+- **update-conventions global** (neu G7): bietet für `~/.claude/settings.json` zwei
+  Werte an, jeden einzeln mit Grund und Diff — `"autoMemoryEnabled": false` (die
+  Auto-Memory für alle Projekte aus) und `"cleanupPeriodDays": 365` (Transkripte ein
+  Jahr statt 30 Tage). Ein passender Wert wird nur gemeldet, alle anderen Einträge
+  bleiben. Die README nennt beide im Kasten zu den globalen Einstellungen.
+- **`template-sync.sh`:** `settings` liest diese beiden Werte, `set-settings` schreibt
+  sie in einen Ausgabeordner und ändert sonst kein Byte der Datei; ungültiges JSON wird
+  abgelehnt. `memory-dir` findet den Auto-Memory-Ordner eines Projekts: über
+  `autoMemoryDirectory`, den eigenen Ordnernamen per Umgebungsvariable, den aus dem
+  Repo-Pfad gebildeten Namen (Worktrees teilen ihn) oder die Transkripte, die den Pfad
+  nennen.
 
 ### Template
 

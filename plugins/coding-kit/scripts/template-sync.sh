@@ -133,6 +133,32 @@
 #       status>, date <F-NNN> <created|done> git, missing <F-NNN> <created|done>,
 #       type feature <count>, next-feature <F-NNN>, requirements REQUIREMENTS.md (left
 #       to the skill), index features/INDEX.md. Nothing is written into PROJECT.
+#   settings CONFIG
+#       Reads CONFIG/settings.json, the user settings of Claude Code (CONFIG is the
+#       config folder, ~/.claude or $CLAUDE_CONFIG_DIR). Lines: file
+#       <missing|valid|invalid> (invalid with a reason, then nothing else), then per
+#       setting the kit sets (autoMemoryEnabled, cleanupPeriodDays) key <name> <raw
+#       value|missing|duplicate>. Only the top level counts.
+#   set-settings CONFIG OUT NAME=value…
+#       Writes CONFIG/settings.json (a missing file counts as {}) with the given values
+#       into OUT/settings.json (OUT missing or empty). An existing top-level member gets
+#       the new value in place, a missing one is inserted first in the object with the
+#       indentation of the members; every other byte stays. Lines: set <name>
+#       <replaced|added>, then written settings.json. Refused: another NAME, a value
+#       other than true/false (autoMemoryEnabled) or a positive whole number
+#       (cleanupPeriodDays), a NAME given twice, a file that is no valid JSON object or
+#       has the NAME twice — then nothing is written.
+#   memory-dir CONFIG PROJECT
+#       Finds the auto memory folder of PROJECT: autoMemoryDirectory of the local, then
+#       the project, then the user settings (~/ follows HOME); else
+#       $CLAUDE_CODE_PROJECT_DIR_NAME below CONFIG/projects; else the folder named after
+#       the main checkout (worktrees share it; every byte that is no ASCII letter or
+#       digit becomes -, the path as given and with symlinks resolved); else every
+#       folder whose transcripts name that path as working directory. Line:
+#       <setting|env|name|transcript|none> <present|absent> <own|shared> <memory
+#       folder>; shared holds other projects too: the user setting, the env name, or a
+#       folder whose transcripts name a name twin (another path the rule maps to the
+#       same folder, "my app" and "my.app"); none names the folder the rule gives.
 #
 # Options name a stand-in for a file of PROJECT, so a skill can go on with files it
 # prepared in a temp folder while a write below .claude/ waits for approval:
@@ -191,6 +217,9 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh lock-check PROJECT
        sh template-sync.sh detect [--changed] [--answers FILE] [--registry FILE] TEMPLATE PROJECT [SIGNAL...]
        sh template-sync.sh migrate [--index FILE] [--sections INTAKE,PLAN,HISTORY] PROJECT OUT
+       sh template-sync.sh settings CONFIG
+       sh template-sync.sh set-settings CONFIG OUT NAME=value...
+       sh template-sync.sh memory-dir CONFIG PROJECT
 EOF
   exit 2
 }
@@ -2811,6 +2840,348 @@ migrate() {  # PROJECT OUT
   return 0
 }
 
+# --- Claude Code settings and the auto memory folder ------------------------------------
+
+# The user settings the kit may set (update-conventions global), each with its check.
+SETTINGS_KEYS='autoMemoryEnabled cleanupPeriodDays'
+
+settings_value_ok() {  # NAME VALUE
+  case $1 in
+    autoMemoryEnabled)
+      case $2 in true | false) return 0 ;; esac
+      ;;
+    cleanupPeriodDays)
+      case $2 in '' | 0* | *[!0-9]*) ;; *) return 0 ;; esac
+      ;;
+  esac
+  return 1
+}
+
+# Reads the JSON file FILE, whose top level must be an object. MODE get prints
+# "file valid" and per name in KEYS "key <name> <raw value|missing|duplicate>"; MODE set
+# writes FILE with the NAME=value pairs of SETS into OUT — an existing top-level member
+# gets the new value in place, a missing one is inserted first in the object with the
+# indentation of the members — and prints "set <name> <replaced|added>". Everything else
+# stays byte for byte. An invalid file prints "file invalid <reason>" and exits 4.
+json_top() {  # FILE MODE KEYS SETS OUT
+  awk -v mode="$2" -v keys="$3" -v sets="$4" -v out="$5" '
+    function fail(why) { if (!bad) reason = why; bad = 1; return 0 }
+    function skipws() { while (p <= N && index(" \t\r\n", substr(S, p, 1))) p++ }
+    function str(   c, e) {
+      if (substr(S, p, 1) != "\"") return fail("string expected at " p)
+      p++
+      while (p <= N) {
+        c = substr(S, p, 1)
+        if (c == "\"") { p++; return 1 }
+        if (c == "\\") {
+          e = substr(S, p + 1, 1)
+          if (e == "u") {
+            if (substr(S, p + 2, 4) !~ /^[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]$/)
+              return fail("bad \\u escape at " p)
+            p += 6
+            continue
+          }
+          if (!index("\"\\/bfnrt", e) || e == "") return fail("bad escape at " p)
+          p += 2
+          continue
+        }
+        p++
+      }
+      return fail("unterminated string")
+    }
+    function num() {
+      if (!match(substr(S, p), /^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][-+]?[0-9]+)?/))
+        return fail("bad value at " p)
+      p += RLENGTH
+      return 1
+    }
+    function lit() {
+      if (substr(S, p, 4) == "true" || substr(S, p, 4) == "null") { p += 4; return 1 }
+      if (substr(S, p, 5) == "false") { p += 5; return 1 }
+      return fail("bad value at " p)
+    }
+    function val(   c) {
+      skipws()
+      c = substr(S, p, 1)
+      if (c == "{") return obj(0)
+      if (c == "[") return arr()
+      if (c == "\"") return str()
+      if (c == "-" || index("0123456789", c)) return num()
+      return lit()
+    }
+    function arr(   c) {
+      p++
+      skipws()
+      if (substr(S, p, 1) == "]") { p++; return 1 }
+      while (1) {
+        if (!val()) return 0
+        skipws()
+        c = substr(S, p, 1)
+        if (c == ",") { p++; continue }
+        if (c == "]") { p++; return 1 }
+        return fail("\",\" or \"]\" expected at " p)
+      }
+    }
+    # top = 1 for the root object: its members are recorded (KS key start, VS/VE value).
+    function obj(top,   c, ks, k, vs) {
+      p++
+      skipws()
+      if (substr(S, p, 1) == "}") { if (top) CLOSE = p; p++; return 1 }
+      while (1) {
+        skipws()
+        ks = p
+        if (!str()) return 0
+        k = substr(S, ks + 1, p - ks - 2)
+        skipws()
+        if (substr(S, p, 1) != ":") return fail("\":\" expected at " p)
+        p++
+        skipws()
+        vs = p
+        if (!val()) return 0
+        if (top) {
+          if (!FIRST) FIRST = ks
+          if (k in VS) DUP[k] = 1
+          VS[k] = vs; VE[k] = p
+        }
+        skipws()
+        c = substr(S, p, 1)
+        if (c == ",") { p++; continue }
+        if (c == "}") { if (top) CLOSE = p; p++; return 1 }
+        return fail("\",\" or \"}\" expected at " p)
+      }
+    }
+    { S = S (NR > 1 ? "\n" : "") $0 }
+    END {
+      OFS = "\t"
+      N = length(S); p = 1
+      skipws()
+      if (substr(S, p, 1) != "{") fail("the top level is not an object")
+      else { OPEN = p; if (obj(1)) { skipws(); if (p <= N) fail("text after the object") } }
+      if (bad) { print "file", "invalid", reason; exit 4 }
+      if (mode == "get") {
+        print "file", "valid"
+        nk = split(keys, K, " ")
+        for (i = 1; i <= nk; i++) {
+          k = K[i]
+          if (k in DUP) print "key", k, "duplicate"
+          else if (k in VS) print "key", k, substr(S, VS[k], VE[k] - VS[k])
+          else print "key", k, "missing"
+        }
+        exit 0
+      }
+      ns = split(sets, A, " ")
+      for (i = 1; i <= ns; i++) {
+        k = substr(A[i], 1, index(A[i], "=") - 1); NV[k] = substr(A[i], index(A[i], "=") + 1)
+        if (k in DUP) { print "file", "invalid", "\"" k "\" appears twice"; exit 4 }
+        if (k in VS) { nr++; R[nr] = k } else { na++; ADD[na] = k }
+      }
+      # Replace from the back, so earlier positions stay valid.
+      for (i = 1; i <= nr; i++) for (j = i + 1; j <= nr; j++)
+        if (VS[R[j]] > VS[R[i]]) { t = R[i]; R[i] = R[j]; R[j] = t }
+      for (i = 1; i <= nr; i++) {
+        k = R[i]
+        S = substr(S, 1, VS[k] - 1) NV[k] substr(S, VE[k])
+      }
+      if (na && !FIRST) {
+        # An empty object gets the members on lines of their own.
+        ins = ""
+        for (i = 1; i <= na; i++) ins = ins (i > 1 ? "," : "") "\n  \"" ADD[i] "\": " NV[ADD[i]]
+        S = substr(S, 1, OPEN) ins "\n" substr(S, CLOSE)
+      } else if (na) {
+        pre = substr(S, OPEN + 1, FIRST - OPEN - 1)
+        nl = 0
+        for (i = 1; i <= length(pre); i++) if (substr(pre, i, 1) == "\n") nl = i
+        ins = ""
+        if (nl) {
+          ind = substr(pre, nl + 1)
+          for (i = 1; i <= na; i++) ins = ins "\n" ind "\"" ADD[i] "\": " NV[ADD[i]] ","
+          S = substr(S, 1, OPEN) ins substr(S, OPEN + 1)
+        } else {
+          for (i = 1; i <= na; i++) ins = ins "\"" ADD[i] "\": " NV[ADD[i]] ", "
+          S = substr(S, 1, FIRST - 1) ins substr(S, FIRST)
+        }
+      }
+      printf "%s\n", S > out
+      close(out)
+      for (i = 1; i <= ns; i++) {
+        k = substr(A[i], 1, index(A[i], "=") - 1)
+        print "set", k, ((k in VS) ? "replaced" : "added")
+      }
+    }' "$1"
+}
+
+settings() {
+  [ $# -eq 1 ] || usage
+  ST_CONFIG=$1
+  [ -d "$ST_CONFIG" ] || die "config folder not found: $ST_CONFIG"
+  if [ ! -f "$ST_CONFIG/settings.json" ]; then
+    printf 'file\tmissing\n'
+    for st_key in $SETTINGS_KEYS; do printf 'key\t%s\tmissing\n' "$st_key"; done
+    return 0
+  fi
+  json_top "$ST_CONFIG/settings.json" get "$SETTINGS_KEYS" '' '' || [ $? -eq 4 ]
+}
+
+set_settings() {
+  [ $# -ge 3 ] || usage
+  SS_CONFIG=$1 SS_OUT=$2
+  shift 2
+  [ -d "$SS_CONFIG" ] || die "config folder not found: $SS_CONFIG"
+  check_out_dir "$SS_OUT"
+  setup_work
+  ss_sets=
+  for ss_arg in "$@"; do
+    case $ss_arg in
+      *=*) ;;
+      *) die "expected NAME=value, not '$ss_arg'" ;;
+    esac
+    ss_key=${ss_arg%%=*}
+    ss_val=${ss_arg#*=}
+    case " $SETTINGS_KEYS " in
+      *" $ss_key "*) ;;
+      *) die "$ss_key: not a setting the kit sets ($SETTINGS_KEYS)" ;;
+    esac
+    case " $ss_sets " in
+      *" $ss_key="*) die "$ss_key: given twice" ;;
+    esac
+    settings_value_ok "$ss_key" "$ss_val" || die "$ss_key: invalid value '$ss_val'"
+    ss_sets="$ss_sets $ss_arg"
+  done
+  ss_src=$SS_CONFIG/settings.json
+  if [ ! -f "$ss_src" ]; then
+    printf '{}\n' > "$WORK/settings.json"
+    ss_src=$WORK/settings.json
+  fi
+  mkdir -p "$SS_OUT"
+  json_top "$ss_src" set '' "$ss_sets" "$SS_OUT/settings.json" > "$WORK/listing" || {
+    ss_why=$(cut -f3 "$WORK/listing")
+    rm -f "$SS_OUT/settings.json"
+    die "$SS_CONFIG/settings.json: not valid JSON ($ss_why) — nothing written"
+  }
+  cat "$WORK/listing"
+  printf 'written\tsettings.json\n'
+}
+
+# A path as Claude Code names its project folder: every byte that is not an ASCII
+# letter or digit becomes "-".
+project_dir_name() {  # PATH
+  printf '%s' "$1" | LC_ALL=C sed 's/[^A-Za-z0-9]/-/g'
+}
+
+# The string value of autoMemoryDirectory in the settings FILE, "~/" expanded; empty
+# when the file lacks it. A value that is no plain absolute or ~/ path is skipped with a
+# note, as Claude Code does not take it either.
+memory_setting() {  # FILE
+  [ -f "$1" ] || return 0
+  ms_out=$(json_top "$1" get autoMemoryDirectory '' '') \
+    || { printf 'template-sync: %s: not valid JSON, skipped\n' "$1" >&2; return 0; }
+  ms_line=$(printf '%s\n' "$ms_out" | awk -F "$TAB" '$1 == "key" { print $3 }')
+  case $ms_line in
+    missing | '') return 0 ;;
+    '"~/'*'"' | '"/'*'"') ;;
+    *)
+      printf 'template-sync: %s: autoMemoryDirectory %s is no absolute or ~/ path, skipped\n' \
+        "$1" "$ms_line" >&2
+      return 0
+      ;;
+  esac
+  ms_val=${ms_line#\"}
+  ms_val=${ms_val%\"}
+  case $ms_val in
+    *\\*)
+      printf 'template-sync: %s: autoMemoryDirectory with an escape, skipped\n' "$1" >&2
+      return 0
+      ;;
+    '~/'*) ms_val=$HOME/${ms_val#'~/'} ;;
+  esac
+  printf '%s\n' "$ms_val"
+}
+
+memory_line() {  # STAGE SCOPE DIR
+  ml_state=absent
+  if [ -d "$3" ]; then ml_state=present; fi
+  printf '%s\t%s\t%s\t%s\n' "$1" "$ml_state" "$2" "$3"
+}
+
+# own, or shared when a transcript in the project folder FOLDER names a name twin: a
+# working directory other than PATH and PATH2 that the name rule maps to the same folder
+# ("my app" and "my.app"), so Claude Code shares it between both projects. Other paths
+# a transcript names (a cd during the session) say nothing about the folder.
+folder_scope() {  # FOLDER PATH PATH2
+  grep -oh '"cwd":"[^"]*"' "$1"/*.jsonl 2> /dev/null | sort -u |
+    LC_ALL=C awk -v name="${1##*/}" -v a="$2" -v b="$3" '
+      {
+        c = $0
+        sub(/^"cwd":"/, "", c); sub(/"$/, "", c)
+        if (c == a || c == b) next
+        e = c
+        gsub(/[^A-Za-z0-9]/, "-", e)
+        if (e == name) twin = 1
+      }
+      END { print (twin ? "shared" : "own") }'
+}
+
+memory_dir() {
+  [ $# -eq 2 ] || usage
+  MD_CONFIG=$1 MD_P=$2
+  [ -d "$MD_CONFIG" ] || die "config folder not found: $MD_CONFIG"
+  [ -d "$MD_P" ] || die "project not found: $MD_P"
+  # 2. autoMemoryDirectory: local before project before user settings. Set by the user,
+  # it holds the memory of every project.
+  for md_scope in own:"$MD_P/.claude/settings.local.json" own:"$MD_P/.claude/settings.json" \
+    shared:"$MD_CONFIG/settings.json"; do
+    md_dir=$(memory_setting "${md_scope#*:}")
+    if [ -n "$md_dir" ]; then
+      memory_line setting "${md_scope%%:*}" "$md_dir"
+      return 0
+    fi
+  done
+  # A folder name of one's own for every project of this config folder.
+  if [ -n "${CLAUDE_CODE_PROJECT_DIR_NAME:-}" ]; then
+    memory_line env shared "$MD_CONFIG/projects/$CLAUDE_CODE_PROJECT_DIR_NAME/memory"
+    return 0
+  fi
+  # The repository the memory belongs to: worktrees share the one of the main checkout.
+  md_common=$(git -C "$MD_P" rev-parse --git-common-dir 2> /dev/null) || md_common=
+  case $md_common in
+    .git | */.git) md_root=$(cd "$MD_P" && cd "$md_common/.." && pwd) ;;
+    '') md_root=$(cd "$MD_P" && pwd) ;;
+    *) md_root=$(git -C "$MD_P" rev-parse --show-toplevel) ;;
+  esac
+  md_phys=$(cd "$md_root" && pwd -P)
+  # 3. The folder name derived from the path, as written and with symlinks resolved.
+  for md_path in "$md_root" "$md_phys"; do
+    md_name=$(project_dir_name "$md_path")
+    if [ -d "$MD_CONFIG/projects/$md_name" ]; then
+      memory_line name "$(folder_scope "$MD_CONFIG/projects/$md_name" "$md_root" "$md_phys")" \
+        "$MD_CONFIG/projects/$md_name/memory"
+      return 0
+    fi
+  done
+  # 4. A folder whose transcripts name the path as their working directory (umlauts or
+  # another path form give another name); several are listed for the skill to ask.
+  md_found=0
+  if [ -d "$MD_CONFIG/projects" ]; then
+    for md_folder in "$MD_CONFIG/projects"/*/; do
+      [ -d "$md_folder" ] || continue
+      for md_path in "$md_root" "$md_phys"; do
+        md_hit=$(grep -lF -e "\"cwd\":\"$md_path\"" -e "\"cwd\":\"$md_path/" \
+          "$md_folder"*.jsonl 2> /dev/null | head -n 1) || md_hit=
+        if [ -n "$md_hit" ]; then
+          memory_line transcript "$(folder_scope "${md_folder%/}" "$md_root" "$md_phys")" \
+            "${md_folder%/}/memory"
+          md_found=1
+          break
+        fi
+      done
+    done
+  fi
+  if [ "$md_found" -eq 0 ]; then
+    memory_line none own "$MD_CONFIG/projects/$(project_dir_name "$md_root")/memory"
+  fi
+  return 0
+}
+
 cmd=${1:-}
 [ $# -eq 0 ] || shift
 parse_opts "$cmd" "$@"
@@ -2828,5 +3199,8 @@ case $cmd in
   lock-check) lock_check "$@" ;;
   detect) detect "$@" ;;
   migrate) migrate "$@" ;;
+  settings) settings "$@" ;;
+  set-settings) set_settings "$@" ;;
+  memory-dir) memory_dir "$@" ;;
   *) usage ;;
 esac

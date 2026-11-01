@@ -13,6 +13,11 @@
 
 set -u
 
+# The cases build git repositories of their own. In a pre-commit hook git exports the
+# index and directory of the kit repo, which would point their git calls there.
+unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE GIT_PREFIX GIT_OBJECT_DIRECTORY \
+  GIT_ALTERNATE_OBJECT_DIRECTORIES
+
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 SCRIPT=$ROOT/plugins/coding-kit/scripts/template-sync.sh
 TEMPLATE=$ROOT/plugins/coding-kit/template
@@ -201,6 +206,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 . "$HERE/detect.sh"
 . "$HERE/features.sh"
 . "$HERE/migrate.sh"
+. "$HERE/settings.sh"
 
 # --- main -----------------------------------------------------------------------
 
@@ -226,6 +232,7 @@ run_cases() {  # DIR
   run_detect_cases
   run_features_cases
   run_migrate_cases
+  run_settings_cases
 }
 
 # The awk implementation behind COMMAND: mawk or gawk by their -W version line, "other"

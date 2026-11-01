@@ -332,6 +332,18 @@ jeder Session, wie die CLAUDE.md. Eingerichtet und abgeglichen werden sie mit
 >   [Eigene Abweichungen](#eigene-abweichungen-und-ergänzungen) beschrieben.
 > - **Eine fremde Datei** unter `~/.claude/rules/coding-kit.md` — ohne die Kennung des
 >   Kits in der ersten Zeile — fasst das Kit nicht an.
+> - **Zwei Werte in `~/.claude/settings.json`** bietet `update-conventions global` an,
+>   jeden einzeln mit Grund und mit Diff vor dem Schreiben; alle anderen Einträge bleiben
+>   unverändert. Abgelehnt wird nichts geschrieben, der nächste Lauf fragt wieder.
+>   - `"autoMemoryEnabled": false` schaltet die Auto-Memory von Claude Code für alle
+>     Projekte ab. Sie liegt nur auf einem Rechner; Projektwissen gehört in den Graph
+>     oder ins Repo (`docs/notes.md`). In Projekten aus dem Kit ist sie über deren
+>     `.claude/settings.json` ohnehin aus, auch wenn du hier ablehnst. Notizen anderer
+>     Projekte bleiben liegen, werden aber nicht mehr geladen.
+>   - `"cleanupPeriodDays": 365` lässt Claude Code die lokalen Transkripte ein Jahr statt
+>     30 Tage aufheben. Sie sind der Rückweg für Graphiti-Episoden, die der Server
+>     verliert, und helfen, den Auto-Memory-Ordner eines Projekts zu finden. Dafür
+>     brauchen sie mehr Platz auf der Platte.
 > - Mit `CLAUDE_CONFIG_DIR` gilt statt `~/.claude` dieser Ordner.
 
 ### Antwortsprache und Erklär-Niveau

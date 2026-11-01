@@ -459,8 +459,9 @@ selben Ordner gehört allein dem Nutzer.
 
 **Wann:** mit `global` immer; in jedem anderen Lauf außer `revise` einmal nach dem letzten
 Projekt, aber nur, wenn `rules/coding-kit.md` existiert oder G1 eine alte Kit-Kopie
-findet. Im Modus `status` nur berichten (G1, die Zeilen aus G3, Hinweise aus G5) und
-nichts schreiben — weder Werte noch Regeln noch Basis.
+findet. Im Modus `status` nur berichten (G1, die Zeilen aus G3, Hinweise aus G5, die
+Werte aus G7) und nichts schreiben — weder Werte noch Regeln noch Basis noch Settings.
+G7 läuft nur mit `global`.
 
 ### G1. Stand
 
@@ -471,7 +472,7 @@ nichts schreiben — weder Werte noch Regeln noch Basis.
   Stellvertreter-Ordner (`<ordner>/.global-base` statt `${CLAUDE_PLUGIN_DATA}/global-base`).
 - **Kit-Regeln:** Gibt es `<config>/rules/coding-kit.md` und steht in der ersten Zeile
   `<!-- coding-kit:global-rules -->`? Ohne diese Kennung ist die Datei **fremd**: nie
-  anfassen, melden und Teil G beenden.
+  anfassen, melden und mit G7 weitermachen — die Settings hängen nicht an den Regeln.
 - **Alte Kit-Kopie:** Enthält `<config>/CLAUDE.md` die Kopfzeile der früheren Vorlage
   („Gepflegt als Vorlage im coding-kit …"), ist sie eine Kopie aus der Zeit, als das Kit
   die CLAUDE.md selbst setzte → G4. Ohne diese Zeile ist die CLAUDE.md **selbst
@@ -571,3 +572,28 @@ Kit-Regeln jetzt eingerichtet sind: `sh <skript> snapshot --snapshot <basis> <co
 <tmp>/global rules/coding-kit.md`. Der Hinweis beim Session-Start vergleicht den Render
 mit dieser Basis; abgelehnte Änderungen meldet er erst wieder, wenn sich Kit oder Werte
 erneut ändern. Danach sagen, dass die neuen Regeln ab der nächsten Session gelten.
+
+### G7. Nutzer-Settings von Claude Code
+
+Zwei Werte in `<config>/settings.json` empfiehlt das Kit. Jeder wird einzeln mit Grund
+angeboten, nie ungefragt geschrieben:
+
+- **`"autoMemoryEnabled": false`** — die Auto-Memory aus, für alle Projekte, auch die,
+  die das Kit nicht pflegt. Grund: Sie liegt nur auf diesem Rechner; Projektwissen
+  gehört in den Graph oder ins Repo (`docs/notes.md`). In Kit-Projekten ist sie über
+  deren `.claude/settings.json` ohnehin aus, auch wenn der Nutzer hier ablehnt — der
+  globale Wert ist ein Extra für alles andere. Vorhandene Notizen bleiben liegen und
+  werden danach nicht mehr geladen.
+- **`"cleanupPeriodDays": 365`** — Claude Code hebt die lokalen Transkripte ein Jahr
+  statt 30 Tage auf. Grund: Sie sind der Rückweg für Graphiti-Episoden, die der Server
+  verliert, und helfen, den Auto-Memory-Ordner eines Projekts zu finden. Sie brauchen
+  dafür mehr Platz auf der Platte.
+
+1. `sh <skript> settings <config>` (aufgelöster Pfad wie § 0). `file invalid` → melden
+   und nichts anbieten. Ein Wert, der schon passt (`autoMemoryEnabled` ist `false`,
+   `cleanupPeriodDays` ab 365), nur melden; `duplicate` → melden, nicht anbieten.
+2. Die übrigen Werte einzeln anbieten, ein kleinerer `cleanupPeriodDays` mit seinem
+   Wert: **setzen** / **nicht setzen** (der nächste `global`-Lauf fragt wieder).
+3. Die bestätigten Werte: `sh <skript> set-settings <config> <tmp>/settings NAME=value…`,
+   den Diff `<config>/settings.json` → `<tmp>/settings/settings.json` zeigen und nach
+   OK kopieren. Alle anderen Einträge bleiben; die Werte gelten ab der nächsten Session.
