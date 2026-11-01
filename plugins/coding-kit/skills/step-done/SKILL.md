@@ -15,10 +15,11 @@ Fasse am Ende zusammen, was du getan hast.
 ## 0. Projektkontext ermitteln
 
 Lies die **Projekt-CLAUDE.md**: Sprachen (Languages-Block; Alt-Projekte: einzeilige
-Doku-Sprach-Angabe), Graphiti-group_id (ohne
-Graphiti-Block/MCP → Graphiti still überspringen), Sicherheits-Postur (öffentliches Repo
-oder Security-/Auth-Charakter, z. B. `THREAT-MODEL.md` vorhanden → strengster Maßstab
-bei Secrets/Privacy). Nichts davon hardcoden.
+Doku-Sprach-Angabe), Graphiti-group_id (ohne Graphiti-Block → Graphiti überspringen;
+mit Block, aber ohne MCP → Lesen still überspringen, Schreiben meldet § 6),
+Sicherheits-Postur (öffentliches Repo oder Security-/Auth-Charakter, z. B.
+`THREAT-MODEL.md` vorhanden → strengster Maßstab bei Secrets/Privacy). Nichts davon
+hardcoden.
 
 **Altes Format:** Hat das Projekt eine `PROGRESS.md` mit `FEATURE-INDEX`-Block, aber keine
 `features/INDEX.md`, arbeitet es noch mit dem Dokumentmodell vor coding-kit 2.0.0. Dann
@@ -298,9 +299,13 @@ Graph soll nur festhalten, was der Nutzer freigegeben hat. Bleibt das Feature
 add-feature, prep-step und refine-requirements; den Wegweiser dafür schreiben sie. Die
 Migration in update-conventions schreibt keinen.)
 
-- `add_memory` mit der group_id aus der Projekt-CLAUDE.md (falls verfügbar, sonst still
-  überspringen), nach der Graphiti-Regel der globalen Kit-Regeln (Abschnitt Graphiti
-  Memory).
+- `add_memory` mit der group_id aus der Projekt-CLAUDE.md, nach der Graphiti-Regel der
+  globalen Kit-Regeln (Abschnitt Graphiti Memory). Ohne Graphiti-Block nichts schreiben
+  — dann ist `features/INDEX.md` der Wegweiser.
+- **Graph nicht erreichbar** (Block da, aber kein MCP, oder `add_memory` scheitert):
+  nicht still überspringen und nicht nach `docs/notes.md` umleiten — in der
+  Zusammenfassung in einem Satz melden, dass der Wegweiser nicht geschrieben wurde, mit
+  seinem Text zum Nachtragen.
 - Inhalt ist ein **Wegweiser**: F-Nummer, Titel, Pfad der Feature-Datei und das Ergebnis
   in wenigen Sätzen. Die Details stehen in der Feature-Datei.
 - Ein Fund von allgemeinem Wert (etwa eine Stolperfalle) darf als eigene kurze Episode

@@ -230,6 +230,24 @@ Alle Skills sind **stack-agnostisch**: Sie rufen nur die just-Standardrezepte
 Sprache der lebenden Doku, Sicherheits-Postur) aus der Projekt-CLAUDE.md — nichts ist
 hartkodiert.
 
+### Projektwissen: Graphiti oder `docs/notes.md`
+
+Graphiti ist optional; das Kit läuft ohne vollständig. Wissen, das ein Projekt braucht
+und das keinen Ort im Repo hat (Stolperfallen, Eigenheiten von Werkzeugen), liegt je
+nach Projekt an einer von zwei Stellen:
+
+- **Mit Graphiti-Block** in der Projekt-CLAUDE.md: im Graph, den mehrere Rechner
+  erreichen. Ist er gerade nicht erreichbar, melden die Skills, was sie nicht schreiben
+  konnten, samt Text zum Nachtragen.
+- **Ohne Block:** in `docs/notes.md`. Das Template legt die Datei an, die CLAUDE.md lädt
+  sie in jeder Session, und sie reist mit git.
+
+Die Wahl trifft das Projekt (`/coding-kit:new-project` fragt danach), nicht der Rechner.
+Die Auto-Memory von Claude Code ist in Projekten abgeschaltet (`.claude/settings.json`),
+weil sie nur auf einem Rechner liegt. Graphiti nachrüsten:
+`/coding-kit:update-conventions` mit `graphiti` in `OPTIONAL` und einer `GROUP_ID` in
+`.claude/template-answers`.
+
 ### update-conventions: die Aufrufe
 
 `/coding-kit:update-conventions` holt, was das Kit inzwischen anders macht — in Projekte

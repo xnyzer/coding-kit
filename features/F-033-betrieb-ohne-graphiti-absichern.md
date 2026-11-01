@@ -84,24 +84,34 @@ new-project schlägt auch auf Rechnern ohne Graphiti eine group_id vor.
   `.claude/settings.json` des Kit-Repos hat die Zeile auch. Negativ: Das MANIFEST führt
   `docs/notes.md`, `just check` ist grün. Die vorhandene Auto-Memory-Notiz des Kit-Repos
   ist vorher nach Graphiti übertragen (nach OK) und wird nicht ungefragt gelöscht.
-- [ ] AC-3 — Gegeben ein Projekt mit Graphiti-Block und eine Session ohne Graphiti-MCP,
+- [x] AC-3 — Gegeben ein Projekt mit Graphiti-Block und eine Session ohne Graphiti-MCP,
   wenn step-done ein Feature auf `DONE` setzt, dann ist die Verbuchung vollständig, und
   die Zusammenfassung meldet in einem Satz, dass der Wegweiser nicht geschrieben wurde,
   samt Text. Negativ: In einem Projekt ohne Graphiti-Block gibt es keine Meldung, keinen
   Fehler und keinen Wegweiser in `docs/notes.md`. Die übrigen Schreibstellen
   (new-project, go-public, `DROPPED`/`SUPERSEDED` in add-feature, prep-step,
   refine-requirements) verweisen auf dieselbe Regel; keine sagt fürs Schreiben „still
-  überspringen“.
-- [ ] AC-4 — Gegeben eine Session ohne Graphiti-Werkzeuge, wenn new-project nach der
+  überspringen“. — belegt: Headless-Lauf von step-done mit `--plugin-dir` und
+  `--strict-mcp-config` in einem Testprojekt mit Graphiti-Block am 2026-11-01. Das
+  Feature ging auf `DONE`, die Zusammenfassung meldete den fehlenden Wegweiser mit Text,
+  `docs/notes.md` blieb unberührt. grep über die Skills: Jede Schreibstelle schreibt nur
+  mit Block und meldet einen Ausfall; „still“ steht nur noch beim Lesen.
+- [x] AC-4 — Gegeben eine Session ohne Graphiti-Werkzeuge, wenn new-project nach der
   group_id fragt, dann ist die Vorbelegung „kein Graphiti“, mit dem Hinweis auf
   `docs/notes.md` und darauf, wie sich der Block später nachrüsten lässt. Mit
   Graphiti-Werkzeugen bleibt der Projektname die Vorbelegung. Negativ: Wählt der Nutzer
   trotz fehlender Werkzeuge eine group_id, entsteht der Block, denn ein anderer Rechner
-  kann Graphiti haben.
-- [ ] AC-5 — Gegeben Template-Block, HOW-TO, README und die CLAUDE.md des Kits, wenn man
+  kann Graphiti haben. — belegt: Trockenlauf von new-project ohne Graphiti-MCP am
+  2026-11-01: Vorbelegung „kein Graphiti“ mit Hinweis auf `docs/notes.md` und das
+  Nachrüsten. Den Fall mit Werkzeugen und die eigene group_id belegt der Skill-Text
+  (§ 2, Frage 6).
+- [x] AC-5 — Gegeben Template-Block, HOW-TO, README und die CLAUDE.md des Kits, wenn man
   sie liest, dann beschreiben sie den Weg ohne Graphiti so wie AC-1, und keiner nennt
   „still überspringen“ fürs Schreiben. Negativ: `just check` ist grün, und der
-  CHANGELOG-Eintrag hat einen Abschnitt `### Template`.
+  CHANGELOG-Eintrag hat einen Abschnitt `### Template`. — belegt: Template-Block, HOW-TO
+  und Kit-CLAUDE.md (F-033a) sowie der README-Abschnitt „Projektwissen: Graphiti oder
+  `docs/notes.md`“ gelesen; grep ohne „still überspringen“ fürs Schreiben; `just check`
+  (Validator OK, 2181 Skript-Tests); CHANGELOG 3.2.0 mit `### Template`.
 - [ ] AC-6 — Gegeben ein Projekt, dessen Auto-Memory-Ordner auf diesem Rechner Einträge
   hat, wenn `/coding-kit:update-conventions` in diesem Projekt läuft (mit und ohne
   Graphiti-Block), dann findet es nur den Ordner dieses Projekts und zeigt je Eintrag ein
@@ -481,3 +491,42 @@ Claude Code.
   erneut angeboten. Dauerhaft ablehnen geht mit einer `skip`-Zeile.
 - Unabhängiges Review: zwei Befunde, beide behoben (Fehlermeldung im Skript, Erklärung in
   `.claude/README.md`).
+
+### F-033b — fertig 2026-11-01
+
+**Umgesetzt:**
+
+- Sechs Skills schreiben nur noch mit Graphiti-Block in den Graph: step-done § 6,
+  new-project § 4g, go-public § 5 sowie die Wegweiser bei `DROPPED`/`SUPERSEDED` in
+  add-feature, prep-step und refine-requirements. Ist der Graph nicht erreichbar, melden
+  sie in einem Satz, was fehlt, mit dem Text zum Nachtragen. Die Kontext-Schritte von
+  step-done, go-public und prep-step trennen Lesen (still) und Schreiben (melden).
+- new-project, Frage 6: Mit Graphiti-Werkzeugen ist der Projektname vorbelegt, sonst
+  „kein Graphiti“. Dazu kommen der Hinweis auf `docs/notes.md` und der Weg zum späteren
+  Nachrüsten; eine eigene group_id bleibt erlaubt.
+- `docs/skill-authoring.md`: Der Baustein „Graphiti schreiben“ nennt die Meldung, der
+  Projektkontext-Schritt nur noch das stille Lesen.
+- README: neuer Abschnitt „Projektwissen: Graphiti oder `docs/notes.md`“.
+- Testläufe mit `--plugin-dir` und `--strict-mcp-config`: step-done in einem
+  Testprojekt mit Graphiti-Block (0,57 US-Dollar) und new-project im Trockenlauf
+  (0,45 US-Dollar).
+
+**Entscheidungen:**
+
+- Lesestellen bleiben still (build-step, teach-step, add-feature beim Nachschlagen). Nur
+  beim Schreiben geht etwas verloren.
+- Nachrüsten von Graphiti läuft über die Antworten in update-conventions (`graphiti` in
+  `OPTIONAL`, `GROUP_ID`); ein eigener Weg ist nicht nötig.
+
+**Abweichung vom Plan:**
+
+- In prep-step ist zusätzlich der Kontext-Schritt präzisiert, weil prep-step auch
+  schreibt.
+- Der Gegenfall von AC-3 (ohne Block keine Meldung) und der Fall von AC-4 mit
+  Graphiti-Werkzeugen sind nur am Skill-Text belegt, nicht durch eigene Läufe.
+
+**Funde:**
+
+- Mit `--strict-mcp-config` sieht eine Session auch die Graphiti-Verbindung über
+  claude.ai nicht. Damit lässt sich ein Betrieb ohne Graphiti zuverlässig testen.
+- Unabhängiges Review: ein Befund (Verweis in go-public), behoben.

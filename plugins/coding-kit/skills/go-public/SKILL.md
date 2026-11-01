@@ -20,12 +20,12 @@ werden.
 ## 0. Projektkontext ermitteln
 
 Projekt-CLAUDE.md lesen: Zweck/Scope, Sprache der lebenden Doku, Graphiti-group_id
-(ohne Graphiti-Block/MCP still überspringen), Sicherheits-Postur (THREAT-MODEL.md
-→ strengster Maßstab im Preflight). Template und MANIFEST auflösen wie
-`/coding-kit:update-conventions` § 0 (wird für Nachzug und private/-Regeln
-gebraucht). Prüf-Infrastruktur des Projekts ermitteln: justfile
-(`just check` als Gate), `scripts/privacy-lint.sh`, konfigurierter Secrets-Scanner
-(lefthook.yml/mise.toml). Nichts davon hardcoden.
+(ohne Graphiti-Block überspringen; ohne MCP Lesen still überspringen, Schreiben melden
+wie in § 5), Sicherheits-Postur (THREAT-MODEL.md → strengster Maßstab im Preflight).
+Template und MANIFEST auflösen wie `/coding-kit:update-conventions` § 0 (wird für
+Nachzug und private/-Regeln gebraucht). Prüf-Infrastruktur des Projekts ermitteln:
+justfile (`just check` als Gate), `scripts/privacy-lint.sh`, konfigurierter
+Secrets-Scanner (lefthook.yml/mise.toml). Nichts davon hardcoden.
 
 ## Kontext-Recovery
 
@@ -160,6 +160,8 @@ Schritt (Languages-Block editieren; prospektive Semantik wie bei
   Push-Protection aktiv (soweit vom Plan unterstützt).
 - **Checks:** `just check` grün.
 - Ergebnis als kurze Zusammenfassung ausgeben (Fall, Gates, Befund-Entscheidungen,
-  Commits, Settings). Graphiti mit der group_id des Projekts (falls verfügbar): eine
-  kurze Episode nach der Graphiti-Regel der globalen Kit-Regeln — das Projekt ist
-  public. Die Entscheidungen des Laufs stehen in der Zusammenfassung, nicht im Graph.
+  Commits, Settings). Graphiti mit der group_id des Projekts (nur mit Graphiti-Block):
+  eine kurze Episode nach der Graphiti-Regel der globalen Kit-Regeln — das Projekt ist
+  public. Die Entscheidungen des Laufs stehen in der Zusammenfassung, nicht im Graph. Ist
+  der Graph nicht erreichbar, in der Zusammenfassung in einem Satz melden, mit dem Text
+  der Episode zum Nachtragen.

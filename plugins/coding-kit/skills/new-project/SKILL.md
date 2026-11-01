@@ -63,8 +63,13 @@ merken — sie wird gestempelt und füllt `TEMPLATE_VERSION`.
    Ergebnis sind die Werte der fünf `LANG_*`-Platzhalter. Immer englisch (nicht
    konfigurierbar): Identifier, Conventional-Commit-Tokens, Status-Tokens,
    Governance-Doku.
-6. **Graphiti-group_id?** _(Default: Projektname)_ — „kein Graphiti" entfernt den
-   optionalen Graphiti-Block.
+6. **Graphiti-group_id?** _(Default: Projektname, wenn die Session Graphiti-Werkzeuge
+   hat (`add_memory`, `search_memory_facts`); sonst „kein Graphiti")_ — „kein Graphiti"
+   entfernt den optionalen Graphiti-Block; Wissen ohne Ort im Repo geht dann nach
+   `docs/notes.md`, die das Template anlegt. Nachrüsten lässt sich der Block später per
+   `/coding-kit:update-conventions` (`graphiti` in `OPTIONAL` und eine `GROUP_ID` in den
+   Antworten, Schritt 2). Eine group_id trotz fehlender Werkzeuge ist erlaubt: Ein
+   anderer Rechner kann Graphiti haben.
 7. **Anforderungen jetzt oder später?** _(Default: jetzt via `/define-requirements`)_ —
    „später" lässt die Ziel-Abschnitte der CLAUDE.md mit ihren Platzhaltern und
    `features/INDEX.md` leer, wie gerendert.
@@ -190,11 +195,13 @@ Platzhalter belassen.
   Body mit den Kernentscheidungen (Lizenz, Sichtbarkeit, Modul), Abschluss
   `Co-Authored-By: Claude <noreply@anthropic.com>`. Danach Push (bestätigt).
 
-### 4g. Graphiti-Gründungsepisode (falls MCP verfügbar)
+### 4g. Graphiti-Gründungsepisode (nur mit Graphiti-Block)
 
 `add_memory` mit `group_id` aus Schritt 2.6, nach der Graphiti-Regel der globalen
 Kit-Regeln (Abschnitt Graphiti Memory): eine kurze Episode aus der Short-Info — Zweck,
-Zielnutzer, gewähltes Modul. Ohne MCP still überspringen.
+Zielnutzer, gewähltes Modul. Ohne Graphiti-Block nichts schreiben. Ist der Graph nicht
+erreichbar (kein MCP, oder `add_memory` scheitert), im Abschlussbericht in einem Satz
+melden, mit dem Text der Episode zum Nachtragen.
 
 ## Abschlussbericht
 

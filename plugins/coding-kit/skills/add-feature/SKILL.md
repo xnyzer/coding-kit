@@ -158,8 +158,9 @@ ergänzen (Vorschau der geänderten Stelle); keine neue Nummer.
 - Nach dem Schreiben die Tabelle erzeugen: `just features-index` (ohne das Rezept
   `sh scripts/features-index.sh write`). Meldet das Skript etwas, beheben und erneut
   laufen lassen; die Datei re-lesen.
-- Graphiti (falls verfügbar): nur bei „nicht aufnehmen" mit Datei (`DROPPED`) ein kurzer
-  Wegweiser nach der Graphiti-Regel der globalen Kit-Regeln: F-Nummer, Titel, Pfad der
-  Feature-Datei, Grund. Sonst nichts in den Graph.
+- Graphiti (nur mit Graphiti-Block): nur bei „nicht aufnehmen" mit Datei (`DROPPED`) ein
+  kurzer Wegweiser nach der Graphiti-Regel der globalen Kit-Regeln: F-Nummer, Titel, Pfad
+  der Feature-Datei, Grund. Sonst nichts in den Graph. Ist der Graph nicht erreichbar,
+  in einem Satz melden, mit dem Text zum Nachtragen.
 - Nicht committen — das macht `/coding-kit:step-done` mit dem nächsten Abschluss, oder
   der Nutzer entscheidet.

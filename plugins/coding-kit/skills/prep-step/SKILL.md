@@ -27,7 +27,8 @@ werden nach dem Übernehmen gelöscht.
 
 Lies die **Projekt-CLAUDE.md**: Überblick mit Zweck, Umfang, Zielen, Nicht-Zielen und
 Rahmenbedingungen; Sprache der lebenden Doku; Verweise auf `CODING-STANDARDS.md` /
-`THREAT-MODEL.md`; Graphiti-group_id (Graphiti optional — ohne MCP still überspringen).
+`THREAT-MODEL.md`; Graphiti-group_id (Graphiti optional — ohne MCP das Lesen still
+überspringen; ein Wegweiser, der nicht geschrieben werden kann, wird gemeldet, § 4).
 Nichts davon hardcoden.
 
 **Altes Format:** Hat das Projekt eine `PROGRESS.md` mit `FEATURE-INDEX`-Block, aber keine
@@ -170,8 +171,9 @@ mehr dagegen als dafür, abraten — mit Grund; einen Workaround planst du nicht
 Entscheidung bleibt beim Nutzer: weitermachen, anders lösen, `DROPPED` (Grund in die
 Datei) oder `SUPERSEDED` (aufgehen in anderen Nummern, Feld `superseded-by`) — die beiden
 letzten mit Vorschau wie jede Änderung, `done:` auf heute. Nach dem Schreiben dann ein
-kurzer Graphiti-Wegweiser (falls verfügbar) nach der Graphiti-Regel der globalen
-Kit-Regeln: F-Nummer, Titel, Pfad der Feature-Datei, Grund bzw. Nachfolger.
+kurzer Graphiti-Wegweiser (nur mit Graphiti-Block) nach der Graphiti-Regel der globalen
+Kit-Regeln: F-Nummer, Titel, Pfad der Feature-Datei, Grund bzw. Nachfolger. Ist der
+Graph nicht erreichbar, in einem Satz melden, mit dem Text zum Nachtragen.
 
 **Abschnitt Spezifikation** der Feature-Datei (Gerüst aus der Vorlage
 `features/F-000-template.md`, Überschriften in der Sprache der lebenden Doku, Kürzel

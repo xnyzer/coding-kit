@@ -33,6 +33,13 @@ die Vorlage per `/coding-kit:update-conventions`.
   hatte, wird zum Anlegen angeboten (bisher nur gemeldet); eine gelöschte bleibt beim
   Melden. Dafür kennt `template-sync.sh zones` den Zustand `new-file` — die Datei fehlt
   und hat keine Seed-Basis; das Ergebnis ist dann die ganze Datei aus dem Render.
+- **step-done, new-project, go-public, add-feature, prep-step, refine-requirements:**
+  Jede Graphiti-Schreibstelle schreibt nur mit Graphiti-Block. Ist der Graph dann nicht
+  erreichbar, meldet der Skill in einem Satz, was er nicht schreiben konnte, mit dem Text
+  zum Nachtragen; bisher übersprang er still.
+- **new-project:** Die Frage nach der group_id ist mit dem Projektnamen vorbelegt, wenn
+  die Session Graphiti-Werkzeuge hat, sonst mit „kein Graphiti"; der Hinweis nennt
+  `docs/notes.md` und den Weg, den Block später nachzurüsten.
 
 ### Template
 
