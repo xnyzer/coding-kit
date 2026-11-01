@@ -44,7 +44,17 @@ die Vorlage per `/coding-kit:update-conventions`.
   Werte an, jeden einzeln mit Grund und Diff — `"autoMemoryEnabled": false` (die
   Auto-Memory für alle Projekte aus) und `"cleanupPeriodDays": 365` (Transkripte ein
   Jahr statt 30 Tage). Ein passender Wert wird nur gemeldet, alle anderen Einträge
-  bleiben. Die README nennt beide im Kasten zu den globalen Einstellungen.
+  bleiben. Die README nennt beide im Kasten zu den globalen Einstellungen. G6 stellt klar:
+  Der Stand des Abgleichs kommt nur in den Datenordner des laufenden Plugins, nie in den
+  einer anderen Plugin-Quelle (etwa des installierten Plugins bei einem Test mit
+  `--plugin-dir`); sonst meldet deren Hook in jeder Session eine Änderung.
+- **update-conventions** (neu A5, jeder Projektlauf): überträgt die Auto-Memory des
+  aktuellen Projekts auf diesem Rechner — Projektwissen in den Graph bzw. nach
+  `docs/notes.md`, Privates nach `private/`, Übergreifendes in die Graph-Gruppe `main` —
+  nach einer gemeinsamen Freigabe mit dem umgeschriebenen Text je Eintrag. Gelöscht wird
+  erst, wenn das Ziel den Eintrag nachweislich hat (im Graph: die Gruppe listet die
+  Episode). Einen Ordner, den sich mehrere Projekte teilen, meldet der Schritt nur, ohne
+  zu übertragen oder zu löschen; andere Projekte und Transkripte fasst er nie an.
 - **`template-sync.sh`:** `settings` liest diese beiden Werte, `set-settings` schreibt
   sie in einen Ausgabeordner und ändert sonst kein Byte der Datei; ungültiges JSON wird
   abgelehnt. `memory-dir` findet den Auto-Memory-Ordner eines Projekts: über
@@ -62,9 +72,11 @@ die Vorlage per `/coding-kit:update-conventions`.
   Bestandsprojekte bekommen die Datei zum Anlegen angeboten.
 - **`CLAUDE.md`:** Die Zone `claude-startup` lädt `docs/notes.md` per `@docs/notes.md`;
   die Zone `claude-graphiti` meldet nicht Geschriebenes statt es still zu überspringen.
-- **`HOW-TO-CODE-WITH-CLAUDE.md`:** Schritt 4 der Einrichtung beschreibt Graph,
-  Projektnotizen und die abgeschaltete Auto-Memory; Schritt 6 von step-done nennt die
-  Meldung bei nicht erreichbarem Graph.
+- **`HOW-TO-CODE-WITH-CLAUDE.md`:** Die Zeile zu `/update-conventions` nennt die
+  Übertragung der Auto-Memory, die zwei Settings mit `global` und das Angebot neuer
+  Seed-Dateien. Schritt 4 der Einrichtung beschreibt Graph, Projektnotizen und die
+  abgeschaltete Auto-Memory; Schritt 6 von step-done nennt die Meldung bei nicht
+  erreichbarem Graph.
 
 ## 3.1.0 — 2026-10-30
 

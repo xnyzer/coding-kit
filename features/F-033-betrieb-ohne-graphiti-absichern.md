@@ -2,10 +2,10 @@
 id: F-033
 title: Betrieb ohne Graphiti absichern und Auto-Memory ablösen
 type: feature
-status: IN-PROGRESS
+status: DONE
 size: L
 created: 2026-10-19
-done:
+done: 2026-11-01
 depends-on:
 superseded-by:
 ---
@@ -72,7 +72,7 @@ new-project schlägt auch auf Rechnern ohne Graphiti eine group_id vor.
   „still“ nur noch beim Lesen, Auto-Memory nur als Verbot genannt;
   `template-sync.sh render-global` übernimmt die Zone; `just check` (Validator OK, 2181
   Skript-Tests).
-- [ ] AC-2 — Gegeben ein frisch gerendertes Projekt, mit und ohne Graphiti, wenn man es
+- [x] AC-2 — Gegeben ein frisch gerendertes Projekt, mit und ohne Graphiti, wenn man es
   liest, dann:
   - steht in `.claude/settings.json` `"autoMemoryEnabled": false`;
   - gibt es `docs/notes.md` (seed) mit einem kurzen Kopf: wofür die Datei da ist, was
@@ -83,7 +83,11 @@ new-project schlägt auch auf Rechnern ohne Graphiti eine group_id vor.
   Ein Bestandsprojekt bekommt alle drei per `/coding-kit:update-conventions`. Die
   `.claude/settings.json` des Kit-Repos hat die Zeile auch. Negativ: Das MANIFEST führt
   `docs/notes.md`, `just check` ist grün. Die vorhandene Auto-Memory-Notiz des Kit-Repos
-  ist vorher nach Graphiti übertragen (nach OK) und wird nicht ungefragt gelöscht.
+  ist vorher nach Graphiti übertragen (nach OK) und wird nicht ungefragt gelöscht. —
+  belegt: Render-Tests (F-033a), Kit-Settings gelesen, die Notiz des Kit-Repos nach OK
+  übertragen und gelöscht; Bestandsprojekt auf 3.1.0 per `update-conventions` am
+  2026-11-01: Settings-Zeile, `docs/notes.md` als neue Datei mit Seed-Basis und Import in
+  der CLAUDE.md angekommen.
 - [x] AC-3 — Gegeben ein Projekt mit Graphiti-Block und eine Session ohne Graphiti-MCP,
   wenn step-done ein Feature auf `DONE` setzt, dann ist die Verbuchung vollständig, und
   die Zusammenfassung meldet in einem Satz, dass der Wegweiser nicht geschrieben wurde,
@@ -112,7 +116,7 @@ new-project schlägt auch auf Rechnern ohne Graphiti eine group_id vor.
   und Kit-CLAUDE.md (F-033a) sowie der README-Abschnitt „Projektwissen: Graphiti oder
   `docs/notes.md`“ gelesen; grep ohne „still überspringen“ fürs Schreiben; `just check`
   (Validator OK, 2181 Skript-Tests); CHANGELOG 3.2.0 mit `### Template`.
-- [ ] AC-6 — Gegeben ein Projekt, dessen Auto-Memory-Ordner auf diesem Rechner Einträge
+- [x] AC-6 — Gegeben ein Projekt, dessen Auto-Memory-Ordner auf diesem Rechner Einträge
   hat, wenn `/coding-kit:update-conventions` in diesem Projekt läuft (mit und ohne
   Graphiti-Block), dann findet es nur den Ordner dieses Projekts und zeigt je Eintrag ein
   Ziel:
@@ -126,8 +130,12 @@ new-project schlägt auch auf Rechnern ohne Graphiti eine group_id vor.
   die übertragenen Dateien. `MEMORY.md` und den Ordner löscht es, sobald er leer ist.
   Negativ: Ohne Freigabe wird nichts gelöscht. Ein Eintrag, dessen Ziel scheitert oder
   den der Nutzer zurückstellt, bleibt liegen und wird gemeldet. Ohne Auto-Memory-Ordner
-  läuft der Schritt ohne Ausgabe durch.
-- [ ] AC-7 — Gegeben ein Repo-Pfad, wenn das Kit den Auto-Memory-Ordner sucht, dann in
+  läuft der Schritt ohne Ausgabe durch. — belegt: zwei Headless-Läufe am 2026-11-01 mit
+  je drei Einträgen. Mit Graphiti: Projektwissen in die Projektgruppe, Präferenz in die
+  Gruppe für `main` (im Test eine Ersatzgruppe), Server nach `private/`, Ordner danach
+  gelöscht. Ohne Graphiti: Projektwissen in `docs/notes.md`, Server nach `private/`, die
+  zurückgestellte Präferenz samt ihrer Zeile in `MEMORY.md` liegen geblieben.
+- [x] AC-7 — Gegeben ein Repo-Pfad, wenn das Kit den Auto-Memory-Ordner sucht, dann in
   dieser Reihenfolge:
   1. Der Ordner, den die laufende Session selbst nennt (solange ihre Auto-Memory an ist).
   2. `autoMemoryDirectory` aus den Settings, falls gesetzt.
@@ -136,8 +144,11 @@ new-project schlägt auch auf Rechnern ohne Graphiti eine group_id vor.
   4. Sonst der Ordner, dessen Transkripte genau diesen Arbeitspfad nennen.
 
   Negativ: Findet keine Stufe einen Ordner, meldet der Schritt das und rät nicht. Nennt
-  eine Stufe einen Ordner, den sich mehrere Projekte teilen, wird nichts gelöscht.
-- [ ] AC-8 — Gegeben `/coding-kit:update-conventions global` (Teil G), wenn es läuft,
+  eine Stufe einen Ordner, den sich mehrere Projekte teilen, wird nichts gelöscht. —
+  belegt: Skript-Tests zu `memory-dir` (Stufen 2–4, Namensregel, Worktree,
+  Namenszwillinge → `shared`, `none`), Stichprobe an zehn echten Repos; Stufe 1, die
+  Meldung bei `none` und das Nicht-Löschen bei `shared` durch A5 Schritt 1 im Skill-Text.
+- [x] AC-8 — Gegeben `/coding-kit:update-conventions global` (Teil G), wenn es läuft,
   dann bietet es für die Nutzer-Settings (`~/.claude/settings.json`, mit
   `CLAUDE_CONFIG_DIR` dort) zwei Werte an, je mit Grund und einzeln zu bestätigen:
   - `"autoMemoryEnabled": false` — Auto-Memory aus für alle Projekte, auch solche, die
@@ -151,7 +162,10 @@ new-project schlägt auch auf Rechnern ohne Graphiti eine group_id vor.
   beide Werte mit Grund. Negativ: Ohne Bestätigung wird nichts geschrieben, der nächste
   Lauf fragt wieder. Ein vorhandener Wert ab 365 Tagen oder ein schon abgeschaltetes
   Auto-Memory wird nur gemeldet. Alle übrigen Einträge der Settings bleiben unverändert,
-  die Datei bleibt gültiges JSON.
+  die Datei bleibt gültiges JSON. — belegt: Lauf des Nutzers mit `--plugin-dir` am
+  2026-11-01. `autoMemoryEnabled` wurde nach Bestätigung gesetzt, `cleanupPeriodDays`
+  (schon 365) nur gemeldet, die Datei bleibt gültig (`template-sync.sh settings`).
+  Skript-Tests zu `settings` und `set-settings`; README-Kasten gelesen.
 
 ### Randfälle
 
@@ -584,3 +598,50 @@ Claude Code.
   die Shell an der Klammer.
 - Unabhängiges Review: sechs Befunde, vier behoben, einer verworfen, einer als
   Abweichung festgehalten (siehe oben).
+
+### F-033d — fertig 2026-11-01
+
+**Umgesetzt:**
+
+- update-conventions, neuer Abschnitt A5 „Auto-Memory übertragen“. Er läuft nach A2
+  Schritt 10 in jedem Projektlauf außer `revise` und arbeitet so:
+  - Den Ordner findet `memory-dir`; Stufe 1 gilt nur, wenn das abgeglichene Projekt das
+    Repo der Session ist.
+  - Ein geteilter Ordner wird nur gemeldet, `none` ebenfalls.
+  - Für jeden Eintrag gibt es einen Zielvorschlag in der Form der Kit-Regeln, dann eine
+    gemeinsame Freigabe.
+  - Gelöscht wird erst, wenn das Ziel den Eintrag hat (im Graph: `get_episodes` listet
+    die Episode), und der Ordner nur, wenn er danach leer ist.
+- G6: Der Abgleich-Stand kommt nur in den Datenordner des laufenden Plugins, mit
+  Begründung.
+- Beschreibung im Kopf des Skills (an zwei Stellen gekürzt, damit sie unter 1536 Zeichen
+  bleibt), README-Zeilen, die HOW-TO-Zeile im Template und der CHANGELOG nennen
+  Übertragung und Settings.
+- Testläufe headless mit `--plugin-dir` an Testprojekten auf dem Stand 3.1.0: mit
+  Graphiti (1,53 US-Dollar) und ohne (1,20 US-Dollar); die Graph-Testgruppen wurden nach
+  OK gelöscht. AC-8 hat der Nutzer an den eigenen Settings belegt.
+
+**Entscheidungen:**
+
+- Ein geteilter Ordner wird weder übertragen noch gelöscht. Die Spezifikation verlangte
+  nur „nicht löschen“; welche Einträge zum Projekt gehören, lässt sich aber nicht sicher
+  sagen.
+- Der Abgleich-Stand gehört dem laufenden Plugin. Eine Basis beim installierten Plugin
+  hätte dort in jeder Session den Hinweis ausgelöst. So hat es der Nutzer im G7-Lauf
+  gewählt, und G6 sagt es jetzt ausdrücklich.
+
+**Abweichung vom Plan:**
+
+- A5 ist ein eigener Abschnitt statt einer Nummer in A2, damit die bisherigen
+  Schrittnummern gültig bleiben.
+- Kein eigener Release-Commit: Der CHANGELOG-Eintrag 3.2.0 trägt sein Datum schon.
+- Die Testläufe liefen vor den Korrekturen aus dem Review. Das Verhalten für einen
+  eigenen Ordner ist gleich geblieben; die neuen Wege (`shared`, `none`, Stufe 1) sind
+  nur am Text geprüft.
+
+**Funde:**
+
+- In einem Pre-Commit-Hook exportiert git `GIT_INDEX_FILE`; Tests, die eigene Repos
+  bauen, müssen das zurücksetzen. Das war beim Commit von F-033c aufgefallen, und
+  `tests/template-sync/run.sh` macht es jetzt.
+- Unabhängiges Review: sieben Befunde, alle behoben.

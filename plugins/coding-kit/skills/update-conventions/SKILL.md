@@ -1,6 +1,6 @@
 ---
 name: update-conventions
-description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME); Abweichungs-Registry mit den Arten skip, keep, adapt; erkennt bei jedem Lauf per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt (dauerhafte Ablehnung als Rules-Zeile); Migration für Projekte ohne Snapshot und für das Dokumentmodell vor 2.0.0 (PROGRESS, Archiv und REQUIREMENTS → eine Datei je Feature in features/, auch mit dem Argument `features` allein); erkennt im Template entfernte/umbenannte Dateien. Ohne Argument nur das Projekt im aktuellen Ordner, alle Projekte nur mit `alle`; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente werden nie angefasst; sie und Tools ohne Vorlage meldet er mit dem Angebot, sie dem Template vorzuschlagen (Hintergrund-Skill propose-to-template). Mit `global` — und einmal in jedem anderen Lauf, sobald sie eingerichtet sind — gleicht er auch die globalen Kit-Regeln auf dem Rechner ab (`~/.claude/rules/coding-kit.md`, aus der Kit-Datei und den Werten der Personal-Config gerendert) — Ersteinrichtung, Diff und Bestätigung je Abschnitt, Migration einer alten Kit-Kopie in `~/.claude/CLAUDE.md`; eine selbst angelegte CLAUDE.md fasst er nie an. Nichts wird ungefragt überschrieben.
+description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME); Abweichungs-Registry mit den Arten skip, keep, adapt; erkennt bei jedem Lauf per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt (dauerhafte Ablehnung als Rules-Zeile); Migration für Projekte ohne Snapshot und für das Dokumentmodell vor 2.0.0 (→ eine Datei je Feature in features/, auch per Argument `features`); erkennt im Template entfernte/umbenannte Dateien. Ohne Argument nur das Projekt im aktuellen Ordner, alle Projekte nur mit `alle`; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente fasst er nie an; sie und Tools ohne Vorlage bietet er dem Template an (propose-to-template). Mit `global` — und einmal in jedem anderen Lauf, sobald sie eingerichtet sind — gleicht er auch die globalen Kit-Regeln auf dem Rechner ab (`~/.claude/rules/coding-kit.md`) — Ersteinrichtung, Diff und Bestätigung je Abschnitt, Migration einer alten Kit-Kopie in `~/.claude/CLAUDE.md`; eine selbst angelegte CLAUDE.md fasst er nie an. Nur mit `global` bietet er zwei Settings an (Auto-Memory aus, Transkripte 365 Tage). Überträgt die Auto-Memory des Projekts in Graph oder docs/notes.md. Nichts wird ungefragt überschrieben.
 argument-hint: "[Projekt | alle | global [Ordner] | features] [status | revise]"
 disable-model-invocation: true
 user-invocable: true
@@ -30,7 +30,7 @@ Fragmente nie selbst zusammenführen, einsetzen oder aus dem Template abschreibe
   gilt er als Claude-Config-Ordner — für Tests, das echte `~/.claude` bleibt unberührt.
 - **`status`:** nur Bericht — nichts im Projekt schreiben (keine Antworten, kein
   Snapshot, keine Registry, kein Stempel) und nichts im Config-Ordner.
-- **`revise`:** nur die Registry-Revision (A2 Schritt 10).
+- **`revise`:** nur die Registry-Revision (A2 Schritt 10), ohne A5.
 - **`features`:** nur die Migration des Dokumentmodells (A4) für das Repo im aktuellen
   Ordner — auch für eines ohne Template-Antworten (etwa das coding-kit selbst); kein
   Abgleich, keine globalen Regeln.
@@ -277,7 +277,7 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
       kennt das Tool inzwischen —, zum Austragen anbieten.
 
     Jede Änderung einzeln bestätigen. Sinngleiche Zeilen eines Alt-Formats übernimmt A3
-    Schritt 3.
+    Schritt 3. Danach A5 (Auto-Memory übertragen).
 11. **Abschluss:** **Lock-Abgleich** — `sh <skript> lock-check <projekt>`, ausgewertet
     wie `/choose-stack` § Lock-Datei; meldet es `lockfile missing`, `unlocked` oder
     `stale` (die `mise.toml` hat sich geändert) oder eine Lücke:
@@ -291,7 +291,8 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
 die Tabelle aus `sh <skript> status <projekt>` (ohne Snapshot: `status --base
 <tmp>/base`); die Erkennung aus Schritt 2 als Bericht (fehlende Module und Fragmente,
 Tools ohne Vorlage, Ablehnungen), die Zeilen aus `zones` (Schritt 6, nichts kopieren)
-und `lock-check` (Schritt 11) und was Schritt 10 vorschlagen würde, als Hinweis. Ohne
+und `lock-check` (Schritt 11), was Schritt 10 vorschlagen würde, und aus A5 Ordner und
+Zahl der Auto-Memory-Einträge, als Hinweis. Ohne
 `.claude/template-answers` prüft das Skript keine Module — das im Bericht sagen.
 Antworten für die Vorschau nur in `<tmp>` anlegen. Nichts im Projekt schreiben. Hat das
 Projekt das alte Dokumentmodell, das sagen und die Ausgabe von `migrate` (A4 Schritt 3)
@@ -448,6 +449,64 @@ werden nach dem Übernehmen gelöscht.
    (falls vorhanden) grün, Commit-Vorschlag (z. B. `docs: move tasks to feature files`)
    — **nur nach OK**.
 
+### A5. Auto-Memory übertragen
+
+Die Auto-Memory von Claude Code liegt nur auf einem Rechner; ein Projekt hält sein Wissen
+im Graph oder in `docs/notes.md` (Kit-Regeln, Abschnitt Graphiti Memory). A5 zieht
+vorhandene Einträge dorthin um und löscht sie danach — **nur die des abgeglichenen
+Projekts auf diesem Rechner**, nie die anderer Projekte, nie Transkripte. Läuft in jedem
+Lauf nach A2 Schritt 10, nicht im Modus `revise`; im Modus `status` nur Ordner, Stufe
+und Zahl der Einträge berichten.
+
+1. **Ordner finden:** `sh <skript> memory-dir <config> <projekt>` (`<config>` wie G1);
+   die Zeile nennt Stufe, `present`/`absent`, `own`/`shared` und den Ordner. Nennt diese
+   Session ihren Auto-Memory-Ordner selbst (Abschnitt zur Memory in ihren Anweisungen,
+   solange die Auto-Memory an ist) und ist das abgeglichene Projekt das Repo, in dem sie
+   läuft, gilt ihr Ordner; weicht er vom Skript ab, wie `shared` behandeln.
+   - `absent` → nichts zu tun, nichts melden.
+   - `none` → in einem Satz melden, dass kein Auto-Memory-Ordner zu finden war; nicht
+     raten.
+   - Mehrere `transcript`-Zeilen → fragen, welcher Ordner gemeint ist (auch: keiner).
+   - `shared` → nichts übertragen und nichts löschen: Der Ordner hält auch Notizen
+     anderer Projekte, welche zu diesem gehören, lässt sich nicht sicher sagen. Ordner und
+     Grund melden.
+2. **Einträge lesen:** jede `.md`-Datei außer `MEMORY.md` — Kopfblock mit `name`,
+   `description` und `type` (`user`, `feedback`, `project`, `reference`), darunter der
+   Text. In `MEMORY.md` zählt jede Zeile, die nicht nur auf eine Eintragsdatei verweist,
+   als eigener Eintrag. Andere Dateien bleiben unberührt und werden gemeldet.
+3. **Ziel je Eintrag vorschlagen** (der Graphiti-Block der Projekt-CLAUDE.md entscheidet
+   die Ablage):
+   - Projektwissen ohne Ort im Repo → mit Block der Graph (group_id des Projekts), ohne
+     Block `docs/notes.md`;
+   - Privates (Hostnamen, IPs, Personendaten, lokale Pfade) → eine Datei unter
+     `private/`, nie `docs/notes.md`;
+   - Projektübergreifendes (Arbeitsweise, Präferenzen; meist `user` und `feedback`) →
+     Graph-Gruppe `main`; ohne Graphiti-Werkzeuge entscheidet der Nutzer
+     (`docs/notes.md`, `private/` oder verwerfen);
+   - Überholtes oder schon Vorhandenes (vorher im Graph suchen und `docs/notes.md`
+     lesen) → nur löschen.
+
+   Den Text dabei in die Form der Kit-Regeln bringen (ein Thema, 2–4 Sätze, Geltendes im
+   Präsens, ohne Hashes und Versionsstände); für `docs/notes.md` in der Sprache der
+   lebenden Doku. Fehlt `docs/notes.md`, aus dem Render anlegen
+   (`<tmp>/seeds/docs/notes.md`, A2 Schritt 6).
+4. **Eine Freigabe:** den Ordnerpfad, je Eintrag Ziel und neuen Text sowie die Dateien,
+   die danach gelöscht werden. Je Eintrag änderbar: anderes Ziel oder **zurückstellen**
+   (bleibt liegen, der nächste Lauf fragt wieder).
+5. **Übertragen, dann löschen:**
+   - Graph: `add_memory` je Eintrag mit eindeutigem Namen; `add_memory` meldet nur
+     „queued". Angekommen ist er erst, wenn `get_episodes` der Gruppe eine Episode mit
+     diesem Namen listet — eine Themensuche fände auch ältere Fakten. Kommt er nicht an
+     oder ist der Graph nicht erreichbar, bleibt die Datei liegen und wird gemeldet.
+   - `docs/notes.md` und `private/`: schreiben, re-lesen.
+   - Erst danach die übertragenen und die zum Löschen freigegebenen Dateien löschen und
+     ihre Zeilen aus `MEMORY.md` nehmen. `MEMORY.md` löschen, wenn nur noch Verweise auf
+     gelöschte Dateien darin stehen; den Ordner nur, wenn er danach leer ist. Nur im
+     gezeigten Ordner löschen.
+   - Melden: übertragen (wohin), gelöscht, zurückgestellt, gescheitert, liegen
+     geblieben. Die Änderung an `docs/notes.md` gehört in den Commit des Abschlusses
+     (A2 Schritt 11); das Löschen betrifft nur diesen Rechner.
+
 ---
 
 ## Teil G — Globale Kit-Regeln (Kit → Rechner)
@@ -572,6 +631,14 @@ Kit-Regeln jetzt eingerichtet sind: `sh <skript> snapshot --snapshot <basis> <co
 <tmp>/global rules/coding-kit.md`. Der Hinweis beim Session-Start vergleicht den Render
 mit dieser Basis; abgelehnte Änderungen meldet er erst wieder, wenn sich Kit oder Werte
 erneut ändern. Danach sagen, dass die neuen Regeln ab der nächsten Session gelten.
+
+Die Basis gehört dem **laufenden** Plugin: nur `<basis>` aus § 0 bzw. G1, nie der
+Datenordner einer anderen Plugin-Quelle — etwa des installierten Plugins, wenn diese
+Session mit `--plugin-dir` läuft. Nicht danach fragen. Grund: Der Hook jeder Quelle
+vergleicht mit ihrer eigenen Kit-Datei; eine fremde Basis passt nicht dazu und brächte
+dort in jeder Session den Hinweis. Hat die andere Quelle eine ältere Kit-Datei, meldet
+sie sich nach ihrem Update einmal; dann setzt ein normaler Lauf nur die Basis — das dem
+Nutzer am Ende sagen.
 
 ### G7. Nutzer-Settings von Claude Code
 
