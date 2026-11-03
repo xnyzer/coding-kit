@@ -13,6 +13,19 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.2.1 — 2026-11-03
+
+Die Auto-Memory-Übertragung meldet keine falschen Fehler mehr (F-051).
+
+- **`update-conventions`, A5:** Ein Eintrag gilt als in den Graph übertragen, sobald
+  `add_memory` „queued" meldet; dann wird seine Datei gelöscht. Bisher wartete A5, bis
+  eine Abfrage der Gruppe die Episode listete. Die Abfrage liefert aber nur die ersten
+  Episoden nach ID, nicht die neuesten, und eine frische ist oft noch in Verarbeitung —
+  in jeder größeren Gruppe hieß es deshalb „nicht angekommen", und die Datei blieb
+  liegen. Scheitert der Aufruf oder ist der Graph nicht erreichbar, bleibt die Datei wie
+  bisher liegen. Der Bericht nennt den Rückweg: Der Text steht im Transkript der
+  Session.
+
 ## 3.2.0 — 2026-11-01
 
 Betrieb ohne Graphiti, Auto-Memory abgelöst (F-033). Projekte sollen auf jedem Rechner

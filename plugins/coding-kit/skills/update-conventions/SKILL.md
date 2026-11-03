@@ -494,18 +494,21 @@ und Zahl der Einträge berichten.
    die danach gelöscht werden. Je Eintrag änderbar: anderes Ziel oder **zurückstellen**
    (bleibt liegen, der nächste Lauf fragt wieder).
 5. **Übertragen, dann löschen:**
-   - Graph: `add_memory` je Eintrag mit eindeutigem Namen; `add_memory` meldet nur
-     „queued". Angekommen ist er erst, wenn `get_episodes` der Gruppe eine Episode mit
-     diesem Namen listet — eine Themensuche fände auch ältere Fakten. Kommt er nicht an
-     oder ist der Graph nicht erreichbar, bleibt die Datei liegen und wird gemeldet.
+   - Graph: `add_memory` je Eintrag mit eindeutigem Namen. Meldet es „queued", gilt der
+     Eintrag als übertragen. Ob der Server ihn danach verarbeitet, prüft A5 nicht: Das
+     geschieht im Hintergrund, oft erst Minuten später, und der Rückweg ist das
+     Transkript (siehe Melden). Scheitert der Aufruf oder ist der Graph nicht erreichbar,
+     bleibt die Datei liegen und wird gemeldet.
    - `docs/notes.md` und `private/`: schreiben, re-lesen.
    - Erst danach die übertragenen und die zum Löschen freigegebenen Dateien löschen und
      ihre Zeilen aus `MEMORY.md` nehmen. `MEMORY.md` löschen, wenn nur noch Verweise auf
      gelöschte Dateien darin stehen; den Ordner nur, wenn er danach leer ist. Nur im
      gezeigten Ordner löschen.
    - Melden: übertragen (wohin), gelöscht, zurückgestellt, gescheitert, liegen
-     geblieben. Die Änderung an `docs/notes.md` gehört in den Commit des Abschlusses
-     (A2 Schritt 11); das Löschen betrifft nur diesen Rechner.
+     geblieben. Ging mindestens ein Eintrag in den Graph, dazu ein Satz zum Rückweg: Der
+     Text steht im Transkript dieser Session; verliert der Server eine Episode, lässt sie
+     sich von dort nachreichen. Die Änderung an `docs/notes.md` gehört in den Commit des
+     Abschlusses (A2 Schritt 11); das Löschen betrifft nur diesen Rechner.
 
 ---
 

@@ -2,10 +2,10 @@
 id: F-051
 title: Ankunftsprüfung aus der Auto-Memory-Übertragung entfernen
 type: fix
-status: PLANNED
+status: DONE
 size: S
 created: 2026-11-03
-done:
+done: 2026-11-03
 depends-on: F-033
 superseded-by:
 ---
@@ -45,13 +45,16 @@ ist falsch. In den Tests fiel es nicht auf, weil die Testgruppen leer waren.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben A5 überträgt einen Eintrag in den Graph, wenn `add_memory`
+- [x] AC-1 — Gegeben A5 überträgt einen Eintrag in den Graph, wenn `add_memory`
   „queued“ meldet, dann gilt er als übertragen und seine Datei wird gelöscht — ohne
-  Abfrage per `get_episodes`.
-- [ ] AC-2 — Gegeben `add_memory` scheitert oder der Graph ist nicht erreichbar, wenn A5
-  überträgt, dann bleibt die Datei liegen und wird als gescheitert gemeldet.
-- [ ] AC-3 — Gegeben mindestens ein Eintrag ging in den Graph, wenn A5 berichtet, dann
-  nennt der Bericht in einem Satz den Rückweg: Der Text steht im Transkript der Session.
+  Abfrage per `get_episodes` — belegt: A5 Schritt 5 gelesen; grep `get_episodes` in
+  `plugins/coding-kit/skills/` ohne Treffer.
+- [x] AC-2 — Gegeben `add_memory` scheitert oder der Graph ist nicht erreichbar, wenn A5
+  überträgt, dann bleibt die Datei liegen und wird als gescheitert gemeldet — belegt: A5
+  Schritt 5 gelesen (Datei bleibt, Meldung als gescheitert).
+- [x] AC-3 — Gegeben mindestens ein Eintrag ging in den Graph, wenn A5 berichtet, dann
+  nennt der Bericht in einem Satz den Rückweg: Der Text steht im Transkript der Session
+  — belegt: A5 Schritt 5, Punkt Melden, gelesen.
 
 ### Randfälle
 
@@ -80,3 +83,24 @@ Verlauf unverändert.
 - A5 Schritt 5, Punkt Melden: bei Graph-Übertragungen der Satz zum Rückweg über das
   Transkript.
 - `plugin.json` auf 3.2.1, CHANGELOG-Eintrag 3.2.1 (Fehlerbehebung, ohne Template).
+
+## Verlauf
+
+### F-051 — fertig 2026-11-03
+
+**Umgesetzt:**
+
+- update-conventions, A5 Schritt 5: Meldet `add_memory` „queued“, gilt der Eintrag als
+  übertragen und seine Datei wird gelöscht; scheitert der Aufruf oder ist der Graph
+  nicht erreichbar, bleibt sie liegen. Ein Satz begründet, warum A5 die Ankunft nicht
+  prüft. Der Bericht nennt bei Graph-Übertragungen den Rückweg über das Transkript.
+- Version 3.2.1 mit CHANGELOG-Eintrag, ohne Abschnitt `### Template`.
+
+**Entscheidungen:**
+
+- Die Begründung im Skill nennt die alte Abfrage nicht beim Namen, sondern sagt, warum
+  es keine Prüfung gibt — damit sie niemand wieder einbaut.
+
+**Abweichung vom Plan:** keine. Geprüft am Text; ein Headless-Lauf war nicht geplant.
+
+**Funde:** Unabhängiges Review ohne Befunde; keine neuen Aufgaben.
