@@ -65,7 +65,7 @@ bzw. ohne GitHub zuerst.
 | [F-025](F-025-install-sh-fehlender-gh-login-und.md) | install.sh — fehlender gh-Login und Plattform-Abdeckung | BACKLOG |  |
 | [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) | Stop-Hook plattformfähig machen (Windows greift ins WSL) | BACKLOG |  |
 | [F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md) | Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren | IN-PROGRESS |  |
-| [F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) | Git-Host je Projekt festhalten, mit Grundstufe nur Git | PLANNED |  |
+| [F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) | Git-Host je Projekt festhalten, mit Grundstufe nur Git | IN-PROGRESS |  |
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
 | [F-052](F-052-azure-devops-services-als-git-host.md) | Azure DevOps Services als Git-Host | BACKLOG |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |

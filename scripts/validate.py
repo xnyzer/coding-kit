@@ -61,6 +61,16 @@ ALLOWED_EMAIL_DOMAINS = (
     "example.com",
     "example.org",
 )
+# The SSH user of the public git hosts in remote URLs (git@github.com:owner/repo.git) —
+# a fixed account name, not a person's address. One entry per host template-sync.sh
+# recognizes (MANIFEST § Hosts).
+ALLOWED_SSH_REMOTES = {
+    "git@github.com",
+    "git@ssh.github.com",
+    "git@gitlab.com",
+    "git@codeberg.org",
+    "git@ssh.dev.azure.com",
+}
 
 # Private name blocklist: gitignored, so absent in CI — the check silently skips there.
 # One term per line; `#` starts a comment. The file itself is never scanned (private/ is
@@ -102,6 +112,10 @@ MODULES_README = TEMPLATE_ROOT / "modules" / "README.md"
 MODULE_STATUS_ROW_RE = re.compile(r"^\|\s*`([a-z0-9][a-z0-9-]*)`\s*\|\s*([a-z]*)", re.MULTILINE)
 MODULE_STATUSES = {"full", "stub"}
 SCRIPT_SIGNAL_TYPES_RE = re.compile(r"^SIGNAL_TYPES='([a-z ]*)'", re.MULTILINE)
+# Git hosts (MANIFEST § Hosts): one table row per host, the name backticked in the first
+# column; template-sync.sh lists the same names in HOSTS.
+HOST_ROW_RE = re.compile(r"^\|\s*`([a-z][a-z0-9-]*)`\s*\|", re.MULTILINE)
+SCRIPT_HOSTS_RE = re.compile(r"^HOSTS='([a-z0-9 -]*)'", re.MULTILINE)
 # Deterministic helpers shipped with the plugin (POSIX sh, called with `sh <path>`).
 PLUGIN_SCRIPTS_DIR = PLUGIN_ROOT / "scripts"
 TEMPLATE_SYNC = PLUGIN_SCRIPTS_DIR / "template-sync.sh"
@@ -270,7 +284,7 @@ def check_privacy(path: Path, text: str, findings: list[str]) -> None:
         findings.append(f"{rel}: IP address leaked — {ip}")
     for match in EMAIL_RE.finditer(text):
         email = match.group(0)
-        if email.endswith(ALLOWED_EMAIL_DOMAINS):
+        if email.endswith(ALLOWED_EMAIL_DOMAINS) or email in ALLOWED_SSH_REMOTES:
             continue
         findings.append(f"{rel}: email address leaked — {email}")
 
@@ -684,6 +698,28 @@ def check_detection(text: str, findings: list[str]) -> None:
     check_script_signal_types(types, findings)
 
 
+def check_hosts(text: str, findings: list[str]) -> None:
+    """MANIFEST § Hosts lists the supported hosts, `git` among them; `template-sync.sh`
+    knows exactly those (HOSTS)."""
+    rel = display_path(MANIFEST_PATH)
+    section = manifest_section(text, "Hosts")
+    if section is None:
+        findings.append(f"{rel}: no '## Hosts' section")
+        return
+    hosts = set(HOST_ROW_RE.findall(section))
+    if "git" not in hosts:
+        findings.append(f"{rel}: § Hosts has no row for the base level `git`")
+    if not TEMPLATE_SYNC.is_file():
+        return  # reported by check_module_parts_known
+    match = SCRIPT_HOSTS_RE.search(TEMPLATE_SYNC.read_text(encoding="utf-8"))
+    script_hosts = set(match.group(1).split()) if match else set()
+    if script_hosts != hosts:
+        findings.append(
+            f"{display_path(TEMPLATE_SYNC)}: HOSTS {sorted(script_hosts)} differ from "
+            f"MANIFEST § Hosts {sorted(hosts)}"
+        )
+
+
 def check_snapshot_contract(text: str, findings: list[str]) -> None:
     """MANIFEST declares the base snapshot and the deviation registry; the registry template
     carries both tables with the headers the script and the skills read; the template's
@@ -852,6 +888,7 @@ def check_template_contract(findings: list[str]) -> None:
     check_module_file_policies(findings)
     check_snapshot_contract(text, findings)
     check_detection(text, findings)
+    check_hosts(text, findings)
     check_features_recipes(findings)
 
 

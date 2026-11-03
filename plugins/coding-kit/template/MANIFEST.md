@@ -45,6 +45,7 @@ it must not contain a tab or `{{`.
 | `PROJECT_NAME`, `PROJECT_DESCRIPTION`, `OWNER`, `YEAR`, `GROUP_ID`, `LANG_LIVING_DOCS`, `LANG_CLAUDE_MD`, `LANG_COMMENTS`, `LANG_COMMITS`, `LANG_README`, `LICENSE_SPDX` | the placeholder of the same name (§ Placeholders); a key no rendered file needs may be left out |
 | `MODULE` | the stack module (`docs-only` without a stack) — required |
 | `VISIBILITY` | `public` or `private`; decides the public-only targets — required |
+| `HOST` | the project's git host, a name from § Hosts; projects from before it lack the key — `template-sync.sh host` suggests a value from the remote |
 | `OPTIONAL` | the `template:optional` blocks the project keeps by choice, comma-separated (e.g. `graphiti`); missing or empty = none; the license blocks are derived, never listed |
 | `FRAGMENTS` | standards fragments beyond the module's own and its declared ones (characteristic fragments the project chose, fragments from a detection proposal, the language fragment of a tool language), comma-separated, in slot order |
 
@@ -53,6 +54,26 @@ Derived, never stored: `PROJECT_NAME_SNAKE` (from `PROJECT_NAME`), `CODEQL_LANGU
 docs-only project has no CodeQL workflow), `TEMPLATE_VERSION` (the plugin version) and
 the license blocks: `license-tbd` is kept while `LICENSE_SPDX` is `TBD`, `license`
 otherwise.
+
+## Hosts
+
+The git host belongs to the project: `HOST` in its answers. Skills look up what the host
+can do in this table instead of calling a host CLI unconditionally; a step the host
+cannot do is reported as skipped, never failed. `git` is the base level — a project
+without a host, with no remote or any plain git remote (a bare repository on a disk or
+NAS, a server the kit does not know) — and always carries the whole workflow.
+
+| Host | CLI | Create repository | Repository settings | Description, topics | Visibility | Issues | Commit address | Renovate | CI |
+|------|-----|-------------------|---------------------|---------------------|------------|--------|----------------|----------|----|
+| `github` | `gh` | `gh repo create` | yes — merge method, branch cleanup, secret scanning (`gh repo edit`, `gh api`) | yes | per repository | yes | noreply `<id>+<login>@users.noreply.github.com` | platform `github` | `.github/workflows/` |
+| `git` | — | no — `git init`, a remote is any git URL | no | no | no | no | set by the user, never a private one | no | no |
+
+`template-sync.sh host PROJECT` names the host in effect: `HOST` from the answers, else
+the value the remote `origin` suggests. It recognizes these servers by host name: GitHub
+(`github.com`), Azure DevOps (`dev.azure.com`, `*.visualstudio.com`), GitLab
+(`gitlab.com`) and Forgejo (`codeberg.org`). A recognized host without a row above runs
+as `git` until it gets one; any other server — GitHub Enterprise Server or a self-hosted
+one — is `git` as well.
 
 ## Markers
 

@@ -207,6 +207,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 . "$HERE/features.sh"
 . "$HERE/migrate.sh"
 . "$HERE/settings.sh"
+. "$HERE/host.sh"
 
 # --- main -----------------------------------------------------------------------
 
@@ -233,6 +234,7 @@ run_cases() {  # DIR
   run_features_cases
   run_migrate_cases
   run_settings_cases
+  run_host_cases
 }
 
 # The awk implementation behind COMMAND: mawk or gawk by their -W version line, "other"

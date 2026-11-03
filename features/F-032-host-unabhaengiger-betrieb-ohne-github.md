@@ -2,7 +2,7 @@
 id: F-032
 title: Git-Host je Projekt festhalten, mit Grundstufe nur Git
 type: feature
-status: PLANNED
+status: IN-PROGRESS
 size: L
 created: 2026-10-19
 done:
@@ -108,14 +108,17 @@ in F-032 auf; F-025 und die Hosts F-052 (Azure DevOps), F-053 (GitLab) und F-054
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben ein Projekt, wenn `template-sync.sh host <projekt>` läuft, dann
+- [x] AC-1 — Gegeben ein Projekt, wenn `template-sync.sh host <projekt>` läuft, dann
   nennt es Host und Quelle: `HOST` aus den Antworten, sonst Vorschlag aus `origin`
   (`github`), ohne Remote oder bei Bare-Repo/unbekanntem Host `git`; ein noch nicht
   unterstützter, aber erkannter Host (Azure, GitLab, Forgejo) wird als solcher genannt
-  und läuft als `git`.
-- [ ] AC-2 — Gegeben `HOST` in den Antworten und ein Remote auf einen anderen Host, wenn
+  und läuft als `git` — belegt: Skript-Tests in `tests/template-sync/host.sh` (alle
+  Remote-Formen und erkannten Hosts), `just check` grün.
+- [x] AC-2 — Gegeben `HOST` in den Antworten und ein Remote auf einen anderen Host, wenn
   `host` läuft, dann gilt `HOST` und der Widerspruch wird gemeldet; ein ungültiger
-  `HOST`-Wert bricht mit der Liste der gültigen Werte ab.
+  `HOST`-Wert bricht mit der Liste der gültigen Werte ab — belegt: Skript-Tests in
+  `tests/template-sync/host.sh` (Widerspruch; ungültiger, leerer und Listen-Wert
+  abgelehnt).
 - [ ] AC-3 — Gegeben new-project mit Host `git`, wenn der Lauf durchgeht, dann entsteht
   das Projekt per `git init` lokal, ohne `gh`-Aufruf, ohne `.github/` und
   `renovate.json`, `just check` ist grün, der Erst-Commit hat die Adresse aus
@@ -359,3 +362,39 @@ Substeps gemeinsam, mit Abschnitt `### Template`.
 - Headless-Lauf an Testkopien (mit GitHub-Remote, ohne Remote); Umzug manuell an einem
   privaten Wegwerf-Repo, danach gelöscht.
 - Erfüllt AC-8, AC-10, AC-11, EC-4, EC-7 bis EC-13 und den Migrationsteil von AC-9.
+
+## Verlauf
+
+### F-032a — fertig 2026-11-03
+
+**Umgesetzt:**
+
+- `template-sync.sh host [--answers FILE] PROJECT` (Funktionen `remote_kind` und `host`
+  am Ende des Skripts): nennt den Host mit Quelle (`answers`, `remote`, `none`) und den
+  Remote mit Art und Hostnamen; dazu Zeilen `unsupported`, `no-origin` und `mismatch`.
+  Die Art kommt aus dem Hostnamen der URL (HTTPS, SSH, scp-Form); Pfade, `file://` und
+  Laufwerksbuchstaben sind `local`. Zugangsdaten einer URL werden nie ausgegeben.
+- MANIFEST: Schlüssel `HOST` unter § Answers; neuer Abschnitt `## Hosts` mit den
+  Fähigkeiten von `github` und `git` und den erkannten, noch nicht unterstützten Hosts.
+- `validate.py` prüft, dass das Skript (`HOSTS`) und § Hosts dieselben Hosts nennen und
+  `git` dabei ist.
+- Tests in `tests/template-sync/host.sh`; Version 3.3.0 mit CHANGELOG-Eintrag.
+
+**Entscheidungen:**
+
+- Ein Widerspruch zählt, wenn der Remote einen anderen Host vorschlägt als `HOST`:
+  `HOST=git` auf einem noch nicht unterstützten Host (etwa GitLab) ist keiner, ein
+  GitHub-Projekt ohne Remote schon.
+- Selbst gehostete Server werden nicht am Namen geraten. Sie gelten als `other`, bis ein
+  Host-Feature ihre Adresse kennt.
+- „Noch nicht unterstützt“ wird aus der Host-Liste abgeleitet, damit F-052 bis F-054 nur
+  `HOSTS` und das MANIFEST ergänzen müssen.
+
+**Abweichung vom Plan:** `validate.py` lässt in der Datenschutz-Prüfung die SSH-Nutzer
+der öffentlichen Git-Hosts zu (`git@github.com` und je erkanntem Host eine feste
+Adresse). Bisher galten sie als geleakte E-Mail-Adressen, und jede SSH-Remote-URL in
+Doku oder Tests war blockiert. Andere Adressen meldet die Prüfung weiter.
+
+**Funde:** Unabhängiges Review mit 4 Befunden: 3 behoben, 1 verworfen (GitLab-Eintrag
+der Erlaubnisliste — die Liste folgt den erkannten Hosts). Dabei eine Lücke gefunden und
+behoben: Ein Wert mit mehreren Hosts ging durch. Keine neuen Aufgaben.

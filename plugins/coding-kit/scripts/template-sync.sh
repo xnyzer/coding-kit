@@ -159,6 +159,17 @@
 #       folder>; shared holds other projects too: the user setting, the env name, or a
 #       folder whose transcripts name a name twin (another path the rule maps to the
 #       same folder, "my app" and "my.app"); none names the folder the rule gives.
+#   host [--answers FILE] PROJECT
+#       Names the git host of PROJECT (MANIFEST § Hosts). Lines: host <name>
+#       <answers|remote|none> — HOST of the answers, else what the remote origin
+#       suggests (a supported host as itself, anything else git), else git without a
+#       remote; remote <kind> <host name|->, kinds: a supported host, azure, gitlab,
+#       forgejo, other (another server, e.g. GitHub Enterprise), local (a path or
+#       file:// URL), none; unsupported <kind> for a recognized host the kit does not
+#       support yet (it runs as git); no-origin <names> when other remotes exist but no
+#       origin; mismatch <HOST> <kind> when the answers name another host than the
+#       remote suggests. Only the host name of a URL is printed, never a user or token.
+#       Refused: a HOST that is no supported host.
 #
 # Options name a stand-in for a file of PROJECT, so a skill can go on with files it
 # prepared in a temp folder while a write below .claude/ waits for approval:
@@ -186,6 +197,9 @@ ANSWERS_FILE=.claude/template-answers
 # Signal types detect reads (MANIFEST § Detection); the validator compares the list
 # with the MANIFEST table.
 SIGNAL_TYPES='npm pypi go tool file'
+# Git hosts the kit supports (MANIFEST § Hosts); the validator compares the list with the
+# MANIFEST table.
+HOSTS='github git'
 SLOT_OPEN='<!-- module:coding-standards -->'
 SLOT_CLOSE='<!-- /module:coding-standards -->'
 # Set by parse_opts.
@@ -220,6 +234,7 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh settings CONFIG
        sh template-sync.sh set-settings CONFIG OUT NAME=value...
        sh template-sync.sh memory-dir CONFIG PROJECT
+       sh template-sync.sh host [--answers FILE] PROJECT
 EOF
   exit 2
 }
@@ -298,7 +313,7 @@ warn_unknown_keys() {
       }
       next
     }
-    !($1 in known) && $1 !~ /^(MODULE|VISIBILITY|OPTIONAL|FRAGMENTS)$/ {
+    !($1 in known) && $1 !~ /^(MODULE|VISIBILITY|HOST|OPTIONAL|FRAGMENTS)$/ {
       print "template-sync: warning: answers key " $1 " is not used by this template" | "cat 1>&2"
     }
     END { close("cat 1>&2") }' "$TEMPLATE/MANIFEST.md" "$WORK/values.tsv"
@@ -832,7 +847,7 @@ parse_opts() {  # COMMAND ARGS…
       --seeds) po_for='render snapshot' po_n=1 ;;
       --changed) po_for=detect po_n=1 ;;
       --base) po_for='status merge zones' po_n=2 ;;
-      --answers) po_for=detect po_n=2 ;;
+      --answers) po_for='detect host' po_n=2 ;;
       --registry) po_for='status changed merge zones detect' po_n=2 ;;
       --snapshot) po_for='status changed merge snapshot zones' po_n=2 ;;
       --index | --sections) po_for=migrate po_n=2 ;;
@@ -3182,6 +3197,102 @@ memory_dir() {
   return 0
 }
 
+# --- host: the project's git host (MANIFEST § Hosts) --------------------------------
+
+# The kind of server a remote URL points to, and its host name: "KIND<TAB>NAME". Kinds:
+# a name of HOSTS, a recognized host the kit does not support yet (azure, gitlab,
+# forgejo), other (any other server), local (a path or file:// URL). Only the host name
+# leaves this function — never the user, a password or a token a URL may carry.
+remote_kind() {  # URL
+  rk_url=$1
+  case $rk_url in
+    file://*) printf 'local\t-\n'; return 0 ;;
+    *://*)
+      rk_name=${rk_url#*://}
+      rk_name=${rk_name%%/*}
+      ;;
+    *:*)
+      # scp form [user@]host:path — git reads it so only when no / precedes the colon.
+      rk_name=${rk_url%%:*}
+      case $rk_name in
+        */* | '') printf 'local\t-\n'; return 0 ;;
+      esac
+      ;;
+    *) printf 'local\t-\n'; return 0 ;;
+  esac
+  rk_name=${rk_name##*@}
+  rk_name=${rk_name%%:*}
+  rk_name=$(printf '%s' "$rk_name" | tr 'A-Z' 'a-z')
+  case $rk_name in
+    # A single letter is a Windows drive (C:\repo, C:/repo), not a server.
+    ? | '') printf 'local\t-\n'; return 0 ;;
+    github.com | ssh.github.com) rk_kind=github ;;
+    dev.azure.com | ssh.dev.azure.com | *.visualstudio.com) rk_kind=azure ;;
+    gitlab.com) rk_kind=gitlab ;;
+    codeberg.org) rk_kind=forgejo ;;
+    *) rk_kind=other ;;
+  esac
+  printf '%s\t%s\n' "$rk_kind" "$rk_name"
+}
+
+host() {
+  [ $# -eq 1 ] || usage
+  HO_P=$1
+  [ -d "$HO_P" ] || die "project not found: $HO_P"
+  set_paths "$HO_P"
+  setup_work
+  # HOST from the answers; a missing file or key leaves it empty. A value that is not
+  # exactly one name of HOSTS — also an empty one — is refused.
+  ho_host=
+  if [ -f "$ANS_PATH" ]; then
+    load_answers "$ANS_PATH" > "$WORK/values.tsv" || die "answers are invalid: $ANS_PATH"
+    if ho_host=$(value_of HOST); then
+      case $ho_host in
+        '' | *[!a-z]*) ho_known=0 ;;
+        *) case " $HOSTS " in *" $ho_host "*) ho_known=1 ;; *) ho_known=0 ;; esac ;;
+      esac
+      [ "$ho_known" -eq 1 ] || die "answers: HOST must be one of: $HOSTS — not '$ho_host'"
+    else
+      ho_host=
+    fi
+  fi
+  # The remote: origin only; a project that is no git repository has none.
+  ho_url=$(git -C "$HO_P" remote get-url origin 2> /dev/null) || ho_url=
+  if [ -n "$ho_url" ]; then
+    ho_remote=$(remote_kind "$ho_url")
+  else
+    ho_remote="none$TAB-"
+  fi
+  ho_kind=${ho_remote%%"$TAB"*}
+  # What the remote suggests: a supported host as itself, everything else as git.
+  case " $HOSTS " in
+    *" $ho_kind "*) ho_suggest=$ho_kind ;;
+    *) ho_suggest=git ;;
+  esac
+  if [ -n "$ho_host" ]; then
+    printf 'host\t%s\tanswers\n' "$ho_host"
+  elif [ "$ho_kind" = none ]; then
+    printf 'host\t%s\tnone\n' "$ho_suggest"
+  else
+    printf 'host\t%s\tremote\n' "$ho_suggest"
+  fi
+  printf 'remote\t%s\n' "$ho_remote"
+  # A recognized host that is no supported one yet (remote_kind names the recognized).
+  case $ho_kind in
+    other | local | none) ;;
+    "$ho_suggest") ;;
+    *) printf 'unsupported\t%s\n' "$ho_kind" ;;
+  esac
+  if [ "$ho_kind" = none ]; then
+    ho_others=$(git -C "$HO_P" remote 2> /dev/null | tr '\n' ',' | sed 's/,$//') || ho_others=
+    [ -z "$ho_others" ] || printf 'no-origin\t%s\n' "$ho_others"
+  fi
+  if [ -n "$ho_host" ] && [ "$ho_host" != "$ho_suggest" ]; then
+    printf 'mismatch\t%s\t%s\n' "$ho_host" "$ho_kind"
+  fi
+  return 0
+}
+
 cmd=${1:-}
 [ $# -eq 0 ] || shift
 parse_opts "$cmd" "$@"
@@ -3202,5 +3313,6 @@ case $cmd in
   settings) settings "$@" ;;
   set-settings) set_settings "$@" ;;
   memory-dir) memory_dir "$@" ;;
+  host) host "$@" ;;
   *) usage ;;
 esac

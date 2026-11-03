@@ -13,6 +13,20 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.3.0 — 2026-11-03
+
+Git-Host je Projekt, mit „nur Git“ als Grundstufe (F-032, in Arbeit).
+
+- **`template-sync.sh host`:** nennt den Git-Host eines Projekts und woher er kommt —
+  `HOST` aus den Template-Antworten, sonst der Vorschlag aus dem Remote `origin`. Erkannt
+  werden GitHub, Azure DevOps, GitLab und Forgejo (Codeberg) am Hostnamen; was das Kit
+  noch nicht unterstützt, läuft als `git`, ebenso ein Pfad, ein Bare-Repo oder ein
+  unbekannter Server. Widersprechen Antworten und Remote, meldet der Befehl das.
+  Zugangsdaten in einer Remote-URL gibt er nie aus.
+- **MANIFEST:** neuer Antworten-Schlüssel `HOST` und Abschnitt `## Hosts` mit den
+  Fähigkeiten je Host (`github`, `git`); `just check` prüft, dass Skript und MANIFEST
+  dieselben Hosts kennen.
+
 ## 3.2.1 — 2026-11-03
 
 Die Auto-Memory-Übertragung meldet keine falschen Fehler mehr (F-051).
