@@ -15,7 +15,8 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
 
 ## 3.3.0 — 2026-11-03
 
-Git-Host je Projekt, mit „nur Git“ als Grundstufe (F-032, in Arbeit).
+Git-Host je Projekt, mit „nur Git“ als Grundstufe (F-032, in Arbeit); step-done prüft
+Reviewer-Befunde nach, bevor es sie übernimmt (F-055).
 
 - **`template-sync.sh host`:** nennt den Git-Host eines Projekts und woher er kommt —
   `HOST` aus den Template-Antworten, sonst der Vorschlag aus dem Remote `origin`. Erkannt
@@ -26,6 +27,19 @@ Git-Host je Projekt, mit „nur Git“ als Grundstufe (F-032, in Arbeit).
 - **MANIFEST:** neuer Antworten-Schlüssel `HOST` und Abschnitt `## Hosts` mit den
   Fähigkeiten je Host (`github`, `git`); `just check` prüft, dass Skript und MANIFEST
   dieselben Hosts kennen.
+- **`step-done`, unabhängiges Review:** Jeder Befund des Reviewers wird zuerst am Code
+  nachgeprüft — trifft er zu, gilt er für gleichartige Stellen genauso, trägt seine
+  Grundlage? Erst dann wird er behoben, teils behoben oder mit Grund verworfen; die
+  Befundliste in der Vorschau nennt je Befund, worauf die Entscheidung beruht. Ein
+  Befund gegen eine Entscheidung, die nur im Gespräch fiel, wird verworfen, und die
+  Entscheidung kommt in den Verlauf.
+- **Reviewer-Agent:** nennt gleichartige Stellen im selben Befund, statt eine
+  herauszugreifen.
+
+### Template
+
+- **`HOW-TO-CODE-WITH-CLAUDE.md`:** Der Abschnitt zu `/step-done` sagt, dass jeder
+  Befund des Reviewers zuerst am Code nachgeprüft wird, auch an gleichartigen Stellen.
 
 ## 3.2.1 — 2026-11-03
 

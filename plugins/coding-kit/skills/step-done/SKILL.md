@@ -1,6 +1,6 @@
 ---
 name: step-done
-description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS (ohne sie gegen drei Abschnitte der Vorlage) nach fünf Prüffragen — verständlich, einfach, sicher, lesbar, kein Workaround — samt Behebung vorhandener Fehler im berührten Code, Checks über just, unabhängiges Review durch einen nur lesenden Reviewer-Agenten mit frischem Kontext (Befunde behoben oder mit Grund verworfen), Erkennungs-Backstop (neu eingeführte Frameworks ohne Fragment, Sprachen ohne Stack-Modul), Backstop für geänderte managed Dateien ohne Registry-Eintrag, Secrets-Scan, Privacy-Scan der lebenden Doku, Verbuchung in der Feature-Datei (Verlauf-Eintrag, Abnahmekriterien mit Beleg, Status IN-PROGRESS bzw. DONE, erzeugte Index-Tabelle, Vorschlag zur Reihenfolge) und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), beim Abschluss des Features ein kurzer Graphiti-Wegweiser.
+description: Nach Abschluss einer Aufgabe ausführen. Review gegen CODING-STANDARDS (ohne sie gegen drei Abschnitte der Vorlage) nach fünf Prüffragen — verständlich, einfach, sicher, lesbar, kein Workaround — samt Behebung vorhandener Fehler im berührten Code, Checks über just, unabhängiges Review durch einen nur lesenden Reviewer-Agenten mit frischem Kontext (Befunde am Code nachgeprüft, behoben oder mit Grund verworfen), Erkennungs-Backstop (neu eingeführte Frameworks ohne Fragment, Sprachen ohne Stack-Modul), Backstop für geänderte managed Dateien ohne Registry-Eintrag, Secrets-Scan, Privacy-Scan der lebenden Doku, Verbuchung in der Feature-Datei (Verlauf-Eintrag, Abnahmekriterien mit Beleg, Status IN-PROGRESS bzw. DONE, erzeugte Index-Tabelle, Vorschlag zur Reihenfolge) und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben), beim Abschluss des Features ein kurzer Graphiti-Wegweiser.
 disable-model-invocation: false
 user-invocable: true
 ---
@@ -95,12 +95,27 @@ Bei jeder Größe genau ein Lauf.
      dem Hinweis, dass nur die Abschnitte Mindset, Control flow und Secure coding gelten.
 2. **Starten:** den Agenten `coding-kit:reviewer` mit diesem Auftrag aufrufen und seine
    Antwort abwarten.
-3. **Befunde bewerten:** jeden Befund beheben oder mit Begründung verwerfen — vorhandene
-   Fehler nach der Regel oben. Wird ein Befund zu einem Abnahmekriterium nicht behoben,
-   wird das Kriterium in Schritt 4 nicht abgehakt. Nach Korrekturen die Checks erneut;
+3. **Befunde nachprüfen und bewerten:** Ein Befund ist ein Hinweis, kein Urteil — der
+   Reviewer kennt das Gespräch nicht und kann danebenliegen. Jeden Befund zuerst selbst
+   am Code nachprüfen:
+   - **Trifft er zu?** Die genannte Stelle lesen, nicht nur die Beschreibung.
+   - **Gleichartige Stellen:** Gilt er dort genauso, werden alle behoben, nicht nur
+     die genannte. Ist eine Stelle anders, den Unterschied benennen; trifft er nur an
+     einem Teil der Stellen zu, ist er teils behoben.
+   - **Grundlage:** Trägt das angeführte Kriterium, die Regel des Maßstabs oder die
+     Entscheidung den Befund wirklich? Widerspricht er einer Entscheidung, die im
+     Gespräch fiel, aber nicht in der Feature-Datei steht, wird er mit Verweis darauf
+     verworfen; die Entscheidung kommt im Verlauf-Eintrag unter Entscheidungen in die
+     Datei.
+
+   Was der Prüfung standhält, beheben — vorhandene Fehler nach der Regel oben; was nicht,
+   mit Grund verwerfen. Wird ein Befund zu einem Abnahmekriterium nicht behoben, wird
+   das Kriterium in Schritt 4 nicht abgehakt. Nach Korrekturen die Checks erneut;
    **kein zweiter Reviewer-Lauf** — die Korrekturen prüft das eigene Review.
 4. **Liste festhalten** für die Vorschau in Schritt 5: je Befund Stelle, Art,
-   Entscheidung (behoben oder verworfen) und Grund — oder „keine Befunde".
+   Entscheidung (behoben, teils behoben oder verworfen) und worauf sie beruht — auch bei
+   behobenen, etwa „am Code bestätigt; gleiche Lage in X mitbehoben" — oder „keine
+   Befunde".
 
 **Reviewer nicht verfügbar** (Agent-Werkzeug fehlt, Agent nicht geladen, Lauf bricht ab):
 das ausdrücklich sagen, mit dem eigenen Review weitermachen und im Verlauf-Eintrag unter

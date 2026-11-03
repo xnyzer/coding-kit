@@ -44,16 +44,15 @@ with its reasons.
 
 Stand 2026-11-03.
 
-1. **[F-055](F-055-reviewer-befunde-in-step-done-nachpruefen.md)** — klein, vor F-032b: die nächsten Abschlüsse von [F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) profitieren davon.
-2. **[F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md)** — Graphiti-Strang; F-029d wartet die 7 Tage Nachmessung ab (frühestens
+1. **[F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md)** — Graphiti-Strang; F-029d wartet die 7 Tage Nachmessung ab (frühestens
    2026-11-06).
-3. **[F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) → [F-052](F-052-azure-devops-services-als-git-host.md) → [F-025](F-025-install-sh-fehlender-gh-login-und.md) → [F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: erst die Grundlage mit
+2. **[F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) → [F-052](F-052-azure-devops-services-als-git-host.md) → [F-025](F-025-install-sh-fehlender-gh-login-und.md) → [F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: erst die Grundlage mit
    „nur Git“, dann Azure DevOps (Bedarf in der Firma), der Installer, GitLab, Forgejo.
-4. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
-5. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+3. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
+4. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
-Strang 2 und 3 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 1 und 2 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ## All features
@@ -71,7 +70,6 @@ bzw. ohne GitHub zuerst.
 | [F-052](F-052-azure-devops-services-als-git-host.md) | Azure DevOps Services als Git-Host | BACKLOG |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
-| [F-055](F-055-reviewer-befunde-in-step-done-nachpruefen.md) | Reviewer-Befunde in step-done erst nachprüfen, dann übernehmen | PLANNED |  |
 
 ### Closed
 
@@ -80,6 +78,7 @@ bzw. ohne GitHub zuerst.
 | [F-024](F-024-commit-adresse-aus-der-personal-config.md) | Commit-Adresse aus der Personal-Config statt hart aus gh | SUPERSEDED → F-032 | 2026-11-03 |
 | [F-030](F-030-graphiti-episodenverlust-erkennen-und.md) | Graphiti-Episodenverlust erkennen und wiederherstellbar halten | DROPPED | 2026-11-03 |
 | [F-051](F-051-ankunftspruefung-der-auto-memory-entfernen.md) | Ankunftsprüfung aus der Auto-Memory-Übertragung entfernen | DONE | 2026-11-03 |
+| [F-055](F-055-reviewer-befunde-in-step-done-nachpruefen.md) | Reviewer-Befunde in step-done erst nachprüfen, dann übernehmen | DONE | 2026-11-03 |
 | [F-033](F-033-betrieb-ohne-graphiti-absichern.md) | Betrieb ohne Graphiti absichern und Auto-Memory ablösen | DONE | 2026-11-01 |
 | [F-034](F-034-senior-massstab-in-den-bau-skills.md) | Senior-Maßstab in den Bau-Skills | DONE | 2026-10-30 |
 | [F-037](F-037-unabhaengiges-review-in-step-done.md) | Unabhängiges Review in step-done (Reviewer mit frischem Kontext) | DONE | 2026-10-30 |

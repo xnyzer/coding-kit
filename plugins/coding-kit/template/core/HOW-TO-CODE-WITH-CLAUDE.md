@@ -119,8 +119,10 @@ substeps, M a short interview and 2–3 substeps, L the full interview and 3–5
    green. Then a **read-only reviewer agent** checks the diff with fresh context — it gets
    only the F-number, the diff, the new files and the coding standards, never a summary
    of the build — against the feature file (acceptance criteria, edge cases, non-goals)
-   and the same five questions. Each finding is fixed or rejected with a reason; the list
-   is shown with the booking preview. One run per step, no second round after the fixes.
+   and the same five questions. Each finding is first checked against the code — does it
+   hold there, and at comparable places too? — then fixed or rejected with a reason; the
+   list, with what each decision rests on, is shown with the booking preview. One run per
+   step, no second round after the fixes.
 2. **Secrets & privacy scan** — working tree + commit draft for secrets/keys/IPs/private
    emails; living docs for private info (names, customers, local paths). Findings are
    fixed or moved to `private/` before any commit is proposed.

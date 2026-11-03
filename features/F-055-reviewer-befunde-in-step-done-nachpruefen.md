@@ -2,10 +2,10 @@
 id: F-055
 title: Reviewer-Befunde in step-done erst nachprüfen, dann übernehmen
 type: fix
-status: PLANNED
+status: DONE
 size: S
 created: 2026-11-03
-done:
+done: 2026-11-03
 depends-on:
 superseded-by:
 ---
@@ -45,18 +45,23 @@ in einem Lauf erprobt.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben der Reviewer meldet Befunde, wenn step-done sie bewertet, dann
+- [x] AC-1 — Gegeben der Reviewer meldet Befunde, wenn step-done sie bewertet, dann
   prüft der Haupt-Agent jeden zuerst selbst am Code nach: Trifft er an der Stelle zu?
   Gilt er für gleichartige Stellen genauso — dann alle beheben —, oder ist eine Stelle
   anders, und warum? Ist die angeführte Grundlage (Kriterium, Regel des Maßstabs,
   Entscheidung) die richtige? Was der Prüfung nicht standhält, wird mit Grund verworfen.
-  HOW-TO, README und die Beschreibung von step-done sagen das in einem Halbsatz.
-- [ ] AC-2 — Gegeben die Befundliste für die Vorschau, dann nennt sie je Befund Stelle,
+  HOW-TO, README und die Beschreibung von step-done sagen das in einem Halbsatz —
+  belegt: step-done § Unabhängiges Review Punkt 3 und Beschreibung im Kopfblock,
+  HOW-TO § What `/step-done` does Punkt 1 und README-Zeile zu step-done gelesen;
+  `just check` grün.
+- [x] AC-2 — Gegeben die Befundliste für die Vorschau, dann nennt sie je Befund Stelle,
   Art, Entscheidung (behoben, teils behoben, verworfen) und worauf die Entscheidung
-  beruht — auch bei behobenen, etwa „am Code bestätigt; gleiche Lage in X mitbehoben“.
-- [ ] AC-3 — Gegeben der Reviewer findet einen Fehler an einer Stelle, dann nennt er
+  beruht — auch bei behobenen, etwa „am Code bestätigt; gleiche Lage in X mitbehoben“ —
+  belegt: step-done § Unabhängiges Review Punkt 4 gelesen.
+- [x] AC-3 — Gegeben der Reviewer findet einen Fehler an einer Stelle, dann nennt er
   gleichartige Stellen im berührten Code im selben Befund mit, statt eine
-  herauszugreifen — ein Befund gilt für alle gleichartigen Stellen oder für keine.
+  herauszugreifen — ein Befund gilt für alle gleichartigen Stellen oder für keine —
+  belegt: `agents/reviewer.md` § Vorgehen gelesen.
 
 ### Randfälle
 
@@ -107,3 +112,28 @@ Klarstellung im Text ohne geänderten Ablauf.
   oder mit Grund verworfen“.
 - CHANGELOG 3.3.0: ein Punkt zu F-055 und ein Abschnitt `### Template` für die HOW-TO;
   `plugin.json` bleibt 3.3.0.
+
+## Verlauf
+
+### F-055 — fertig 2026-11-03
+
+**Umgesetzt:**
+
+- step-done, Unabhängiges Review: Punkt 3 heißt „Befunde nachprüfen und bewerten“. Jeder
+  Befund wird am Code nachgeprüft — trifft er zu, gilt er für gleichartige Stellen
+  genauso, trägt seine Grundlage? —, dann behoben, teils behoben oder verworfen. Ein
+  Befund gegen eine Entscheidung, die nur im Gespräch fiel, wird verworfen, die
+  Entscheidung kommt in den Verlauf. Punkt 4 nennt je Befund, worauf die Entscheidung
+  beruht.
+- Reviewer-Agent: gleichartige Stellen kommen in denselben Befund.
+- HOW-TO, README und die Beschreibung von step-done sagen das in einem Halbsatz;
+  CHANGELOG 3.3.0 mit Abschnitt `### Template`.
+
+**Entscheidungen:** keine über die Spezifikation hinaus.
+
+**Abweichung vom Plan:** Der Reviewer sagt zusätzlich in einem Halbsatz, warum eine
+scheinbar gleichartige Stelle anders ist.
+
+**Funde:** Unabhängiges Review ohne Befunde; keine neuen Aufgaben. Der Abschluss lief noch
+mit dem installierten step-done; den neuen Punkt 3 erprobt erst ein Lauf mit dem neuen
+Stand.
