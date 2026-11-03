@@ -2,12 +2,12 @@
 id: F-024
 title: Commit-Adresse aus der Personal-Config statt hart aus gh
 type: feature
-status: BACKLOG
+status: SUPERSEDED
 size:
 created: 2026-08-12
-done:
+done: 2026-11-03
 depends-on:
-superseded-by:
+superseded-by: F-032
 ---
 
 # F-024 — Commit-Adresse aus der Personal-Config statt hart aus gh
@@ -37,4 +37,8 @@ Skill statt zu raten.
   selben Commit anpassen, gemeinsam mit F-032.
 
 **Abhängigkeiten:** F-032 (Host-Profil bestimmt, welche Noreply-Adresse gilt) — sinnvoll
-im selben Zug umzusetzen
+im selben Zug umzusetzen.
+
+**Entscheidung 2026-11-03:** Geht in F-032 auf. Dort bekommt jeder Host eine eigene
+Commit-Adresse in der Personal-Config, und jedes Projekt nimmt die Adresse seines Hosts;
+die Lösungsskizze oben ist damit Teil der Spezifikation von F-032.
