@@ -170,11 +170,23 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 - **Conventional Commits**, English, imperative mood; justify trade-offs briefly in the
   body (`Decision: X over Y because …`).
 - Body ends with `Co-Authored-By: Claude <noreply@anthropic.com>` where applicable.
+<!-- template:optional:host-github -->
 - **Commit email = GitHub noreply** — verify before each commit; never a private address.
+<!-- /template:optional:host-github -->
+<!-- template:optional:host-git -->
+- **Commit email = the address set for this project** — verify before each commit; never
+  a private address.
+<!-- /template:optional:host-git -->
 - **Never auto-commit** — always wait for the owner's explicit "yes".
 - **Focused commits** — one concern per commit.
+<!-- template:optional:host-github -->
 - **Trunk-based:** short-lived feature branches onto `main`; PRs optional for solo work
   but CI must be green either way; **squash-merge**; delete the branch after merge.
+<!-- /template:optional:host-github -->
+<!-- template:optional:host-git -->
+- **Trunk-based:** short-lived feature branches onto `main`; `just check` must be green
+  before merging; **squash** each change into one commit; delete the branch after merge.
+<!-- /template:optional:host-git -->
 
 ---
 

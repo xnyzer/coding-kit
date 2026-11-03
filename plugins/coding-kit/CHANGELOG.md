@@ -27,6 +27,11 @@ Reviewer-Befunde nach, bevor es sie übernimmt (F-055).
 - **MANIFEST:** neuer Antworten-Schlüssel `HOST` und Abschnitt `## Hosts` mit den
   Fähigkeiten je Host (`github`, `git`); `just check` prüft, dass Skript und MANIFEST
   dieselben Hosts kennen.
+- **Render nach Host:** `HOST` entscheidet, welche Template-Dateien ein Projekt bekommt
+  (neue Policy `host:NAME`) und welche Textblöcke darin stehen (`host-github`,
+  `host-git`, abgeleitet wie die Lizenz-Blöcke). Ein Projekt ohne `HOST` rendert wie
+  `github` — Bestandsprojekte bleiben byte-gleich. Neuer abgeleiteter Platzhalter
+  `{{GO_MODULE}}` für den Go-Modulpfad; bei `git` braucht kein Ziel mehr `OWNER`.
 - **`step-done`, unabhängiges Review:** Jeder Befund des Reviewers wird zuerst am Code
   nachgeprüft — trifft er zu, gilt er für gleichartige Stellen genauso, trägt seine
   Grundlage? Erst dann wird er behoben, teils behoben oder mit Grund verworfen; die
@@ -40,6 +45,16 @@ Reviewer-Befunde nach, bevor es sie übernimmt (F-055).
 
 - **`HOW-TO-CODE-WITH-CLAUDE.md`:** Der Abschnitt zu `/step-done` sagt, dass jeder
   Befund des Reviewers zuerst am Code nachgeprüft wird, auch an gleichartigen Stellen.
+- **Host-Blöcke** in `CLAUDE.md`, `CODING-STANDARDS.md`, `CONTRIBUTING.md`,
+  `CODE_OF_CONDUCT.md`, `HOW-TO-CODE-WITH-CLAUDE.md` und `SECURITY.md`: Die GitHub-Texte
+  zu Commit-Adresse, Sicherheits- und Verhaltensmeldung sowie zu Pull Requests und CI
+  stehen jetzt im Block `host-github`, daneben eine Fassung für Projekte ohne Host
+  (`host-git`; Meldung privat an den Maintainer, `just check` statt CI als Prüftor). Für
+  GitHub-Projekte ändert sich am gerenderten Text nichts.
+- **Nur auf GitHub:** `.github/` (Issue- und PR-Vorlagen, CI, CodeQL) und
+  `renovate.json` entstehen nur noch bei `HOST=github`.
+- **Go-Modul:** `go.mod` nutzt `{{GO_MODULE}}`; auf GitHub unverändert
+  `github.com/<owner>/<name>`, ohne Host nur der Projektname.
 
 ## 3.2.1 — 2026-11-03
 

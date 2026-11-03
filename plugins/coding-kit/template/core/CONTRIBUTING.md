@@ -30,6 +30,7 @@ contribution you agree that it will be licensed under the terms the project adop
 
 ## Commit email policy
 
+<!-- template:optional:host-github -->
 This repository's history may be public. Commit emails must use the GitHub noreply format:
 
 ```
@@ -37,6 +38,13 @@ This repository's history may be public. Commit emails must use the GitHub norep
 ```
 
 Do not use a private or corporate email address. If a real email slips into history, it
+<!-- /template:optional:host-github -->
+<!-- template:optional:host-git -->
+This repository's history may be public. Commit emails must use the address the
+maintainer sets for this project.
+
+Do not use a private email address. If a real email slips into history, it
+<!-- /template:optional:host-git -->
 has to be scrubbed with `git filter-repo` and force-pushed — preventing is far cheaper
 than cleaning.
 
@@ -61,8 +69,17 @@ privacy lint (local paths, IPs, emails, plus terms from an optional gitignored
 Follow `CODING-STANDARDS.md` — it is the binding reference, including the stack-specific
 section at the end. Run `just check` before committing.
 
+<!-- template:optional:host-github -->
 ## Pull requests
 
 - Target the `main` branch; CI must be green.
 - Describe the change and the reasoning. Keep changes focused — one concern per PR.
 - Squash-merge is the default; branches are deleted after merge.
+<!-- /template:optional:host-github -->
+<!-- template:optional:host-git -->
+## Submitting changes
+
+- Work on a short-lived branch off `main`; `just check` must be green before it is merged.
+- Describe the change and the reasoning. Keep changes focused — one concern per change.
+- Each change lands on `main` as one commit (squash); the branch is deleted afterwards.
+<!-- /template:optional:host-git -->

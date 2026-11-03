@@ -13,7 +13,8 @@ run_render_cases() {
   refute "private: no public-only file" has docs/CODE_OF_CONDUCT.md
   refute "docs-only: no CodeQL workflow" has docs/.github/workflows/codeql.yml
   check "docs-only: core justfile" same_but_first_line docs/justfile "$TEMPLATE/core/justfile"
-  check "docs-only: slot keeps its placeholder text" same_but_first_line docs/CODING-STANDARDS.md "$TEMPLATE/core/CODING-STANDARDS.md"
+  for_host "$TEMPLATE/core/CODING-STANDARDS.md" github cs.github
+  check "docs-only: slot keeps its placeholder text" same_but_first_line docs/CODING-STANDARDS.md "$TMP/cs.github"
 
   # docs-only, public: public-only files, still no CodeQL (no language)
   check "docs-only public renders" render docs-pub docs-only public
@@ -123,4 +124,40 @@ run_render_cases() {
   check "no command: usage exit 2" test $? -eq 2
   $SH "$SCRIPT" render "$TEMPLATE" "$TMP/full.answers" > /dev/null 2>&1
   check "missing argument: usage exit 2" test $? -eq 2
+
+  # --- host: targets and blocks per HOST (MANIFEST § Hosts, § Policies) --------------
+  check "host github renders" render hgh go public --seeds HOST=github
+  check "host missing renders" render hno go public --seeds
+  check "host: missing HOST renders like github" diff -r "$TMP/hgh" "$TMP/hno"
+  check "host github: exactly the github targets" core_exactly hgh public github
+  check "host github: Go module path" grep -qx 'module github.com/octo/demo-app' "$TMP/hgh/go.mod"
+  check "host github: noreply rule kept" contains hgh/CONTRIBUTING.md 'users.noreply.github.com'
+  refute "host github: no block markers left" grep -rq template:optional "$TMP/hgh"
+
+  check "host git renders without OWNER" render hgit go public --seeds HOST=git -OWNER
+  check "host git: listing matches the files" listing_matches hgit
+  check "host git: exactly the git targets" core_exactly hgit public git
+  refute "host git: no .github" test -e "$TMP/hgit/.github"
+  refute "host git: no renovate.json" has hgit/renovate.json
+  check "host git: public-only files still there" has hgit/CODE_OF_CONDUCT.md
+  check "host git: no placeholder left" no_placeholders hgit
+  check "host git: bare Go module" grep -qx 'module demo-app' "$TMP/hgit/go.mod"
+  refute "host git: no block markers left" grep -rq template:optional "$TMP/hgit"
+  refute "host git: no GitHub noreply rule" grep -rqF 'users.noreply.github.com' \
+    "$TMP/hgit/CONTRIBUTING.md" "$TMP/hgit/CODING-STANDARDS.md" "$TMP/hgit/CLAUDE.md" \
+    "$TMP/hgit/HOW-TO-CODE-WITH-CLAUDE.md"
+  refute "host git: no GitHub security tab" grep -qF 'Security tab' \
+    "$TMP/hgit/SECURITY.md" "$TMP/hgit/CODE_OF_CONDUCT.md"
+  refute "host git: no CI gate" grep -qF 'CI must be green' \
+    "$TMP/hgit/CONTRIBUTING.md" "$TMP/hgit/CODING-STANDARDS.md"
+  check "host git: just check is the gate" contains hgit/CONTRIBUTING.md '`just check` must be green'
+  check "host git: private reporting channel to adapt" contains hgit/SECURITY.md 'contact the maintainer privately'
+  for_host "$TEMPLATE/core/SECURITY.md" git sec.git
+  check "host git: SECURITY is the git variant" cmp -s "$TMP/hgit/SECURITY.md" "$TMP/sec.git"
+
+  refute "host: unknown HOST refused" render hx1 docs-only private HOST=gitlab
+  check "host: refusal lists the hosts" err_mentions hx1 'github git'
+  refute "host: empty HOST refused" render hx2 docs-only private HOST=
+  refute "host: host block in OPTIONAL refused" render hx3 docs-only private OPTIONAL=host-git
+  check "host: OPTIONAL refusal names the derivation" err_mentions hx3 'derived from HOST'
 }

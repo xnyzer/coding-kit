@@ -350,7 +350,7 @@ template_version() {
 
 # --- MANIFEST and MODULE.md tables ---------------------------------------------
 
-# § Core-managed files → "source<TAB>target<TAB>kind<TAB>public-only|-".
+# § Core-managed files → "source<TAB>target<TAB>kind<TAB>public-only|-<TAB>host|-".
 core_rows() {
   awk -F'|' '
     /^## / { insec = ($0 ~ /^## Core-managed files[ \t]*$/); next }
@@ -361,7 +361,9 @@ core_rows() {
       if (tgt == "same path") tgt = substr(src, 6)
       gsub(/^[ \t]+|[ \t]+$/, "", pol)
       kind = pol; sub(/[^a-z-].*$/, "", kind)
-      print src "\t" tgt "\t" kind "\t" (pol ~ /public-only/ ? "public-only" : "-")
+      host = "-"
+      if (match(pol, /host:[a-z]+/)) host = substr(pol, RSTART + 5, RLENGTH - 5)
+      print src "\t" tgt "\t" kind "\t" (pol ~ /public-only/ ? "public-only" : "-") "\t" host
     }' "$TEMPLATE/MANIFEST.md"
 }
 
@@ -660,6 +662,9 @@ render() {
     public | private) ;;
     *) die "answers: VISIBILITY must be public or private, not '$VISIBILITY'" ;;
   esac
+  # A project without HOST predates it and lives on GitHub (MANIFEST § Answers).
+  HOST=$(value_of HOST) || HOST=github
+  check_host "$HOST"
   OPTIONAL=$(list_of OPTIONAL)
   FRAGMENTS=$(list_of FRAGMENTS)
   # Word splitting of the name lists is intended.
@@ -670,15 +675,29 @@ render() {
     *" license "* | *" license-tbd "*)
       die "answers OPTIONAL: the license blocks are derived from LICENSE_SPDX, do not list them"
       ;;
+    *" host-"*)
+      die "answers OPTIONAL: the host blocks are derived from HOST, do not list them"
+      ;;
   esac
   if [ "$(value_of LICENSE_SPDX || true)" = TBD ]; then
     OPTIONAL="$OPTIONAL license-tbd"
   else
     OPTIONAL="$OPTIONAL license"
   fi
+  OPTIONAL="$OPTIONAL host-$HOST"
 
   if ! value_of PROJECT_NAME_SNAKE > /dev/null && r_name=$(value_of PROJECT_NAME); then
     add_value PROJECT_NAME_SNAKE "$(printf '%s' "$r_name" | tr '-' '_')"
+  fi
+  # The Go module path: below the repository URL on a host, the bare name without one.
+  # A host without a case here leaves it unset, so go.mod reports it as unresolved.
+  if ! value_of GO_MODULE > /dev/null && r_name=$(value_of PROJECT_NAME); then
+    case $HOST in
+      git) add_value GO_MODULE "$r_name" ;;
+      github)
+        if r_owner=$(value_of OWNER); then add_value GO_MODULE "github.com/$r_owner/$r_name"; fi
+        ;;
+    esac
   fi
   CODEQL=$(module_codeql)
   if [ -n "$CODEQL" ]; then add_value CODEQL_LANGUAGES "$CODEQL"; fi
@@ -695,7 +714,7 @@ render() {
 
   mkdir -p "$OUT"
 
-  while IFS="$TAB" read -r r_src r_tgt r_kind r_pub; do
+  while IFS="$TAB" read -r r_src r_tgt r_kind r_pub r_host; do
     case $r_kind in
       seed)
         [ "$seeds" -eq 1 ] || continue
@@ -705,6 +724,7 @@ render() {
       *) die "MANIFEST: unknown policy '$r_kind' for $r_src" ;;
     esac
     if [ "$r_pub" = public-only ] && [ "$VISIBILITY" != public ]; then continue; fi
+    if [ "$r_host" != - ] && [ "$r_host" != "$HOST" ]; then continue; fi
     r_from=$TEMPLATE/$r_src
     [ -f "$r_from" ] || die "MANIFEST lists $r_src, which is missing"
     # A module part that replaces the core file (the justfile) becomes the source.
@@ -3199,6 +3219,15 @@ memory_dir() {
 
 # --- host: the project's git host (MANIFEST § Hosts) --------------------------------
 
+# Refuses a HOST value that is not exactly one name of HOSTS (an empty one too).
+check_host() {  # VALUE
+  case $1 in
+    '' | *[!a-z]*) ;;
+    *) case " $HOSTS " in *" $1 "*) return 0 ;; esac ;;
+  esac
+  die "answers: HOST must be one of: $HOSTS — not '$1'"
+}
+
 # The kind of server a remote URL points to, and its host name: "KIND<TAB>NAME". Kinds:
 # a name of HOSTS, a recognized host the kit does not support yet (azure, gitlab,
 # forgejo), other (any other server), local (a path or file:// URL). Only the host name
@@ -3247,11 +3276,7 @@ host() {
   if [ -f "$ANS_PATH" ]; then
     load_answers "$ANS_PATH" > "$WORK/values.tsv" || die "answers are invalid: $ANS_PATH"
     if ho_host=$(value_of HOST); then
-      case $ho_host in
-        '' | *[!a-z]*) ho_known=0 ;;
-        *) case " $HOSTS " in *" $ho_host "*) ho_known=1 ;; *) ho_known=0 ;; esac ;;
-      esac
-      [ "$ho_known" -eq 1 ] || die "answers: HOST must be one of: $HOSTS — not '$ho_host'"
+      check_host "$ho_host"
     else
       ho_host=
     fi

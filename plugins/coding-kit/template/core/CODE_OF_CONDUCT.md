@@ -43,7 +43,12 @@ We agree to restrict the following behaviors in our community. Instances, threat
 
 Tensions can occur between community members even when they are trying their best to collaborate. Not every conflict represents a code of conduct violation, and this Code of Conduct reinforces encouraged behaviors and norms that can help avoid conflicts and minimize harm.
 
+<!-- template:optional:host-github -->
 When an incident does occur, it is important to report it promptly. To report a possible violation, open a private report via the repository's **Security tab → "Report a vulnerability"** (in this solo-maintained project that channel is also monitored for conduct reports), or open a regular issue asking the maintainer for a private follow-up channel. <!-- template:adapt: replace with your community's reporting channel if different -->
+<!-- /template:optional:host-github -->
+<!-- template:optional:host-git -->
+When an incident does occur, it is important to report it promptly. To report a possible violation, contact the maintainer privately through the channel named in `SECURITY.md` (in this solo-maintained project that channel is also monitored for conduct reports). <!-- template:adapt: replace with your community's reporting channel if different -->
+<!-- /template:optional:host-git -->
 
 Community Moderators take reports of violations seriously and will make every effort to respond in a timely manner. They will investigate all reports of code of conduct violations, reviewing messages, logs, and recordings, or interviewing witnesses and other participants. Community Moderators will keep investigation and enforcement actions as transparent as possible while prioritizing safety and confidentiality. In order to honor these values, enforcement actions are carried out in private with the involved parties, but communicating to the whole community may be part of a mutually agreed upon resolution.
 

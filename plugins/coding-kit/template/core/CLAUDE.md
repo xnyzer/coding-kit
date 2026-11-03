@@ -67,8 +67,15 @@ Project notes — knowledge with no other place in the repo: @docs/notes.md
   - README & public docs: **{{LANG_README}}**
 - Git: **Conventional Commits** (tokens English), prose in {{LANG_COMMITS}},
   imperative mood; body ends with
+<!-- template:optional:host-github -->
   `Co-Authored-By: Claude <noreply@anthropic.com>`. Commit email = **GitHub noreply**
   (verify `git config user.email`; fix via `gh api user`). **Never auto-commit — ask first.**
+<!-- /template:optional:host-github -->
+<!-- template:optional:host-git -->
+  `Co-Authored-By: Claude <noreply@anthropic.com>`. Commit email = the address set for
+  this project, **never a private one** (verify `git config user.email`). **Never
+  auto-commit — ask first.**
+<!-- /template:optional:host-git -->
 - License: **{{LICENSE_SPDX}}**; dependencies must be permissive-licensed (no GPL/AGPL) —
   deviations only as a conscious, documented decision.
 - Toolchain: **mise + just + lefthook** are mandatory; all checks run via **`just check`**

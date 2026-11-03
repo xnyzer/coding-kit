@@ -398,3 +398,39 @@ Doku oder Tests war blockiert. Andere Adressen meldet die Prüfung weiter.
 **Funde:** Unabhängiges Review mit 4 Befunden: 3 behoben, 1 verworfen (GitLab-Eintrag
 der Erlaubnisliste — die Liste folgt den erkannten Hosts). Dabei eine Lücke gefunden und
 behoben: Ein Wert mit mehreren Hosts ging durch. Keine neuen Aufgaben.
+
+### F-032b — fertig 2026-11-04
+
+**Umgesetzt:**
+
+- Render nach Host (`template-sync.sh`, Funktion `render`): `HOST` aus den Antworten,
+  ohne Eintrag `github`. Ziele mit der neuen Policy `host:NAME` entstehen nur auf diesem
+  Host; im MANIFEST tragen `.github/**` und `renovate.json` `host:github`.
+- Host-Blöcke `host-github` und `host-git`, abgeleitet wie die Lizenz-Blöcke: in
+  `CLAUDE.md`, `CODING-STANDARDS.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`,
+  `HOW-TO-CODE-WITH-CLAUDE.md` und `SECURITY.md`. Der GitHub-Text steht wortgleich im
+  Block `host-github`.
+- Abgeleiteter Platzhalter `{{GO_MODULE}}` für `go.mod`: auf GitHub
+  `github.com/<owner>/<name>`, ohne Host der Projektname — so braucht bei `git` kein
+  Ziel `OWNER`.
+- Render-Tests für beide Hosts; Belege für AC-3 und AC-4, Template-Seite: Byte-Vergleich
+  aller Module und Sichtbarkeiten mit dem Stand davor; ein gerendertes „nur Git“-Projekt
+  besteht `just check`.
+
+**Entscheidungen:**
+
+- Der GitHub-Text bleibt wortgleich in einem eigenen Block, statt in einem gemeinsamen
+  Satz für alle Hosts aufzugehen: GitHub-Projekte rendern byte-gleich, und
+  `update-conventions` zeigt ihnen keine Änderung.
+- Die Ableitung von `GO_MODULE` nennt jeden Host ausdrücklich; ein künftiger Host ohne
+  eigenen Fall fällt als ungelöster Platzhalter auf, statt still einen GitHub-Pfad zu
+  bekommen.
+
+**Abweichung vom Plan:** Über die Texte zur Commit-Adresse hinaus haben auch die
+Meldewege (`SECURITY.md`, `CODE_OF_CONDUCT.md`) und die Regeln zu Pull Requests und CI
+(`CONTRIBUTING.md`, `CODING-STANDARDS.md`) Host-Blöcke bekommen. Sie verwiesen auf
+GitHub-Funktionen, die es bei `git` nicht gibt.
+
+**Funde:** Unabhängiges Review mit 2 Befunden, beide nachgeprüft und behoben (Meldeweg
+im Verhaltenskodex; CI-Pflicht in CONTRIBUTING und CODING-STANDARDS). Keine neuen
+Aufgaben.

@@ -148,10 +148,10 @@ slot_order() {  # FILE NAMES
 
 has_module_rows() { cut -f3 "$TMP/$1.tsv" | grep -qx module; }
 
-# Managed core targets per MANIFEST for a visibility — parsed here independently of the
-# script, so a parsing slip in either shows up.
-expected_core() {  # VISIBILITY
-  awk -F'|' -v vis="$1" '
+# Managed core targets per MANIFEST for a visibility and a host (default github) — parsed
+# here independently of the script, so a parsing slip in either shows up.
+expected_core() {  # VISIBILITY [HOST]
+  awk -F'|' -v vis="$1" -v host="${2:-github}" '
     /^## Core-managed files/ { f = 1; next }
     /^## / { f = 0 }
     f && $2 ~ /`core\// {
@@ -160,6 +160,7 @@ expected_core() {  # VISIBILITY
       if (tgt == "same path") tgt = substr(src, 6)
       if ($4 ~ /^ *seed/) next
       if ($4 ~ /public-only/ && vis != "public") next
+      if (match($4, /host:[a-z]+/) && substr($4, RSTART + 5, RLENGTH - 5) != host) next
       print tgt
     }' "$TEMPLATE/MANIFEST.md"
 }
@@ -169,6 +170,29 @@ all_core_present() {  # NAME VISIBILITY [EXCEPT]
     [ "$p_t" = "${3:-}" ] && continue
     [ -f "$TMP/$1/$p_t" ] || return 1
   done
+}
+
+# The managed core targets of NAME are exactly those of VISIBILITY on HOST.
+core_exactly() {  # NAME VISIBILITY HOST
+  expected_core "$2" "$3" | LC_ALL=C sort > "$TMP/$1.core-want"
+  awk -F '\t' '$2 == "managed" && $3 == "core" { print $1 }' "$TMP/$1.tsv" \
+    | LC_ALL=C sort > "$TMP/$1.core-got"
+  cmp -s "$TMP/$1.core-want" "$TMP/$1.core-got"
+}
+
+# SOURCE with its host blocks resolved for HOST: the block of HOST loses its marker
+# lines, the blocks of other hosts go with their content. Written to $TMP/NAME.
+for_host() {  # SOURCE HOST NAME
+  awk -v host="$2" '
+    /^<!-- template:optional:host-[a-z]+ -->$/ {
+      name = $0
+      sub(/^<!-- template:optional:host-/, "", name); sub(/ -->$/, "", name)
+      in_block = 1
+      next
+    }
+    /^<!-- \/template:optional:host-[a-z]+ -->$/ { in_block = 0; next }
+    in_block && name != host { next }
+    { print }' "$1" > "$TMP/$3"
 }
 
 # The module's [tools] entries follow the last core [tools] entry as one block.

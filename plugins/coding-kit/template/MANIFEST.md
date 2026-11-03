@@ -27,6 +27,7 @@ lowercase and therefore never collide).
 | `{{LANG_COMMITS}}` | Language of commit-message prose (Conventional tokens stay English) | `/new-project` language preset (default: English) |
 | `{{LANG_README}}` | Language of README & public docs | `/new-project` language preset (default: English) |
 | `{{LICENSE_SPDX}}` | Chosen license SPDX id | `/choose-license` ("TBD" allowed) |
+| `{{GO_MODULE}}` | Go module path: `github.com/<OWNER>/<PROJECT_NAME>` on GitHub, the bare `<PROJECT_NAME>` on `git` | derived from `HOST`, `OWNER`, `PROJECT_NAME` |
 | `{{CODEQL_LANGUAGES}}` | CodeQL language for the module | stack module (`javascript-typescript`, `python`, `go`) |
 | `{{TEMPLATE_VERSION}}` | Plugin version at instantiation | `version` in the plugin's `.claude-plugin/plugin.json` |
 
@@ -45,15 +46,17 @@ it must not contain a tab or `{{`.
 | `PROJECT_NAME`, `PROJECT_DESCRIPTION`, `OWNER`, `YEAR`, `GROUP_ID`, `LANG_LIVING_DOCS`, `LANG_CLAUDE_MD`, `LANG_COMMENTS`, `LANG_COMMITS`, `LANG_README`, `LICENSE_SPDX` | the placeholder of the same name (§ Placeholders); a key no rendered file needs may be left out |
 | `MODULE` | the stack module (`docs-only` without a stack) — required |
 | `VISIBILITY` | `public` or `private`; decides the public-only targets — required |
-| `HOST` | the project's git host, a name from § Hosts; projects from before it lack the key — `template-sync.sh host` suggests a value from the remote |
+| `HOST` | the project's git host, a name from § Hosts; decides the host targets (§ Policies) and the host blocks. Projects from before it lack the key and render as `github`; `template-sync.sh host` suggests a value from the remote |
 | `OPTIONAL` | the `template:optional` blocks the project keeps by choice, comma-separated (e.g. `graphiti`); missing or empty = none; the license blocks are derived, never listed |
 | `FRAGMENTS` | standards fragments beyond the module's own and its declared ones (characteristic fragments the project chose, fragments from a detection proposal, the language fragment of a tool language), comma-separated, in slot order |
 
-Derived, never stored: `PROJECT_NAME_SNAKE` (from `PROJECT_NAME`), `CODEQL_LANGUAGES`
+Derived, never stored: `PROJECT_NAME_SNAKE` (from `PROJECT_NAME`), `GO_MODULE` (from
+`HOST`, `OWNER` and `PROJECT_NAME`), `CODEQL_LANGUAGES`
 (from the module's `MODULE.md`; a module without one gets no target that needs it, so a
 docs-only project has no CodeQL workflow), `TEMPLATE_VERSION` (the plugin version) and
 the license blocks: `license-tbd` is kept while `LICENSE_SPDX` is `TBD`, `license`
-otherwise.
+otherwise. Likewise the host blocks: `host-<HOST>` is kept, the blocks of the other hosts
+are dropped.
 
 ## Hosts
 
@@ -80,7 +83,7 @@ one — is `git` as well.
 | Marker | Meaning |
 |--------|---------|
 | `<!-- template:adapt: hint -->` | Spot `/new-project` must concretise from the short-info — never raw-copy. |
-| `<!-- template:optional:NAME -->` … `<!-- /template:optional:NAME -->` | Block kept or removed at instantiation (used: `graphiti`, `license`, `license-tbd`). |
+| `<!-- template:optional:NAME -->` … `<!-- /template:optional:NAME -->` | Block kept or removed at instantiation (used: `graphiti`, `license`, `license-tbd`, `host-github`, `host-git`). |
 | `<!-- module:coding-standards -->` … `<!-- /module:coding-standards -->` | Slot in `CODING-STANDARDS.md` §13 where standards fragments are **appended** (each wrapped in `fragment:NAME`), not single-inserted. |
 | `<!-- fragment:NAME -->` … `<!-- /fragment:NAME -->` | Wraps one self-contained standards fragment inside the `module:coding-standards` slot. `NAME` = a catalog fragment (`modules/standards/`) or a stack module's own module fragment. See § Standards fragments. |
 | `<!-- section:NAME -->` … `<!-- /section:NAME -->` | Marks a template-owned zone inside a **seed** file that `/update-conventions` may diff and offer individually — never the whole file. Names are lowercase-kebab, unique across the template. See § Seed sections. |
@@ -109,6 +112,8 @@ issue there) — never as an automatic write from a project.
   zones explicitly marked `section:NAME`, which `/update-conventions` may offer
   individually (diff shown, confirmed per section); the file as a whole is never offered.
 - **public-only** — instantiated only for public repositories.
+- **host:NAME** — instantiated only for projects on host `NAME` (§ Hosts), e.g. the
+  `.github/` files and `renovate.json` only on `github`.
 - **module** — provided/replaced by the stack module; synced like managed.
 
 ## Base snapshot
@@ -184,16 +189,16 @@ contains itself, is offered for removal.
 | `core/.claude/README.md` | `.claude/README.md` | managed |
 | `core/.claude/convention-overrides.md` | `.claude/convention-overrides.md` | seed |
 | `core/.claude/skills/README.md` | `.claude/skills/README.md` | managed |
-| `core/.github/ISSUE_TEMPLATE/bug_report.yml` | same path | managed |
-| `core/.github/ISSUE_TEMPLATE/feature_request.yml` | same path | managed |
-| `core/.github/ISSUE_TEMPLATE/config.yml` | same path | managed |
-| `core/.github/PULL_REQUEST_TEMPLATE.md` | same path | managed |
-| `core/.github/workflows/ci.yml` | same path | managed (module may append jobs) |
-| `core/.github/workflows/codeql.yml` | same path | managed, public-only |
+| `core/.github/ISSUE_TEMPLATE/bug_report.yml` | same path | managed, host:github |
+| `core/.github/ISSUE_TEMPLATE/feature_request.yml` | same path | managed, host:github |
+| `core/.github/ISSUE_TEMPLATE/config.yml` | same path | managed, host:github |
+| `core/.github/PULL_REQUEST_TEMPLATE.md` | same path | managed, host:github |
+| `core/.github/workflows/ci.yml` | same path | managed, host:github (module may append jobs) |
+| `core/.github/workflows/codeql.yml` | same path | managed, public-only, host:github |
 | `core/justfile` | `justfile` | module (core ships the docs-only default) |
 | `core/mise.toml` | `mise.toml` | managed (module merges `[tools]`) |
 | `core/lefthook.yml` | `lefthook.yml` | managed |
-| `core/renovate.json` | `renovate.json` | managed |
+| `core/renovate.json` | `renovate.json` | managed, host:github |
 | `core/.editorconfig` | `.editorconfig` | managed |
 | `core/.gitattributes` | `.gitattributes` | managed |
 | `core/.gitignore` | `.gitignore` | managed (module appends below marker) |
