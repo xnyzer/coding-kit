@@ -42,16 +42,18 @@ with its reasons.
 
 ## Recommended order
 
-Stand 2026-11-01.
+Stand 2026-11-03.
 
-1. **[F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md) → [F-030](F-030-graphiti-episodenverlust-erkennen-und.md)** — Graphiti-Strang; [F-030](F-030-graphiti-episodenverlust-erkennen-und.md) kann starten, während F-029d die
-   7 Tage Nachmessung abwartet.
-2. **[F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) → [F-024](F-024-commit-adresse-aus-der-personal-config.md) → [F-025](F-025-install-sh-fehlender-gh-login-und.md)** — Host-Strang.
-3. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
-4. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+1. **[F-051](F-051-ankunftspruefung-der-auto-memory-entfernen.md)** — vor dem Abgleich der eigenen Projekte, sonst meldet die
+   Auto-Memory-Übertragung dort falsche Fehler.
+2. **[F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md)** — Graphiti-Strang; F-029d wartet die 7 Tage Nachmessung ab (frühestens
+   2026-11-06).
+3. **[F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) → [F-024](F-024-commit-adresse-aus-der-personal-config.md) → [F-025](F-025-install-sh-fehlender-gh-login-und.md)** — Host-Strang.
+4. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
+5. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
-Strang 1 und 2 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 2 und 3 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ## All features
@@ -65,14 +67,15 @@ bzw. ohne GitHub zuerst.
 | [F-025](F-025-install-sh-fehlender-gh-login-und.md) | install.sh — fehlender gh-Login und Plattform-Abdeckung | BACKLOG |  |
 | [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) | Stop-Hook plattformfähig machen (Windows greift ins WSL) | BACKLOG |  |
 | [F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md) | Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren | IN-PROGRESS |  |
-| [F-030](F-030-graphiti-episodenverlust-erkennen-und.md) | Graphiti-Episodenverlust erkennen und wiederherstellbar halten | BACKLOG |  |
 | [F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) | Host-unabhängiger Betrieb (ohne GitHub, andere Git-Server, nur Git) | BACKLOG |  |
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
+| [F-051](F-051-ankunftspruefung-der-auto-memory-entfernen.md) | Ankunftsprüfung aus der Auto-Memory-Übertragung entfernen | PLANNED |  |
 
 ### Closed
 
 | ID | Title | Status | Done |
 |----|-------|--------|------|
+| [F-030](F-030-graphiti-episodenverlust-erkennen-und.md) | Graphiti-Episodenverlust erkennen und wiederherstellbar halten | DROPPED | 2026-11-03 |
 | [F-033](F-033-betrieb-ohne-graphiti-absichern.md) | Betrieb ohne Graphiti absichern und Auto-Memory ablösen | DONE | 2026-11-01 |
 | [F-034](F-034-senior-massstab-in-den-bau-skills.md) | Senior-Maßstab in den Bau-Skills | DONE | 2026-10-30 |
 | [F-037](F-037-unabhaengiges-review-in-step-done.md) | Unabhängiges Review in step-done (Reviewer mit frischem Kontext) | DONE | 2026-10-30 |
@@ -118,4 +121,4 @@ bzw. ohne GitHub zuerst.
 | [F-035](F-035-repo-uebergreifende-uebergabe-statt.md) | Repo-übergreifende Übergabe statt Parallelarbeit | SUPERSEDED → F-039 |  |
 <!-- /features-index -->
 
-next-feature: F-051
+next-feature: F-052
