@@ -14,13 +14,15 @@
 #       personal values of ENV (the personal config ~/.claude/coding-kit.env, shell
 #       syntax — read, never executed; a missing file has no values) into
 #       OUT/rules/coding-kit.md (OUT missing or empty), its path below the Claude config
-#       folder. Lines: key <CODING_KIT_NAME> <set|empty|missing> per value the rules read,
-#       then rendered <target>. An empty or missing value drops its template:optional
+#       folder. Lines: key <CODING_KIT_NAME> <set|empty|missing> per value the rules read;
+#       legacy CODING_KIT_GIT_NOREPLY_EMAIL CODING_KIT_EMAIL_GITHUB <rename|superseded>
+#       while the old commit address is set (superseded: the new key is set too); then
+#       rendered <target>. An empty or missing value drops its template:optional
 #       block: reply-language without CODING_KIT_REPLY_LANGUAGE, level-NAME unless
 #       CODING_KIT_EXPLAIN_LEVEL is NAME (a level without a block is refused),
 #       explain-note without CODING_KIT_EXPLAIN_NOTE, explain without level and note.
 #       zones then takes OUT as SEEDS and the config folder as PROJECT.
-#   set-global KIT ENV OUT NAME=value…
+#   set-global [--rename-legacy] KIT ENV OUT [NAME=value…]
 #       Writes the personal config ENV (a missing file counts as empty) with the given
 #       values into OUT/coding-kit.env (OUT missing or empty; mode 600). NAME is a
 #       CODING_KIT_ key the global rules read, the default host of new projects
@@ -29,7 +31,10 @@
 #       followed by the comment of that key in KIT. The first assignment of a key (also behind
 #       export) is replaced in place and later ones are dropped, a key the file lacks is
 #       appended; every other line stays as it is (a missing final newline is added).
-#       Lines: set <NAME> <replaced|added>, then written coding-kit.env. Refused: an
+#       --rename-legacy moves the old commit address CODING_KIT_GIT_NOREPLY_EMAIL to
+#       CODING_KIT_EMAIL_GITHUB (unless that key is set or given) and removes every
+#       assignment of the old key; then NAME=value is optional. Lines: set <NAME>
+#       <replaced|added>, dropped <NAME>, then written coding-kit.env. Refused: an
 #       unknown or repeated NAME, a tab, line break or {{ in a value, a level without a
 #       block in KIT.
 #   status [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT
@@ -224,6 +229,7 @@ REGISTRY_OPT=
 SNAPSHOT_OPT=
 INDEX_OPT=
 SECTIONS_OPT=Intake,Plan,History
+RENAME_LEGACY=0
 CHANGED=0
 SEEDS=0
 
@@ -236,7 +242,7 @@ usage() {
   cat >&2 << 'EOF'
 usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh render-global KIT ENV OUT
-       sh template-sync.sh set-global KIT ENV OUT NAME=value...
+       sh template-sync.sh set-global [--rename-legacy] KIT ENV OUT [NAME=value...]
        sh template-sync.sh status [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT
        sh template-sync.sh changed [--registry FILE] [--snapshot DIR] PROJECT
        sh template-sync.sh merge [--base DIR] [--registry FILE] [--snapshot DIR] PROJECT SOLL OUT
@@ -888,6 +894,7 @@ parse_opts() {  # COMMAND ARGS…
       --registry) po_for='status changed merge zones detect' po_n=2 ;;
       --snapshot) po_for='status changed merge snapshot zones' po_n=2 ;;
       --index | --sections) po_for=migrate po_n=2 ;;
+      --rename-legacy) po_for=set-global po_n=1 ;;
       --*)
         printf 'template-sync: unknown option %s\n' "$1" >&2
         usage
@@ -923,6 +930,7 @@ parse_opts() {  # COMMAND ARGS…
         INDEX_OPT=$2
         ;;
       --sections) SECTIONS_OPT=$2 ;;
+      --rename-legacy) RENAME_LEGACY=1 ;;
     esac
     shift "$po_n"
     OPTS_SHIFT=$((OPTS_SHIFT + po_n))
@@ -1708,6 +1716,18 @@ render_global() {
     fi
     printf 'key\tCODING_KIT_%s\t%s\n' "$rg_name" "$rg_state" >> "$WORK/keys.tsv"
   done
+  # The commit address from before the keys per host: still to rename, or superseded
+  # when the new key is set as well.
+  if rg_old=$(env_value "$LEGACY_EMAIL_KEY") && [ -n "$rg_old" ]; then
+    rg_key=$(email_key github)
+    if rg_new=$(env_value "$rg_key") && [ -n "$rg_new" ]; then
+      rg_state=superseded
+    else
+      rg_state=rename
+    fi
+    printf 'legacy\tCODING_KIT_%s\tCODING_KIT_%s\t%s\n' "$LEGACY_EMAIL_KEY" "$rg_key" \
+      "$rg_state" >> "$WORK/keys.tsv"
+  fi
   rg_lang=$(value_of REPLY_LANGUAGE) || rg_lang=
   rg_level=$(value_of EXPLAIN_LEVEL) || rg_level=
   rg_note=$(value_of EXPLAIN_NOTE) || rg_note=
@@ -1729,12 +1749,33 @@ render_global() {
 }
 
 set_global() {
-  [ $# -ge 4 ] || usage
+  if [ "$RENAME_LEGACY" -eq 1 ]; then [ $# -ge 3 ] || usage; else [ $# -ge 4 ] || usage; fi
   SG_KIT=$1 SG_ENV=$2 SG_OUT=$3
   shift 3
   [ -f "$SG_KIT" ] || die "kit rules not found: $SG_KIT"
   check_out_dir "$SG_OUT"
   setup_work
+  # --rename-legacy: the old commit address moves to the GitHub key — unless that key is
+  # set already or given — and every assignment of the old key goes. The value never
+  # leaves the script.
+  sg_drop=
+  if [ "$RENAME_LEGACY" -eq 1 ]; then
+    sg_drop=$LEGACY_EMAIL_KEY
+    sg_new=$(email_key github)
+    : > "$WORK/env.tsv"
+    if [ -f "$SG_ENV" ]; then
+      load_env "$SG_ENV" > "$WORK/env.tsv" || die "invalid personal config: $SG_ENV"
+    fi
+    case " $* " in
+      *" CODING_KIT_$sg_new="*) ;;
+      *)
+        if ! { sg_cur=$(env_value "$sg_new") && [ -n "$sg_cur" ]; } \
+          && sg_old=$(env_value "$LEGACY_EMAIL_KEY") && [ -n "$sg_old" ]; then
+          set -- "$@" "CODING_KIT_$sg_new=$sg_old"
+        fi
+        ;;
+    esac
+  fi
   kit_levels "$SG_KIT"
   # The values of the global rules, the default host of new projects, then the commit
   # address per host.
@@ -1783,7 +1824,7 @@ set_global() {
   # Replaces the first assignment of each given key in place and drops later ones (they
   # would win in the shell), appends the keys the file lacks behind a blank line; every
   # other line goes through unchanged. A file with CRLF line ends gets CRLF lines.
-  awk -F "$TAB" -v status="$WORK/status" '
+  awk -F "$TAB" -v status="$WORK/status" -v drop="$sg_drop" '
     FILENAME == ARGV[1] { line[$1] = substr($0, length($1) + 2); order[++n] = $1; next }
     FNR == 1 { crlf = ($0 ~ /\r$/) }
     {
@@ -1795,6 +1836,11 @@ set_global() {
       sub(/^export[ \t]+/, "", t)
       if (match(t, /^CODING_KIT_[A-Z0-9_]+=/)) {
         name = substr(t, 12, RLENGTH - 12)
+        if (name == drop) {
+          if (!dropped) print "dropped\tCODING_KIT_" name > status
+          dropped = 1
+          next
+        }
         if (name in line) {
           if (!(name in done)) {
             print line[name] (crlf ? "\r" : "")
@@ -1821,6 +1867,7 @@ set_global() {
   for sg_name in $sg_keys; do
     grep "^set${TAB}CODING_KIT_$sg_name$TAB" "$WORK/status" || true
   done
+  grep "^dropped$TAB" "$WORK/status" || true
   printf 'written\tcoding-kit.env\n'
 }
 

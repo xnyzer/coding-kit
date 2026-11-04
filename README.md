@@ -259,9 +259,15 @@ Abschnitt:
 | `… global` | Ersteinrichtung der Kit-Regeln, nach einer Änderung der Werte, nach dem Hinweis beim Session-Start | nur die [globalen Kit-Regeln](#globale-kit-regeln) und die zwei empfohlenen Settings, auch außerhalb eines Projekts |
 | `… status` | vorher sehen, was käme | nur Bericht, schreibt nichts (auch nicht global) |
 | `… revise` | die Abweichungs-Registry aufräumen | nur die Registry-Revision, ohne globale Regeln |
+| `… host` | das Projekt auf einen anderen Git-Host bringen — von „nur Git" auf GitHub oder zurück | Repo privat anlegen, alten `origin` unter dem Namen des alten Hosts behalten, neuen setzen, `HOST` umstellen; dann der Abgleich, der die Dateien des neuen Hosts anbietet und die des alten zum Entfernen. Push nur auf deine Bitte; Issues, Secrets und das alte Repo bleiben Handarbeit |
 
 `global <ordner>` nimmt einen anderen Ordner als `~/.claude` — gedacht für Tests, das
 echte `~/.claude` bleibt dabei unberührt.
+
+Ein Bestandsprojekt ohne Eintrag `HOST` bekommt beim ersten Abgleich seinen Host: Liegt es
+auf GitHub, trägt der Skill `HOST=github` ohne Frage ein; sonst fragt er, ob es bei Git
+bleibt oder auf einen Host umzieht. `… global` bietet an, eine Commit-Adresse unter dem
+alten Schlüssel `CODING_KIT_GIT_NOREPLY_EMAIL` nach `CODING_KIT_EMAIL_GITHUB` umzubenennen.
 
 ### Stop-Hook
 

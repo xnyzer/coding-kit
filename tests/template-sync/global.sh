@@ -257,6 +257,39 @@ run_global_cases() {
   check "set-global: address replaced with its comment" grep -qxF \
     "CODING_KIT_EMAIL_GIT=\"new@example.org\"  # $(kit_c CODING_KIT_EMAIL_GIT)" "$TMP/gsaddr/coding-kit.env"
   check "set-global: address added" set_is gsaddr EMAIL_GITHUB added
+  # --- the old commit address: reported by render-global, dropped by set-global ------
+  envfile rgl 'CODING_KIT_GIT_NOREPLY_EMAIL="1+octo@users.noreply.github.com"'
+  check "render-global: old address runs" rglobal rgl
+  check "render-global: old address waits for the rename" grep -qxF \
+    "legacy${TABC}CODING_KIT_GIT_NOREPLY_EMAIL${TABC}CODING_KIT_EMAIL_GITHUB${TABC}rename" "$TMP/rgl.tsv"
+  envfile rgs 'CODING_KIT_GIT_NOREPLY_EMAIL=old@example.org' 'CODING_KIT_EMAIL_GITHUB=new@example.org'
+  check "render-global: old and new address run" rglobal rgs
+  check "render-global: old address superseded by the new one" grep -qxF \
+    "legacy${TABC}CODING_KIT_GIT_NOREPLY_EMAIL${TABC}CODING_KIT_EMAIL_GITHUB${TABC}superseded" "$TMP/rgs.tsv"
+  refute "render-global: no legacy line without the old address" grep -q '^legacy' "$TMP/ga.tsv"
+  envfile gdrop '# personal config' 'CODING_KIT_GIT_NOREPLY_EMAIL="a@example.org"' 'OTHER=1' \
+    'export CODING_KIT_GIT_NOREPLY_EMAIL=b@example.org'
+  check "set-global: rename runs without a value" \
+    eval 'ts set-global --rename-legacy "$KIT" "$TMP/gdrop.env" "$TMP/gdrop" > "$TMP/gdrop.tsv"'
+  check "set-global: rename reports added and dropped" \
+    test "$(cut -f1,2 "$TMP/gdrop.tsv" | tr '\t\n' ' |')" = \
+    "set CODING_KIT_EMAIL_GITHUB|dropped CODING_KIT_GIT_NOREPLY_EMAIL|written coding-kit.env|"
+  check "set-global: the last old value moves to the GitHub key" \
+    grep -q '^CODING_KIT_EMAIL_GITHUB="b@example.org"  # ' "$TMP/gdrop/coding-kit.env"
+  refute "set-global: no assignment of the old key left" \
+    grep -q 'CODING_KIT_GIT_NOREPLY_EMAIL' "$TMP/gdrop/coding-kit.env"
+  check "set-global: other lines stay" grep -qx 'OTHER=1' "$TMP/gdrop/coding-kit.env"
+  envfile gdrops 'CODING_KIT_GIT_NOREPLY_EMAIL=old@example.org' 'CODING_KIT_EMAIL_GITHUB=new@example.org'
+  check "set-global: rename with the new key set runs" \
+    eval 'ts set-global --rename-legacy "$KIT" "$TMP/gdrops.env" "$TMP/gdrops" > "$TMP/gdrops.tsv"'
+  check "set-global: a set GitHub key wins over the old value" \
+    grep -qx 'CODING_KIT_EMAIL_GITHUB=new@example.org' "$TMP/gdrops/coding-kit.env"
+  refute "set-global: the superseded old key is gone" \
+    grep -q 'CODING_KIT_GIT_NOREPLY_EMAIL' "$TMP/gdrops/coding-kit.env"
+  refute "set-global: without --rename-legacy a value is required" \
+    ts set-global "$KIT" "$TMP/gdrop.env" "$TMP/gdropx"
+  refute "render-global takes no --rename-legacy" \
+    ts render-global --rename-legacy "$KIT" "$TMP/gdrop.env" "$TMP/gdropr"
   check "set-global: default host runs" sglobal gsdh CODING_KIT_DEFAULT_HOST=git
   check "set-global: default host written with its comment" grep -qxF \
     "CODING_KIT_DEFAULT_HOST=\"git\"  # $(kit_c CODING_KIT_DEFAULT_HOST)" "$TMP/gsdh/coding-kit.env"

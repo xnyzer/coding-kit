@@ -2,10 +2,10 @@
 id: F-032
 title: Git-Host je Projekt festhalten, mit Grundstufe nur Git
 type: feature
-status: IN-PROGRESS
+status: DONE
 size: L
 created: 2026-10-19
-done:
+done: 2026-11-04
 depends-on:
 superseded-by:
 ---
@@ -148,19 +148,27 @@ in F-032 auf; F-025 und die Hosts F-052 (Azure DevOps), F-053 (GitLab) und F-054
   Skill einen Host-Schritt braucht, dann weist er ihn mit dem Hinweis `gh auth login`
   aus und läuft weiter — belegt: Headless-Lauf name-it mit nicht angemeldetem `gh`
   (Schritt übersprungen, Hinweis `gh auth login`, Lauf geht weiter); grep wie bei AC-6.
-- [ ] AC-8 — Gegeben ein Bestandsprojekt ohne `HOST` mit GitHub-Remote, wenn
+- [x] AC-8 — Gegeben ein Bestandsprojekt ohne `HOST` mit GitHub-Remote, wenn
   update-conventions läuft, dann trägt es `HOST=github` ohne eigene Frage ein, nennt das
-  im Bericht und ändert am Render sonst nichts.
-- [ ] AC-9 — Gegeben eine Personal-Config mit den alten Schlüsseln
-  (`CODING_KIT_GIT_NOREPLY_EMAIL`, `CODING_KIT_GITHUB_LOGIN`), wenn `update-conventions
-  global` läuft, dann bietet es die Umbenennung auf die Schlüssel je Host an; bis dahin
-  gelten die alten Werte als GitHub-Werte.
-- [ ] AC-10 — Gegeben ein Bestandsprojekt ohne `HOST` und ohne GitHub-Remote, wenn
+  im Bericht und ändert am Render sonst nichts — belegt: Headless-Lauf
+  update-conventions an einem nachgebauten GitHub-Projekt ohne `HOST` (`HOST=github`
+  ohne Frage eingetragen und im Bericht genannt, Template-Dateien unverändert).
+- [x] AC-9 — Gegeben eine Personal-Config mit der alten Commit-Adresse
+  `CODING_KIT_GIT_NOREPLY_EMAIL`, wenn `update-conventions global` läuft, dann bietet es
+  die Umbenennung nach `CODING_KIT_EMAIL_GITHUB` an; bis dahin gilt der alte Wert als
+  GitHub-Adresse. `CODING_KIT_GITHUB_LOGIN` bleibt, wie er ist — belegt: Headless-Lauf
+  `update-conventions global` an einem Test-Config-Ordner (umbenannt per `set-global
+  --rename-legacy`, alter Schlüssel entfernt); Skript-Tests zu `render-global`
+  (`legacy`) und `--rename-legacy`; Lesen mit dem alten Schlüssel: Skript-Tests zu
+  `commit-email` (F-032c).
+- [x] AC-10 — Gegeben ein Bestandsprojekt ohne `HOST` und ohne GitHub-Remote, wenn
   update-conventions läuft, dann fragt es: bei Git bleiben (`HOST=git`) oder umziehen,
   mit der Liste der unterstützten Hosts. Der Umzug läuft wie der Wechsel in AC-11.
   Bricht ein Schritt ab, bleibt `HOST` unverändert und der Bericht nennt, was schon
-  geschehen ist.
-- [ ] AC-11 — Gegeben ein Projekt mit `HOST`, wenn `update-conventions host` läuft, dann
+  geschehen ist — belegt: Headless-Lauf an einem Projekt ohne Remote und ohne `HOST`,
+  Antwort „bei Git bleiben“ (`HOST=git`, GitHub-Dateien je Datei entfernt, kein
+  `gh`-Aufruf); der Umzug läuft wie AC-11.
+- [x] AC-11 — Gegeben ein Projekt mit `HOST`, wenn `update-conventions host` läuft, dann
   nennt es den aktuellen Host und bietet die übrigen unterstützten Hosts und `git` an.
   Nach der Wahl zeigt es die Schritte: Repo auf dem Ziel privat anlegen (nicht bei
   `git`), alten `origin` unter dem Namen des alten Hosts behalten, neuen `origin`
@@ -168,7 +176,11 @@ in F-032 auf; F-025 und die Hosts F-052 (Azure DevOps), F-053 (GitLab) und F-054
   Dateien des alten Hosts je Datei zum Entfernen angeboten (Mechanik der entfernten
   Ziele, A2 Schritt 8). Erst nach Bestätigung führt es sie aus; Branches und Tags pusht
   es nur auf eigene, ausdrückliche Bitte. Ab dann gilt die Commit-Adresse des neuen
-  Hosts; frühere Commits bleiben unverändert.
+  Hosts; frühere Commits bleiben unverändert — belegt: Headless-Läufe
+  `update-conventions host` — GitHub → `git` (Dateien entfernt, alter `origin` unter dem
+  Namen des alten Hosts, bei belegtem Namen ein anderer) und echter Umzug `git` → GitHub
+  (privates Repo angelegt, kein Push, `origin` gesetzt, `HOST=github` und `OWNER`,
+  GitHub-Dateien angelegt, `just check` grün); das Test-Repo wird danach gelöscht.
 
 ### Randfälle
 
@@ -277,6 +289,8 @@ in F-032 auf; F-025 und die Hosts F-052 (Azure DevOps), F-053 (GitLab) und F-054
 - 2026-11-03 — Hostwechsel jederzeit über `update-conventions host` statt eines eigenen
   Skills: Render, Merge und das Entfernen alter Ziele stecken schon dort; ein eigener
   Skill müsste sie doppeln. Der Umzug von „nur Git“ (AC-10) ist derselbe Ablauf.
+- 2026-11-04 — `CODING_KIT_GITHUB_LOGIN` wird nicht umbenannt: Der Name enthält den Host
+  schon, und kein Skill liest ihn als Adresse. AC-9 ist entsprechend angepasst.
 
 ## Plan
 
@@ -515,3 +529,41 @@ verworfen (Verweise auf `update-conventions host`, weil 3.3.0 erst nach F-032e
 veröffentlicht wird). Offen: Diese Verweise führen erst mit F-032e zum Ziel — vorher
 nicht pushen. go-public, check-upstreams und die Projektsuche von update-conventions
 sind nur am Text geprüft.
+
+### F-032e — fertig 2026-11-04
+
+**Umgesetzt:**
+
+- update-conventions A2 Schritt 2: Fehlt `HOST`, trägt ein GitHub-Remote `HOST=github`
+  ohne Frage ein; sonst die Frage — bei Git bleiben oder umziehen. Meldet `host` einen
+  Widerspruch, bietet der Skill an, `HOST` dem Remote anzugleichen. Ziele eines anderen
+  Hosts kommen im Merge als `removed` und werden je Datei zum Entfernen angeboten.
+- Neuer Ablauf A6 (Argument `host`) für Umzug und Wechsel: sauberer Arbeitsbaum, Repo
+  immer privat, alter `origin` unter dem Namen des alten Hosts, `HOST` umstellen,
+  Dateien über den Abgleich, Push nur auf Bitte, Bericht mit Handarbeit; eigener kurzer
+  Weg, wenn der Remote schon umgezogen ist.
+- Migration (A3) schreibt `HOST` mit. Teil G bietet die Umbenennung der alten
+  Commit-Adresse an: `render-global` meldet sie als `legacy`, `set-global
+  --rename-legacy` verschiebt den Wert, ohne dass die Session ihn sieht.
+- README (Aufrufe von update-conventions), CHANGELOG mit `### Template`.
+- Headless-Läufe an nachgebauten Projekten (A, B, C, C2, D) und ein echter Umzug auf
+  GitHub mit einem privaten Wegwerf-Repo.
+
+**Entscheidungen:**
+
+- Auch beim Wechsel auf `git` behält der alte `origin` seine Adresse unter dem Namen des
+  alten Hosts — sonst meldete `host` dauerhaft einen Widerspruch, und jeder Abgleich
+  böte den Umzug zurück an (Fund aus Lauf C).
+- Die Umbenennung macht das Skript (`--rename-legacy`) statt des Skills, damit die
+  Adresse nie durch die Session geht.
+
+**Abweichung vom Plan:** `CODING_KIT_GITHUB_LOGIN` bleibt (AC-9 angepasst);
+`--rename-legacy` statt eines allgemeinen Entfernens von Schlüsseln.
+
+**Funde:** Unabhängiges Review mit 3 Befunden, alle nachgeprüft: 2 behoben (Widerspruch
+mit schon umgezogenem Remote — eigener Weg in A6; Hinweis „privat angelegt" im Bericht),
+1 über die Anpassung von AC-9 gelöst (`CODING_KIT_GITHUB_LOGIN`). In den Headless-Läufen
+durften Dateien unter `.claude/` nicht ohne Rückfrage geschrieben werden; der Skill
+bereitete sie dann wie vorgesehen in `<tmp>` vor, kopiert wurde von Hand. Nur am Text
+geprüft: EC-9, EC-10, EC-13. Das Test-Repo `coding-kit-host-test` muss von Hand gelöscht
+werden (dem `gh`-Token fehlt `delete_repo`).

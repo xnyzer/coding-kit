@@ -54,6 +54,14 @@ Reviewer-Befunde nach, bevor es sie übernimmt (F-055).
   holt den Ref ohne `gh` über `git ls-remote`.
 - **README:** Der Abschnitt „Ohne GitHub (nur Git)“ beschreibt den Weg über die Skills
   statt eines Bootstraps von Hand.
+- **`update-conventions`, Host je Projekt:** Ein Bestandsprojekt ohne `HOST` bekommt beim
+  Abgleich seinen Host — auf GitHub ohne Frage, sonst die Frage, ob es bei Git bleibt
+  oder umzieht. Das neue Argument `host` wechselt den Host eines Projekts: Repo privat
+  anlegen, alten `origin` unter dem Namen des alten Hosts behalten, `HOST` umstellen,
+  Dateien des neuen Hosts anbieten und die des alten zum Entfernen; gepusht wird nur
+  auf Bitte. Mit `global` bietet er an, die alte Commit-Adresse nach
+  `CODING_KIT_EMAIL_GITHUB` umzubenennen (`set-global --rename-legacy`; `render-global`
+  meldet sie als `legacy`).
 - **Globale Regeln**, Abschnitt Git & Commits: Commit-Adresse ist die des Projekt-Hosts
   aus der Personal-Config statt immer GitHub-Noreply. Auf jedem Rechner holt
   `/coding-kit:update-conventions global` den geänderten Abschnitt.
@@ -78,6 +86,9 @@ Reviewer-Befunde nach, bevor es sie übernimmt (F-055).
   GitHub-Projekte ändert sich am gerenderten Text nichts.
 - **Nur auf GitHub:** `.github/` (Issue- und PR-Vorlagen, CI, CodeQL) und
   `renovate.json` entstehen nur noch bei `HOST=github`.
+- **Host im Projekt:** `.claude/template-answers` bekommt beim Update den Schlüssel
+  `HOST` — GitHub-Projekte ohne Frage, alle anderen nach Rückfrage. Für GitHub-Projekte
+  ändert sich an den Dateien nichts.
 - **Go-Modul:** `go.mod` nutzt `{{GO_MODULE}}`; auf GitHub unverändert
   `github.com/<owner>/<name>`, ohne Host nur der Projektname.
 

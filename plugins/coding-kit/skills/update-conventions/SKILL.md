@@ -1,7 +1,7 @@
 ---
 name: update-conventions
-description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (section:NAME); Abweichungs-Registry mit den Arten skip, keep, adapt; erkennt bei jedem Lauf per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt (dauerhafte Ablehnung als Rules-Zeile); Migration für Projekte ohne Snapshot und für das Dokumentmodell vor 2.0.0 (→ eine Datei je Feature in features/, auch per Argument `features`); erkennt im Template entfernte/umbenannte Dateien. Ohne Argument nur das Projekt im aktuellen Ordner, alle Projekte nur mit `alle`; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente fasst er nie an; sie und Tools ohne Vorlage bietet er dem Template an (propose-to-template). Mit `global` — und einmal in jedem anderen Lauf, sobald sie eingerichtet sind — gleicht er auch die globalen Kit-Regeln auf dem Rechner ab (`~/.claude/rules/coding-kit.md`) — Ersteinrichtung, Diff und Bestätigung je Abschnitt, Migration einer alten Kit-Kopie in `~/.claude/CLAUDE.md`; eine selbst angelegte CLAUDE.md fasst er nie an. Nur mit `global` bietet er zwei Settings an (Auto-Memory aus, Transkripte 365 Tage). Überträgt die Auto-Memory des Projekts in Graph oder docs/notes.md. Nichts wird ungefragt überschrieben.
-argument-hint: "[Projekt | alle | global [Ordner] | features] [status | revise]"
+description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je seed-Zone (section:NAME); Abweichungs-Registry (skip, keep, adapt); erkennt per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt; Migration für Projekte ohne Snapshot und für das Dokumentmodell vor 2.0.0 (auch per Argument `features`); erkennt entfernte/umbenannte Dateien. Ohne Argument das Projekt im aktuellen Ordner, `alle` für alle; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente und Tools ohne Vorlage bietet er dem Template an (propose-to-template). Mit `global` — und einmal in jedem anderen Lauf — gleicht er die globalen Kit-Regeln auf dem Rechner ab (`~/.claude/rules/coding-kit.md`; Ersteinrichtung, Diff je Abschnitt, Migration einer alten Kit-Kopie; eine selbst angelegte CLAUDE.md nie); nur mit `global` bietet er zwei Settings an (Auto-Memory aus, Transkripte 365 Tage). Überträgt die Auto-Memory des Projekts in Graph oder docs/notes.md. Trägt bei Bestandsprojekten den Git-Host ein (GitHub ohne Frage, sonst Frage nach Umzug); `host` wechselt den Host eines Projekts. Nichts wird ungefragt überschrieben.
+argument-hint: "[Projekt | alle | global [Ordner] | features | host] [status | revise]"
 disable-model-invocation: true
 user-invocable: true
 ---
@@ -31,6 +31,8 @@ Fragmente nie selbst zusammenführen, einsetzen oder aus dem Template abschreibe
 - **`status`:** nur Bericht — nichts im Projekt schreiben (keine Antworten, kein
   Snapshot, keine Registry, kein Stempel) und nichts im Config-Ordner.
 - **`revise`:** nur die Registry-Revision (A2 Schritt 10), ohne A5.
+- **`host`:** den Git-Host des Projekts im aktuellen Ordner wechseln (A6) — auch von
+  „nur Git" auf einen Host oder zurück; danach der Abgleich (A2) für die Host-Dateien.
 - **`features`:** nur die Migration des Dokumentmodells (A4) für das Repo im aktuellen
   Ordner — auch für eines ohne Template-Antworten (etwa das coding-kit selbst); kein
   Abgleich, keine globalen Regeln.
@@ -116,6 +118,21 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    Bestätigung ändern. Die Prämisse eines Aufrufers rendert nur diesen Lauf, sie ändert
    die Datei nicht.
 
+   **Host** (`sh <skript> host <projekt>`, `MANIFEST.md` § Hosts):
+   - Fehlt `HOST` und schlägt der Remote `github` vor → `HOST=github` eintragen, ohne
+     eigene Frage, und im Bericht nennen; am Render ändert sich nichts.
+   - Fehlt `HOST` sonst → fragen: **bei Git bleiben** (`HOST=git`; Empfehlung, wenn
+     `unsupported` einen erkannten, noch nicht unterstützten Host meldet — mit dem
+     Hinweis, dass er später kommt) oder **umziehen** auf einen Host aus § Hosts → A6.
+     Bei Git bleiben heißt: Die GitHub-Dateien, die das Projekt bisher hatte, kommen in
+     Schritt 4 als `removed` und werden je Datei zum Entfernen angeboten.
+   - Meldet `host` einen Widerspruch (`mismatch`) → anbieten, `HOST` dem Remote
+     anzugleichen: auf den Host, den der Remote vorschlägt (ein noch nicht unterstützter
+     oder fremder Server zählt als `git`) — nach A6, Fall „Remote schon umgezogen";
+     ohne Zustimmung bleibt `HOST`.
+   - Scheitert der Umzug oder bricht der Nutzer ab, bleibt `HOST` leer — die Frage kommt
+     beim nächsten Lauf wieder. Mit `status` nur berichten.
+
    **Erkennung** (jeder Lauf, nach den Antworten, vor dem Rendern): `sh <skript> detect
    <template> <projekt>` gleicht die Signale des Projekts mit den Modulen und dem
    Fragment-Katalog des aktuellen Templates ab (`MANIFEST.md` § Detection) — so kommt
@@ -161,7 +178,11 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    - `new`: anlegen anbieten — oder als `skip` registrieren.
    - `missing`: das Projekt hat die Datei gelöscht — wiederherstellen anbieten oder als
      `skip` registrieren.
-   - `removed`: Schritt 8. `skipped`: nur auflisten.
+   - `removed`: Schritt 8 — außer das Ziel gehört zu einem anderen Host (Policy
+     `host:NAME` im MANIFEST, etwa nach einem Wechsel auf `git`): dann je Datei
+     **entfernen** anbieten; weicht die Datei ab oder hat sie eine `keep`-Zeile, vorher
+     den Diff gegen die Basis zeigen. Abgelehnt → liegen lassen und im Bericht nennen.
+     `skipped`: nur auflisten.
 
    Nach dem Übernehmen geänderte JSON-Dateien auf Gültigkeit prüfen (Schritt 11 prüft
    ohnehin `just check`). Altes Dokumentmodell → jetzt A4, dann weiter mit Schritt 6.
@@ -314,10 +335,10 @@ dann A2 ab Schritt 3.
    README), `GROUP_ID` und die fünf `LANG_*` (Languages-Block der Projekt-CLAUDE.md;
    Alt-Projekte mit einzeiliger Doku-Sprach-Angabe: deren Wert für die lebende Doku,
    übrige Dimensionen englisch), `LICENSE_SPDX` (`LICENSE`, ohne Datei `TBD`), `MODULE`
-   (justfile-Kopf, `mise.toml`, Modul-Dateien; im Zweifel fragen), `VISIBILITY` wie A2
-   Schritt 2, `OPTIONAL` (Graphiti-Block vorhanden → `graphiti`) und `FRAGMENTS` wie A2
-   Schritt 2. Zeigen, bestätigen lassen, als `.claude/template-answers` schreiben
-   (MANIFEST § Answers).
+   (justfile-Kopf, `mise.toml`, Modul-Dateien; im Zweifel fragen), `VISIBILITY` und
+   `HOST` wie A2 Schritt 2, `OPTIONAL` (Graphiti-Block vorhanden → `graphiti`) und
+   `FRAGMENTS` wie A2 Schritt 2. Zeigen, bestätigen lassen, als
+   `.claude/template-answers` schreiben (MANIFEST § Answers).
 2. **Basis wählen** — sie entscheidet, was der erste Merge als Projektabweichung sieht:
    - **(a) Template-Historie** (Standard): die Template-Fassung einer Version aus der
      Historie eines coding-kit-Checkouts. **Version:** standardmäßig der Stempel; auf
@@ -517,6 +538,50 @@ und Zahl der Einträge berichten.
      sich von dort nachreichen. Die Änderung an `docs/notes.md` gehört in den Commit des
      Abschlusses (A2 Schritt 11); das Löschen betrifft nur diesen Rechner.
 
+### A6. Host wechseln (Argument `host`, Umzug aus A2 Schritt 2)
+
+Ein Ablauf für beides: den Umzug eines Projekts von „nur Git" auf einen Host und den
+späteren Wechsel zwischen Hosts. Host-Schritte nach `MANIFEST.md` § Hosts (Absatz „Host
+steps in a skill").
+
+1. **Voraussetzungen:** Der Arbeitsbaum ist sauber (`git status --porcelain` leer) —
+   sonst nicht starten: erst committen oder zurückstellen. Den aktuellen Host nennt
+   `sh <skript> host <projekt>`; als Ziel die übrigen Hosts aus § Hosts und `git`
+   anbieten. Ist das Ziel der aktuelle Host: nichts zu tun, melden.
+
+   **Fall „Remote schon umgezogen"** (Widerspruch aus A2 Schritt 2, `origin` zeigt
+   bereits auf das Ziel): kein Repo anlegen, keinen Remote umbenennen — nur `HOST` auf
+   das Ziel stellen (auf `github` dazu `OWNER` aus der `origin`-URL) und die Dateien
+   abgleichen wie unten unter **Dateien**; dann weiter mit Schritt 5.
+2. **Schritte zeigen** und bestätigen lassen — erst danach ausführen:
+   - **Repo anlegen** (nicht bei Ziel `git`), immer **privat**, auch bei
+     `VISIBILITY=public` — öffentlich wird es danach über `/coding-kit:go-public`. Auf
+     `github`: `gh repo create "$(gh api user --jq .login)/<name>" --private`; ohne
+     angemeldetes `gh` nicht anlegen, auf `gh auth login` hinweisen und abbrechen.
+   - **Remotes:** Hat das Projekt einen `origin`, behält er seine Adresse unter dem
+     Namen des alten Hosts (`git remote rename origin <alter-host>`), auch bei Ziel
+     `git` — sonst meldete `host` danach dauerhaft einen Widerspruch, und jeder Abgleich
+     böte den Umzug zurück an; ist der Name belegt, nach einem anderen fragen — nichts
+     überschreiben. Der neue `origin` ist die Adresse des neuen Repos (`git remote add
+     origin <url>`); bei Ziel `git` gibt es keinen, bis der Nutzer selbst einen setzt
+     (etwa ein Bare-Repo auf einem NAS).
+   - **Antworten:** `HOST` auf das Ziel, auf `github` dazu `OWNER`.
+   - **Dateien:** A2 ab Schritt 3 mit den neuen Antworten — die Dateien des neuen Hosts
+     kommen als `new` (je Datei bestätigt), die des alten als `removed` (Schritt 4, je
+     Datei zum Entfernen angeboten).
+3. **Push nur auf eigene, ausdrückliche Bitte** — dann `git push -u origin --all` und
+   `git push origin --tags`. Ohne Bitte nennt der Bericht die Befehle.
+4. **Scheitert ein Schritt** (Name auf dem Host vergeben, `gh` nicht angemeldet):
+   anhalten. `HOST` bleibt, wie er war, und der Bericht nennt, was schon geschehen ist
+   (etwa ein angelegtes Repo oder ein umbenannter Remote) und wie es zurückgeht.
+5. **Bericht:** neuer Host, Remotes, angelegte und entfernte Dateien; bei
+   `VISIBILITY=public` der Hinweis, dass das Repo privat angelegt ist und erst über
+   `/coding-kit:go-public` öffentlich wird. Ab dem nächsten Commit gilt die
+   Commit-Adresse des neuen Hosts (`/coding-kit:step-done` § 5a); frühere Commits
+   bleiben, wie sie sind. Als Handarbeit nennen: Issues, Pull Requests, Wiki, CI-Secrets
+   und Repo-Einstellungen überträgt das Kit nicht, und das alte Repo wird weder gelöscht
+   noch archiviert.
+
 ---
 
 ## Teil G — Globale Kit-Regeln (Kit → Rechner)
@@ -558,6 +623,15 @@ als Personal-Config starten; er fragt nur, was offen ist, und gibt den Pfad der 
 den Werten zurück — die echte oder, solange das Kopieren nicht freigegeben ist, eine in
 `<tmp>`. Danach `<tmp>/global` löschen und mit genau dieser Datei neu rendern. `empty`
 ist eine bewusste Wahl: nicht nachfragen. Werte nie selbst in die env-Datei schreiben.
+
+**Alte Commit-Adresse:** Meldet `render-global` eine Zeile `legacy` — die Adresse steht
+noch unter `CODING_KIT_GIT_NOREPLY_EMAIL` aus der Zeit vor den Schlüsseln je Host —,
+die Umbenennung anbieten: `sh <skript> set-global --rename-legacy <kit>
+<config>/coding-kit.env <tmp>/neu` schreibt sie nach `CODING_KIT_EMAIL_GITHUB` (bei
+`superseded` gilt der neue Schlüssel schon, der alte entfällt nur) und entfernt den alten
+Schlüssel; die Adresse selbst sieht dabei niemand. Nach Freigabe
+`cp <tmp>/neu/coding-kit.env <config>/coding-kit.env`. Bis dahin gilt der alte Schlüssel
+für GitHub weiter. `CODING_KIT_GITHUB_LOGIN` bleibt, wie er ist.
 
 ### G3. Abgleich
 
