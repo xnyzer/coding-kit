@@ -131,8 +131,20 @@ run_render_cases() {
   check "host: missing HOST renders like github" diff -r "$TMP/hgh" "$TMP/hno"
   check "host github: exactly the github targets" core_exactly hgh public github
   check "host github: Go module path" grep -qx 'module github.com/octo/demo-app' "$TMP/hgh/go.mod"
+  refute "host github: no target keeps the .tmpl suffix" tmpl_left hgh
   check "host github: noreply rule kept" contains hgh/CONTRIBUTING.md 'users.noreply.github.com'
   refute "host github: no block markers left" grep -rq template:optional "$TMP/hgh"
+
+  # .tmpl: a source next to its suffixed twin has the same target — the render stops
+  cp -R "$TEMPLATE" "$TMP/tpl-dup"
+  cp "$TEMPLATE/modules/go/files/go.mod.tmpl" "$TMP/tpl-dup/modules/go/files/go.mod"
+  awk '{ print } /^\| `go\.mod\.tmpl` \|/ { print "| `go.mod` | seed |" }' \
+    "$TEMPLATE/modules/go/MODULE.md" > "$TMP/tpl-dup/modules/go/MODULE.md"
+  t_template=$TEMPLATE
+  TEMPLATE=$TMP/tpl-dup
+  refute "tmpl twin renders" render tdup go public --seeds
+  TEMPLATE=$t_template
+  check "tmpl twin: names the target" err_mentions tdup 'two sources render to go.mod'
 
   check "host git renders without OWNER" render hgit go public --seeds HOST=git -OWNER
   check "host git: listing matches the files" listing_matches hgit

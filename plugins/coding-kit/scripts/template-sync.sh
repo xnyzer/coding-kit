@@ -771,6 +771,8 @@ render() {
         *) die "modules/$MODULE/MODULE.md: policy of $f_rel must start with managed or seed" ;;
       esac
       f_tgt=$(subst_path "$f_rel") || exit 1
+      # The suffix keeps tools in the kit repo from reading the source as real.
+      f_tgt=${f_tgt%.tmpl}
       emit "$MODDIR/files/$f_rel" "$f_tgt" "$f_kind" module
     done < "$WORK/files.lst"
   fi

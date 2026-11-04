@@ -247,7 +247,7 @@ Each `modules/<name>/` may provide (all optional except `MODULE.md`):
 | `gitignore.part` | `.gitignore` | appended below the `# module:gitignore` marker | managed |
 | `CODING-STANDARDS.part.md` | `CODING-STANDARDS.md` | the module's own module fragment (the rules of its toolchain) — appended in the `module:coding-standards` slot, wrapped as `fragment:<module>`; a module may also declare catalog fragments, its language fragment first (§ Standards fragments) | managed |
 | `ci.part.yml` | `.github/workflows/ci.yml` | jobs appended below the `# module:ci-jobs` marker | managed |
-| `files/**` | project root (same relative path) | copied after placeholder substitution | per file, see `MODULE.md` |
+| `files/**` | project root (same relative path, without a `.tmpl` suffix) | copied after placeholder substitution | per file, see `MODULE.md` |
 
 **Composition rules.** Rendering must be reproducible byte for byte, so the mechanics
 above are exact. The plugin's `scripts/template-sync.sh render` implements them:
@@ -263,6 +263,10 @@ above are exact. The plugin's `scripts/template-sync.sh render` implements them:
 - `files/**`: the table `## File policies (files/)` in `MODULE.md` names every file by its
   full path below `files/`; the first word of its policy cell (`managed` or `seed`) is
   machine-read.
+- `files/**`: a name ending in `.tmpl` loses the suffix in the target
+  (`go.mod.tmpl` → `go.mod`). It is for sources a tool in the kit repo would otherwise
+  read as real — GitHub's dependency graph parses every `go.mod` and fails on the
+  placeholders. Two sources with the same target stop the render.
 
 **Standard recipe set** every module's justfile must implement (skills call only these):
 `setup`, `dev`, `test`, `lint`, `format`, `check`, `build`, `features-index`. `check` is

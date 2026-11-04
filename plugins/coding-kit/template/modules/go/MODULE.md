@@ -16,7 +16,7 @@ locally and as an extra CI job. Go version = current stable via mise + `go.mod` 
 | `gitignore.part` | bin, dist, coverage.out |
 | `CODING-STANDARDS.part.md` | Go toolchain rules for §13 (module fragment) |
 | `ci.part.yml` | extra CI job: license gate |
-| `files/` | go.mod, main.go + test sample, .golangci.yml |
+| `files/` | go.mod (as `go.mod.tmpl`), main.go + test sample, .golangci.yml |
 
 **Standards fragments:** `go-lang` — the language fragment with the Go rules that hold
 whatever toolchain runs the code; the module's own `fragment:go` holds only the rules of
@@ -30,7 +30,7 @@ this toolchain.
 
 | File | Policy |
 |------|--------|
-| `go.mod` | seed (module path + go directive evolve with the project) |
+| `go.mod.tmpl` | seed (module path + go directive evolve with the project) |
 | `.golangci.yml` | managed |
 | `main.go`, `main_test.go` | seed (sample code — replace freely) |
 

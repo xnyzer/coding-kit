@@ -94,6 +94,8 @@ render() {
 has() { [ -f "$TMP/$1" ]; }
 contains() { grep -qF -- "$2" "$TMP/$1"; }
 err_mentions() { grep -qF -- "$2" "$TMP/$1.err"; }
+# Some file below DIR still ends in .tmpl, a suffix the render strips.
+tmpl_left() { find "$TMP/$1" -name '*.tmpl' | grep -q .; }
 
 # No registered-style placeholder token left anywhere below DIR.
 no_placeholders() {

@@ -46,7 +46,8 @@ Stand 2026-11-04.
 
 1. **[F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md)** — Graphiti-Strang; F-029d wartet die 7 Tage Nachmessung ab (frühestens
    2026-11-06).
-2. **[F-056](F-056-abhaengigkeitsgraph-go-vorlage.md)** — klein, zwischendurch.
+2. **[F-056](F-056-abhaengigkeitsgraph-go-vorlage.md)** — gebaut; offen ist nur der Nachweis von AC-3 nach dem
+   nächsten Push.
 3. **[F-052](F-052-azure-devops-services-als-git-host.md) → [F-025](F-025-install-sh-fehlender-gh-login-und.md) → [F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: Azure DevOps (Bedarf in der Firma),
    der Installer, GitLab, Forgejo — auf der fertigen Grundlage „Git-Host je Projekt“.
 4. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
@@ -70,7 +71,7 @@ bzw. ohne GitHub zuerst.
 | [F-052](F-052-azure-devops-services-als-git-host.md) | Azure DevOps Services als Git-Host | BACKLOG |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
-| [F-056](F-056-abhaengigkeitsgraph-go-vorlage.md) | Fehlschlag des GitHub-Abhängigkeitsgraphen an der Go-Vorlage beheben | PLANNED |  |
+| [F-056](F-056-abhaengigkeitsgraph-go-vorlage.md) | Fehlschlag des GitHub-Abhängigkeitsgraphen an der Go-Vorlage beheben | IN-PROGRESS |  |
 
 ### Closed
 

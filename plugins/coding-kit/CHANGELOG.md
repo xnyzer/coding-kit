@@ -13,6 +13,17 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.3.1 — 2026-11-04
+
+GitHubs Abhängigkeitsgraph scheitert nicht mehr an der Go-Vorlage (F-056).
+
+- **Go-Modul:** Die Vorlage heißt `files/go.mod.tmpl`. GitHub liest jede `go.mod` im
+  Repo für seinen Abhängigkeitsgraphen; an den Platzhaltern der Vorlage schlug der Lauf
+  „Graph Update: go_modules“ fehl. Ein Ausschluss je Pfad wirkt auf diese Läufe nicht.
+- **Render:** Eine Datei unter `files/**`, deren Name auf `.tmpl` endet, landet ohne
+  die Endung im Projekt (MANIFEST § Module contract). Projekte bekommen wie bisher
+  `go.mod` mit demselben Inhalt.
+
 ## 3.3.0 — 2026-11-03
 
 Git-Host je Projekt, mit „nur Git“ als Grundstufe (F-032, in Arbeit); step-done prüft

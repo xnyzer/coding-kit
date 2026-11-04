@@ -2,7 +2,7 @@
 id: F-056
 title: Fehlschlag des GitHub-Abhängigkeitsgraphen an der Go-Vorlage beheben
 type: fix
-status: PLANNED
+status: IN-PROGRESS
 size: S
 created: 2026-11-04
 done:
@@ -43,13 +43,16 @@ Projekte. Die Python-Vorlage ist nicht betroffen.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben eine Datei unter `files/` eines Moduls, deren Name auf `.tmpl`
+- [x] AC-1 — Gegeben eine Datei unter `files/` eines Moduls, deren Name auf `.tmpl`
   endet, wenn der Renderer sie ausgibt, dann landet sie ohne diese Endung im Projekt
   (`files/go.mod.tmpl` → `go.mod`); Dateien ohne die Endung behalten ihren Pfad, und
-  keine Ausgabe trägt die Endung `.tmpl`.
-- [ ] AC-2 — Gegeben die Go-Vorlage, dann gibt es im Kit-Repo keine Datei `go.mod` mehr,
+  keine Ausgabe trägt die Endung `.tmpl` — belegt: Test „host github: no target keeps
+  the .tmpl suffix“; ohne die Renderer-Zeile schlagen 15 Checks fehl; `just check` grün.
+- [x] AC-2 — Gegeben die Go-Vorlage, dann gibt es im Kit-Repo keine Datei `go.mod` mehr,
   und der Render des Go-Moduls ergibt dieselbe `go.mod` wie vorher — Pfad und Inhalt,
-  für Host `github` und `git`.
+  für Host `github` und `git` — belegt: `git ls-files` ohne `go.mod`; der ganze
+  Go-Render vor und nach der Änderung ist für beide Hosts Byte für Byte gleich; Tests
+  „Go module path“ und „bare Go module“.
 - [ ] AC-3 — Gegeben der Push mit der Umbenennung auf `main`, dann folgt kein
   fehlgeschlagener Lauf „Graph Update: go_modules“ mehr; die übrigen Einträge des
   Abhängigkeitsgraphen (Actions, Python- und TS-Vorlage) bleiben.
@@ -124,3 +127,20 @@ liegt nach der Prüfung auf der Hand, und Projekte merken nichts.
 
 Erkennung (2a): keine neuen Sprachen, Tools oder Dependencies. Keine neue Config, keine
 Endpunkte.
+
+## Verlauf
+
+### F-056 — fertig 2026-11-04
+
+- **Umgesetzt:** Die Go-Vorlage heißt `modules/go/files/go.mod.tmpl`. Der Renderer
+  (`template-sync.sh`, Ausgabe von `files/**`) streicht nach der Platzhalter-Ersetzung
+  die Endung `.tmpl`. MANIFEST § Module contract nennt die Regel in der Tabelle und unter
+  den Composition rules; die Go-`MODULE.md` führt die Datei unter dem neuen Namen.
+  `tests/template-sync/render.sh` prüft, dass keine Ausgabe auf `.tmpl` endet und dass
+  ein Template mit `go.mod` neben `go.mod.tmpl` den Render abbricht (EC-1). Version
+  3.3.1.
+- **Entscheidungen:** kein `### Template` im CHANGELOG — der Render für Projekte bleibt
+  Byte für Byte gleich, und die Versionsregel verlangt ihn nicht.
+- **Abweichung vom Plan:** Der Test-Helfer `tmpl_left` steht in
+  `tests/template-sync/run.sh` bei den übrigen Helfern statt in `render.sh`.
+- **Funde:** keine; unabhängiges Review ohne Befunde. AC-3 wird nach dem Push belegt.
