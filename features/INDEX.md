@@ -70,7 +70,7 @@ bzw. ohne GitHub zuerst.
 | [F-052](F-052-azure-devops-services-als-git-host.md) | Azure DevOps Services als Git-Host | BACKLOG |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
-| [F-056](F-056-abhaengigkeitsgraph-go-vorlage.md) | Fehlschlag des GitHub-Abhängigkeitsgraphen an der Go-Vorlage beheben | BACKLOG |  |
+| [F-056](F-056-abhaengigkeitsgraph-go-vorlage.md) | Fehlschlag des GitHub-Abhängigkeitsgraphen an der Go-Vorlage beheben | PLANNED |  |
 
 ### Closed
 
