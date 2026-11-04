@@ -46,15 +46,13 @@ Stand 2026-11-04.
 
 1. **[F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md)** — Graphiti-Strang; F-029d wartet die 7 Tage Nachmessung ab (frühestens
    2026-11-06).
-2. **[F-056](F-056-abhaengigkeitsgraph-go-vorlage.md)** — gebaut; offen ist nur der Nachweis von AC-3 nach dem
-   nächsten Push.
-3. **[F-052](F-052-azure-devops-services-als-git-host.md) → [F-025](F-025-install-sh-fehlender-gh-login-und.md) → [F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: Azure DevOps (Bedarf in der Firma),
+2. **[F-052](F-052-azure-devops-services-als-git-host.md) → [F-025](F-025-install-sh-fehlender-gh-login-und.md) → [F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: Azure DevOps (Bedarf in der Firma),
    der Installer, GitLab, Forgejo — auf der fertigen Grundlage „Git-Host je Projekt“.
-4. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
-5. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+3. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
+4. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
-Strang 1 und 3 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
+Strang 1 und 2 sind tauschbar: Graphiti-Kosten zuerst oder Betrieb auf anderen Rechnern
 bzw. ohne GitHub zuerst.
 
 ## All features
@@ -71,13 +69,13 @@ bzw. ohne GitHub zuerst.
 | [F-052](F-052-azure-devops-services-als-git-host.md) | Azure DevOps Services als Git-Host | BACKLOG |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
-| [F-056](F-056-abhaengigkeitsgraph-go-vorlage.md) | Fehlschlag des GitHub-Abhängigkeitsgraphen an der Go-Vorlage beheben | IN-PROGRESS |  |
 
 ### Closed
 
 | ID | Title | Status | Done |
 |----|-------|--------|------|
 | [F-032](F-032-host-unabhaengiger-betrieb-ohne-github.md) | Git-Host je Projekt festhalten, mit Grundstufe nur Git | DONE | 2026-11-04 |
+| [F-056](F-056-abhaengigkeitsgraph-go-vorlage.md) | Fehlschlag des GitHub-Abhängigkeitsgraphen an der Go-Vorlage beheben | DONE | 2026-11-04 |
 | [F-024](F-024-commit-adresse-aus-der-personal-config.md) | Commit-Adresse aus der Personal-Config statt hart aus gh | SUPERSEDED → F-032 | 2026-11-03 |
 | [F-030](F-030-graphiti-episodenverlust-erkennen-und.md) | Graphiti-Episodenverlust erkennen und wiederherstellbar halten | DROPPED | 2026-11-03 |
 | [F-051](F-051-ankunftspruefung-der-auto-memory-entfernen.md) | Ankunftsprüfung aus der Auto-Memory-Übertragung entfernen | DONE | 2026-11-03 |

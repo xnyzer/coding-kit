@@ -2,10 +2,10 @@
 id: F-056
 title: Fehlschlag des GitHub-Abhängigkeitsgraphen an der Go-Vorlage beheben
 type: fix
-status: IN-PROGRESS
+status: DONE
 size: S
 created: 2026-11-04
-done:
+done: 2026-11-04
 depends-on:
 superseded-by:
 ---
@@ -53,9 +53,12 @@ Projekte. Die Python-Vorlage ist nicht betroffen.
   für Host `github` und `git` — belegt: `git ls-files` ohne `go.mod`; der ganze
   Go-Render vor und nach der Änderung ist für beide Hosts Byte für Byte gleich; Tests
   „Go module path“ und „bare Go module“.
-- [ ] AC-3 — Gegeben der Push mit der Umbenennung auf `main`, dann folgt kein
+- [x] AC-3 — Gegeben der Push mit der Umbenennung auf `main`, dann folgt kein
   fehlgeschlagener Lauf „Graph Update: go_modules“ mehr; die übrigen Einträge des
-  Abhängigkeitsgraphen (Actions, Python- und TS-Vorlage) bleiben.
+  Abhängigkeitsgraphen (Actions, Python- und TS-Vorlage) bleiben — belegt: Nach dem
+  Push von `9c0f02a` führt der Abhängigkeitsgraph nur noch `pyproject.toml`,
+  `package.json` und `ci.yml`, alle lesbar; die Go-Vorlage ist nicht mehr dabei; kein
+  Lauf „Graph Update: go_modules“ danach; die Paketliste ist unverändert.
 
 ### Randfälle
 
@@ -143,4 +146,6 @@ Endpunkte.
   Byte für Byte gleich, und die Versionsregel verlangt ihn nicht.
 - **Abweichung vom Plan:** Der Test-Helfer `tmpl_left` steht in
   `tests/template-sync/run.sh` bei den übrigen Helfern statt in `render.sh`.
-- **Funde:** keine; unabhängiges Review ohne Befunde. AC-3 wird nach dem Push belegt.
+- **Funde:** keine; unabhängiges Review ohne Befunde. AC-3 nach dem Push belegt
+  (Abhängigkeitsgraph ohne die Go-Vorlage). Zum Push selbst startete GitHub keine CI;
+  lokal war `just check` grün.
