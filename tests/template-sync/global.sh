@@ -243,7 +243,20 @@ run_global_cases() {
     err_mentions gsl "unknown level 'pro' (known: einsteiger junior fortgeschritten senior)"
   check "set-global: nothing written for a refused value" test ! -e "$TMP/gsl"
   refute "set-global: other personal keys are refused" sglobal gsk CODING_KIT_PROJECTS_DIR=/x
-  check "set-global: other personal keys are named" err_mentions gsk 'not a value of the global rules'
+  check "set-global: other personal keys are named" \
+    err_mentions gsk 'not a key of the personal config the kit writes'
+  refute "set-global: the address of an unknown host is refused" \
+    sglobal gshost CODING_KIT_EMAIL_GITLAB=me@example.org
+  envfile gsaddr '# personal config' 'CODING_KIT_EMAIL_GIT="old@example.org"'
+  check "set-global: addresses per host run" sglobal gsaddr \
+    CODING_KIT_EMAIL_GIT=new@example.org CODING_KIT_EMAIL_GITHUB=1+octo@users.noreply.github.com \
+    CODING_KIT_REPLY_LANGUAGE=Deutsch
+  check "set-global: address keys after the rule values, then written" \
+    test "$(cut -f2 "$TMP/gsaddr.tsv" | tr '\n' ' ')" = \
+    "CODING_KIT_REPLY_LANGUAGE CODING_KIT_EMAIL_GITHUB CODING_KIT_EMAIL_GIT coding-kit.env "
+  check "set-global: address replaced with its comment" grep -qxF \
+    "CODING_KIT_EMAIL_GIT=\"new@example.org\"  # $(kit_c CODING_KIT_EMAIL_GIT)" "$TMP/gsaddr/coding-kit.env"
+  check "set-global: address added" set_is gsaddr EMAIL_GITHUB added
   refute "set-global: a repeated key is refused" sglobal gsr CODING_KIT_REPLY_LANGUAGE=a \
     CODING_KIT_REPLY_LANGUAGE=b
   refute "set-global: a name without prefix is refused" sglobal gsx REPLY_LANGUAGE=x

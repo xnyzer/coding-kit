@@ -97,12 +97,10 @@ Das Repo entsteht **leer**; die Dateien schreibt erst 4b. **Kein separates `git 
 der Klon des leeren Repos übernimmt den Default-Branch des Remotes; `git branch
 --show-current` muss `main` zeigen (die CI-Vorlage triggert auf `main`), sonst vor dem
 ersten Commit `git symbolic-ref HEAD refs/heads/main`. Danach lokale Autor-Config (nie
-hardcoden):
-
-```bash
-git config user.name  "$(gh api user --jq '.name // .login')"
-git config user.email "$(gh api user --jq '.id')+$(gh api user --jq '.login')@users.noreply.github.com"
-```
+hardcoden): `git config --local user.name "$(gh api user --jq '.name // .login')"`; die
+Commit-Adresse ermitteln und setzen wie `/coding-kit:step-done` § 5a — über
+`template-sync.sh commit-email`, die Adresse des Projekt-Hosts aus der Personal-Config,
+sonst die zur Laufzeit aufgelöste GitHub-Noreply-Adresse, immer `--local`.
 
 Schlägt `create` fehl (Name belegt): zurück zu Schritt 2.1.
 

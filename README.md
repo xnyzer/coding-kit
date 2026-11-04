@@ -72,7 +72,7 @@ mkdir -p ~/.claude
 cat > ~/.claude/coding-kit.env <<EOF
 CODING_KIT_GITHUB_LOGIN="$(gh api user --jq .login)"
 CODING_KIT_GIT_AUTHOR_NAME="$(gh api user --jq '.name // .login')"
-CODING_KIT_GIT_NOREPLY_EMAIL="$(gh api user --jq .id)+$(gh api user --jq .login)@users.noreply.github.com"
+CODING_KIT_EMAIL_GITHUB="$(gh api user --jq .id)+$(gh api user --jq .login)@users.noreply.github.com"
 CODING_KIT_PROJECTS_DIR="$HOME/Documents/Coding-Projects"
 EOF
 chmod 600 ~/.claude/coding-kit.env
@@ -83,7 +83,7 @@ Projekte-Verzeichnis vorher prüfen und ggf. anpassen. Schlüssel-Referenz:
 
 **3. Globale Kit-Regeln** — optional: Das Kit funktioniert ohne. Sie setzen die
 House-Defaults für jede Session (Antwortsprache, Erklär-Niveau, „nie automatisch
-committen", Noreply-Mail-Pflicht, Graphiti-Konventionen) — ohne sie fehlen diese
+committen", Commit-Adresse je Host, Graphiti-Konventionen) — ohne sie fehlen diese
 Leitplanken außerhalb der Skills. Einrichten in einer Claude-Session:
 
 ```
@@ -118,13 +118,14 @@ den Rechner — einen eingebauten Pfad dafür hat das Kit nicht.
 1. **Marketplace + Plugin** wie im manuellen Weg — die zwei `/plugin`-Befehle lesen nur.
    `install.sh` ist hier keine Option (er verlangt ein authentifiziertes `gh`).
 2. **Personal-Config von Hand**, ohne `gh api`-Vorbefüllung. `CODING_KIT_GITHUB_LOGIN`
-   entfällt, als Commit-Adresse gehört die des jeweiligen Hosts hinein:
+   entfällt; die Commit-Adresse für Projekte ohne Host steht unter
+   `CODING_KIT_EMAIL_GIT`:
 
    ```bash
    mkdir -p ~/.claude
    cat > ~/.claude/coding-kit.env <<EOF
    CODING_KIT_GIT_AUTHOR_NAME="Vorname Nachname"
-   CODING_KIT_GIT_NOREPLY_EMAIL="adresse@example.org"
+   CODING_KIT_EMAIL_GIT="adresse@example.org"
    CODING_KIT_PROJECTS_DIR="$HOME/Documents/Coding-Projects"
    EOF
    chmod 600 ~/.claude/coding-kit.env
@@ -154,13 +155,11 @@ die Repo-Settings aus 4c entfallen. Die projektübergreifende Discovery
 von `/update-conventions alle` findet lokale Projekte über `.claude/template-version` unter
 `$CODING_KIT_PROJECTS_DIR`, das Marker-Topic braucht sie dafür nicht.
 
-**Commit-Identität:** Die [globalen Kit-Regeln](#globale-kit-regeln) schreiben die
-GitHub-Noreply-Adresse als Pflicht fest und lösen sie über `gh api user` auf. Auf einem
-Rechner ohne GitHub ist das die falsche Regel — dort den Abschnitt „Git & Commits" in
-`~/.claude/rules/coding-kit.md` auf die Adresse des eigenen Hosts umschreiben, mit einer
-Override-Zeile schützen (siehe [Eigene Abweichungen](#eigene-abweichungen-und-ergänzungen))
-und `git config user.email` **pro Repo** setzen, damit die Firmenadresse nicht in private
-Projekte wandert.
+**Commit-Identität:** Die [globalen Kit-Regeln](#globale-kit-regeln) verlangen die
+Adresse des Projekt-Hosts aus der Personal-Config — für Projekte ohne Host
+`CODING_KIT_EMAIL_GIT`, für GitHub-Projekte `CODING_KIT_EMAIL_GITHUB` (sonst die
+Noreply-Adresse über `gh api user`). `/coding-kit:step-done` setzt sie **pro Repo**
+(`git config --local`), damit eine Firmenadresse nicht in private Projekte wandert.
 
 ## Tägliche Nutzung
 
@@ -201,8 +200,9 @@ Was bei `teils` konkret entfällt — der Rest des Skills läuft lokal weiter:
   Marker-Topic (`gh search repos`). Lokale Projekte findet sie weiter über `.claude/template-version`
   unter `$CODING_KIT_PROJECTS_DIR`.
 - **`name-it`:** der GitHub-Verfügbarkeitscheck; npm, PyPI und Domain bleiben.
-- **`step-done`:** allein die Zeile, die `git config user.email` auf die
-  GitHub-Noreply-Adresse setzt. Review, `just check`, Scans und Verbuchung sind lokal.
+- **`step-done`:** nichts — die Commit-Adresse kommt aus der Personal-Config
+  (`CODING_KIT_EMAIL_GIT`); fehlt sie, fragt der Skill. Review, `just check`, Scans und
+  Verbuchung sind lokal.
 
 Die beiden `ja`-Skills: **`go-public`** dreht GitHub-Sichtbarkeit und -Settings, ist ohne
 GitHub also gegenstandslos; **`check-upstreams`** liest fremde GitHub-Repos (im Kit über
@@ -402,7 +402,8 @@ Laufzeit ermittelbar ist, plus Offline-Fallbacks:
 |-----------|-----------|
 | `CODING_KIT_GITHUB_LOGIN` | GitHub-Login (Fallback; primär via `gh api user`) |
 | `CODING_KIT_GIT_AUTHOR_NAME` | Git-Autorname |
-| `CODING_KIT_GIT_NOREPLY_EMAIL` | GitHub-Noreply-Adresse für Commits |
+| `CODING_KIT_EMAIL_GITHUB` | Commit-Adresse für GitHub-Projekte (Noreply); der frühere Schlüssel `CODING_KIT_GIT_NOREPLY_EMAIL` gilt bis zur Umbenennung weiter |
+| `CODING_KIT_EMAIL_GIT` | Commit-Adresse für Projekte ohne Host |
 | `CODING_KIT_PROJECTS_DIR` | Wurzelverzeichnis der Projekte |
 | `CODING_KIT_REPLY_LANGUAGE` | Antwortsprache der [globalen Kit-Regeln](#antwortsprache-und-erklär-niveau) |
 | `CODING_KIT_EXPLAIN_LEVEL` | Erklär-Niveau: `einsteiger`, `junior`, `fortgeschritten` oder `senior` |

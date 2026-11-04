@@ -114,8 +114,8 @@ Nachzug-Commit), sonst rendert der nächste Abgleich wieder privat.
 
 Danach: `just check` muss grün sein; Secrets- und Privacy-Scan über die neu
 entstandenen Dateien (Preflight-Maßstab). Dann **Commit nach Freigabe**
-(Conventional, englisch; Commit-E-Mail muss die GitHub-noreply-Adresse sein —
-vor dem Commit `git config user.email` prüfen).
+(Conventional, englisch; Commit-E-Mail wie `/coding-kit:step-done` § 5a — die Adresse
+des Projekt-Hosts, vor dem Commit `git config user.email` prüfen).
 
 **Hartes Gate: kein Übergang, solange der Nachzug nicht committet ist.** Das Repo
 geht erst online, wenn es vollständig ist. (Fall C: der Lauf zeigt nur noch

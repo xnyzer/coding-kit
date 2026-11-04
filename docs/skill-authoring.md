@@ -94,9 +94,11 @@ braucht, gibt ihm der Skill im Auftrag mit.
 - **Keine Personendaten:** keine Klarnamen, privaten E-Mail-Adressen, Kundennamen.
 - **Keine absoluten lokalen Pfade** (`/Users/…`, `/home/…`) und keine privaten
   IPs/Hostnames.
-- **Keine hartkodierte Identität:** GitHub-Login/Noreply-E-Mail immer zur Laufzeit
-  ermitteln (`git config`, `gh api user`); nicht Ermittelbares kommt aus der
-  Personal-Config `~/.claude/coding-kit.env` (per Installer angelegt, nie committed).
+- **Keine hartkodierte Identität:** GitHub-Login zur Laufzeit ermitteln (`git config`,
+  `gh api user`). Die Commit-Adresse ist die des Projekt-Hosts: `template-sync.sh
+  commit-email` liest sie aus der Personal-Config `~/.claude/coding-kit.env` (per
+  Installer angelegt, nie committed), auf GitHub sonst zur Laufzeit über `gh api user` —
+  Ablauf in step-done § 5a, andere Skills verweisen darauf.
 - **Keine statischen Versionsstände** in Skill-Texten („aktuelles LTS" statt Zahl);
   aktuelle Stände zur Laufzeit per Websuche verifizieren.
 - **Kein hartkodierter Projektzustand:** Skills dürfen nichts über ein konkretes Projekt

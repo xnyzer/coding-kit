@@ -23,8 +23,9 @@
 #   set-global KIT ENV OUT NAME=value…
 #       Writes the personal config ENV (a missing file counts as empty) with the given
 #       values into OUT/coding-kit.env (OUT missing or empty; mode 600). NAME is a
-#       CODING_KIT_ key the global rules read; its line becomes NAME="value" followed by
-#       the comment of that key in KIT. The first assignment of a key (also behind
+#       CODING_KIT_ key the global rules read or the commit address of a host
+#       (CODING_KIT_EMAIL_<HOST>, see commit-email); its line becomes NAME="value"
+#       followed by the comment of that key in KIT. The first assignment of a key (also behind
 #       export) is replaced in place and later ones are dropped, a key the file lacks is
 #       appended; every other line stays as it is (a missing final newline is added).
 #       Lines: set <NAME> <replaced|added>, then written coding-kit.env. Refused: an
@@ -170,6 +171,14 @@
 #       origin; mismatch <HOST> <kind> when the answers name another host than the
 #       remote suggests. Only the host name of a URL is printed, never a user or token.
 #       Refused: a HOST that is no supported host.
+#   commit-email [--answers FILE] ENV PROJECT
+#       The commit address of PROJECT: the host as host names it, then the address the
+#       personal config ENV (read, never executed; a missing file has no values) holds
+#       for that host — CODING_KIT_EMAIL_<HOST> in upper case, on github also the older
+#       CODING_KIT_GIT_NOREPLY_EMAIL. Never the address of another host. Lines: host
+#       <name> <answers|remote|none>; email <config|legacy|missing|invalid> <key>
+#       <address|->, invalid for anything but a plain address (letters, digits and
+#       . _ % + - around one @, a domain with a dot) — so the value is safe to quote.
 #
 # Options name a stand-in for a file of PROJECT, so a skill can go on with files it
 # prepared in a temp folder while a write below .claude/ waits for approval:
@@ -235,6 +244,7 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh set-settings CONFIG OUT NAME=value...
        sh template-sync.sh memory-dir CONFIG PROJECT
        sh template-sync.sh host [--answers FILE] PROJECT
+       sh template-sync.sh commit-email [--answers FILE] ENV PROJECT
 EOF
   exit 2
 }
@@ -867,7 +877,7 @@ parse_opts() {  # COMMAND ARGS…
       --seeds) po_for='render snapshot' po_n=1 ;;
       --changed) po_for=detect po_n=1 ;;
       --base) po_for='status merge zones' po_n=2 ;;
-      --answers) po_for='detect host' po_n=2 ;;
+      --answers) po_for='detect host commit-email' po_n=2 ;;
       --registry) po_for='status changed merge zones detect' po_n=2 ;;
       --snapshot) po_for='status changed merge snapshot zones' po_n=2 ;;
       --index | --sections) po_for=migrate po_n=2 ;;
@@ -1719,6 +1729,8 @@ set_global() {
   check_out_dir "$SG_OUT"
   setup_work
   kit_levels "$SG_KIT"
+  # The values of the global rules, then the commit address per host.
+  sg_keys="$GLOBAL_KEYS$(email_keys)"
   sg_nl='
 '
   : > "$WORK/given"
@@ -1731,9 +1743,9 @@ set_global() {
     sg_key=${sg_arg%%=*}
     sg_val=${sg_arg#*=}
     sg_name=${sg_key#CODING_KIT_}
-    case " $GLOBAL_KEYS " in
+    case " $sg_keys " in
       *" $sg_name "*) ;;
-      *) die "$sg_key: not a value of the global rules" ;;
+      *) die "$sg_key: not a key of the personal config the kit writes" ;;
     esac
     if grep -qxF -- "$sg_name" "$WORK/given"; then die "$sg_key: given twice"; fi
     printf '%s\n' "$sg_name" >> "$WORK/given"
@@ -1746,9 +1758,9 @@ set_global() {
     sg_quoted=$(printf '%s' "$sg_val" | sed 's/[\\"$`]/\\&/g')
     printf '%s\t%s="%s"  # %s\n' "$sg_name" "$sg_key" "$sg_quoted" "$sg_comment" >> "$WORK/lines.given"
   done
-  # The new lines in the order of GLOBAL_KEYS (word splitting of the list is intended).
+  # The new lines in the order of the keys (word splitting of the list is intended).
   : > "$WORK/lines.tsv"
-  for sg_name in $GLOBAL_KEYS; do
+  for sg_name in $sg_keys; do
     awk -F "$TAB" -v k="$sg_name" '$1 == k' "$WORK/lines.given" >> "$WORK/lines.tsv"
   done
   : > "$WORK/env.in"
@@ -1792,7 +1804,7 @@ set_global() {
   mkdir -p "$SG_OUT"
   mv "$WORK/coding-kit.env" "$SG_OUT/coding-kit.env"
   chmod 600 "$SG_OUT/coding-kit.env"
-  for sg_name in $GLOBAL_KEYS; do
+  for sg_name in $sg_keys; do
     grep "^set${TAB}CODING_KIT_$sg_name$TAB" "$WORK/status" || true
   done
   printf 'written\tcoding-kit.env\n'
@@ -3264,57 +3276,110 @@ remote_kind() {  # URL
   printf '%s\t%s\n' "$rk_kind" "$rk_name"
 }
 
-host() {
-  [ $# -eq 1 ] || usage
-  HO_P=$1
-  [ -d "$HO_P" ] || die "project not found: $HO_P"
-  set_paths "$HO_P"
-  setup_work
+# The host of PROJECT, for host and commit-email (set_paths and setup_work first). Sets
+# HO_HOST (HOST of the answers, empty without), HO_REMOTE ("kind<TAB>name" of origin),
+# HO_KIND, HO_SUGGEST (what the remote suggests: a supported host as itself, anything
+# else git) and HO_SOURCE (answers, remote or none) with HO_EFFECTIVE, the host in effect.
+resolve_host() {  # PROJECT
   # HOST from the answers; a missing file or key leaves it empty. A value that is not
   # exactly one name of HOSTS — also an empty one — is refused.
-  ho_host=
+  HO_HOST=
   if [ -f "$ANS_PATH" ]; then
     load_answers "$ANS_PATH" > "$WORK/values.tsv" || die "answers are invalid: $ANS_PATH"
-    if ho_host=$(value_of HOST); then
-      check_host "$ho_host"
+    if HO_HOST=$(value_of HOST); then
+      check_host "$HO_HOST"
     else
-      ho_host=
+      HO_HOST=
     fi
   fi
   # The remote: origin only; a project that is no git repository has none.
-  ho_url=$(git -C "$HO_P" remote get-url origin 2> /dev/null) || ho_url=
-  if [ -n "$ho_url" ]; then
-    ho_remote=$(remote_kind "$ho_url")
+  rh_url=$(git -C "$1" remote get-url origin 2> /dev/null) || rh_url=
+  if [ -n "$rh_url" ]; then
+    HO_REMOTE=$(remote_kind "$rh_url")
   else
-    ho_remote="none$TAB-"
+    HO_REMOTE="none$TAB-"
   fi
-  ho_kind=${ho_remote%%"$TAB"*}
-  # What the remote suggests: a supported host as itself, everything else as git.
+  HO_KIND=${HO_REMOTE%%"$TAB"*}
   case " $HOSTS " in
-    *" $ho_kind "*) ho_suggest=$ho_kind ;;
-    *) ho_suggest=git ;;
+    *" $HO_KIND "*) HO_SUGGEST=$HO_KIND ;;
+    *) HO_SUGGEST=git ;;
   esac
-  if [ -n "$ho_host" ]; then
-    printf 'host\t%s\tanswers\n' "$ho_host"
-  elif [ "$ho_kind" = none ]; then
-    printf 'host\t%s\tnone\n' "$ho_suggest"
+  if [ -n "$HO_HOST" ]; then
+    HO_EFFECTIVE=$HO_HOST HO_SOURCE=answers
+  elif [ "$HO_KIND" = none ]; then
+    HO_EFFECTIVE=$HO_SUGGEST HO_SOURCE=none
   else
-    printf 'host\t%s\tremote\n' "$ho_suggest"
+    HO_EFFECTIVE=$HO_SUGGEST HO_SOURCE=remote
   fi
-  printf 'remote\t%s\n' "$ho_remote"
+}
+
+host() {
+  [ $# -eq 1 ] || usage
+  [ -d "$1" ] || die "project not found: $1"
+  set_paths "$1"
+  setup_work
+  resolve_host "$1"
+  printf 'host\t%s\t%s\n' "$HO_EFFECTIVE" "$HO_SOURCE"
+  printf 'remote\t%s\n' "$HO_REMOTE"
   # A recognized host that is no supported one yet (remote_kind names the recognized).
-  case $ho_kind in
+  case $HO_KIND in
     other | local | none) ;;
-    "$ho_suggest") ;;
-    *) printf 'unsupported\t%s\n' "$ho_kind" ;;
+    "$HO_SUGGEST") ;;
+    *) printf 'unsupported\t%s\n' "$HO_KIND" ;;
   esac
-  if [ "$ho_kind" = none ]; then
-    ho_others=$(git -C "$HO_P" remote 2> /dev/null | tr '\n' ',' | sed 's/,$//') || ho_others=
+  if [ "$HO_KIND" = none ]; then
+    ho_others=$(git -C "$1" remote 2> /dev/null | tr '\n' ',' | sed 's/,$//') || ho_others=
     [ -z "$ho_others" ] || printf 'no-origin\t%s\n' "$ho_others"
   fi
-  if [ -n "$ho_host" ] && [ "$ho_host" != "$ho_suggest" ]; then
-    printf 'mismatch\t%s\t%s\n' "$ho_host" "$ho_kind"
+  if [ -n "$HO_HOST" ] && [ "$HO_HOST" != "$HO_SUGGEST" ]; then
+    printf 'mismatch\t%s\t%s\n' "$HO_HOST" "$HO_KIND"
   fi
+  return 0
+}
+
+# --- commit-email: the commit address of a project's host ---------------------------
+
+# The personal config key of the commit address on HOST, without the CODING_KIT_ prefix.
+email_key() {  # HOST
+  printf 'EMAIL_%s' "$(printf '%s' "$1" | tr 'a-z' 'A-Z')"
+}
+
+# The address keys of all hosts, in the order of HOSTS.
+email_keys() {
+  for ek_host in $HOSTS; do printf ' %s' "$(email_key "$ek_host")"; done
+}
+
+# Before the keys per host the personal config had one address, always GitHub's.
+LEGACY_EMAIL_KEY=GIT_NOREPLY_EMAIL
+
+commit_email() {
+  [ $# -eq 2 ] || usage
+  CE_ENV=$1
+  [ -d "$2" ] || die "project not found: $2"
+  set_paths "$2"
+  setup_work
+  resolve_host "$2"
+  : > "$WORK/env.tsv"
+  if [ -f "$CE_ENV" ]; then
+    load_env "$CE_ENV" > "$WORK/env.tsv" || die "personal config is invalid: $CE_ENV"
+  fi
+  # Only the key of this host counts — never the address of another one.
+  ce_key=$(email_key "$HO_EFFECTIVE")
+  if ce_addr=$(env_value "$ce_key") && [ -n "$ce_addr" ]; then
+    ce_state=config
+  elif [ "$HO_EFFECTIVE" = github ] && ce_addr=$(env_value "$LEGACY_EMAIL_KEY") \
+    && [ -n "$ce_addr" ]; then
+    ce_state=legacy ce_key=$LEGACY_EMAIL_KEY
+  else
+    ce_state=missing ce_addr=-
+  fi
+  # Only plain addresses pass: a skill puts the value into a shell command.
+  if [ "$ce_state" != missing ] && ! printf '%s\n' "$ce_addr" \
+    | grep -Eqx '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'; then
+    ce_state=invalid
+  fi
+  printf 'host\t%s\t%s\n' "$HO_EFFECTIVE" "$HO_SOURCE"
+  printf 'email\t%s\tCODING_KIT_%s\t%s\n' "$ce_state" "$ce_key" "$ce_addr"
   return 0
 }
 
@@ -3339,5 +3404,6 @@ case $cmd in
   set-settings) set_settings "$@" ;;
   memory-dir) memory_dir "$@" ;;
   host) host "$@" ;;
+  commit-email) commit_email "$@" ;;
   *) usage ;;
 esac

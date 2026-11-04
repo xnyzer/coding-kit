@@ -279,20 +279,31 @@ melden statt verbuchen.
 
 ### 5a. Commit-E-Mail prüfen (KRITISCH)
 
-Vor jedem `git commit` prüfen, dass die E-Mail eine **GitHub-noreply-Adresse** ist:
+Vor jedem `git commit` gilt die Adresse des **Projekt-Hosts** — nie die eines anderen
+Hosts, nie eine private. Welche das ist, sagt
+`sh <skript> commit-email <config>/coding-kit.env <projekt>`: `<skript>` ist
+`${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh` (in Shell-Befehlen der aufgelöste Pfad),
+`<config>` ist `$CLAUDE_CONFIG_DIR`, sonst `~/.claude`. Die Zeile `email` nennt Zustand,
+Schlüssel und Adresse:
 
-```bash
-git config --get user.email
-```
+- `config` → diese Adresse. `legacy` → ebenso; der alte Schlüssel
+  `CODING_KIT_GIT_NOREPLY_EMAIL` gilt für GitHub, bis `/coding-kit:update-conventions
+  global` ihn umbenennt.
+- `missing` auf GitHub (Zeile `host github`) → zur Laufzeit auflösen, nie hardcoden:
+  `"$(gh api user --jq '.id')+$(gh api user --jq '.login')@users.noreply.github.com"`.
+  Scheitert `gh` (nicht angemeldet), fragen.
+- `missing` bei einem anderen Host oder `invalid` → nach der Adresse fragen.
 
-Erwartetes Format: `<numerische-id>+<github-login>@users.noreply.github.com`.
-Weicht sie ab, zur Laufzeit auflösen — nie eine Adresse hardcoden:
-
-```bash
-GH_ID=$(gh api user --jq '.id')
-GH_LOGIN=$(gh api user --jq '.login')
-git config --local user.email "${GH_ID}+${GH_LOGIN}@users.noreply.github.com"
-```
+Eine erfragte Adresse muss dieselbe Form haben, die das Skript prüft — Buchstaben,
+Ziffern und `. _ % + -` um ein `@`, eine Domain mit Punkt —, sonst erneut fragen. In
+Befehlen steht die Adresse immer in einfachen Anführungszeichen. Dann
+`git config --get user.email` vergleichen; weicht sie ab, nur im Projekt setzen:
+`git config --local user.email '<adresse>'`. Eine aufgelöste oder erfragte Adresse kommt
+nicht ungefragt in die Personal-Config: anbieten, sie unter dem Schlüssel des Hosts zu
+speichern (`CODING_KIT_EMAIL_<HOST>`, der Host aus der Zeile `host` in Großbuchstaben) —
+`sh <skript> set-global ${CLAUDE_PLUGIN_ROOT}/global/coding-kit.md
+<config>/coding-kit.env <tmp>/neu 'CODING_KIT_EMAIL_<HOST>=<adresse>'` (`<tmp>` ein
+frisches `mktemp -d`), nach Freigabe `cp <tmp>/neu/coding-kit.env <config>/coding-kit.env`.
 
 Erst dann committen. Nie `--author="…"` mit einer echten E-Mail verwenden. **Warum:** in
 einem öffentlichen Repo darf keine private E-Mail in Commits landen — das wäre ein

@@ -434,3 +434,36 @@ GitHub-Funktionen, die es bei `git` nicht gibt.
 **Funde:** Unabhängiges Review mit 2 Befunden, beide nachgeprüft und behoben (Meldeweg
 im Verhaltenskodex; CI-Pflicht in CONTRIBUTING und CODING-STANDARDS). Keine neuen
 Aufgaben.
+
+### F-032c — fertig 2026-11-04
+
+**Umgesetzt:**
+
+- Personal-Config mit einer Commit-Adresse je Host (`CODING_KIT_EMAIL_GITHUB`,
+  `CODING_KIT_EMAIL_GIT`, Namen aus `HOSTS` abgeleitet); `set-global` schreibt sie mit
+  dem Kommentar ihrer Zeile in den globalen Regeln, der Validator prüft, dass jeder Host
+  dort eine hat.
+- Neuer Befehl `template-sync.sh commit-email`: ermittelt den Host wie `host`
+  (gemeinsame Funktion `resolve_host`) und liest nur dessen Adresse; der alte Schlüssel
+  `CODING_KIT_GIT_NOREPLY_EMAIL` gilt dabei als GitHub-Adresse. Nur einfache Adressen
+  gelten als gültig, die Datei wird nie ausgeführt.
+- step-done § 5a setzt die Adresse darüber, auf GitHub sonst über `gh api user`, sonst
+  wird gefragt — immer `--local`, gespeichert wird nur nach Freigabe. new-project und
+  go-public verweisen darauf.
+- Globale Regeln (Abschnitt Git & Commits), `install.sh`, README und
+  `docs/skill-authoring.md` nennen die Adresse je Host.
+
+**Entscheidungen:**
+
+- Die Personal-Config liest ein Skript-Befehl, nicht der Skill: Sie ist Shell-Syntax und
+  darf nie ausgeführt werden; das sichere Lesen gibt es im Skript schon (`load_env`).
+- Die globale Regel beschreibt den Weg über die Personal-Config, nicht über das Skript,
+  weil sie auch außerhalb von Kit-Projekten gilt.
+
+**Abweichung vom Plan:** Der Befehl `commit-email` war nicht ausdrücklich geplant (Grund
+oben). `go-public` kam dazu, weil es dieselbe feste GitHub-Regel nannte.
+
+**Funde:** Unabhängiges Review mit 3 Befunden, alle nachgeprüft und behoben (Speichern
+nach ungültigem Altschlüssel; Erlaubnisliste statt Sperrliste bei der Adresse; drei
+README-Stellen). Offen: der Headless-Lauf von step-done für AC-5 kommt mit F-032d. Keine
+neuen Aufgaben.

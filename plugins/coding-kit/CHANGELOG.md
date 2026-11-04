@@ -32,6 +32,18 @@ Reviewer-Befunde nach, bevor es sie übernimmt (F-055).
   `host-git`, abgeleitet wie die Lizenz-Blöcke). Ein Projekt ohne `HOST` rendert wie
   `github` — Bestandsprojekte bleiben byte-gleich. Neuer abgeleiteter Platzhalter
   `{{GO_MODULE}}` für den Go-Modulpfad; bei `git` braucht kein Ziel mehr `OWNER`.
+- **Commit-Adresse je Host:** Die Personal-Config trägt je Host eine Adresse
+  (`CODING_KIT_EMAIL_GITHUB`, `CODING_KIT_EMAIL_GIT`); `set-global` schreibt sie. Der neue
+  Befehl `template-sync.sh commit-email` nennt für ein Projekt die Adresse seines Hosts —
+  nie die eines anderen. Der alte Schlüssel `CODING_KIT_GIT_NOREPLY_EMAIL` gilt bis zur
+  Umbenennung als GitHub-Adresse; `install.sh` schreibt schon den neuen.
+- **`step-done`** (§ 5a), **`new-project`** (Autor-Config) und **`go-public`** setzen die
+  Adresse über `commit-email` statt fest die GitHub-Noreply-Adresse; fehlt sie, auf
+  GitHub zur Laufzeit über `gh api user`, sonst fragen — immer nur im Projekt
+  (`--local`). Eine erfragte Adresse kommt nur nach Freigabe in die Personal-Config.
+- **Globale Regeln**, Abschnitt Git & Commits: Commit-Adresse ist die des Projekt-Hosts
+  aus der Personal-Config statt immer GitHub-Noreply. Auf jedem Rechner holt
+  `/coding-kit:update-conventions global` den geänderten Abschnitt.
 - **`step-done`, unabhängiges Review:** Jeder Befund des Reviewers wird zuerst am Code
   nachgeprüft — trifft er zu, gilt er für gleichartige Stellen genauso, trägt seine
   Grundlage? Erst dann wird er behoben, teils behoben oder mit Grund verworfen; die

@@ -21,6 +21,12 @@ remote_is() {  # NAME URL KIND NAME HOST
   grep -qx "remote	$3	$4" "$TMP/$1.out" && grep -qx "host	$5	remote" "$TMP/$1.out"
 }
 
+# commit-email with the personal config $TMP/ENV for $TMP/NAME; the output is FORMAT.
+ce_is() {  # NAME ENV FORMAT
+  ts commit-email "$TMP/$2" "$TMP/$1" > "$TMP/$1.ce" 2> "$TMP/$1.ce.err" || return 1
+  file_is "$1.ce" "$3"
+}
+
 run_host_cases() {
   # --- the remote suggests the host -------------------------------------------------
   check "host: GitHub over HTTPS" remote_is hr1 https://github.com/o/r.git github github.com github
@@ -106,6 +112,60 @@ run_host_cases() {
   check "host: --answers names a stand-in" \
     eval 'ts host --answers "$TMP/ha7.answers" "$TMP/ha1" > "$TMP/ha7.out"'
   check "host: the stand-in counts" grep -qx 'host	git	answers' "$TMP/ha7.out"
+
+  # --- commit-email: the address of the project's host -------------------------------
+  CE_GH='1+octo@users.noreply.github.com'
+  put ce.env "CODING_KIT_EMAIL_GITHUB=\"$CE_GH\"\nCODING_KIT_EMAIL_GIT=me@example.org\n"
+  host_repo ce1 https://github.com/o/r.git
+  check "commit-email: GitHub project gets the GitHub address" \
+    ce_is ce1 ce.env "host\tgithub\tremote\nemail\tconfig\tCODING_KIT_EMAIL_GITHUB\t$CE_GH\n"
+  host_repo ce2 -
+  check "commit-email: plain-git project gets the git address" \
+    ce_is ce2 ce.env 'host\tgit\tnone\nemail\tconfig\tCODING_KIT_EMAIL_GIT\tme@example.org\n'
+  put ce-gh.env "CODING_KIT_EMAIL_GITHUB=$CE_GH\n"
+  check "commit-email: never the address of another host" \
+    ce_is ce2 ce-gh.env 'host\tgit\tnone\nemail\tmissing\tCODING_KIT_EMAIL_GIT\t-\n'
+  put ce-old.env "CODING_KIT_GIT_NOREPLY_EMAIL=\"$CE_GH\"\n"
+  check "commit-email: the old key counts for GitHub" \
+    ce_is ce1 ce-old.env "host\tgithub\tremote\nemail\tlegacy\tCODING_KIT_GIT_NOREPLY_EMAIL\t$CE_GH\n"
+  check "commit-email: the old key never counts for git" \
+    ce_is ce2 ce-old.env 'host\tgit\tnone\nemail\tmissing\tCODING_KIT_EMAIL_GIT\t-\n'
+  put ce-both.env "CODING_KIT_GIT_NOREPLY_EMAIL=old@example.org\nCODING_KIT_EMAIL_GITHUB=$CE_GH\n"
+  check "commit-email: the new key wins over the old one" \
+    ce_is ce1 ce-both.env "host\tgithub\tremote\nemail\tconfig\tCODING_KIT_EMAIL_GITHUB\t$CE_GH\n"
+  put ce-empty.env "CODING_KIT_EMAIL_GITHUB=\"\"\nCODING_KIT_GIT_NOREPLY_EMAIL=$CE_GH\n"
+  check "commit-email: an empty key falls back to the old one" \
+    ce_is ce1 ce-empty.env "host\tgithub\tremote\nemail\tlegacy\tCODING_KIT_GIT_NOREPLY_EMAIL\t$CE_GH\n"
+  check "commit-email: no personal config" \
+    ce_is ce1 ce-none.env 'host\tgithub\tremote\nemail\tmissing\tCODING_KIT_EMAIL_GITHUB\t-\n'
+  put ce-bad.env 'CODING_KIT_EMAIL_GIT="not an address"\n'
+  check "commit-email: no address form is invalid" \
+    ce_is ce2 ce-bad.env 'host\tgit\tnone\nemail\tinvalid\tCODING_KIT_EMAIL_GIT\tnot an address\n'
+  put ce-sub.env 'CODING_KIT_EMAIL_GIT="$(id)@example.org"\n'
+  check "commit-email: a command substitution is invalid" \
+    ce_is ce2 ce-sub.env 'host\tgit\tnone\nemail\tinvalid\tCODING_KIT_EMAIL_GIT\t$(id)@example.org\n'
+  put ce-tick.env "CODING_KIT_EMAIL_GIT='\`id\`@example.org'\n"
+  check "commit-email: a backtick is invalid" \
+    ce_is ce2 ce-tick.env "host\tgit\tnone\nemail\tinvalid\tCODING_KIT_EMAIL_GIT\t\`id\`@example.org\n"
+  put ce-nodot.env 'CODING_KIT_EMAIL_GIT=me@localhost\n'
+  check "commit-email: a domain without a dot is invalid" \
+    ce_is ce2 ce-nodot.env 'host\tgit\tnone\nemail\tinvalid\tCODING_KIT_EMAIL_GIT\tme@localhost\n'
+  put ce-run.env 'CODING_KIT_EMAIL_GIT="$(touch ce-ran)@example.org"\n'
+  check "commit-email: the personal config is never executed" \
+    eval '(cd "$TMP" && ts commit-email "$TMP/ce-run.env" "$TMP/ce2" > /dev/null)'
+  refute "commit-email: no command ran" test -e "$TMP/ce-ran"
+  host_repo ce3 https://github.com/o/r.git
+  put ce3/.claude/template-answers 'HOST=git\n'
+  check "commit-email: HOST of the answers decides" \
+    ce_is ce3 ce.env 'host\tgit\tanswers\nemail\tconfig\tCODING_KIT_EMAIL_GIT\tme@example.org\n'
+  put ce4.answers 'HOST=git\n'
+  check "commit-email: --answers names a stand-in" \
+    eval 'ts commit-email --answers "$TMP/ce4.answers" "$TMP/ce.env" "$TMP/ce1" > "$TMP/ce4.out"'
+  check "commit-email: the stand-in counts" grep -qx 'host	git	answers' "$TMP/ce4.out"
+  put ce-broken.env 'CODING_KIT_EMAIL_GIT="open\n'
+  refute "commit-email: invalid personal config refused" ts commit-email "$TMP/ce-broken.env" "$TMP/ce2"
+  refute "commit-email: missing project refused" ts commit-email "$TMP/ce.env" "$TMP/nope"
+  refute "commit-email: missing operand refused" ts commit-email "$TMP/ce.env"
 
   # --- refused ---------------------------------------------------------------------
   host_repo hx1 -

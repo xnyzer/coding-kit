@@ -6,11 +6,14 @@ der Kit-Vorlage und den Werten in ~/.claude/coding-kit.env und gleicht sie nach
 Plugin-Updates abschnittsweise ab, immer erst nach Bestätigung.
 
 Persönliche Werte stehen nur in ~/.claude/coding-kit.env. Nach einer Änderung dort
-/coding-kit:update-conventions global ausführen; die env-Datei allein ändert nichts.
+/coding-kit:update-conventions global ausführen; die env-Datei allein ändert nichts —
+außer den Commit-Adressen (CODING_KIT_EMAIL_…), die gelten beim nächsten Commit.
 
 CODING_KIT_REPLY_LANGUAGE=""  # Sprache der Antworten, z. B. Deutsch, English; leer = Claude-Standard
 CODING_KIT_EXPLAIN_LEVEL=""   # einsteiger | junior | fortgeschritten | senior; leer = Claude-Standard
 CODING_KIT_EXPLAIN_NOTE=""    # freier Text, präzisiert die Stufe; leer = keine Notiz
+CODING_KIT_EMAIL_GITHUB=""    # Commit-Adresse für GitHub-Projekte (Noreply); leer = über gh ermitteln
+CODING_KIT_EMAIL_GIT=""       # Commit-Adresse für Projekte ohne Host; leer = beim Commit fragen
 
 Abweichen:
 - Eine Regel anders: den Abschnitt hier ändern und darin eine eigene Zeile mit dem
@@ -89,10 +92,14 @@ dem Niveau.
   vorhanden).
 - Conventional Commits, englisch, Imperativ; Body endet mit
   `Co-Authored-By: Claude <noreply@anthropic.com>`.
-- **Commit-E-Mail = GitHub-Noreply, nie eine private Adresse** — gilt auch bei
-  Amend/Rebase/Cherry-Pick. Vor jedem Commit `git config user.email` prüfen; bei
-  Abweichung zur Laufzeit auflösen (nichts hardcoden):
-  `git config --local user.email "$(gh api user --jq .id)+$(gh api user --jq .login)@users.noreply.github.com"`
+- **Commit-E-Mail = die Adresse des Projekt-Hosts, nie eine private** — gilt auch bei
+  Amend/Rebase/Cherry-Pick. Sie steht in der Personal-Config als
+  `CODING_KIT_EMAIL_<HOST>` (Host aus `HOST` in `.claude/template-answers`, sonst aus dem
+  Remote); nie die Adresse eines anderen Hosts. Vor jedem Commit `git config user.email`
+  prüfen, bei Abweichung nur im Projekt setzen (`--local`). Fehlt sie: auf GitHub zur
+  Laufzeit auflösen (nichts hardcoden):
+  `git config --local user.email "$(gh api user --jq .id)+$(gh api user --jq .login)@users.noreply.github.com"`;
+  sonst fragen.
 <!-- /section:global-git -->
 
 <!-- section:global-graphiti -->

@@ -718,6 +718,16 @@ def check_hosts(text: str, findings: list[str]) -> None:
             f"{display_path(TEMPLATE_SYNC)}: HOSTS {sorted(script_hosts)} differ from "
             f"MANIFEST § Hosts {sorted(hosts)}"
         )
+    # set-global writes a commit address per host with the comment of its key line in
+    # the kit's global rules; a host without that line could not be written.
+    if GLOBAL_RULES.is_file():
+        rules = GLOBAL_RULES.read_text(encoding="utf-8")
+        for host in sorted(hosts):
+            key = f"CODING_KIT_EMAIL_{host.upper()}="
+            if not re.search(rf"^{re.escape(key)}.*#", rules, re.MULTILINE):
+                findings.append(
+                    f"{display_path(GLOBAL_RULES)}: no key line with a comment for {key[:-1]}"
+                )
 
 
 def check_snapshot_contract(text: str, findings: list[str]) -> None:
