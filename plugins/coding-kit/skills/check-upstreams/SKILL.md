@@ -16,10 +16,16 @@ Argument (optional): Name eines Watchlist-Eintrags — sonst alle prüfen.
 ## 0. Watchliste auflösen
 
 Die Watchliste ist `upstreams.json` im **Kit-Repo** (nicht im Plugin-Install-Verzeichnis —
-sie wird geschrieben und committed). Kit-Checkout auflösen wie üblich:
-`$CODING_KIT_PROJECTS_DIR/coding-kit`, sonst `gh repo clone
-"$(gh api user --jq .login)/coding-kit" <tmp>` (dann gelten Updates als Vorschlag zum
-Zurückspielen).
+sie wird geschrieben und committed). Kit-Checkout auflösen:
+`$CODING_KIT_PROJECTS_DIR/coding-kit`, sonst das Repo aus `homepage` in
+`${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` nach `<tmp>` klonen (`git clone
+<homepage>`; nie aus dem eigenen Konto ableiten) — dann gelten Updates als Vorschlag zum
+Zurückspielen.
+
+**Ohne angemeldetes `gh`** (`gh auth status`; die Vorbild-Repos liegen auf GitHub): den
+aktuellen Ref liefert `git ls-remote https://github.com/<repo> HEAD`, neue Releases eine
+Websuche bzw. die Releases-Seite. Was nur über `gh api` geht — Vergleich der Commits seit
+dem Ref, Aktivität —, als übersprungen ausweisen, mit dem Hinweis `gh auth login`.
 
 ## 1. Je Eintrag: Neuerungen ermitteln (zur Laufzeit, nie aus dem Gedächtnis)
 

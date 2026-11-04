@@ -41,6 +41,19 @@ Reviewer-Befunde nach, bevor es sie übernimmt (F-055).
   Adresse über `commit-email` statt fest die GitHub-Noreply-Adresse; fehlt sie, auf
   GitHub zur Laufzeit über `gh api user`, sonst fragen — immer nur im Projekt
   (`--local`). Eine erfragte Adresse kommt nur nach Freigabe in die Personal-Config.
+- **Skills ohne GitHub:** Kann der Host einen Schritt nicht oder ist `gh` nicht
+  angemeldet, weisen die Skills ihn als übersprungen aus (mit dem Hinweis `gh auth login`)
+  und machen weiter — der Ablauf steht einmal im MANIFEST § Hosts. **`new-project`** fragt
+  als Erstes nach dem Git-Host — vorgeschlagen wird `CODING_KIT_DEFAULT_HOST` aus der
+  Personal-Config (neu, `template-sync.sh default-host` liest ihn) — und legt ein Projekt
+  auf `git` per `git init` lokal an, ohne `gh`. **`go-public`** verweist bei `git` auf den Host-Wechsel und bietet den
+  Preflight als reine Prüfung an. **`name-it`** prüft GitHub nur auf GitHub,
+  **`propose-to-template`** gibt bei `git` Titel und Body ohne `gh`-Befehl aus,
+  **`update-conventions`** sucht und gleicht die Sichtbarkeit nur mit angemeldetem `gh` ab.
+  **`check-upstreams`** klont das Kit-Repo aus `homepage` statt aus dem eigenen Konto und
+  holt den Ref ohne `gh` über `git ls-remote`.
+- **README:** Der Abschnitt „Ohne GitHub (nur Git)“ beschreibt den Weg über die Skills
+  statt eines Bootstraps von Hand.
 - **Globale Regeln**, Abschnitt Git & Commits: Commit-Adresse ist die des Projekt-Hosts
   aus der Personal-Config statt immer GitHub-Noreply. Auf jedem Rechner holt
   `/coding-kit:update-conventions global` den geänderten Abschnitt.

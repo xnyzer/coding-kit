@@ -107,7 +107,7 @@ Frisch installierte Skills sind ggf. erst nach einem Session-Neustart sichtbar.
 > bleibt für eine native Windows-Installation unsichtbar. Die Toolchain kommt dort über
 > scoop/winget statt brew.
 
-### Ohne GitHub (nur git)
+### Ohne GitHub (nur Git)
 
 Für Rechner ohne GitHub-Konto oder mit dem Verbot, Code dorthin zu pushen — etwa
 Firmenrechner mit eigenem Git-Host. Voraussetzung ist nur, dass github.com **lesend**
@@ -125,6 +125,7 @@ den Rechner — einen eingebauten Pfad dafür hat das Kit nicht.
    mkdir -p ~/.claude
    cat > ~/.claude/coding-kit.env <<EOF
    CODING_KIT_GIT_AUTHOR_NAME="Vorname Nachname"
+   CODING_KIT_DEFAULT_HOST="git"
    CODING_KIT_EMAIL_GIT="adresse@example.org"
    CODING_KIT_PROJECTS_DIR="$HOME/Documents/Coding-Projects"
    EOF
@@ -136,24 +137,19 @@ den Rechner — einen eingebauten Pfad dafür hat das Kit nicht.
 Das Template kommt mit dem Plugin; ein eigener Klon ist nicht nötig, und kein Skill fragt
 dafür nach GitHub.
 
-**Projekte anlegen:** `/new-project` legt das Repo über `gh repo create` an — das ist der
-einzige Schritt, der sich nicht lokal erfüllen lässt. Ersatz: einen leeren Ordner selbst
-initialisieren und den Skill darauf ansetzen; er setzt bei einem vorhandenen
-Projektordner auf, statt ihn neu anzulegen, und schreibt die Dateien aus dem Template im
-Plugin.
+**Projekte anlegen:** `/new-project` fragt als Erstes nach dem Git-Host; vorgeschlagen
+wird `CODING_KIT_DEFAULT_HOST` aus der Personal-Config — auf einem Rechner ohne GitHub
+einmal `git` eintragen. Mit `git` legt es das Projekt per `git init` lokal an, ohne
+Remote und ohne `gh`; Repo-Anlage, Repo-Settings, Topics und Push weist es als
+übersprungen aus. Das Projekt bekommt dann weder `.github/` noch `renovate.json`, und
+die Texte zu Commit-Adresse, Sicherheitsmeldung und Prüftor sprechen nicht von GitHub.
+Einen Remote — etwa ein Bare-Repo auf einem NAS — setzt du später selbst (`git remote
+add origin <url>`); den Umzug auf einen Host übernimmt `/coding-kit:update-conventions
+host`.
 
-```bash
-cd "$CODING_KIT_PROJECTS_DIR"
-mkdir <name> && cd <name>
-git init -b main
-git config user.name  "Vorname Nachname"     # lokal, nicht global
-git config user.email "adresse@example.org"
-```
-
-Die Instanziierung ab Schritt 4b (MANIFEST, Modul, Fragmente, `just check`) läuft lokal;
-die Repo-Settings aus 4c entfallen. Die projektübergreifende Discovery
-von `/update-conventions alle` findet lokale Projekte über `.claude/template-version` unter
-`$CODING_KIT_PROJECTS_DIR`, das Marker-Topic braucht sie dafür nicht.
+Die projektübergreifende Discovery von `/update-conventions alle` findet lokale Projekte
+über `.claude/template-version` unter `$CODING_KIT_PROJECTS_DIR`, das Marker-Topic braucht
+sie dafür nicht.
 
 **Commit-Identität:** Die [globalen Kit-Regeln](#globale-kit-regeln) verlangen die
 Adresse des Projekt-Hosts aus der Personal-Config — für Projekte ohne Host
@@ -165,17 +161,18 @@ Noreply-Adresse über `gh api user`). `/coding-kit:step-done` setzt sie **pro Re
 
 Die Skills erscheinen namespaced als `/coding-kit:<skill>`:
 
-Die Spalte **GitHub** sagt, was ohne GitHub bleibt: `–` = rein lokal über git und just,
-`teils` = der Skill läuft, einzelne Teilschritte entfallen (Details unter der Tabelle),
-`ja` = braucht GitHub, ohne ist er gegenstandslos.
+Die Spalte **GitHub** sagt, was ohne GitHub bleibt — bei Host `git` oder ohne angemeldetes
+`gh`: `–` = rein lokal über git und just, `teils` = der Skill läuft, einzelne Teilschritte
+weist er als übersprungen aus (Details unter der Tabelle), `ja` = braucht einen Host, ohne
+ist er gegenstandslos.
 
 | Skill | GitHub | Zweck |
 |-------|:------:|-------|
-| `/coding-kit:new-project` | teils | **Der Orchestrator:** Short-Info → Abfragen (Name/Lizenz/Stack/…, Sub-Skills aufrufbar) → Plan → leeres Repo anlegen und aus dem mitgelieferten Template befüllen (Renderer, Antworten-Datei und Basis-Snapshot im Erst-Commit), verifizieren, Erst-Commit nach OK. Trockenlauf: Argument `dry-run`. |
+| `/coding-kit:new-project` | teils | **Der Orchestrator:** Short-Info → Abfragen (Git-Host/Name/Lizenz/Stack/…, Sub-Skills aufrufbar) → Plan → leeres Repo anlegen (auf GitHub oder nur lokal mit Git) und aus dem mitgelieferten Template befüllen (Renderer, Antworten-Datei und Basis-Snapshot im Erst-Commit), verifizieren, Erst-Commit nach OK. Trockenlauf: Argument `dry-run`. |
 | `/coding-kit:add-feature` | – | Neue Aufgabe aufnehmen: erst das Problem, dann Beratung (stärkstes Gegenargument, Alternativen, eine von vier Empfehlungen — auch „nicht aufnehmen"), dann eine Datei `features/F-NNN-kurzname.md` mit Status `BACKLOG` und ein Vorschlag für die Reihenfolge; Umsetzungsideen nur als grobe Lösungsskizze. Startest du oder Claude selbst, angelegt wird nach deinem OK. |
 | `/coding-kit:prep-step` | – | Feature vor der Umsetzung spezifizieren und planen: Größe S/M/L aus Aufwand, Unsicherheit und Reichweite; Spezifikation in der Tiefe je Größe (Abnahmekriterien, Randfälle, Nicht-Ziele, Tests, Einbettung; ab M Interview, bei L Example Mapping), darf abraten; neue Frameworks, Sprachen und Toolchains per Erkennungs-Skript gegen Fragment-Katalog und Stack-Module prüfen; Substeps planen, Ready prüfen, Status `PLANNED`. |
 | `/coding-kit:build-step` | – | Aufgabe plan-treu aus ihrer Feature-Datei umsetzen: Substep für Substep mit Verifikation und Selbst-Review (verständlich, einfach, sicher, lesbar, kein Workaround — gegen die `CODING-STANDARDS.md`, ohne sie gegen drei Abschnitte der Vorlage), Nicht-Ziele als Grenze, Abweichungen gesammelt für step-done. Vorhandene Fehler im berührten Code behebt er mit (bei großen Korrekturen erst nach Rückfrage); lässt der Plan keine saubere Lösung zu, hält er an, statt einen Workaround zu bauen. Jeder Substep endet mit einer step-done-Empfehlung (du prüfst und schließt selbst ab). |
-| `/coding-kit:step-done` | teils | Abschluss-Checkliste: Review nach denselben fünf Prüffragen wie build-step (gegen die `CODING-STANDARDS.md`, ohne sie gegen drei Abschnitte der Vorlage), vorhandene Fehler im berührten Code gleich mitbehoben, `just check`, unabhängiges Review durch einen nur lesenden Reviewer-Agenten mit frischem Kontext (gegen Spezifikation und Maßstab; Befunde am Code nachgeprüft — auch an gleichartigen Stellen —, behoben oder mit Grund verworfen, die Liste steht in der Vorschau), Erkennungs-Backstop (in diesem Schritt neue Frameworks ohne Fragment, Sprachen ohne Modul, Tools ohne Vorlage), Backstop für geänderte managed Dateien ohne Registry-Zeile, Secrets-Scan, Privacy-Scan der lebenden Doku, Verbuchung in der Feature-Datei (Verlauf-Eintrag, Abnahmekriterien mit Beleg, Status `IN-PROGRESS` bzw. `DONE`, erzeugte Tabelle) und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben). |
+| `/coding-kit:step-done` | – | Abschluss-Checkliste: Review nach denselben fünf Prüffragen wie build-step (gegen die `CODING-STANDARDS.md`, ohne sie gegen drei Abschnitte der Vorlage), vorhandene Fehler im berührten Code gleich mitbehoben, `just check`, unabhängiges Review durch einen nur lesenden Reviewer-Agenten mit frischem Kontext (gegen Spezifikation und Maßstab; Befunde am Code nachgeprüft — auch an gleichartigen Stellen —, behoben oder mit Grund verworfen, die Liste steht in der Vorschau), Erkennungs-Backstop (in diesem Schritt neue Frameworks ohne Fragment, Sprachen ohne Modul, Tools ohne Vorlage), Backstop für geänderte managed Dateien ohne Registry-Zeile, Secrets-Scan, Privacy-Scan der lebenden Doku, Verbuchung in der Feature-Datei (Verlauf-Eintrag, Abnahmekriterien mit Beleg, Status `IN-PROGRESS` bzw. `DONE`, erzeugte Tabelle) und Commit nach einer gemeinsamen Freigabe (Vorschau vor dem Schreiben). |
 | `/coding-kit:audit-code` | – | Vollaudit (Code, Security, Deps, Deployment) → `AUDIT-RESULTS.md`, fixt nichts. |
 | `/coding-kit:teach-step` | – | Lehrer-Modus: Aufgabe aus ihrer Feature-Datei selbst umsetzen, der Skill leitet sokratisch an, prüft nach denselben fünf Fragen wie step-done, zeigt vorhandene Fehler als Hinweis und testet — schreibt nie Code. |
 | `/coding-kit:name-it` | teils | Namenskandidaten nach Kriterien + Verfügbarkeits-Checks (GitHub/npm/PyPI, Domain optional). |
@@ -185,7 +182,7 @@ Die Spalte **GitHub** sagt, was ohne GitHub bleibt: `–` = rein lokal über git
 | `/coding-kit:refine-requirements` | – | Zurück zur Spec: Diagnose mit drei Pfaden; arbeitet auf den Ziel-Abschnitten der CLAUDE.md, den Feature-Dateien und ADRs; teilt Features (`SUPERSEDED`), streicht sie (`DROPPED`), datiert Entscheidungen, plant die Reihenfolge um. |
 | `/coding-kit:update-conventions` | teils | Konventions-Sync Template → Projekte (nur abwärts), Update-Fenster aus dem CHANGELOG: managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot des Projekts (`scripts/template-sync.sh`) — Projektzusätze bleiben, Konflikte kommen mit Lösungsvorschlag; Diff + Bestätigung je Datei, je Standards-Fragment und je markierter seed-Zone (`section:NAME`; Zonen und Fragmente vergleicht und setzt das Skript ein, neue und gestrichene Zonen erkennt es an der Basis des letzten Syncs); Abweichungs-Registry mit den Arten `skip`, `keep`, `adapt` samt Revision; erkennt bei jedem Lauf, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt (dauerhafte Ablehnung als Rules-Zeile); ohne Argument nur das aktuelle Projekt, `alle` für alle, Modi `status` und `revise`; Migration für Projekte ohne Snapshot (Basis aus der Template-Historie) und für Altprojekte; erkennt im Template entfernte/umbenannte Dateien (Rückbau/Umzug je Datei bestätigt); projektlokale Fragmente und Tools ohne Vorlage meldet er mit dem Angebot eines Übernahme-Vorschlags fürs Template (`propose-to-template`); prüft die `mise.lock` per Skript auf Plattform-Einträge für die CI und bietet `mise lock` an. Überträgt die Auto-Memory des Projekts auf diesem Rechner nach Freigabe in Graph oder `docs/notes.md` und löscht sie danach. Mit `global` gleicht er die globalen Kit-Regeln auf dem Rechner ab (`~/.claude/rules/coding-kit.md`, Ersteinrichtung und Migration einer alten Kit-Kopie in `~/.claude/CLAUDE.md` inklusive) und bietet zwei Settings an (Auto-Memory aus, Transkripte 365 Tage), jeder andere Lauf prüft die Regeln einmal mit; eine selbst angelegte CLAUDE.md fasst er nie an. |
 | `/coding-kit:explain-level` | – | Antwortsprache und Erklär-Niveau festlegen: kurzes Interview (Programmieren, Shell, Git, Frameworks, Projekt-Werkzeuge, Code mitlesen) → Vorschlag für Stufe (`einsteiger`, `junior`, `fortgeschritten`, `senior`) und Notiz mit dem Stufentext der Kit-Regeln; schreibt die Werte nach Freigabe in die Personal-Config. Wirksam, sobald `/coding-kit:update-conventions global` die globalen Regeln neu erzeugt; jederzeit erneut aufrufbar. |
-| `/coding-kit:check-upstreams` | ja | Watchliste externer Vorbild-Repos prüfen (`upstreams.json`), Neuerungen seit letztem Ref, Übernahme-Vorschläge. |
+| `/coding-kit:check-upstreams` | teils | Watchliste externer Vorbild-Repos prüfen (`upstreams.json`), Neuerungen seit letztem Ref, Übernahme-Vorschläge. |
 | `/coding-kit:go-public` | ja | Projekt nachträglich public machen: blockierendes Preflight-Audit (Secrets in der vollen Historie, Privacy inkl. Commit-Metadaten, Lizenz, `private/`-Hygiene), Datei-Nachzug **vor** dem Umstellen (update-conventions mit Sichtbarkeits-Prämisse), dann Sichtbarkeitswechsel bzw. Repo-Anlage + Push nur nach laufbezogener Freigabe; Abschluss-Check (CodeQL, Settings). |
 | `/coding-kit:refine-prompt` | – | Übergebenen Prompt analysieren, Schwachstellen benennen, nach Best Practices neu formulieren und ausführen. |
 | `/coding-kit:handoff` | – | Am Kontextlimit: kopierfertigen Handoff-Prompt für einen frischen Chat schreiben — übergibt nur, was aus der Session noch nicht dokumentiert ist, verweist sonst auf die Quelldateien; baut und ändert nichts. |
@@ -193,20 +190,20 @@ Die Spalte **GitHub** sagt, was ohne GitHub bleibt: `–` = rein lokal über git
 
 Was bei `teils` konkret entfällt — der Rest des Skills läuft lokal weiter:
 
-- **`new-project`:** die Repo-Anlage über `gh repo create` (Schritt 4a) und die
-  Repo-Settings samt Topics (4c). Instanziierung, Verifikation und Erst-Commit sind lokal;
-  Ersatz für 4a steht unter [Ohne GitHub](#ohne-github-nur-git).
+- **`new-project`:** mit Host `git` die Repo-Anlage auf GitHub (Schritt 4a — stattdessen
+  `git init`), die Repo-Settings samt Topics (4c) und der Push. Instanziierung,
+  Verifikation und Erst-Commit sind lokal; siehe [Ohne GitHub](#ohne-github-nur-git).
 - **`update-conventions`:** die projektübergreifende Discovery (`alle`) über das
-  Marker-Topic (`gh search repos`). Lokale Projekte findet sie weiter über `.claude/template-version`
-  unter `$CODING_KIT_PROJECTS_DIR`.
+  Marker-Topic (`gh search repos`) und der Abgleich der Sichtbarkeit; lokale Projekte
+  findet sie weiter über `.claude/template-version` unter `$CODING_KIT_PROJECTS_DIR`.
 - **`name-it`:** der GitHub-Verfügbarkeitscheck; npm, PyPI und Domain bleiben.
-- **`step-done`:** nichts — die Commit-Adresse kommt aus der Personal-Config
-  (`CODING_KIT_EMAIL_GIT`); fehlt sie, fragt der Skill. Review, `just check`, Scans und
-  Verbuchung sind lokal.
+- **`check-upstreams`:** der Vergleich der Commits über `gh api`; den aktuellen Ref holt
+  er über `git ls-remote`, neue Releases per Websuche.
 
-Die beiden `ja`-Skills: **`go-public`** dreht GitHub-Sichtbarkeit und -Settings, ist ohne
-GitHub also gegenstandslos; **`check-upstreams`** liest fremde GitHub-Repos (im Kit über
-`gh api`) — ohne `gh` bleibt nur manuelles Nachsehen.
+`step-done` braucht GitHub nicht: Die Commit-Adresse kommt aus der Personal-Config
+(`CODING_KIT_EMAIL_GIT`), fehlt sie, fragt der Skill. Der `ja`-Skill **`go-public`** dreht
+die Sichtbarkeit eines Repos auf einem Host; bei `git` verweist er auf den Host-Wechsel und
+bietet den Preflight als reine Prüfung an.
 
 Der übliche Zyklus: `add-feature` → `prep-step` → `build-step` → `step-done` (je Substep).
 `step-done` rufst du bewusst selbst auf, wenn du den Substep geprüft hast — build-step
@@ -402,6 +399,7 @@ Laufzeit ermittelbar ist, plus Offline-Fallbacks:
 |-----------|-----------|
 | `CODING_KIT_GITHUB_LOGIN` | GitHub-Login (Fallback; primär via `gh api user`) |
 | `CODING_KIT_GIT_AUTHOR_NAME` | Git-Autorname |
+| `CODING_KIT_DEFAULT_HOST` | Git-Host, den `/new-project` vorschlägt: `github` oder `git`; leer = `github` |
 | `CODING_KIT_EMAIL_GITHUB` | Commit-Adresse für GitHub-Projekte (Noreply); der frühere Schlüssel `CODING_KIT_GIT_NOREPLY_EMAIL` gilt bis zur Umbenennung weiter |
 | `CODING_KIT_EMAIL_GIT` | Commit-Adresse für Projekte ohne Host |
 | `CODING_KIT_PROJECTS_DIR` | Wurzelverzeichnis der Projekte |

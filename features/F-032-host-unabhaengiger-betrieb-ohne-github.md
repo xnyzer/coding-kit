@@ -119,25 +119,35 @@ in F-032 auf; F-025 und die Hosts F-052 (Azure DevOps), F-053 (GitLab) und F-054
   `HOST`-Wert bricht mit der Liste der gültigen Werte ab — belegt: Skript-Tests in
   `tests/template-sync/host.sh` (Widerspruch; ungültiger, leerer und Listen-Wert
   abgelehnt).
-- [ ] AC-3 — Gegeben new-project mit Host `git`, wenn der Lauf durchgeht, dann entsteht
+- [x] AC-3 — Gegeben new-project mit Host `git`, wenn der Lauf durchgeht, dann entsteht
   das Projekt per `git init` lokal, ohne `gh`-Aufruf, ohne `.github/` und
   `renovate.json`, `just check` ist grün, der Erst-Commit hat die Adresse aus
   `CODING_KIT_EMAIL_GIT`, und der Bericht nennt die übersprungenen Schritte (Repo
-  anlegen, Settings, Topics).
-- [ ] AC-4 — Gegeben ein GitHub-Projekt, wenn new-project, go-public, name-it,
+  anlegen, Settings, Topics) — belegt: Headless-Lauf new-project mit Host `git` (Projekt
+  per `git init`, kein `gh`-Aufruf, kein `.github/` und `renovate.json`, `just check`
+  grün, Bericht nennt die übersprungenen Schritte); den Weg über `CODING_KIT_EMAIL_GIT`
+  belegen die Skript-Tests.
+- [x] AC-4 — Gegeben ein GitHub-Projekt, wenn new-project, go-public, name-it,
   check-upstreams, propose-to-template, update-conventions oder step-done laufen, dann
-  verhalten sie sich wie vor F-032 (Regression).
-- [ ] AC-5 — Gegeben eine Personal-Config mit Adressen für `github` und `git`, wenn
+  verhalten sie sich wie vor F-032 (Regression) — belegt: Headless-Trockenlauf
+  new-project auf GitHub (Plan wie zuvor); Render von GitHub-Projekten byte-gleich zum
+  Stand vor F-032 (F-032b); übrige Skills am Text geprüft.
+- [x] AC-5 — Gegeben eine Personal-Config mit Adressen für `github` und `git`, wenn
   step-done in einem Projekt committet, dann setzt es `user.email` lokal auf die Adresse
   seines Hosts; fehlt sie, fragt es, statt zu raten — nie die Adresse eines anderen
-  Hosts.
-- [ ] AC-6 — Gegeben ein Projekt `HOST=git`, wenn go-public, name-it, check-upstreams,
+  Hosts — belegt: Skript-Tests zu `commit-email`; Headless-Lauf new-project mit Host
+  `git` (Adresse nur lokal gesetzt, die GitHub-Adresse der Personal-Config nicht
+  genommen).
+- [x] AC-6 — Gegeben ein Projekt `HOST=git`, wenn go-public, name-it, check-upstreams,
   propose-to-template oder die Projektsuche von update-conventions laufen, dann ruft
   keiner `gh` auf; jeder weist den Schritt aus (propose-to-template gibt den Text
-  kopierfertig aus).
-- [ ] AC-7 — Gegeben `HOST=github`, `gh` installiert, aber nicht angemeldet, wenn ein
+  kopierfertig aus) — belegt: Headless-Lauf propose-to-template mit `HOST=git` ohne
+  `gh`-Aufruf; grep — jeder `gh`-Befehl in den Skills steht hinter einer Prüfung von
+  Host oder Anmeldung.
+- [x] AC-7 — Gegeben `HOST=github`, `gh` installiert, aber nicht angemeldet, wenn ein
   Skill einen Host-Schritt braucht, dann weist er ihn mit dem Hinweis `gh auth login`
-  aus und läuft weiter.
+  aus und läuft weiter — belegt: Headless-Lauf name-it mit nicht angemeldetem `gh`
+  (Schritt übersprungen, Hinweis `gh auth login`, Lauf geht weiter); grep wie bei AC-6.
 - [ ] AC-8 — Gegeben ein Bestandsprojekt ohne `HOST` mit GitHub-Remote, wenn
   update-conventions läuft, dann trägt es `HOST=github` ohne eigene Frage ein, nennt das
   im Bericht und ändert am Render sonst nichts.
@@ -467,3 +477,41 @@ oben). `go-public` kam dazu, weil es dieselbe feste GitHub-Regel nannte.
 nach ungültigem Altschlüssel; Erlaubnisliste statt Sperrliste bei der Adresse; drei
 README-Stellen). Offen: der Headless-Lauf von step-done für AC-5 kommt mit F-032d. Keine
 neuen Aufgaben.
+
+### F-032d — fertig 2026-11-04
+
+**Umgesetzt:**
+
+- MANIFEST § Hosts, Absatz „Host steps in a skill": Host bestimmen, Fähigkeit
+  nachschlagen, Anmeldung der CLI prüfen; sonst den Schritt ausweisen und weitermachen.
+  Die Skills verweisen darauf.
+- new-project fragt als Erstes nach dem Host (Vorauswahl `CODING_KIT_DEFAULT_HOST`,
+  gelesen mit dem neuen Befehl `template-sync.sh default-host`) und legt bei `git` das
+  Projekt per `git init` ohne Remote und ohne `gh` an; `HOST` kommt in die Antworten.
+- go-public verweist bei `git` auf den Host-Wechsel und bietet den Preflight als reine
+  Prüfung an; name-it prüft GitHub nur auf GitHub; propose-to-template gibt bei `git`
+  Titel und Body ohne `gh` aus; update-conventions sucht und gleicht die Sichtbarkeit
+  nur mit angemeldetem `gh` ab, `OWNER` kommt sonst aus der `origin`-URL;
+  check-upstreams klont das Kit-Repo aus `homepage` und holt den Ref ohne `gh`.
+- README: „Ohne GitHub (nur Git)" beschreibt den Weg über die Skills.
+- Vier Headless-Läufe mit `--plugin-dir` (new-project `git`, new-project-Trockenlauf
+  GitHub, propose-to-template bei `git`, name-it ohne angemeldetes `gh`).
+
+**Entscheidungen:**
+
+- Vorauswahl des Hosts aus der Personal-Config statt aus `gh auth status`
+  (Nutzerentscheidung nach dem Review): kein `gh`-Aufruf bei `git`, und ein Rechner ohne
+  GitHub stellt sie einmal um.
+- check-upstreams leitet das Kit-Repo aus `homepage` ab statt aus dem eigenen Konto —
+  der Rest aus F-026, den die Lösungsskizze nennt.
+
+**Abweichung vom Plan:** zusätzlich der Befehl `default-host` und der Schlüssel
+`CODING_KIT_DEFAULT_HOST` (für die Vorauswahl aus der Personal-Config, wie R1 sie
+vorsieht); zusätzlich ein vierter Headless-Lauf für AC-7.
+
+**Funde:** Unabhängiges Review mit 5 Befunden, alle nachgeprüft: 4 behoben (OWNER ohne
+`gh`; Host bei name-it; Vorauswahl über die Personal-Config; vorhandener Ordner), 1
+verworfen (Verweise auf `update-conventions host`, weil 3.3.0 erst nach F-032e
+veröffentlicht wird). Offen: Diese Verweise führen erst mit F-032e zum Ziel — vorher
+nicht pushen. go-public, check-upstreams und die Projektsuche von update-conventions
+sind nur am Text geprüft.

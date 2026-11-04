@@ -167,6 +167,22 @@ run_host_cases() {
   refute "commit-email: missing project refused" ts commit-email "$TMP/ce.env" "$TMP/nope"
   refute "commit-email: missing operand refused" ts commit-email "$TMP/ce.env"
 
+  # --- default-host: the host a new project starts on ---------------------------------
+  put dh-git.env 'CODING_KIT_DEFAULT_HOST=git\n'
+  check "default-host: the key counts" \
+    eval 'ts default-host "$TMP/dh-git.env" > "$TMP/dh1.out" && file_is dh1.out "default-host\tgit\tconfig\n"'
+  check "default-host: without the key github" \
+    eval 'ts default-host "$TMP/ce.env" > "$TMP/dh2.out" && file_is dh2.out "default-host\tgithub\tnone\n"'
+  check "default-host: without a personal config github" \
+    eval 'ts default-host "$TMP/dh-none.env" > "$TMP/dh3.out" && file_is dh3.out "default-host\tgithub\tnone\n"'
+  put dh-bad.env 'CODING_KIT_DEFAULT_HOST=gitlab\n'
+  check "default-host: an unknown host is reported" \
+    eval 'ts default-host "$TMP/dh-bad.env" > "$TMP/dh4.out" && file_is dh4.out "default-host\tgithub\tinvalid\tgitlab\n"'
+  put dh-empty.env 'CODING_KIT_DEFAULT_HOST=""\n'
+  check "default-host: an empty key counts as none" \
+    eval 'ts default-host "$TMP/dh-empty.env" > "$TMP/dh5.out" && file_is dh5.out "default-host\tgithub\tnone\n"'
+  refute "default-host: missing operand refused" ts default-host
+
   # --- refused ---------------------------------------------------------------------
   host_repo hx1 -
   put hx1/.claude/template-answers 'HOST=bitbucket\n'

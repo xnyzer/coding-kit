@@ -257,6 +257,11 @@ run_global_cases() {
   check "set-global: address replaced with its comment" grep -qxF \
     "CODING_KIT_EMAIL_GIT=\"new@example.org\"  # $(kit_c CODING_KIT_EMAIL_GIT)" "$TMP/gsaddr/coding-kit.env"
   check "set-global: address added" set_is gsaddr EMAIL_GITHUB added
+  check "set-global: default host runs" sglobal gsdh CODING_KIT_DEFAULT_HOST=git
+  check "set-global: default host written with its comment" grep -qxF \
+    "CODING_KIT_DEFAULT_HOST=\"git\"  # $(kit_c CODING_KIT_DEFAULT_HOST)" "$TMP/gsdh/coding-kit.env"
+  refute "set-global: an unknown default host is refused" sglobal gsdx CODING_KIT_DEFAULT_HOST=gitlab
+  check "set-global: the refusal lists the hosts" err_mentions gsdx 'github git'
   refute "set-global: a repeated key is refused" sglobal gsr CODING_KIT_REPLY_LANGUAGE=a \
     CODING_KIT_REPLY_LANGUAGE=b
   refute "set-global: a name without prefix is refused" sglobal gsx REPLY_LANGUAGE=x

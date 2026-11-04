@@ -1,6 +1,6 @@
 ---
 name: go-public
-description: Projekt nachträglich public machen — geführter Übergang mit blockierendem Preflight-Audit (Secrets über die volle Git-Historie, Privacy-Scan des committeten Baums, Lizenz, private/-Hygiene), Datei-Nachzug VOR dem Umstellen (via /update-conventions mit Sichtbarkeits-Prämisse) und Abschluss-Check. Drei Startfälle — privates GitHub-Repo, nur lokales Projekt, schon public. Nichts passiert ohne explizite Bestätigung; online geht das Repo erst, wenn es vollständig ist.
+description: Projekt nachträglich public machen — geführter Übergang mit blockierendem Preflight-Audit (Secrets über die volle Git-Historie, Privacy-Scan des committeten Baums, Lizenz, private/-Hygiene), Datei-Nachzug VOR dem Umstellen (via /update-conventions mit Sichtbarkeits-Prämisse) und Abschluss-Check. Drei Startfälle — privates GitHub-Repo, GitHub-Projekt noch ohne Repo, schon public; ohne Host (nur Git) erst der Host-Wechsel, der Preflight auf Wunsch als reine Prüfung. Nichts passiert ohne explizite Bestätigung; online geht das Repo erst, wenn es vollständig ist.
 disable-model-invocation: true
 user-invocable: true
 ---
@@ -37,12 +37,25 @@ laufen lassen).
 
 ## 1. Fallerkennung (zur Laufzeit)
 
-`gh repo view --json visibility` auswerten (Fehler = kein Repo/Remote):
+Zuerst den Host: `sh <skript> host <projekt>` (`<skript>` ist
+`${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh`, in Shell-Befehlen der aufgelöste Pfad).
+Sichtbarkeit ist eine Host-Fähigkeit (`${CLAUDE_PLUGIN_ROOT}/template/MANIFEST.md`
+§ Hosts):
+
+- **Host ohne Sichtbarkeit (`git`):** Es gibt nichts umzustellen, kein `gh`-Aufruf. Soll
+  das Projekt öffentlich auf einen Host, zieht es zuerst mit
+  `/coding-kit:update-conventions host` dorthin um (das Repo entsteht privat), danach
+  läuft dieser Skill als Fall A. Auf Wunsch läuft der Preflight (§ 2) schon jetzt als
+  reine Prüfung, ohne Übergang.
+- **`github`, aber `gh` nicht angemeldet:** den Übergang als übersprungen ausweisen
+  (Hinweis `gh auth login`); der Preflight läuft auf Wunsch als reine Prüfung.
+
+Sonst `gh repo view --json visibility` auswerten (Fehler = kein Repo/Remote):
 
 - **Fall A — Repo existiert und ist private:** voller Ablauf; der Übergang stellt
   später die Sichtbarkeit um.
-- **Fall B — kein GitHub-Repo (Projekt nur lokal):** voller Ablauf; der Übergang
-  legt später das Repo public an und pusht initial (nur mit laufbezogener
+- **Fall B — Host `github`, aber noch kein Repo (Projekt nur lokal):** voller Ablauf;
+  der Übergang legt später das Repo public an und pusht initial (nur mit laufbezogener
   Freigabe).
 - **Fall C — Repo ist schon public:** kein Übergang nötig — aber **Preflight
   trotzdem vollständig ausführen** (nachträgliche Funde sind hier am kritischsten:

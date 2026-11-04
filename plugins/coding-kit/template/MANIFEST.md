@@ -78,6 +78,13 @@ the value the remote `origin` suggests. It recognizes these servers by host name
 as `git` until it gets one; any other server — GitHub Enterprise Server or a self-hosted
 one — is `git` as well.
 
+**Host steps in a skill.** Before a step that needs the host, a skill (1) takes the host
+from `template-sync.sh host` — before the project exists, from the user's choice —, (2)
+looks the step up in the table above, and (3) for a host with a CLI checks that it is
+logged in (`gh auth status` on `github`). If a check fails, the skill reports the step as
+skipped with the reason — for a CLI that is not logged in, with its login command
+(`gh auth login`) — and goes on. A host step never fails a run.
+
 ## Markers
 
 | Marker | Meaning |

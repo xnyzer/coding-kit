@@ -23,7 +23,8 @@
 #   set-global KIT ENV OUT NAME=value…
 #       Writes the personal config ENV (a missing file counts as empty) with the given
 #       values into OUT/coding-kit.env (OUT missing or empty; mode 600). NAME is a
-#       CODING_KIT_ key the global rules read or the commit address of a host
+#       CODING_KIT_ key the global rules read, the default host of new projects
+#       (CODING_KIT_DEFAULT_HOST, one of HOSTS) or the commit address of a host
 #       (CODING_KIT_EMAIL_<HOST>, see commit-email); its line becomes NAME="value"
 #       followed by the comment of that key in KIT. The first assignment of a key (also behind
 #       export) is replaced in place and later ones are dropped, a key the file lacks is
@@ -179,6 +180,11 @@
 #       <name> <answers|remote|none>; email <config|legacy|missing|invalid> <key>
 #       <address|->, invalid for anything but a plain address (letters, digits and
 #       . _ % + - around one @, a domain with a dot) — so the value is safe to quote.
+#   default-host ENV
+#       The host a new project starts on, read from CODING_KIT_DEFAULT_HOST in the
+#       personal config ENV (read, never executed). Line: default-host <host>
+#       <config|none|invalid> [value]; without the key github (none), a value that is no
+#       name of HOSTS gives github with invalid and the value.
 #
 # Options name a stand-in for a file of PROJECT, so a skill can go on with files it
 # prepared in a temp folder while a write below .claude/ waits for approval:
@@ -245,6 +251,7 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh memory-dir CONFIG PROJECT
        sh template-sync.sh host [--answers FILE] PROJECT
        sh template-sync.sh commit-email [--answers FILE] ENV PROJECT
+       sh template-sync.sh default-host ENV
 EOF
   exit 2
 }
@@ -1729,8 +1736,9 @@ set_global() {
   check_out_dir "$SG_OUT"
   setup_work
   kit_levels "$SG_KIT"
-  # The values of the global rules, then the commit address per host.
-  sg_keys="$GLOBAL_KEYS$(email_keys)"
+  # The values of the global rules, the default host of new projects, then the commit
+  # address per host.
+  sg_keys="$GLOBAL_KEYS DEFAULT_HOST$(email_keys)"
   sg_nl='
 '
   : > "$WORK/given"
@@ -1753,6 +1761,12 @@ set_global() {
       *"$TAB"* | *"$sg_nl"* | *'{{'*) die "$sg_key: value contains a tab, a line break or {{" ;;
     esac
     if [ "$sg_name" = EXPLAIN_LEVEL ] && [ -n "$sg_val" ]; then check_level "$sg_val"; fi
+    if [ "$sg_name" = DEFAULT_HOST ] && [ -n "$sg_val" ]; then
+      case " $HOSTS " in
+        *" $sg_val "*) ;;
+        *) die "$sg_key: must be one of: $HOSTS — not '$sg_val'" ;;
+      esac
+    fi
     sg_comment=$(kit_comment "$SG_KIT" "$sg_key") || die "$SG_KIT: no key comment for $sg_key"
     # Inside double quotes the shell would expand $ and ` and read \ and " as escapes.
     sg_quoted=$(printf '%s' "$sg_val" | sed 's/[\\"$`]/\\&/g')
@@ -3349,6 +3363,25 @@ email_keys() {
   for ek_host in $HOSTS; do printf ' %s' "$(email_key "$ek_host")"; done
 }
 
+# --- default-host: the host a new project starts on --------------------------------
+
+default_host() {
+  [ $# -eq 1 ] || usage
+  setup_work
+  : > "$WORK/env.tsv"
+  if [ -f "$1" ]; then
+    load_env "$1" > "$WORK/env.tsv" || die "personal config is invalid: $1"
+  fi
+  if dh_host=$(env_value DEFAULT_HOST) && [ -n "$dh_host" ]; then
+    case " $HOSTS " in
+      *" $dh_host "*) printf 'default-host\t%s\tconfig\n' "$dh_host" ;;
+      *) printf 'default-host\tgithub\tinvalid\t%s\n' "$dh_host" ;;
+    esac
+  else
+    printf 'default-host\tgithub\tnone\n'
+  fi
+}
+
 # Before the keys per host the personal config had one address, always GitHub's.
 LEGACY_EMAIL_KEY=GIT_NOREPLY_EMAIL
 
@@ -3405,5 +3438,6 @@ case $cmd in
   memory-dir) memory_dir "$@" ;;
   host) host "$@" ;;
   commit-email) commit_email "$@" ;;
+  default-host) default_host "$@" ;;
   *) usage ;;
 esac

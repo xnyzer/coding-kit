@@ -1,6 +1,6 @@
 ---
 name: new-project
-description: Neues Projekt anlegen — der Orchestrator. Erhebt die Short-Info, klärt Name/Lizenz/Stack/Sichtbarkeit/Sprachen-Preset/group_id/Anforderungen (mit Defaults, Sub-Skills aufrufbar), zeigt einen Plan und baut nach Bestätigung ein Repo aus dem mitgelieferten Template — Platzhalter füllen, Modul einsetzen, template-version stempeln, Repo-Settings, Verifikation via just check. Trockenlauf mit Argument „dry-run". Nie ohne Bestätigung nach außen wirken.
+description: Neues Projekt anlegen — der Orchestrator. Erhebt die Short-Info, klärt Git-Host (GitHub oder nur Git)/Name/Lizenz/Stack/Sichtbarkeit/Sprachen-Preset/group_id/Anforderungen (mit Defaults, Sub-Skills aufrufbar), zeigt einen Plan und baut nach Bestätigung ein Repo aus dem mitgelieferten Template — Platzhalter füllen, Modul einsetzen, template-version stempeln, Repo-Settings, Verifikation via just check. Trockenlauf mit Argument „dry-run". Nie ohne Bestätigung nach außen wirken.
 argument-hint: "[Short-Info] [dry-run]"
 disable-model-invocation: true
 user-invocable: true
@@ -42,15 +42,23 @@ merken — sie wird gestempelt und füllt `TEMPLATE_VERSION`.
 
 ## Schritt 2 — Abfragen (eine Frage pro Antwort, je mit Default; Aufschieben erlaubt)
 
-1. **Name?** — direkt eingeben oder `/name-it` (nutzt die Short-Info). Ergebnis:
-   lowercase-kebab; `PROJECT_NAME_SNAKE` ableiten.
-2. **Sichtbarkeit?** _(Default: privat)_ — bestimmt die public-only-Dateien; auf die
+1. **Git-Host?** _(Default: was `sh ${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh
+   default-host <config>/coding-kit.env` nennt — `CODING_KIT_DEFAULT_HOST` der
+   Personal-Config, ohne Eintrag `github`; `<config>` ist `$CLAUDE_CONFIG_DIR`, sonst
+   `~/.claude`; meldet die Zeile `invalid`, den Wert nennen)_ — die Hosts aus
+   `MANIFEST.md` § Hosts. `github` legt das Repo dort an; `git` legt das Projekt nur
+   lokal per `git init` an, ohne Remote und ohne `gh`. Der Host steht danach als `HOST`
+   in den Antworten und entscheidet, welche Dateien und Textblöcke das Projekt bekommt;
+   wechseln lässt er sich später mit `/coding-kit:update-conventions host`.
+2. **Name?** — direkt eingeben oder `/name-it` (nutzt die Short-Info und den Host).
+   Ergebnis: lowercase-kebab; `PROJECT_NAME_SNAKE` ableiten.
+3. **Sichtbarkeit?** _(Default: privat)_ — bestimmt die public-only-Dateien; auf die
    Sprachwahl hat sie keinen Einfluss.
-3. **Lizenz?** _(Default: Apache-2.0)_ — direkt, `/choose-license`, oder „später" (TBD;
+4. **Lizenz?** _(Default: Apache-2.0)_ — direkt, `/choose-license`, oder „später" (TBD;
    bei public nicht erlaubt — public braucht eine LICENSE).
-4. **Stack/Modul?** — direkt oder `/choose-stack` (Modus Neuanlage); „offen" →
+5. **Stack/Modul?** — direkt oder `/choose-stack` (Modus Neuanlage); „offen" →
    `docs-only`. Ergebnis inkl. CodeQL-Sprache aus dem `MODULE.md`.
-5. **Sprachen?** Eine Frage mit Presets — den Vorschlag aus der Short-Info ableiten
+6. **Sprachen?** Eine Frage mit Presets — den Vorschlag aus der Short-Info ableiten
    (Thema/Publikum des Projekts), **nicht** aus der Sichtbarkeit:
    - **A — Arbeitssprache + Englisch nach außen** _(Default)_: lebende Doku +
      CLAUDE.md-Prosa in der Arbeitssprache des Nutzers; Kommentare, Commit-Prosa,
@@ -63,14 +71,14 @@ merken — sie wird gestempelt und füllt `TEMPLATE_VERSION`.
    Ergebnis sind die Werte der fünf `LANG_*`-Platzhalter. Immer englisch (nicht
    konfigurierbar): Identifier, Conventional-Commit-Tokens, Status-Tokens,
    Governance-Doku.
-6. **Graphiti-group_id?** _(Default: Projektname, wenn die Session Graphiti-Werkzeuge
+7. **Graphiti-group_id?** _(Default: Projektname, wenn die Session Graphiti-Werkzeuge
    hat (`add_memory`, `search_memory_facts`); sonst „kein Graphiti")_ — „kein Graphiti"
    entfernt den optionalen Graphiti-Block; Wissen ohne Ort im Repo geht dann nach
    `docs/notes.md`, die das Template anlegt. Nachrüsten lässt sich der Block später per
    `/coding-kit:update-conventions` (`graphiti` in `OPTIONAL` und eine `GROUP_ID` in den
    Antworten, Schritt 2). Eine group_id trotz fehlender Werkzeuge ist erlaubt: Ein
    anderer Rechner kann Graphiti haben.
-7. **Anforderungen jetzt oder später?** _(Default: jetzt via `/define-requirements`)_ —
+8. **Anforderungen jetzt oder später?** _(Default: jetzt via `/define-requirements`)_ —
    „später" lässt die Ziel-Abschnitte der CLAUDE.md mit ihren Platzhaltern und
    `features/INDEX.md` leer, wie gerendert.
 
@@ -78,15 +86,23 @@ Bereits Bekanntes (aus Argument/Verlauf) nicht erneut abfragen.
 
 ## Schritt 3 — Plan anzeigen
 
-Kompakt: alle geklärten Werte + die Ausführungsschritte aus Schritt 4 (inkl. exakter
-`gh repo create`-Zeile). **Explizit bestätigen lassen** („Ausführen? j/N"). Im
-**Trockenlauf** hier enden: zusätzlich die Ziel-Dateiliste zeigen — die Zeilen von
-`render --seeds` (§ 4b) mit Antworten in einem Temp-Verzeichnis —, sonst nichts
+Kompakt: alle geklärten Werte + die Ausführungsschritte aus Schritt 4 (inkl. der exakten
+Zeile zum Anlegen — `gh repo create` bzw. `git init`) und die Host-Schritte, die der
+gewählte Host nicht kann, als übersprungen. **Explizit bestätigen lassen** („Ausführen?
+j/N"). Im **Trockenlauf** hier enden: zusätzlich die Ziel-Dateiliste zeigen — die Zeilen
+von `render --seeds` (§ 4b) mit Antworten in einem Temp-Verzeichnis —, sonst nichts
 ausführen.
 
 ## Schritt 4 — Ausführen
 
 ### 4a. Repo anlegen (bestätigt)
+
+Host-Schritte nach `MANIFEST.md` § Hosts (Absatz „Host steps in a skill"): Kann der Host
+einen Schritt nicht oder ist seine CLI nicht angemeldet, den Schritt als übersprungen
+ausweisen und weitermachen.
+
+**Host `github`** — ist `gh` nicht angemeldet, nicht anlegen: auf `gh auth login`
+hinweisen und fragen, ob es danach weitergeht oder das Projekt als `git` entsteht.
 
 ```bash
 cd "$CODING_KIT_PROJECTS_DIR"
@@ -96,13 +112,26 @@ gh repo create "$(gh api user --jq .login)/<name>" --private|--public --clone
 Das Repo entsteht **leer**; die Dateien schreibt erst 4b. **Kein separates `git init`** —
 der Klon des leeren Repos übernimmt den Default-Branch des Remotes; `git branch
 --show-current` muss `main` zeigen (die CI-Vorlage triggert auf `main`), sonst vor dem
-ersten Commit `git symbolic-ref HEAD refs/heads/main`. Danach lokale Autor-Config (nie
-hardcoden): `git config --local user.name "$(gh api user --jq '.name // .login')"`; die
-Commit-Adresse ermitteln und setzen wie `/coding-kit:step-done` § 5a — über
-`template-sync.sh commit-email`, die Adresse des Projekt-Hosts aus der Personal-Config,
-sonst die zur Laufzeit aufgelöste GitHub-Noreply-Adresse, immer `--local`.
+ersten Commit `git symbolic-ref HEAD refs/heads/main`.
 
-Schlägt `create` fehl (Name belegt): zurück zu Schritt 2.1.
+**Host `git`** — lokal anlegen, ohne Remote und ohne `gh`:
+
+```bash
+mkdir "$CODING_KIT_PROJECTS_DIR/<name>" && git -C "$CODING_KIT_PROJECTS_DIR/<name>" init -b main
+```
+
+Einen Remote — etwa ein Bare-Repo auf einem NAS — setzt der Nutzer später selbst
+(`git remote add origin <url>`); ein Umzug auf einen Host geht mit
+`/coding-kit:update-conventions host`.
+
+Danach die lokale Autor-Config (nie hardcoden): der Name auf GitHub über
+`git config --local user.name "$(gh api user --jq '.name // .login')"`, bei `git` aus
+`git config --global user.name`, sonst fragen; die Commit-Adresse ermitteln und setzen wie
+`/coding-kit:step-done` § 5a — über `template-sync.sh commit-email` die Adresse des
+Projekt-Hosts, immer `--local`.
+
+Schlägt `create` fehl (Name belegt) oder gibt es den Ordner schon (`mkdir` scheitert):
+zurück zu Schritt 2.2 — nichts Vorhandenes überschreiben.
 
 ### 4b. Instanziieren (der Renderer schreibt — MANIFEST ist die Quelle)
 
@@ -112,10 +141,11 @@ Template-Dateien selbst abschreiben. Render-Ergebnisse gehören in ein frisches
 Temp-Verzeichnis (`mktemp -d`, im Folgenden `<tmp>`).
 
 1. **Antworten schreiben:** `.claude/template-answers` nach MANIFEST § Answers mit den
-   Werten aus Schritt 2 — `PROJECT_NAME`, `PROJECT_DESCRIPTION`, `OWNER`, `YEAR`,
-   `GROUP_ID` (nur mit Graphiti), die fünf `LANG_*`, `LICENSE_SPDX`, `MODULE`,
-   `VISIBILITY`, `OPTIONAL` (`graphiti`, wenn gewählt) und `FRAGMENTS` (schon bekannte
-   Eigenschafts-Fragmente; die Lizenzblöcke leitet der Renderer selbst ab).
+   Werten aus Schritt 2 — `PROJECT_NAME`, `PROJECT_DESCRIPTION`, `OWNER` (nur auf
+   `github`), `YEAR`, `GROUP_ID` (nur mit Graphiti), die fünf `LANG_*`, `LICENSE_SPDX`,
+   `MODULE`, `VISIBILITY`, `HOST`, `OPTIONAL` (`graphiti`, wenn gewählt) und
+   `FRAGMENTS` (schon bekannte Eigenschafts-Fragmente; die Lizenz- und Host-Blöcke
+   leitet der Renderer selbst ab).
 2. **Rendern:** `sh <skript> render --seeds <template> <projekt>/.claude/template-answers
    <tmp>/neu` und den Inhalt von `<tmp>/neu` ins Projekt kopieren. Der Renderer setzt
    Platzhalter, `template:optional`-Blöcke, public-only-Dateien, Modul-Teile,
@@ -126,7 +156,7 @@ Temp-Verzeichnis (`mktemp -d`, im Folgenden `<tmp>`).
    - **`<!-- template:adapt: … -->`**-Stellen aus der Short-Info konkretisieren (Zweck/
      Scope in CLAUDE.md, README-Intro, Status-Zeile) und den Marker entfernen. Die
      Ziel-Abschnitte im Überblick der CLAUDE.md (Goals, Non-goals, Constraints) füllt
-     `/define-requirements` in 4e; bei „später" (Schritt 2.7) bleiben ihre Marker
+     `/define-requirements` in 4e; bei „später" (Schritt 2.8) bleiben ihre Marker
      stehen. Für jede
      **managed** Datei mit konkretisierter Stelle (z. B. `SECURITY.md`) eine Zeile mit
      Art `adapt` in die Files-Tabelle der `.claude/convention-overrides.md`.
@@ -157,12 +187,13 @@ Mechanik von `/choose-stack` in den Slot und nach `FRAGMENTS`.
 
 ### 4c. Repo-Settings (bestätigt)
 
-Via `gh repo edit` / `gh api`: Beschreibung = Short-Info; **Topics** lowercase-kebab:
-Stack-Topic (z. B. `python`) + 2–4 Domain-Topics aus der Short-Info + Marker-Topic
-`coding-kit` (Discovery für `/update-conventions`); Issues an, Wiki/Projects aus,
-Squash-Merge + delete-branch-on-merge; Push-Protection/Secret-Scanning via `gh api`
-mit Feature-Detection (bei privaten Repos planabhängig — Fehler nicht fatal, gitleaks
-bleibt lokaler Backstop).
+Nur auf einem Host mit Repo-Settings und Topics (`MANIFEST.md` § Hosts); bei `git` als
+übersprungen ausweisen. Auf `github` via `gh repo edit` / `gh api`: Beschreibung =
+Short-Info; **Topics** lowercase-kebab: Stack-Topic (z. B. `python`) + 2–4 Domain-Topics
+aus der Short-Info + Marker-Topic `coding-kit` (Discovery für `/update-conventions`);
+Issues an, Wiki/Projects aus, Squash-Merge + delete-branch-on-merge;
+Push-Protection/Secret-Scanning via `gh api` mit Feature-Detection (bei privaten Repos
+planabhängig — Fehler nicht fatal, gitleaks bleibt lokaler Backstop).
 
 ### 4d. Verifikation (Write-then-Verify)
 
@@ -177,7 +208,7 @@ prüfen. Die Lock-Datei wird mitcommittet.
 
 ### 4e. Anforderungen
 
-Je Schritt 2.7: jetzt `/define-requirements` mit der Short-Info aufrufen (füllt Ziele,
+Je Schritt 2.8: jetzt `/define-requirements` mit der Short-Info aufrufen (füllt Ziele,
 Nicht-Ziele und Rahmenbedingungen im Überblick der CLAUDE.md, legt je Kern-Feature eine
 Datei in `features/` an, schlägt die Reihenfolge vor und erzeugt die Tabelle) — oder die
 Platzhalter belassen.
@@ -191,11 +222,12 @@ Platzhalter belassen.
   `.claude/template-base/` — sonst stimmt die Basis späterer Updates nie. Vorschlag:
   `feat: bootstrap from coding-kit <TEMPLATE_VERSION> (<modul> module)`,
   Body mit den Kernentscheidungen (Lizenz, Sichtbarkeit, Modul), Abschluss
-  `Co-Authored-By: Claude <noreply@anthropic.com>`. Danach Push (bestätigt).
+  `Co-Authored-By: Claude <noreply@anthropic.com>`. Danach Push (bestätigt); ohne
+  Remote (Host `git`) entfällt er.
 
 ### 4g. Graphiti-Gründungsepisode (nur mit Graphiti-Block)
 
-`add_memory` mit `group_id` aus Schritt 2.6, nach der Graphiti-Regel der globalen
+`add_memory` mit `group_id` aus Schritt 2.7, nach der Graphiti-Regel der globalen
 Kit-Regeln (Abschnitt Graphiti Memory): eine kurze Episode aus der Short-Info — Zweck,
 Zielnutzer, gewähltes Modul. Ohne Graphiti-Block nichts schreiben. Ist der Graph nicht
 erreichbar (kein MCP, oder `add_memory` scheitert), im Abschlussbericht in einem Satz
@@ -203,6 +235,8 @@ melden, mit dem Text der Episode zum Nachtragen.
 
 ## Abschlussbericht
 
-Kurz zusammenfassen: Repo-URL, Modul, Lizenz, Template-Version, Verifikationsstatus,
-was aufgeschoben wurde (TBD-Lizenz? Anforderungen später?) — und der Hinweis, dass es
+Kurz zusammenfassen: Repo-URL (bei `git` der Ordner), Host, Modul, Lizenz,
+Template-Version, Verifikationsstatus, die übersprungenen Host-Schritte (bei `git`: Repo
+anlegen, Settings, Topics, Push), was aufgeschoben wurde (TBD-Lizenz? Anforderungen
+später?) — und der Hinweis, dass es
 jetzt mit `/add-feature` → `/prep-step` → `/step-done` weitergeht.

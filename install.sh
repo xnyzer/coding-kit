@@ -94,6 +94,7 @@ else
 # this file is the offline fallback and holds non-resolvable personal choices.
 CODING_KIT_GITHUB_LOGIN="$GH_LOGIN"
 CODING_KIT_GIT_AUTHOR_NAME="$GH_NAME"
+CODING_KIT_DEFAULT_HOST="github"
 CODING_KIT_EMAIL_GITHUB="$NOREPLY"
 CODING_KIT_PROJECTS_DIR="$PROJECTS_DIR"
 EOF

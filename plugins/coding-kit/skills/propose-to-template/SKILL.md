@@ -10,7 +10,7 @@ user-invocable: false
 Konventionen fließen nur abwärts (Template → Projekt). Was ein Projekt besser macht oder
 was dem Template fehlt, kommt deshalb als **Vorschlag** zum Kit — der Nutzer schickt ihn
 ab oder führt ihn aus. Dieser Skill erzeugt nur Text: Er schreibt nie ins Template, nie
-ins Projekt, ruft kein `gh` auf und pusht nichts.
+ins Projekt, ruft `gh` höchstens zum Prüfen der Anmeldung auf und pusht nichts.
 
 ## 0. Fund und Kontext
 
@@ -142,8 +142,10 @@ Fehlt einer der Teile, „none" schreiben statt ihn wegzulassen.
   just check grün; bei einer globalen Regel: Versions-Bump und CHANGELOG ohne
   „### Template", just check grün)
   ```
-- Ein Block mit dem vollständigen Befehl — Titel und Body eingesetzt, der Body über
-  stdin:
+- Liegt das Projekt auf `github` (`sh ${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh host
+  <projekt>`, in der Shell der aufgelöste Pfad) und ist `gh` dort angemeldet
+  (`gh auth status`): ein Block mit dem vollständigen Befehl, Titel und Body eingesetzt,
+  der Body über stdin:
 
   ~~~~
   gh issue create -R <owner>/<repo> --title "<title>" --body-file - <<'EOF'
@@ -151,8 +153,9 @@ Fehlt einer der Teile, „none" schreiben statt ihn wegzulassen.
   EOF
   ~~~~
 
-  Ohne `gh`: `https://github.com/<owner>/<repo>/issues/new` öffnen und Titel und Body aus
-  dem Befehl einfügen.
+  Sonst — Host `git` (dann ohne jeden `gh`-Aufruf), kein `gh` oder nicht angemeldet:
+  Titel und Body je als eigener kopierfertiger Block, dazu die Seite
+  `https://github.com/<owner>/<repo>/issues/new` zum Einfügen; der Befehl entfällt.
 
 **Prompt** (in der Sprache des Gesprächs, das Material darin englisch) — ohne Vorwissen
 ausführbar, ein einziger Block. Er ist ein **Entwurfsauftrag**, keine Bauanleitung mit

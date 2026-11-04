@@ -1,6 +1,6 @@
 ---
 name: name-it
-description: Projektnamen finden. Erzeugt aus der Short-Info Kandidaten nach klaren Kriterien, prüft Verfügbarkeit (GitHub, npm, PyPI, optional Domain) zur Laufzeit und gibt den gewählten Namen an den Aufrufer zurück. Einzeln nutzbar und von /new-project aufrufbar.
+description: Projektnamen finden. Erzeugt aus der Short-Info Kandidaten nach klaren Kriterien, prüft Verfügbarkeit (GitHub bei Host github, npm, PyPI, optional Domain) zur Laufzeit und gibt den gewählten Namen an den Aufrufer zurück. Einzeln nutzbar und von /new-project aufrufbar.
 argument-hint: "[Short-Info]"
 disable-model-invocation: false
 user-invocable: true
@@ -29,10 +29,16 @@ Wortverschmelzungen). Zu jedem ein halber Satz Begründung.
 
 ## 3. Verfügbarkeit prüfen (zur Laufzeit — nie raten)
 
-Prüfumfang hängt vom (voraussichtlichen) Stack ab; GitHub immer:
+Prüfumfang hängt vom (voraussichtlichen) Stack ab. GitHub nur, wenn der Host des Projekts
+`github` ist und `gh` angemeldet ist (`${CLAUDE_PLUGIN_ROOT}/template/MANIFEST.md`
+§ Hosts). Den Host nennt der Aufrufer (`/new-project` Frage 1); liegt im aktuellen Ordner
+schon ein Projekt, gilt `sh ${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh host <projekt>`
+(in der Shell der aufgelöste Pfad) — dann bei `git` ohne jeden `gh`-Aufruf; nur ohne
+beides dieselbe Vorauswahl wie `/new-project` (`CODING_KIT_DEFAULT_HOST`). Sonst die Spalte GitHub als übersprungen
+ausweisen, bei nicht angemeldetem `gh` mit dem Hinweis `gh auth login`.
 
 ```bash
-OWNER=$(gh api user --jq .login)
+OWNER=$(gh api user --jq .login)                                           # nur Host github
 gh repo view "$OWNER/<name>" >/dev/null 2>&1 && echo belegt || echo frei   # GitHub (eigener Account)
 curl -s -o /dev/null -w '%{http_code}' https://registry.npmjs.org/<name>   # npm: 404 = frei
 curl -s -o /dev/null -w '%{http_code}' https://pypi.org/pypi/<name>/json   # PyPI: 404 = frei
@@ -44,9 +50,10 @@ curl -s -o /dev/null -w '%{http_code}' https://pypi.org/pypi/<name>/json   # PyP
 
 ## 4. Vorstellen & entscheiden
 
-Kompakte Tabelle: Kandidat · Begründung · GitHub · npm/PyPI · Namensvettern. Mit klarer
-**Empfehlung** (ein Kandidat, ein Satz warum). Dann **eine** Frage: „Welcher soll es
-sein?" — Default = Empfehlung. Freie Eingabe ist erlaubt (dann Verfügbarkeit nachprüfen).
+Kompakte Tabelle: Kandidat · Begründung · GitHub (oder „übersprungen") · npm/PyPI ·
+Namensvettern. Mit klarer **Empfehlung** (ein Kandidat, ein Satz warum). Dann **eine**
+Frage: „Welcher soll es sein?" — Default = Empfehlung. Freie Eingabe ist erlaubt (dann
+Verfügbarkeit nachprüfen).
 
 ## Rückgabe an den Aufrufer
 

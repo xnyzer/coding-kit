@@ -79,11 +79,12 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
 
 - **Standard:** das Projekt im aktuellen Ordner (siehe Argumente).
 - **`alle`:** GitHub-Discovery über das Marker-Topic
-  (`gh search repos "user:$(gh api user --jq .login) topic:coding-kit" --json name`) plus
-  lokale Ordner unter `$CODING_KIT_PROJECTS_DIR` mit `.claude/template-version`,
-  `features/INDEX.md` oder (altes Format) `PROGRESS.md` mit FEATURE-INDEX. Liste zeigen,
-  Auswahl bestätigen lassen; nur lokale Checkouts bearbeiten (fehlt einer: klonen
-  anbieten).
+  (`gh search repos "user:$(gh api user --jq .login) topic:coding-kit" --json name`) —
+  nur mit angemeldetem `gh` (`gh auth status`), sonst als übersprungen ausweisen (Hinweis
+  `gh auth login`) — plus lokale Ordner unter `$CODING_KIT_PROJECTS_DIR` mit
+  `.claude/template-version`, `features/INDEX.md` oder (altes Format) `PROGRESS.md` mit
+  FEATURE-INDEX. Liste zeigen, Auswahl bestätigen lassen; nur lokale Checkouts bearbeiten
+  (fehlt einer: klonen anbieten).
 - Je Projekt: Liegen `.claude/template-answers` **und** `.claude/template-base/` vor →
   A2. Sonst zuerst A3 (Migration), dann A2. Hat das Projekt noch das **alte
   Dokumentmodell** (`PROGRESS.md` mit FEATURE-INDEX, keine `features/INDEX.md`), gehört
@@ -103,9 +104,12 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    **Kein Abbruch bei aktuellem Stempel:** Antworten können sich geändert haben (z. B.
    eine Lizenz gewählt), deshalb laufen Rendern und Merge immer.
 2. **Antworten prüfen:** `.claude/template-answers` lesen und mit dem Projekt
-   abgleichen — Sichtbarkeit (`gh repo view --json visibility`; ohne Remote `private`;
-   eine Prämisse des Aufrufers gilt vor beidem), Languages-Block der Projekt-CLAUDE.md
-   (`LANG_*`), Lizenz (`LICENSE`), Modul (justfile-Kopf, `mise.toml`), Graphiti-Block der
+   abgleichen — Sichtbarkeit (nur auf einem Host mit Sichtbarkeit und angemeldeter CLI,
+   `${CLAUDE_PLUGIN_ROOT}/template/MANIFEST.md` § Hosts: auf `github`
+   `gh repo view --json visibility`; ohne Remote `private`; bei `git` oder ohne Anmeldung
+   gilt der Wert der Antworten, der Abgleich ist ausgewiesen übersprungen; eine Prämisse
+   des Aufrufers gilt vor allem), Languages-Block der Projekt-CLAUDE.md (`LANG_*`),
+   Lizenz (`LICENSE`), Modul (justfile-Kopf, `mise.toml`), Graphiti-Block der
    CLAUDE.md (`OPTIONAL` enthält `graphiti`), Fragmente im Slot (`FRAGMENTS` = die
    Fragmente im Slot ohne das Modul-Fragment und ohne die im `MODULE.md` deklarierten).
    Unterschiede zeigen und je Wert fragen, welcher gilt; die Antworten-Datei nur nach
@@ -304,14 +308,16 @@ Jede Migration ist ein eigener bestätigter Schritt; danach die Erkennung aus A2
 dann A2 ab Schritt 3.
 
 1. **Antworten-Datei anlegen:** die Werte aus dem Projekt zurückgewinnen — Name (Repo
-   bzw. Ordner), `OWNER` (`gh api user`), Beschreibung (Repo-Beschreibung, sonst README),
-   `GROUP_ID` und die fünf `LANG_*` (Languages-Block der Projekt-CLAUDE.md; Alt-Projekte
-   mit einzeiliger Doku-Sprach-Angabe: deren Wert für die lebende Doku, übrige Dimensionen
-   englisch), `LICENSE_SPDX` (`LICENSE`, ohne Datei `TBD`), `MODULE` (justfile-Kopf,
-   `mise.toml`, Modul-Dateien; im Zweifel fragen), `VISIBILITY` wie A2 Schritt 2,
-   `OPTIONAL` (Graphiti-Block vorhanden → `graphiti`) und `FRAGMENTS` wie A2 Schritt 2.
-   Zeigen, bestätigen lassen, als `.claude/template-answers` schreiben (MANIFEST
-   § Answers).
+   bzw. Ordner), `OWNER` (für ein Projekt auf GitHub aus der `origin`-URL
+   `github.com/<owner>/…`, sonst `gh api user`, sonst erfragen; nur bei `git` weglassen
+   — kein Ziel außerhalb von GitHub braucht ihn), Beschreibung (Repo-Beschreibung, sonst
+   README), `GROUP_ID` und die fünf `LANG_*` (Languages-Block der Projekt-CLAUDE.md;
+   Alt-Projekte mit einzeiliger Doku-Sprach-Angabe: deren Wert für die lebende Doku,
+   übrige Dimensionen englisch), `LICENSE_SPDX` (`LICENSE`, ohne Datei `TBD`), `MODULE`
+   (justfile-Kopf, `mise.toml`, Modul-Dateien; im Zweifel fragen), `VISIBILITY` wie A2
+   Schritt 2, `OPTIONAL` (Graphiti-Block vorhanden → `graphiti`) und `FRAGMENTS` wie A2
+   Schritt 2. Zeigen, bestätigen lassen, als `.claude/template-answers` schreiben
+   (MANIFEST § Answers).
 2. **Basis wählen** — sie entscheidet, was der erste Merge als Projektabweichung sieht:
    - **(a) Template-Historie** (Standard): die Template-Fassung einer Version aus der
      Historie eines coding-kit-Checkouts. **Version:** standardmäßig der Stempel; auf
@@ -352,8 +358,9 @@ dann A2 ab Schritt 3.
    - Lokale Kopien von add-feature/prep-step/step-done/audit-code unter
      `.claude/skills/` löschen — **nur wenn** das coding-kit-Plugin installiert ist
      (`claude plugin list`); projektspezifische Skills immer behalten.
-   - Renovate: `renovate.json` mit `"extends": ["github>OWNER/coding-kit"]` (OWNER zur
-     Laufzeit); die Freigabe der Renovate-App ist eine manuelle Nutzeraktion.
+   - Renovate (nur auf GitHub; bei `git` gibt es kein `renovate.json`):
+     `renovate.json` mit `"extends": ["github>OWNER/coding-kit"]` (OWNER zur Laufzeit);
+     die Freigabe der Renovate-App ist eine manuelle Nutzeraktion.
    - Tooling (`mise.toml`, justfile, `lefthook.yml`) kommt über den Merge; danach
      `mise install && mise lock && just setup && just check` und
      `sh <skript> lock-check <projekt>` (Auswertung wie `/choose-stack` § Lock-Datei).

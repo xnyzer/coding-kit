@@ -718,12 +718,14 @@ def check_hosts(text: str, findings: list[str]) -> None:
             f"{display_path(TEMPLATE_SYNC)}: HOSTS {sorted(script_hosts)} differ from "
             f"MANIFEST § Hosts {sorted(hosts)}"
         )
-    # set-global writes a commit address per host with the comment of its key line in
-    # the kit's global rules; a host without that line could not be written.
+    # set-global writes the default host and a commit address per host with the comment
+    # of its key line in the kit's global rules; a key without that line could not be
+    # written.
     if GLOBAL_RULES.is_file():
         rules = GLOBAL_RULES.read_text(encoding="utf-8")
-        for host in sorted(hosts):
-            key = f"CODING_KIT_EMAIL_{host.upper()}="
+        for key in ["CODING_KIT_DEFAULT_HOST="] + [
+            f"CODING_KIT_EMAIL_{host.upper()}=" for host in sorted(hosts)
+        ]:
             if not re.search(rf"^{re.escape(key)}.*#", rules, re.MULTILINE):
                 findings.append(
                     f"{display_path(GLOBAL_RULES)}: no key line with a comment for {key[:-1]}"
