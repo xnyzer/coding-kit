@@ -2,7 +2,7 @@
 id: F-052
 title: Azure DevOps Services als Git-Host
 type: feature
-status: PLANNED
+status: IN-PROGRESS
 size: L
 created: 2026-11-03
 done:
@@ -185,10 +185,14 @@ je Host).
 
 ### Offene Fragen
 
-- [ ] [CLARIFY] Lädt Renovate auf Azure das Preset `github>…` ohne GitHub-Token? —
-  nicht blockierend, klärt der Spike; sonst nennt der Bericht den nötigen Token.
-- [ ] [CLARIFY] Wie wird mise in der Azure-Pipeline mit fester Version und Prüfsumme
-  installiert? — nicht blockierend, klärt der Spike.
+- [x] [CLARIFY] Lädt Renovate auf Azure das Preset `github>…` ohne GitHub-Token? —
+  Ja (F-052a, lokal mit `--platform=local` geprüft; der Abruf eines `github>`-Presets
+  hängt nicht an der Plattform): anonym über die GitHub-API, samt der Presets, die es
+  erweitert. Bei einem zentralen Lauf über viele Repos hinter einer Adresse nennt der
+  Bericht einen GitHub-Token wegen des Abruflimits.
+- [x] [CLARIFY] Wie wird mise in der Azure-Pipeline mit fester Version und Prüfsumme
+  installiert? — Über das `install.sh` des festgelegten mise-Releases (F-052a): Es trägt
+  die Prüfsummen genau dieser Version und bricht ohne passende ab.
 
 ### Entscheidungen
 
@@ -298,3 +302,66 @@ für alle Substeps gemeinsam, mit `### Template`; gepusht wird erst nach F-052c,
   laufen lassen.
 - Danach Agent vom Mac entfernen, Repo und Test-Organisation löschen.
 - Erfüllt AC-6, EC-5 (am Text des Klickwegs), EC-6.
+
+## Verlauf
+
+### F-052a — fertig 2026-11-09
+
+**Umgesetzt:**
+
+- Spike in einer eigenen Test-Organisation auf Azure DevOps Services: Azure-Probeabo mit
+  Ausgabenlimit, privates Projekt, SSH-Schlüssel im Profil, selbst gehosteter Agent auf
+  einem Mac. Kein Kit-Code.
+- Verbinden per SSH: Ein neues Azure-Projekt bringt ein leeres Repo mit dem Projektnamen
+  mit. `git ls-remote` liefert für ein leeres Repo Exit 0 ohne Zeile auf stdout, für ein
+  Repo mit Inhalt Exit 0 und eine Zeile je Ref; für ein fehlendes Repo oder fehlende
+  Rechte einen Fehler mit `TF401019` auf stderr — Azure unterscheidet beides nicht.
+  Zeitüberschreitungen enden ebenfalls mit einem Fehler („Operation timed out“ auf
+  stderr); ein zweiter Versuch nach kurzer Pause klappt.
+- Pipeline: Ein mit dem Kit gerendertes Projekt (`HOST=git`, Modul docs-only) mit einem
+  Entwurf von `azure-pipelines.yml` lief, im Web registriert, auf dem Agenten grün —
+  mise installieren, `mise install --locked`, `just setup`, `just check`. Ein Push auf
+  einen Branch mit absichtlich rotem Check startete die Pipeline von selbst; sie endete
+  rot bei `just check`.
+- mise mit fester Version: Jedes Release von jdx/mise hat ein eigenes `install.sh` mit
+  den Prüfsummen genau dieser Version. `MISE_VERSION` muss gesetzt sein und zur
+  Download-Adresse passen, sonst wählt das Skript selbst ein Release.
+- Renovate lokal (`--platform=local`, ohne GitHub-Token): Es lädt das Preset
+  `github>xnyzer/coding-kit` anonym über die GitHub-API, löst `config:recommended` auf
+  und erkennt `mise.toml`.
+
+**Entscheidungen:**
+
+- Test-Organisation mit Azure-Probeabo: Neue Organisationen verlangen ein Azure-Abo.
+  Empfehlung war zuerst Pay-as-you-go mit Budget-Alarm; entschieden das Probeabo, weil
+  es dank Ausgabenlimit nichts abbuchen kann, ohne dass der Nutzer umstellt.
+- Für die Pipeline-Vorlage (F-052b): mise über das `install.sh` des festgelegten
+  Releases, Renovate hält `MISE_VERSION` aktuell. `trigger` auf alle Branches und
+  `pr: none`, weil Azure Repos `pr:` ignoriert und Läufe für Pull Requests nur über eine
+  Branch-Policy gäbe.
+
+**Abweichung vom Plan:** Die Test-Organisation braucht ein Azure-Abo; die Spezifikation
+ging von einer Organisation ohne Abo aus. Renovate lief nicht gegen Azure selbst — die
+Preset-Frage hängt nicht an der Plattform und ist lokal geklärt.
+
+**Funde:** Keine neuen Aufgaben. Für F-052b und F-052c:
+
+- Azure DevOps nimmt nur RSA-Schlüssel an, `ssh-keygen` erzeugt heute ED25519 — der
+  erste Hinweis, wenn die Verbindung scheitert; die README nennt es.
+- Neue OpenSSH-Versionen warnen bei jeder Verbindung zu Azure auf stderr, auch bei
+  Erfolg. Die Prüfung der Adresse liest Erfolg sowie „leer“ oder „nicht leer“ allein aus
+  Exit-Code und stdout; stderr dient nur dazu, die Art eines Fehlers zu bestimmen
+  (`TF401019`: gibt es nicht oder keine Rechte; Zeitüberschreitung: erneut versuchen) —
+  die Warnung zählt nie als Fehler.
+- Beim ersten Kontakt kennt SSH den Host-Schlüssel nicht, und `git ls-remote` scheitert
+  ohne Terminal mit „Host key verification failed“ — Hinweis: einmal
+  `ssh -T git@ssh.dev.azure.com` im Terminal ausführen und den Fingerabdruck mit dem in
+  Azure (User settings → SSH public keys) vergleichen. Dieser Befehl endet auch bei
+  erfolgreicher Anmeldung mit einem Fehlercode und „Shell access is not supported“; der
+  Hinweis muss das sagen.
+- Der anonyme Preset-Abruf unterliegt dem Abruflimit von GitHub je Adresse; der Bericht
+  nennt einen GitHub-Token für einen zentralen Renovate-Lauf.
+- Offen für F-052b: der Standard-Pool der Vorlage (Microsoft-gehostet oder ein benannter
+  Pool der Organisation).
+- Die ersten Läufe scheiterten am macOS-Gatekeeper des Test-Agenten; das betrifft nur den
+  Testaufbau, nicht das Kit.

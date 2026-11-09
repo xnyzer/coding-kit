@@ -66,7 +66,7 @@ bzw. ohne GitHub zuerst.
 | [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) | Stop-Hook plattformfähig machen (Windows greift ins WSL) | BACKLOG |  |
 | [F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md) | Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren | IN-PROGRESS |  |
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
-| [F-052](F-052-azure-devops-services-als-git-host.md) | Azure DevOps Services als Git-Host | PLANNED |  |
+| [F-052](F-052-azure-devops-services-als-git-host.md) | Azure DevOps Services als Git-Host | IN-PROGRESS |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
 
