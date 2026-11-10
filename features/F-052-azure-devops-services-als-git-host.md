@@ -2,10 +2,10 @@
 id: F-052
 title: Azure DevOps Services als Git-Host
 type: feature
-status: IN-PROGRESS
+status: DONE
 size: L
 created: 2026-11-03
-done:
+done: 2026-11-10
 depends-on: F-032
 superseded-by:
 ---
@@ -107,10 +107,15 @@ je Host).
   Headless-Lauf mit Adresse samt Token (`credentials`, nicht wiederholt), Repo mit Inhalt
   (`refs`) und fehlendem Repo (`not-found`) — je die drei Wege, nichts angelegt;
   Render-Test „azure public refused“.
-- [ ] AC-6 — Gegeben ein Testprojekt in einer eigenen kostenlosen Organisation, im Web
+- [x] AC-6 — Gegeben ein Testprojekt in einer eigenen kostenlosen Organisation, im Web
   registrierte Pipeline und ein selbst gehosteter Agent auf dem Mac, wenn gepusht wird,
   dann läuft die Pipeline grün (mise, `just setup`, `just check`); ein absichtlich roter
-  Check macht sie rot. Agent, Organisation und Repo werden danach entfernt.
+  Check macht sie rot. Agent, Organisation und Repo werden danach entfernt. — belegt:
+  Lauf 20261110.1 auf `main` grün auf dem selbst gehosteten Agenten im Pool `Default`
+  (mise installieren, Werkzeuge aus `mise.lock`, `just setup`, `just check`); Lauf
+  20261110.2 auf dem Branch `test/red` startete nach dem Push von selbst und endete rot
+  bei `just check`; danach Agent gestoppt und gelöscht, Organisation mit Projekt, Repos
+  und Pipeline gelöscht, Testprojekt lokal entfernt.
 - [x] AC-7 — Gegeben ein Bestandsprojekt ohne `HOST` mit Azure-Remote, wenn
   update-conventions läuft, dann trägt es `HOST=azure` ohne Frage ein, nennt das im
   Bericht und bietet die Azure-Dateien je Datei an; `HOST=git` mit Azure-Remote bietet
@@ -497,7 +502,39 @@ Preset-Frage hängt nicht an der Plattform und ist lokal geklärt.
 - Vorhandene Fehler behoben: update-conventions ließ neue `template:adapt`-Stellen nach
   einem Host-Wechsel unausgefüllt (seit F-032); new-project prüfte den Projektordner erst
   nach dem Anlegen auf dem Host, ein Repo blieb dann verwaist (auch auf GitHub).
-- Unabhängiges Review: 4 Befunde, 3 behoben, 1 verworfen (siehe Commit-Frage).
+- Unabhängiges Review: 4 Befunde, 3 behoben, 1 verworfen — die nicht mehr erfragte
+  Sichtbarkeit, begründet in der Entscheidung vom 2026-11-10.
 - Der Block `host-azure` in `CODE_OF_CONDUCT.md` wird nie gerendert (die Datei ist
   public-only); er bleibt, weil der Validator einen Block je Host verlangt.
+- Keine neuen Aufgaben.
+
+### F-052d — fertig 2026-11-10
+
+**Umgesetzt:**
+
+- Das Testprojekt aus F-052c gepusht und die Pipeline im Web nach dem Klickweg aus dem
+  Bericht registriert: Lauf grün auf dem Agenten im Pool `Default`. Ein Branch mit
+  absichtlich verfälschter Feature-Tabelle startete die Pipeline von selbst und endete
+  rot bei `just check`.
+- Klickweg korrigiert in new-project, README und im Kopf von `azure-pipelines.yml`:
+  Azure erkennt die Datei meist selbst und zeigt sie gleich zur Prüfung; die Auswahl
+  „Existing Azure Pipelines YAML file“ erscheint nur sonst.
+- Aufgeräumt: Agent, Organisation (mit Projekt, Repos und Pipeline), SSH-Schlüssel in
+  Azure und lokal, Testprojekt.
+
+**Entscheidungen:**
+
+- Das Azure-Probeabo bleibt bestehen (Nutzer): Mit Ausgabenlimit kostet es nichts und
+  kann für andere Tests dienen.
+
+**Abweichung vom Plan:**
+
+- Der Klickweg stimmte in einem Schritt nicht (EC-5 am Text geprüft) — korrigiert.
+- Den absichtlich roten Commit im Testprojekt ohne lokale Hooks (`--no-verify`): Der
+  Pre-Commit-Hook hätte genau den Fehler abgefangen, den die Pipeline zeigen sollte.
+- Die lokalen SSH-Dateien entfernte der Nutzer selbst nach Anleitung.
+
+**Funde:**
+
+- Unabhängiges Review: keine Befunde.
 - Keine neuen Aufgaben.

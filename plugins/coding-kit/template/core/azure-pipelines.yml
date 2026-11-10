@@ -1,6 +1,7 @@
 # CI for Azure Pipelines: the same gate as locally — just setup, then just check.
 # Register once in the web: Pipelines → New pipeline → Azure Repos Git → this
-# repository → Existing Azure Pipelines YAML file → /azure-pipelines.yml.
+# repository; Azure usually finds this file and shows it for review → Run. If it asks,
+# choose Existing Azure Pipelines YAML file → /azure-pipelines.yml.
 
 # Every branch; Azure Repos ignores `pr:` — pull request runs need a branch policy.
 trigger:

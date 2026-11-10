@@ -191,8 +191,9 @@ privat — Azure DevOps legt keine öffentlichen Projekte mehr an. Das Projekt b
 **Danach im Web** (der Abschlussbericht nennt die Klicks):
 
 - **Pipeline registrieren**, einmal nach dem ersten Push: Pipelines → New pipeline →
-  Azure Repos Git → das Repo → Existing Azure Pipelines YAML file →
-  `/azure-pipelines.yml`. Sie läuft `just setup` und `just check` wie lokal, im Pool
+  Azure Repos Git → das Repo; meist erkennt Azure die `azure-pipelines.yml` selbst und
+  zeigt sie zur Prüfung → Run (sonst: Existing Azure Pipelines YAML file →
+  `/azure-pipelines.yml`). Sie läuft `just setup` und `just check` wie lokal, im Pool
   `Default` — also auf einem eigenen Agenten der Organisation. Für Microsoft-gehostete
   Agenten ändert man die Zeile `pool` in der Datei; die brauchen gekaufte Laufzeit.
 - **Renovate** läuft auf Azure nicht als App, sondern zentral in der Organisation über

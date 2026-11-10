@@ -297,11 +297,13 @@ jetzt mit `/add-feature` → `/prep-step` → `/step-done` weitergeht.
 Auf `azure` zusätzlich, was nur im Web oder in der Organisation geht:
 
 - **Pipeline registrieren** (nach dem ersten Push, sie liest die Datei aus dem Repo):
-  Pipelines → New pipeline → Azure Repos Git → das Repo → Existing Azure Pipelines YAML
-  file → Branch `main`, Pfad `/azure-pipelines.yml` → Continue → Run. Beim ersten Lauf
-  kann Azure eine Freigabe verlangen (der Lauf wartet mit „needs permission", im Lauf
-  „Permit" wählen). Fehlen die Rechte für das Registrieren, macht es ein Projekt-Admin;
-  das Projekt bleibt verbunden.
+  Pipelines → New pipeline → Azure Repos Git → das Repo. Meist erkennt Azure die
+  `azure-pipelines.yml` selbst und zeigt sie zur Prüfung → Run; fragt es nach der
+  Datei: Existing Azure Pipelines YAML file → Branch `main`, Pfad
+  `/azure-pipelines.yml` → Continue → Run. Beim ersten Lauf kann Azure eine Freigabe
+  verlangen (der Lauf wartet mit „needs permission", im Lauf „Permit" wählen). Fehlen
+  die Rechte für das Registrieren, macht es ein Projekt-Admin; das Projekt bleibt
+  verbunden.
 - **Agent:** `azure-pipelines.yml` läuft im Pool `Default`, also auf einem eigenen Agenten
   der Organisation (Organization settings → Agent pools). Ohne Agenten — oder ohne
   gekaufte Laufzeit, wenn die Zeile `pool` auf Microsoft-gehostete Agenten zeigt — bricht
