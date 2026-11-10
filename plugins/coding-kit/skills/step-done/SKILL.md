@@ -292,7 +292,9 @@ Schlüssel und Adresse:
 - `missing` auf GitHub (Zeile `host github`) → zur Laufzeit auflösen, nie hardcoden:
   `"$(gh api user --jq '.id')+$(gh api user --jq '.login')@users.noreply.github.com"`.
   Scheitert `gh` (nicht angemeldet), fragen.
-- `missing` bei einem anderen Host oder `invalid` → nach der Adresse fragen.
+- `missing` bei einem anderen Host oder `invalid` → nach der Adresse fragen. Auf `azure`
+  gibt es keine Noreply-Adresse; gemeint ist die Adresse, mit der der Nutzer dort arbeitet
+  (meist die Firmenadresse) — nie die eines anderen Hosts.
 
 Eine erfragte Adresse muss dieselbe Form haben, die das Skript prüft — Buchstaben,
 Ziffern und `. _ % + -` um ein `@`, eine Domain mit Punkt —, sonst erneut fragen. In

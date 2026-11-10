@@ -45,7 +45,7 @@ it must not contain a tab or `{{`.
 |-----|-------|
 | `PROJECT_NAME`, `PROJECT_DESCRIPTION`, `OWNER`, `YEAR`, `GROUP_ID`, `LANG_LIVING_DOCS`, `LANG_CLAUDE_MD`, `LANG_COMMENTS`, `LANG_COMMITS`, `LANG_README`, `LICENSE_SPDX` | the placeholder of the same name (§ Placeholders); a key no rendered file needs may be left out |
 | `MODULE` | the stack module (`docs-only` without a stack) — required |
-| `VISIBILITY` | `public` or `private`; decides the public-only targets — required |
+| `VISIBILITY` | `public` or `private`; decides the public-only targets — required. Always `private` on `azure`: Azure DevOps has no public projects, and the render refuses `public` there |
 | `HOST` | the project's git host, a name from § Hosts; decides the host targets (§ Policies) and the host blocks. Projects from before it lack the key and render as `github`; `template-sync.sh host` suggests a value from the remote |
 | `OPTIONAL` | the `template:optional` blocks the project keeps by choice, comma-separated (e.g. `graphiti`); missing or empty = none; the license blocks are derived, never listed |
 | `FRAGMENTS` | standards fragments beyond the module's own and its declared ones (characteristic fragments the project chose, fragments from a detection proposal, the language fragment of a tool language), comma-separated, in slot order |
@@ -69,7 +69,7 @@ NAS, a server the kit does not know) — and always carries the whole workflow.
 | Host | CLI | Create repository | Repository settings | Description, topics | Visibility | Issues | Commit address | Renovate | CI |
 |------|-----|-------------------|---------------------|---------------------|------------|--------|----------------|----------|----|
 | `github` | `gh` | `gh repo create` | yes — merge method, branch cleanup, secret scanning (`gh repo edit`, `gh api`) | yes | per repository | yes | noreply `<id>+<login>@users.noreply.github.com` | platform `github` | `.github/workflows/` |
-| `azure` | — (the kit never calls `az`) | no — the user creates an empty repository in the web; the skill checks its clone URL (`template-sync.sh remote-check`) and sets `origin` | no — never a branch policy | no | per Azure project — asked, never changed | no — work items, the kit creates none | set by the user, never a private one | `renovate.json` in the project; the run is the organization's | `azure-pipelines.yml`, registered once in the web; needs an agent |
+| `azure` | — (the kit never calls `az`) | no — the user creates an empty repository in the web; the skill checks its clone URL (`template-sync.sh remote-check`) and sets `origin` | no — never a branch policy | no | private only — Azure DevOps creates no public projects and makes none public | no — work items, the kit creates none | set by the user, never a private one | `renovate.json` in the project; the run is the organization's | `azure-pipelines.yml`, registered once in the web; needs an agent |
 | `git` | — | no — `git init`, a remote is any git URL | no | no | no | no | set by the user, never a private one | no | no |
 
 `template-sync.sh host PROJECT` names the host in effect: `HOST` from the answers, else
@@ -85,6 +85,13 @@ looks the step up in the table above, and (3) for a host with a CLI checks that 
 logged in (`gh auth status` on `github`). If a check fails, the skill reports the step as
 skipped with the reason — for a CLI that is not logged in, with its login command
 (`gh auth login`) — and goes on. A host step never fails a run.
+
+A host without a CLI (`azure`) takes the web path: the user does the step in the web —
+the skill names the clicks —, the skill takes back what the step yields (the clone URL of
+the new repository) and checks it with `template-sync.sh remote-check` before it connects
+the project. The skill never asks for a token, never logs in and never repeats a URL the
+check refused for its credentials. What only the web can do afterwards (registering the
+pipeline) the skill's report names as the user's step, with its clicks.
 
 ## Markers
 

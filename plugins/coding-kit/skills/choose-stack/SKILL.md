@@ -168,9 +168,10 @@ Nachbesserung stehen im Fragment.
 ## Lock-Datei erzeugen und prüfen
 
 Gilt überall, wo ein Skill die Toolchain eines Projekts installiert — Modus B,
-`/new-project` und `/update-conventions`. Die CI (`jdx/mise-action`) installiert mit
-`--locked`, sobald eine `mise.lock` existiert, und braucht dafür je Tool eine
-Download-URL für die Plattform des Runners. `mise install` schreibt diese Einträge nicht.
+`/new-project` und `/update-conventions`. Die CI (`jdx/mise-action` auf GitHub, die
+`azure-pipelines.yml` auf Azure) installiert mit `--locked`, sobald eine `mise.lock`
+existiert, und braucht dafür je Tool eine Download-URL für die Plattform des Runners.
+`mise install` schreibt diese Einträge nicht.
 
 - **Erzeugen:** nach `mise install` schlicht `mise lock` — **ohne `--platform`**. Welche
   Plattformen hineingehören, steht allein in `lockfile_platforms` (`[settings]` der
@@ -185,17 +186,18 @@ Download-URL für die Plattform des Runners. `mise install` schreibt diese Eintr
 - **Prüfen:** `sh <skript> lock-check <projekt>` (`<skript>` =
   `${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh`, in Shell-Befehlen der aufgelöste
   Pfad) gleicht jeden Eintrag der `mise.lock` mit `lockfile_platforms` und der Plattform
-  des CI-Runners ab (`runs-on` der Workflows mit `jdx/mise-action`) — nie selbst
-  nachzählen. Je Zeile:
+  des CI-Runners ab (`runs-on` der Workflows mit `jdx/mise-action`, der Pool der
+  `azure-pipelines.yml`) — nie selbst nachzählen. Je Zeile:
   - `ci-gap` (**Lücke auf der Plattform des CI-Runners**) → blockiert den Commit; die CI
     wäre rot. Ursache klären (Netz, Tool-Version ohne Release für die Plattform), nicht
     übergehen.
   - `gaps` (**übrige Lücken**) → melden und gegen die „Known limitation"-Einträge im
     `${CLAUDE_PLUGIN_ROOT}/CHANGELOG.md` abgleichen; dort dokumentierte Upstream-Lücken
     sind bekannt und blockieren nicht.
-  - `ci unknown` (ein Ausdruck wie `matrix.os` oder ein self-hosted Runner) → nach der
-    Plattform des Runners fragen und die `gaps` darauf prüfen; `ci none` → keine CI mit
-    mise, Lücken blockieren nicht.
+  - `ci unknown` (ein Ausdruck wie `matrix.os`, ein self-hosted Runner oder auf Azure
+    ein Pool eigener Agenten wie `pool:Default`) → nach der Plattform des Runners bzw.
+    Agenten fragen und die `gaps` darauf prüfen; `ci none` → keine CI mit mise, Lücken
+    blockieren nicht.
   - `lockfile missing`, `unlocked` oder `stale` → die Lock-Datei passt nicht zur
     `mise.toml`: `mise lock` (nach `mise install`), dann erneut prüfen;
     `platforms missing` → wie unter **Erzeugen**.

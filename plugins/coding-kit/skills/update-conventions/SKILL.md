@@ -1,6 +1,6 @@
 ---
 name: update-conventions
-description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je seed-Zone (section:NAME); Abweichungs-Registry (skip, keep, adapt); erkennt per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt; Migration für Projekte ohne Snapshot und für das Dokumentmodell vor 2.0.0 (auch per Argument `features`); erkennt entfernte/umbenannte Dateien. Ohne Argument das Projekt im aktuellen Ordner, `alle` für alle; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente und Tools ohne Vorlage bietet er dem Template an (propose-to-template). Mit `global` — und einmal in jedem anderen Lauf — gleicht er die globalen Kit-Regeln auf dem Rechner ab (`~/.claude/rules/coding-kit.md`; Ersteinrichtung, Diff je Abschnitt, Migration einer alten Kit-Kopie; eine selbst angelegte CLAUDE.md nie); nur mit `global` bietet er zwei Settings an (Auto-Memory aus, Transkripte 365 Tage). Überträgt die Auto-Memory des Projekts in Graph oder docs/notes.md. Trägt bei Bestandsprojekten den Git-Host ein (GitHub ohne Frage, sonst Frage nach Umzug); `host` wechselt den Host eines Projekts. Nichts wird ungefragt überschrieben.
+description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je seed-Zone (section:NAME); Abweichungs-Registry (skip, keep, adapt); erkennt per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt; Migration für Projekte ohne Snapshot und für das Dokumentmodell vor 2.0.0 (auch per Argument `features`); erkennt entfernte/umbenannte Dateien. Ohne Argument das Projekt im aktuellen Ordner, `alle` für alle; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente und Tools ohne Vorlage bietet er dem Template an (propose-to-template). Mit `global` — und einmal in jedem anderen Lauf — gleicht er die globalen Kit-Regeln auf dem Rechner ab (`~/.claude/rules/coding-kit.md`; Ersteinrichtung, Diff je Abschnitt, Migration einer alten Kit-Kopie; eine selbst angelegte CLAUDE.md nie); nur mit `global` bietet er zwei Settings an (Auto-Memory aus, Transkripte 365 Tage). Überträgt die Auto-Memory des Projekts in Graph oder docs/notes.md. Trägt bei Bestandsprojekten den Git-Host ein (GitHub und Azure DevOps ohne Frage, sonst Frage nach Umzug); `host` wechselt den Host eines Projekts. Nichts wird ungefragt überschrieben.
 argument-hint: "[Projekt | alle | global [Ordner] | features | host] [status | revise]"
 disable-model-invocation: true
 user-invocable: true
@@ -109,11 +109,13 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    abgleichen — Sichtbarkeit (nur auf einem Host mit Sichtbarkeit und angemeldeter CLI,
    `${CLAUDE_PLUGIN_ROOT}/template/MANIFEST.md` § Hosts: auf `github`
    `gh repo view --json visibility`; ohne Remote `private`; bei `git` oder ohne Anmeldung
-   gilt der Wert der Antworten, der Abgleich ist ausgewiesen übersprungen; eine Prämisse
-   des Aufrufers gilt vor allem), Languages-Block der Projekt-CLAUDE.md (`LANG_*`),
-   Lizenz (`LICENSE`), Modul (justfile-Kopf, `mise.toml`), Graphiti-Block der
-   CLAUDE.md (`OPTIONAL` enthält `graphiti`), Fragmente im Slot (`FRAGMENTS` = die
-   Fragmente im Slot ohne das Modul-Fragment und ohne die im `MODULE.md` deklarierten).
+   gilt der Wert der Antworten, der Abgleich ist ausgewiesen übersprungen; auf `azure`
+   immer `private` — Azure DevOps hat keine öffentlichen Projekte, der Renderer lehnt
+   `public` dort ab; eine Prämisse des Aufrufers gilt vor allem), Languages-Block der
+   Projekt-CLAUDE.md (`LANG_*`), Lizenz (`LICENSE`), Modul (justfile-Kopf,
+   `mise.toml`), Graphiti-Block der CLAUDE.md (`OPTIONAL` enthält `graphiti`), Fragmente
+   im Slot (`FRAGMENTS` = die Fragmente im Slot ohne das Modul-Fragment und ohne die im
+   `MODULE.md` deklarierten).
    Unterschiede zeigen und je Wert fragen, welcher gilt; die Antworten-Datei nur nach
    Bestätigung ändern. Die Prämisse eines Aufrufers rendert nur diesen Lauf, sie ändert
    die Datei nicht.
@@ -121,6 +123,16 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    **Host** (`sh <skript> host <projekt>`, `MANIFEST.md` § Hosts):
    - Fehlt `HOST` und schlägt der Remote `github` vor → `HOST=github` eintragen, ohne
      eigene Frage, und im Bericht nennen; am Render ändert sich nichts.
+   - Fehlt `HOST` und schlägt der Remote `azure` vor → `HOST=azure` eintragen, ohne
+     eigene Frage, und im Bericht nennen. Steht `VISIBILITY=public` in den Antworten,
+     den Unterschied zeigen: Azure DevOps hat keine öffentlichen Projekte — nach
+     Bestätigung `VISIBILITY=private` (die public-only-Dateien kommen in Schritt 4 als
+     `removed`), sonst bleibt `HOST` leer und die Frage kommt beim nächsten Lauf wieder.
+     Die Azure-Dateien (`azure-pipelines.yml`, `.azuredevops/pull_request_template.md`)
+     kommen in Schritt 4 als `new` und werden je Datei bestätigt; die GitHub-Dateien, die
+     das Projekt als Alt-Projekt bisher hatte, kommen als `removed`. Der Bericht nennt die Schritte im
+     Web wie `/coding-kit:new-project` im Abschlussbericht (Pipeline registrieren, Agent,
+     Renovate).
    - Fehlt `HOST` sonst → fragen: **bei Git bleiben** (`HOST=git`; Empfehlung, wenn
      `unsupported` einen erkannten, noch nicht unterstützten Host meldet — mit dem
      Hinweis, dass er später kommt) oder **umziehen** auf einen Host aus § Hosts → A6.
@@ -185,7 +197,12 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
      `skipped`: nur auflisten.
 
    Nach dem Übernehmen geänderte JSON-Dateien auf Gültigkeit prüfen (Schritt 11 prüft
-   ohnehin `just check`). Altes Dokumentmodell → jetzt A4, dann weiter mit Schritt 6.
+   ohnehin `just check`). Bringt ein übernommener Text eine neue `template:adapt`-Stelle
+   mit (etwa den privaten Meldeweg in `SECURITY.md` nach einem Host-Wechsel), sie mit dem
+   Nutzer konkretisieren wie `/coding-kit:new-project` § 4b Schritt 3, den Marker
+   entfernen und eine Zeile mit Art `adapt` in die Files-Tabelle vormerken (Schritt 10);
+   lehnt er ab, bleibt der Marker stehen und der Bericht nennt die Stelle. Altes
+   Dokumentmodell → jetzt A4, dann weiter mit Schritt 6.
 6. **Blöcke abgleichen — Fragmente im Slot.** Erst nach dem Kopieren aus Schritt 5, sonst
    überschreibt das Ergebnis den Merge der `CODING-STANDARDS.md`:
    `sh <skript> render --seeds <template> <projekt>/.claude/template-answers <tmp>/seeds`,
@@ -330,8 +347,8 @@ dann A2 ab Schritt 3.
 
 1. **Antworten-Datei anlegen:** die Werte aus dem Projekt zurückgewinnen — Name (Repo
    bzw. Ordner), `OWNER` (für ein Projekt auf GitHub aus der `origin`-URL
-   `github.com/<owner>/…`, sonst `gh api user`, sonst erfragen; nur bei `git` weglassen
-   — kein Ziel außerhalb von GitHub braucht ihn), Beschreibung (Repo-Beschreibung, sonst
+   `github.com/<owner>/…`, sonst `gh api user`, sonst erfragen; auf jedem anderen Host
+   weglassen — kein Ziel außerhalb von GitHub braucht ihn), Beschreibung (Repo-Beschreibung, sonst
    README), `GROUP_ID` und die fünf `LANG_*` (Languages-Block der Projekt-CLAUDE.md;
    Alt-Projekte mit einzeiliger Doku-Sprach-Angabe: deren Wert für die lebende Doku,
    übrige Dimensionen englisch), `LICENSE_SPDX` (`LICENSE`, ohne Datei `TBD`), `MODULE`
@@ -551,13 +568,21 @@ steps in a skill").
 
    **Fall „Remote schon umgezogen"** (Widerspruch aus A2 Schritt 2, `origin` zeigt
    bereits auf das Ziel): kein Repo anlegen, keinen Remote umbenennen — nur `HOST` auf
-   das Ziel stellen (auf `github` dazu `OWNER` aus der `origin`-URL) und die Dateien
-   abgleichen wie unten unter **Dateien**; dann weiter mit Schritt 5.
+   das Ziel stellen (auf `github` dazu `OWNER` aus der `origin`-URL, auf `azure`
+   `VISIBILITY=private` — bei `VISIBILITY=public` erst nach der Warnung aus Schritt 2,
+   ohne Zustimmung bleibt `HOST`) und die Dateien abgleichen wie unten unter
+   **Dateien**; dann weiter mit Schritt 5.
 2. **Schritte zeigen** und bestätigen lassen — erst danach ausführen:
    - **Repo anlegen** (nicht bei Ziel `git`), immer **privat**, auch bei
      `VISIBILITY=public` — öffentlich wird es danach über `/coding-kit:go-public`. Auf
      `github`: `gh repo create "$(gh api user --jq .login)/<name>" --private`; ohne
      angemeldetes `gh` nicht anlegen, auf `gh auth login` hinweisen und abbrechen.
+     Auf `azure` der Web-Weg wie `/coding-kit:new-project` § 4a, Host `azure`, Schritte
+     1–3: Repo im Web anlegen lassen, Clone-Adresse erfragen, mit `remote-check` prüfen —
+     verbunden wird nur ein erreichbares, leeres Repo; sonst andere Adresse oder
+     abbrechen (dann Schritt 4). Bei `VISIBILITY=public` vorher warnen: Azure DevOps hat
+     keine öffentlichen Projekte; der Umzug läuft nur weiter, wenn das Projekt privat wird
+     (`VISIBILITY=private`, die public-only-Dateien kommen in Schritt 4 als `removed`).
    - **Remotes:** Hat das Projekt einen `origin`, behält er seine Adresse unter dem
      Namen des alten Hosts (`git remote rename origin <alter-host>`), auch bei Ziel
      `git` — sonst meldete `host` danach dauerhaft einen Widerspruch, und jeder Abgleich
@@ -565,22 +590,26 @@ steps in a skill").
      überschreiben. Der neue `origin` ist die Adresse des neuen Repos (`git remote add
      origin <url>`); bei Ziel `git` gibt es keinen, bis der Nutzer selbst einen setzt
      (etwa ein Bare-Repo auf einem NAS).
-   - **Antworten:** `HOST` auf das Ziel, auf `github` dazu `OWNER`.
+   - **Antworten:** `HOST` auf das Ziel, auf `github` dazu `OWNER`, auf `azure`
+     `VISIBILITY=private`.
    - **Dateien:** A2 ab Schritt 3 mit den neuen Antworten — die Dateien des neuen Hosts
      kommen als `new` (je Datei bestätigt), die des alten als `removed` (Schritt 4, je
      Datei zum Entfernen angeboten).
 3. **Push nur auf eigene, ausdrückliche Bitte** — dann `git push -u origin --all` und
    `git push origin --tags`. Ohne Bitte nennt der Bericht die Befehle.
-4. **Scheitert ein Schritt** (Name auf dem Host vergeben, `gh` nicht angemeldet):
-   anhalten. `HOST` bleibt, wie er war, und der Bericht nennt, was schon geschehen ist
-   (etwa ein angelegtes Repo oder ein umbenannter Remote) und wie es zurückgeht.
+4. **Scheitert ein Schritt** (Name auf dem Host vergeben, `gh` nicht angemeldet, das
+   Azure-Repo nicht erreichbar oder nicht leer): anhalten. `HOST` bleibt, wie er war,
+   und der Bericht nennt, was schon geschehen ist (etwa ein angelegtes Repo oder ein
+   umbenannter Remote) und wie es zurückgeht.
 5. **Bericht:** neuer Host, Remotes, angelegte und entfernte Dateien; bei
    `VISIBILITY=public` der Hinweis, dass das Repo privat angelegt ist und erst über
    `/coding-kit:go-public` öffentlich wird. Ab dem nächsten Commit gilt die
    Commit-Adresse des neuen Hosts (`/coding-kit:step-done` § 5a); frühere Commits
    bleiben, wie sie sind. Als Handarbeit nennen: Issues, Pull Requests, Wiki, CI-Secrets
    und Repo-Einstellungen überträgt das Kit nicht, und das alte Repo wird weder gelöscht
-   noch archiviert.
+   noch archiviert. Auf `azure` dazu die Schritte im Web wie `/coding-kit:new-project`
+   im Abschlussbericht (Pipeline registrieren nach dem Push, Agent, Renovate); die
+   Commit-Adresse ist `CODING_KIT_EMAIL_AZURE`, sonst fragt step-done.
 
 ---
 

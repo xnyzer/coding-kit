@@ -87,6 +87,40 @@ run_lock_cases() {
   check "lock-check: no mise workflow" lock_line lo ci none
   check "lock-check: without CI a gap does not block" lock_line lo tool just 1.55.1 gaps linux-x64
 
+  # --- Azure Pipelines ------------------------------------------------------------------
+  put la/mise.toml "$MISE_TOML"
+  cp "$TMP/lock.fixture" "$TMP/la/mise.lock"
+  cp "$TEMPLATE/core/azure-pipelines.yml" "$TMP/la/azure-pipelines.yml"
+  check "lock-check with the template pipeline runs" eval 'ts lock-check "$TMP/la" > "$TMP/la.tsv"'
+  check "lock-check: own agents of the template pipeline are unknown" \
+    lock_line la ci unknown pool:Default azure-pipelines.yml
+  check "lock-check: unknown agent platform does not block" \
+    lock_line la tool lefthook 2.2.1 gaps linux-x64
+  put lv/mise.toml "$MISE_TOML"
+  cp "$TMP/lock.fixture" "$TMP/lv/mise.lock"
+  put lv/azure-pipelines.yml 'trigger: none\r\n\r\njobs:\r\n  - job: check\r\n    pool:  # hosted\r\n\r\n      vmImage: "ubuntu-latest"\r\n    steps:\r\n      - script: mise install --locked\r\n  - job: win\r\n    pool:\r\n      vmImage: windows-2022\r\n    steps:\r\n      - script: mise install --locked\r\n'
+  check "lock-check with hosted images runs" eval 'ts lock-check "$TMP/lv" > "$TMP/lv.tsv"'
+  check "lock-check: hosted ubuntu image is linux-x64" \
+    lock_line lv ci linux-x64 vmImage:ubuntu-latest azure-pipelines.yml
+  check "lock-check: hosted windows image is windows-x64" \
+    lock_line lv ci windows-x64 vmImage:windows-2022 azure-pipelines.yml
+  check "lock-check: gap on the hosted image blocks" \
+    lock_line lv tool lefthook 2.2.1 ci-gap linux-x64
+  refute "lock-check: steps after the pool are no pool" grep -q 'unknown' "$TMP/lv.tsv"
+  put lp/mise.toml "$MISE_TOML"
+  put lp/azure-pipelines.yml 'pool: Build Agents # own\nsteps:\n  - script: mise install --locked\n'
+  check "lock-check with a one-line pool runs" eval 'ts lock-check "$TMP/lp" > "$TMP/lp.tsv"'
+  check "lock-check: one-line pool is a pool of own agents" \
+    lock_line lp ci unknown "pool:Build Agents" azure-pipelines.yml
+  put lq/mise.toml "$MISE_TOML"
+  put lq/azure-pipelines.yml 'steps:\n  - script: mise install --locked\n'
+  check "lock-check with no pool runs" eval 'ts lock-check "$TMP/lq" > "$TMP/lq.tsv"'
+  check "lock-check: no pool is unknown" lock_line lq ci unknown - azure-pipelines.yml
+  put lr/mise.toml "$MISE_TOML"
+  put lr/azure-pipelines.yml 'pool:\n  vmImage: ubuntu-latest\nsteps:\n  - script: make test\n'
+  check "lock-check with a pipeline without mise runs" eval 'ts lock-check "$TMP/lr" > "$TMP/lr.tsv"'
+  check "lock-check: pipeline without mise install is no CI with mise" lock_line lr ci none
+
   # --- missing setting, missing lock file ----------------------------------------------
   put lm/mise.toml '[tools]\njust = "1"\n\n[settings]\nlockfile = true\n'
   cp "$TMP/lock.fixture" "$TMP/lm/mise.lock"

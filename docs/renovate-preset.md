@@ -12,6 +12,8 @@ wird.
   (Supply-Chain-Härtung); Renovate hält die Pins aktuell und zeigt den Versions-Tag als
   Kommentar.
 - **`labels: ["dependencies"]`** — alle Update-PRs bekommen das Label `dependencies`.
+- **mise in der Azure-Pipeline** — eine Regel (`customManagers`) liest `MISE_VERSION` in
+  `azure-pipelines.yml` und schlägt neue Releases von jdx/mise vor.
 
 ## Projekte anbinden
 
@@ -35,6 +37,11 @@ Renovate läuft als GitHub-App. Die App wird **manuell vom Nutzer** installiert
 (GitHub → Settings → Integrations → [Renovate](https://github.com/apps/renovate) →
 gewünschte Repos freigeben) — das ist bewusst nicht gescriptet. Ohne installierte App
 bleibt die `renovate.json` wirkungslos (aber harmlos).
+
+Auf Azure DevOps gibt es die App nicht: Renovate läuft dort zentral in der Organisation
+(eine eigene Pipeline über die Repos), das Projekt bringt nur die `renovate.json` mit. Das
+Preset holt Renovate auch dort von GitHub, ohne Anmeldung; ein Lauf über viele Repos
+braucht dafür einen GitHub-Token, sonst greift das Abruflimit von GitHub.
 
 ## Dogfooding
 

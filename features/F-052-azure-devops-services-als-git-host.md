@@ -63,7 +63,7 @@ je Host).
 | R4 Keine Zugangsdaten in der Remote-Adresse | `https://<org>@dev.azure.com/…` (nur Nutzername) oder SSH → angenommen | `https://user:<token>@…` → abgelehnt, Bitte um Adresse ohne Zugangsdaten; der Token erscheint in keiner Ausgabe |
 | R5 Template-Ziele für `azure`: `azure-pipelines.yml`, `.azuredevops/pull_request_template.md`, `renovate.json`; Texte: Commit-Adresse wie bei `git`, Pull Requests und CI wie bei GitHub, privater Meldeweg wie bei `git` | `HOST=azure` → keine `.github/` | Ein Azure-Projekt bekommt Issue-Vorlagen oder den Hinweis auf den Security-Tab von GitHub |
 | R6 Commit-Adresse aus `CODING_KIT_EMAIL_AZURE`, sonst fragen | Adresse gesetzt → `--local` gesetzt | Die GitHub-Adresse wird genommen, weil sie zufällig gesetzt ist; eine Noreply-Adresse wird erfunden |
-| R7 Die Sichtbarkeit gilt fürs ganze Azure-Projekt: Sie wird erfragt, nie umgestellt; keine Branch-Policies | go-public auf `azure` → Preflight als reine Prüfung, Hinweis auf die Sichtbarkeit des Azure-Projekts | Ein Skill setzt eine Policy auf `main` und sperrt damit direkte Pushes |
+| R7 Azure-Projekte sind immer privat: Azure DevOps legt keine öffentlichen Projekte mehr an und stellt keines um; keine Branch-Policies | go-public auf `azure` → Preflight als reine Prüfung, Hinweis auf den Umzug nach GitHub | Ein Skill fragt auf Azure nach der Sichtbarkeit, rendert `public` oder setzt eine Policy auf `main` |
 | R8 Pipeline und Renovate laufen in der Organisation: Das Projekt bringt `azure-pipelines.yml` und `renovate.json` mit, die Registrierung der Pipeline macht der Nutzer im Web | Bericht: Klickweg zum Registrieren; „Renovate braucht einen Lauf in der Organisation“ | Ein Skill legt eine Pipeline oder eine Renovate-Pipeline an oder vergibt Rechte |
 
 ### Abnahmekriterien
@@ -91,38 +91,55 @@ je Host).
   `CODING_KIT_EMAIL_AZURE`; fehlt sie, meldet es `missing` und step-done fragt — nie die
   Adresse eines anderen Hosts. — belegt: `tests/template-sync/host.sh`
   (`CODING_KIT_EMAIL_AZURE`, `missing` ohne sie, nie die GitHub-Adresse).
-- [ ] AC-5 — Gegeben new-project mit Host `azure`, wenn der Lauf durchgeht, dann zeigt
+- [x] AC-5 — Gegeben new-project mit Host `azure`, wenn der Lauf durchgeht, dann zeigt
   der Skill die Schritte zum Anlegen eines leeren Repos im Web, nimmt die Clone-Adresse
   entgegen, prüft sie mit `git ls-remote` (erreichbar, leer) und setzt `origin`;
-  `HOST=azure` und die erfragte `VISIBILITY` stehen in den Antworten; der Erst-Commit
-  trägt die Azure-Adresse; gepusht wird nur auf Bitte. Der Bericht nennt den Klickweg zur
-  Registrierung der Pipeline, dass sie einen Agenten braucht, dass Renovate einen Lauf in
-  der Organisation braucht, und die übersprungenen Schritte (Repo anlegen, Beschreibung
-  und Topics, Repo-Einstellungen, Sichtbarkeit). Kein `az`-Aufruf. Negativfälle:
-  `git ls-remote` scheitert, das Repo ist nicht leer oder die Adresse trägt Zugangsdaten
-  → `origin` nicht gesetzt, Hinweis, Frage: neue Adresse, als `git` weiter oder
-  abbrechen.
+  `HOST=azure` und `VISIBILITY=private` stehen in den Antworten, ohne Frage nach der
+  Sichtbarkeit; der Erst-Commit trägt die Azure-Adresse; gepusht wird nur auf Bitte. Der
+  Bericht nennt den Klickweg zur Registrierung der Pipeline, dass sie einen Agenten
+  braucht, dass Renovate einen Lauf in der Organisation braucht, und die übersprungenen
+  Schritte (Repo anlegen, Beschreibung und Topics, Repo-Einstellungen, Sichtbarkeit).
+  Kein `az`-Aufruf. Negativfälle: `git ls-remote` scheitert, das Repo ist nicht leer
+  oder die Adresse trägt Zugangsdaten → `origin` nicht gesetzt, Hinweis, Frage: neue
+  Adresse, als `git` weiter oder abbrechen. — belegt: Headless-Lauf new-project gegen
+  ein leeres Repo der Test-Organisation (`remote-check` → `empty`, `origin` gesetzt,
+  Antworten ohne `OWNER`, erfragte Adresse im Erst-Commit, kein Push, kein `az`/`gh`);
+  Headless-Lauf mit Adresse samt Token (`credentials`, nicht wiederholt), Repo mit Inhalt
+  (`refs`) und fehlendem Repo (`not-found`) — je die drei Wege, nichts angelegt;
+  Render-Test „azure public refused“.
 - [ ] AC-6 — Gegeben ein Testprojekt in einer eigenen kostenlosen Organisation, im Web
   registrierte Pipeline und ein selbst gehosteter Agent auf dem Mac, wenn gepusht wird,
   dann läuft die Pipeline grün (mise, `just setup`, `just check`); ein absichtlich roter
   Check macht sie rot. Agent, Organisation und Repo werden danach entfernt.
-- [ ] AC-7 — Gegeben ein Bestandsprojekt ohne `HOST` mit Azure-Remote, wenn
+- [x] AC-7 — Gegeben ein Bestandsprojekt ohne `HOST` mit Azure-Remote, wenn
   update-conventions läuft, dann trägt es `HOST=azure` ohne Frage ein, nennt das im
   Bericht und bietet die Azure-Dateien je Datei an; `HOST=git` mit Azure-Remote bietet
-  das Angleichen an.
-- [ ] AC-8 — Gegeben ein Projekt, wenn `update-conventions host` nach `azure` wechselt,
+  das Angleichen an. — belegt: Headless-Läufe update-conventions an Testkopien — ohne
+  `HOST` mit Azure-Remote: `HOST=azure` ohne Frage, Azure-Dateien je Datei angeboten,
+  GitHub-Dateien zum Entfernen; `HOST=git` mit Azure-Remote: Angleichen angeboten, nach
+  Ja `HOST=azure` ohne neues Repo.
+- [x] AC-8 — Gegeben ein Projekt, wenn `update-conventions host` nach `azure` wechselt,
   dann läuft das Verbinden wie in AC-5 (Repo im Web, Adresse, `git ls-remote`), danach
   behält es den alten `origin` unter dem Namen des alten Hosts, stellt `HOST` um, bietet
   die Dateien je Datei an und nennt den Klickweg zur Pipeline; gepusht wird nur auf
   Bitte. Ein Wechsel weg von `azure` bietet die Azure-Dateien zum Entfernen an und behält
-  den alten `origin` als `azure`.
-- [ ] AC-9 — Gegeben `HOST=azure`, wenn go-public, name-it, propose-to-template oder
+  den alten `origin` als `azure`. — belegt: Headless-Lauf `update-conventions host`
+  eines öffentlichen GitHub-Projekts nach `azure` (Warnung zur Sichtbarkeit,
+  `remote-check` → `empty`, alter `origin` als `github`, Azure-Dateien angeboten,
+  public-only-Dateien zum Entfernen, Klickweg im Bericht); Headless-Lauf von `azure` nach
+  `git` (alter `origin` als `azure`, Azure-Dateien und `renovate.json` zum Entfernen).
+- [x] AC-9 — Gegeben `HOST=azure`, wenn go-public, name-it, propose-to-template oder
   check-upstreams laufen, dann: go-public stellt nichts um und bietet den Preflight als
   Prüfung an; name-it weist die Namensprüfung auf dem Host als übersprungen aus;
   propose-to-template gibt den Text kopierfertig aus, ohne `gh`; check-upstreams läuft
-  unverändert. Kein Skill ruft `az` auf.
-- [ ] AC-10 — Gegeben GitHub- und `git`-Projekte, wenn die Skills laufen, dann verhalten
-  sie sich wie vor F-052 (Regression).
+  unverändert. Kein Skill ruft `az` auf. — belegt: Headless-Läufe go-public (kein
+  Übergang, Weg über GitHub, Preflight als Prüfung) und propose-to-template (Text
+  kopierfertig, kein `gh`) mit `HOST=azure`; grep — `az` steht in Skills und Skripten
+  nur als „kein `az`“; check-upstreams ohne Host-Bezug unverändert.
+- [x] AC-10 — Gegeben GitHub- und `git`-Projekte, wenn die Skills laufen, dann verhalten
+  sie sich wie vor F-052 (Regression). — belegt: Headless-Trockenlauf new-project mit
+  GitHub (Sichtbarkeit gefragt, `gh repo create --private`, keine Azure-Dateien);
+  Skript-Tests für `github` und `git` unverändert grün; `just check`.
 
 ### Randfälle
 
@@ -226,6 +243,12 @@ je Host).
   (`…/_git/<repo>`) taugen schlecht als Modulpfad.
 - 2026-11-04 — propose-to-template behandelt `azure` wie `git` (Text kopierfertig, kein
   `gh`): Wie seit F-032 entscheidet der Host des Projekts, ob `gh` ins Spiel kommt.
+- 2026-11-10 — Azure-Projekte sind immer privat: Microsoft hat öffentliche Projekte in
+  Azure DevOps im April 2026 abgekündigt — neue lassen sich nicht mehr anlegen, private
+  nicht mehr umstellen, bestehende werden 2027 privat. new-project fragt auf `azure` nicht
+  nach der Sichtbarkeit, der Renderer lehnt `public` dort ab, go-public führt über den
+  Umzug nach GitHub. R7 und AC-5 sind angepasst; zuvor sah die Spezifikation eine
+  erfragte Sichtbarkeit vor.
 
 ## Plan
 
@@ -428,3 +451,53 @@ Preset-Frage hängt nicht an der Plattform und ist lokal geklärt.
 - F-057 (CI-Jobs der Stack-Module auch in der Azure-Pipeline) angelegt.
 - Ohne eine Pause zwischen vielen neuen SSH-Verbindungen drosselt Azure sie
   (Zeitüberschreitung beim Verbinden); `remote-check` meldet das als `timeout`.
+
+### F-052c — fertig 2026-11-10
+
+**Umgesetzt:**
+
+- new-project: Host `azure` mit den Web-Schritten zum leeren Repo, der Prüfung der
+  Clone-Adresse mit `remote-check` (je Ergebnis ein Hinweis, dann neue Adresse, als
+  `git` weiter oder abbrechen) und `git init` mit `origin`; der Abschlussbericht nennt
+  Pipeline-Registrierung samt Freigabe beim ersten Lauf, Agent und Renovate.
+- update-conventions: `HOST=azure` ohne Frage bei Azure-Remote; A6 zieht nach `azure`
+  über denselben Web-Weg um oder von dort weg; ein öffentliches Projekt nur, wenn es
+  privat wird.
+- go-public, name-it, propose-to-template und step-done für `azure`; MANIFEST § Hosts
+  (nur privat) und Absatz „Host steps in a skill“ um den Weg ohne CLI ergänzt; `render`
+  lehnt `VISIBILITY=public` auf `azure` ab.
+- README: Abschnitt „Auf Azure DevOps“ (Voraussetzungen, nur RSA-Schlüssel, Pipeline,
+  Renovate), Personal-Config und Skill-Tabelle; Renovate-Doku um die Regel für die
+  mise-Version und den Lauf auf Azure ergänzt.
+- `lock-check` liest die `azure-pipelines.yml`: ein Microsoft-gehostetes Image nennt die
+  Plattform, ein Pool eigener Agenten meldet sie als unbekannt, dann fragt der Skill.
+- Neun Headless-Läufe mit `--plugin-dir` gegen die Test-Organisation und Testkopien.
+
+**Entscheidungen:**
+
+- go-public auf `azure`: zuerst „Prüfung und Nachzug, Umstellen durch einen
+  Projekt-Admin“ gewählt; nach dem Fund, dass Azure keine öffentlichen Projekte mehr
+  zulässt, ersetzt durch den Weg über den Umzug nach GitHub.
+- `lock-check` für Azure im selben Substep statt als eigene `fix`-Aufgabe (Nutzer), weil
+  die Lücke erst mit der Azure-Pipeline entstand und sonst mit 3.4.0 ausgeliefert würde.
+- Testprojekt im Projekte-Ordner statt im Scratchpad (Nutzer): F-052d pusht es.
+
+**Abweichung vom Plan:**
+
+- Sichtbarkeit auf Azure immer privat statt erfragt (datierte Entscheidung oben).
+- Zusätzlich `lock-check` für die Azure-Pipeline und die Regel in choose-stack.
+- Headless-Läufe dürfen nichts unter `.claude/` schreiben; die Skills wichen wie
+  vorgesehen auf Ersatzdateien aus, das Testprojekt wurde danach von Hand vervollständigt
+  und nach Freigabe committet.
+- HTTPS-Adresse (EC-7) nicht live geprüft — der Git Credential Manager kann dabei ein
+  Browserfenster öffnen; belegt nur über die Skript-Tests.
+
+**Funde:**
+
+- Vorhandene Fehler behoben: update-conventions ließ neue `template:adapt`-Stellen nach
+  einem Host-Wechsel unausgefüllt (seit F-032); new-project prüfte den Projektordner erst
+  nach dem Anlegen auf dem Host, ein Repo blieb dann verwaist (auch auf GitHub).
+- Unabhängiges Review: 4 Befunde, 3 behoben, 1 verworfen (siehe Commit-Frage).
+- Der Block `host-azure` in `CODE_OF_CONDUCT.md` wird nie gerendert (die Datei ist
+  public-only); er bleibt, weil der Validator einen Block je Host verlangt.
+- Keine neuen Aufgaben.

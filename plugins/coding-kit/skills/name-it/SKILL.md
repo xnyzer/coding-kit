@@ -33,9 +33,12 @@ Prüfumfang hängt vom (voraussichtlichen) Stack ab. GitHub nur, wenn der Host d
 `github` ist und `gh` angemeldet ist (`${CLAUDE_PLUGIN_ROOT}/template/MANIFEST.md`
 § Hosts). Den Host nennt der Aufrufer (`/new-project` Frage 1); liegt im aktuellen Ordner
 schon ein Projekt, gilt `sh ${CLAUDE_PLUGIN_ROOT}/scripts/template-sync.sh host <projekt>`
-(in der Shell der aufgelöste Pfad) — dann bei `git` ohne jeden `gh`-Aufruf; nur ohne
-beides dieselbe Vorauswahl wie `/new-project` (`CODING_KIT_DEFAULT_HOST`). Sonst die Spalte GitHub als übersprungen
-ausweisen, bei nicht angemeldetem `gh` mit dem Hinweis `gh auth login`.
+(in der Shell der aufgelöste Pfad) — dann bei `azure` und `git` ohne jeden
+`gh`-Aufruf; nur ohne beides dieselbe Vorauswahl wie `/new-project`
+(`CODING_KIT_DEFAULT_HOST`). Sonst die Spalte GitHub als übersprungen ausweisen, bei nicht
+angemeldetem `gh` mit dem Hinweis `gh auth login`. Auf `azure` prüft das Kit den Namen auf
+dem Host nicht (kein `az`): ob er im Azure-Projekt frei ist, zeigt sich beim Anlegen des
+Repos im Web — die Spalte heißt dann „Host: übersprungen".
 
 ```bash
 OWNER=$(gh api user --jq .login)                                           # nur Host github

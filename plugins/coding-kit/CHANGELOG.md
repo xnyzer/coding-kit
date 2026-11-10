@@ -13,11 +13,34 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 3.4.0 — 2026-11-09
+## 3.4.0 — 2026-11-10
 
-Azure DevOps Services als dritter Git-Host neben GitHub und „nur Git“ (F-052, in
-Arbeit): Skript, MANIFEST und Template kennen `azure`; die Skills folgen.
+Azure DevOps Services als dritter Git-Host neben GitHub und „nur Git“ (F-052): Skript,
+MANIFEST, Template und Skills kennen `azure`. Das Kit ruft dabei kein `az` auf und fasst
+keinen Token an — das Repo legt der Nutzer im Web an, der Skill verbindet das Projekt
+über die Clone-Adresse. Azure-Projekte sind immer privat: Azure DevOps legt keine
+öffentlichen Projekte mehr an und stellt keines mehr um.
 
+- **`/coding-kit:new-project`:** Host `azure` — zeigt die Schritte, um im Web ein leeres
+  Repo anzulegen, prüft die genannte Clone-Adresse mit `remote-check` und setzt
+  `origin` nur bei einem erreichbaren, leeren Repo; sonst andere Adresse, als „nur Git“
+  weiter oder abbrechen. Keine Frage nach der Sichtbarkeit. Der Abschlussbericht nennt
+  die Klicks zum Registrieren der Pipeline, den nötigen Agenten und den Renovate-Lauf der
+  Organisation. Auf jedem Host prüft der Skill jetzt zuerst, ob es den Projektordner
+  schon gibt — vorher blieb dann ein schon angelegtes Repo verwaist.
+- **`/coding-kit:update-conventions`:** Bestandsprojekte mit Azure-Remote bekommen
+  `HOST=azure` ohne Frage, die Azure-Dateien je Datei bestätigt. `… host` zieht nach
+  Azure um (derselbe Web-Weg) oder von dort weg; ein öffentliches Projekt zieht nur um,
+  wenn es privat wird. Bringt ein übernommener Text eine neue `template:adapt`-Stelle
+  mit (etwa den privaten Meldeweg in `SECURITY.md` nach einem Wechsel auf „nur Git“),
+  fragt der Skill sie jetzt ab, statt den Platzhalter stehen zu lassen.
+- **`/coding-kit:go-public`:** auf `azure` kein Übergang — der Weg führt über den Umzug
+  nach GitHub; der Preflight läuft auf Wunsch als reine Prüfung.
+- **`/coding-kit:name-it`, `propose-to-template`, `/coding-kit:step-done`:** auf `azure`
+  ohne `gh` wie bei „nur Git“; step-done fragt nach der Commit-Adresse für Azure, wenn
+  `CODING_KIT_EMAIL_AZURE` fehlt.
+- **README:** neuer Abschnitt „Auf Azure DevOps“ (Voraussetzungen, nur RSA-Schlüssel,
+  Pipeline und Renovate); Personal-Config und Skill-Tabelle um `azure` ergänzt.
 - **`template-sync.sh`:** `HOST=azure` gilt in den Antworten. `host` schlägt `azure` für
   Remotes auf `dev.azure.com`, `ssh.dev.azure.com` und `*.visualstudio.com` vor, statt
   sie als „nicht unterstützt“ zu melden; Azure DevOps Server mit eigenem Hostnamen
@@ -34,9 +57,15 @@ Arbeit): Skript, MANIFEST und Template kennen `azure`; die Skills folgen.
   fragt dabei nichts, und die Prüfung endet nach spätestens 60 Sekunden — Azure hält
   die Verbindung nach „Repo nicht gefunden“ sonst minutenlang offen. Ausgegeben werden
   nur Hostname und Ergebnis, nie Adresse, Token oder Meldungen von git.
+- **`template-sync.sh lock-check`** liest auch die `azure-pipelines.yml`: Ein
+  Microsoft-gehostetes Image nennt die Plattform (`ubuntu-*`, `windows-*`), ein Pool
+  eigener Agenten meldet sie als unbekannt, und der Skill fragt nach ihr
+  (`/coding-kit:choose-stack` § Lock-Datei). Vorher galt ein Azure-Projekt als „ohne
+  CI“, und eine Lücke auf der Plattform des Agenten fiel erst in der Pipeline auf.
 - **MANIFEST:** § Hosts mit der Zeile `azure` (kein `az`, Repo im Web anlegen,
-  Sichtbarkeit je Azure-Projekt, Pipeline im Web registrieren). Die Policy `host:` darf
-  mehrere Hosts nennen (`host:github/azure`).
+  nur privat, Pipeline im Web registrieren) und dem Weg ohne Kommandozeilen-Werkzeug im
+  Absatz „Host steps in a skill“. Die Policy `host:` darf mehrere Hosts nennen
+  (`host:github/azure`); `render` lehnt `VISIBILITY=public` auf `azure` ab.
 - **`just check`:** Jede Template-Datei mit Host-Blöcken braucht einen Block je Host;
   der Kontoname in Azure-Adressen (`<org>@vs-ssh.visualstudio.com`,
   `https://<org>@dev.azure.com`) gilt nicht als Mailadresse.

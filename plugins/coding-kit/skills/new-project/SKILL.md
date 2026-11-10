@@ -1,6 +1,6 @@
 ---
 name: new-project
-description: Neues Projekt anlegen — der Orchestrator. Erhebt die Short-Info, klärt Git-Host (GitHub oder nur Git)/Name/Lizenz/Stack/Sichtbarkeit/Sprachen-Preset/group_id/Anforderungen (mit Defaults, Sub-Skills aufrufbar), zeigt einen Plan und baut nach Bestätigung ein Repo aus dem mitgelieferten Template — Platzhalter füllen, Modul einsetzen, template-version stempeln, Repo-Settings, Verifikation via just check. Trockenlauf mit Argument „dry-run". Nie ohne Bestätigung nach außen wirken.
+description: Neues Projekt anlegen — der Orchestrator. Erhebt die Short-Info, klärt Git-Host (GitHub, Azure DevOps oder nur Git)/Name/Lizenz/Stack/Sichtbarkeit/Sprachen-Preset/group_id/Anforderungen (mit Defaults, Sub-Skills aufrufbar), zeigt einen Plan und baut nach Bestätigung ein Repo aus dem mitgelieferten Template — Platzhalter füllen, Modul einsetzen, template-version stempeln, Repo-Settings, Verifikation via just check. Trockenlauf mit Argument „dry-run". Nie ohne Bestätigung nach außen wirken.
 argument-hint: "[Short-Info] [dry-run]"
 disable-model-invocation: true
 user-invocable: true
@@ -46,14 +46,18 @@ merken — sie wird gestempelt und füllt `TEMPLATE_VERSION`.
    default-host <config>/coding-kit.env` nennt — `CODING_KIT_DEFAULT_HOST` der
    Personal-Config, ohne Eintrag `github`; `<config>` ist `$CLAUDE_CONFIG_DIR`, sonst
    `~/.claude`; meldet die Zeile `invalid`, den Wert nennen)_ — die Hosts aus
-   `MANIFEST.md` § Hosts. `github` legt das Repo dort an; `git` legt das Projekt nur
-   lokal per `git init` an, ohne Remote und ohne `gh`. Der Host steht danach als `HOST`
-   in den Antworten und entscheidet, welche Dateien und Textblöcke das Projekt bekommt;
-   wechseln lässt er sich später mit `/coding-kit:update-conventions host`.
+   `MANIFEST.md` § Hosts. `github` legt das Repo dort an; `azure` verbindet das Projekt
+   mit einem leeren Repo, das der Nutzer im Web in seinem Azure-Projekt anlegt (Azure
+   DevOps Services, ohne `az`); `git` legt das Projekt nur lokal per `git init` an, ohne
+   Remote und ohne `gh`. Der Host steht danach als `HOST` in den Antworten und
+   entscheidet, welche Dateien und Textblöcke das Projekt bekommt; wechseln lässt er sich
+   später mit `/coding-kit:update-conventions host`.
 2. **Name?** — direkt eingeben oder `/name-it` (nutzt die Short-Info und den Host).
    Ergebnis: lowercase-kebab; `PROJECT_NAME_SNAKE` ableiten.
 3. **Sichtbarkeit?** _(Default: privat)_ — bestimmt die public-only-Dateien; auf die
-   Sprachwahl hat sie keinen Einfluss.
+   Sprachwahl hat sie keinen Einfluss. Auf `azure` entfällt die Frage: immer privat,
+   denn Azure DevOps hat keine öffentlichen Projekte mehr (der Renderer lehnt `public`
+   dort ab).
 4. **Lizenz?** _(Default: Apache-2.0)_ — direkt, `/choose-license`, oder „später" (TBD;
    bei public nicht erlaubt — public braucht eine LICENSE).
 5. **Stack/Modul?** — direkt oder `/choose-stack` (Modus Neuanlage); „offen" →
@@ -87,11 +91,11 @@ Bereits Bekanntes (aus Argument/Verlauf) nicht erneut abfragen.
 ## Schritt 3 — Plan anzeigen
 
 Kompakt: alle geklärten Werte + die Ausführungsschritte aus Schritt 4 (inkl. der exakten
-Zeile zum Anlegen — `gh repo create` bzw. `git init`) und die Host-Schritte, die der
-gewählte Host nicht kann, als übersprungen. **Explizit bestätigen lassen** („Ausführen?
-j/N"). Im **Trockenlauf** hier enden: zusätzlich die Ziel-Dateiliste zeigen — die Zeilen
-von `render --seeds` (§ 4b) mit Antworten in einem Temp-Verzeichnis —, sonst nichts
-ausführen.
+Zeile zum Anlegen — `gh repo create` bzw. `git init`, auf `azure` die Web-Schritte und
+`git init` mit `origin`) und die Host-Schritte, die der gewählte Host nicht kann, als
+übersprungen. **Explizit bestätigen lassen** („Ausführen? j/N"). Im **Trockenlauf** hier
+enden: zusätzlich die Ziel-Dateiliste zeigen — die Zeilen von `render --seeds` (§ 4b) mit
+Antworten in einem Temp-Verzeichnis —, sonst nichts ausführen.
 
 ## Schritt 4 — Ausführen
 
@@ -100,6 +104,10 @@ ausführen.
 Host-Schritte nach `MANIFEST.md` § Hosts (Absatz „Host steps in a skill"): Kann der Host
 einen Schritt nicht oder ist seine CLI nicht angemeldet, den Schritt als übersprungen
 ausweisen und weitermachen.
+
+Zuerst prüfen, dass es den Ordner `$CODING_KIT_PROJECTS_DIR/<name>` noch nicht gibt —
+sonst zurück zu Schritt 2.2, bevor auf dem Host etwas entsteht (ein angelegtes Repo
+bliebe sonst verwaist).
 
 **Host `github`** — ist `gh` nicht angemeldet, nicht anlegen: auf `gh auth login`
 hinweisen und fragen, ob es danach weitergeht oder das Projekt als `git` entsteht.
@@ -124,9 +132,53 @@ Einen Remote — etwa ein Bare-Repo auf einem NAS — setzt der Nutzer später s
 (`git remote add origin <url>`); ein Umzug auf einen Host geht mit
 `/coding-kit:update-conventions host`.
 
+**Host `azure`** — der Web-Weg aus `MANIFEST.md` § Hosts: Das Kit ruft kein `az` auf,
+legt auf Azure nichts an und fragt nie nach einem Token.
+
+1. **Repo im Web anlegen lassen** — die Schritte zeigen: in Azure DevOps das
+   Azure-Projekt öffnen → Repos → oben in der Repo-Auswahl „New repository" → Typ Git,
+   Name `<name>`, **„Add a README" aus, kein `.gitignore`** (das Repo muss leer sein) →
+   Create. Ein neues Azure-Projekt bringt schon ein leeres Repo mit seinem Namen mit;
+   das taugt ebenso. Repos anlegen dürfen standardmäßig nur Projekt-Admins — fehlt die
+   Schaltfläche, legt ein Admin das Repo an.
+2. **Clone-Adresse erfragen** — im Repo „Clone": SSH (Schlüssel unter User settings →
+   SSH public keys; Azure nimmt nur RSA-Schlüssel an) oder HTTPS (Anmeldung über den Git
+   Credential Manager). Eine Antwort mit Leerzeichen oder einfachem Anführungszeichen ist
+   keine Adresse — erneut fragen.
+3. **Prüfen:** `sh <skript> remote-check '<adresse>'` (`<skript>` wie in 4b, die
+   Adresse in einfachen Anführungszeichen). Verbunden wird nur, wenn die Zeile `remote`
+   `azure` nennt und die Zeile `reach` `empty` lautet. Sonst `origin` nicht setzen, den
+   Grund nennen und fragen: **andere Adresse** (zurück zu 2), **als `git` weiter** (wie
+   oben bei Host `git`, `HOST=git`) oder **abbrechen**:
+   - `credentials` — die Adresse trägt ein Passwort oder einen Token: um eine Adresse
+     ohne Zugangsdaten bitten und die Adresse nie wiederholen. War es ein echter Token,
+     steht er im Gesprächsverlauf — raten, ihn in Azure zu widerrufen.
+   - `remote` nennt nicht `azure` (etwa `other` für Azure DevOps Server): unterstützt
+     ist nur Azure DevOps Services; ein anderer Server läuft als `git`.
+   - `refs` — das Repo ist nicht leer (etwa mit README angelegt): nie verbinden, nie
+     force-pushen; das Repo im Web löschen und leer neu anlegen oder eine andere Adresse.
+   - `not-found` — das Repo gibt es nicht oder es fehlen Rechte (Azure unterscheidet das
+     nicht): Adresse auf Tippfehler prüfen, Rechte im Azure-Projekt.
+   - `denied` — Anmeldung abgelehnt: per SSH ist der Schlüssel nicht im Profil oder kein
+     RSA-Schlüssel; per HTTPS trägt die Anmeldung des Git Credential Managers nicht.
+   - `host-key` — ssh kennt den Server noch nicht: einmal `ssh -T git@ssh.dev.azure.com`
+     im Terminal ausführen und den Fingerabdruck mit dem in Azure (User settings → SSH
+     public keys) vergleichen. Der Befehl endet auch nach erfolgreicher Anmeldung mit
+     einem Fehler und „Shell access is not supported" — das ist richtig so. Dann erneut
+     prüfen.
+   - `timeout` — keine Antwort: kurz warten und erneut prüfen (viele Verbindungen kurz
+     hintereinander bremst Azure).
+   - `failed` — sonst: die Adresse prüfen.
+4. **Lokal anlegen und verbinden:**
+
+   ```bash
+   mkdir "$CODING_KIT_PROJECTS_DIR/<name>" && git -C "$CODING_KIT_PROJECTS_DIR/<name>" init -b main
+   git -C "$CODING_KIT_PROJECTS_DIR/<name>" remote add origin '<adresse>'
+   ```
+
 Danach die lokale Autor-Config (nie hardcoden): der Name auf GitHub über
-`git config --local user.name "$(gh api user --jq '.name // .login')"`, bei `git` aus
-`git config --global user.name`, sonst fragen; die Commit-Adresse ermitteln und setzen wie
+`git config --local user.name "$(gh api user --jq '.name // .login')"`, auf `azure` und
+bei `git` aus `git config --global user.name`, sonst fragen; die Commit-Adresse ermitteln und setzen wie
 `/coding-kit:step-done` § 5a — über `template-sync.sh commit-email` die Adresse des
 Projekt-Hosts, immer `--local`.
 
@@ -187,8 +239,8 @@ Mechanik von `/choose-stack` in den Slot und nach `FRAGMENTS`.
 
 ### 4c. Repo-Settings (bestätigt)
 
-Nur auf einem Host mit Repo-Settings und Topics (`MANIFEST.md` § Hosts); bei `git` als
-übersprungen ausweisen. Auf `github` via `gh repo edit` / `gh api`: Beschreibung =
+Nur auf einem Host mit Repo-Settings und Topics (`MANIFEST.md` § Hosts); bei `azure` und
+`git` als übersprungen ausweisen. Auf `github` via `gh repo edit` / `gh api`: Beschreibung =
 Short-Info; **Topics** lowercase-kebab: Stack-Topic (z. B. `python`) + 2–4 Domain-Topics
 aus der Short-Info + Marker-Topic `coding-kit` (Discovery für `/update-conventions`);
 Issues an, Wiki/Projects aus, Squash-Merge + delete-branch-on-merge;
@@ -222,8 +274,8 @@ Platzhalter belassen.
   `.claude/template-base/` — sonst stimmt die Basis späterer Updates nie. Vorschlag:
   `feat: bootstrap from coding-kit <TEMPLATE_VERSION> (<modul> module)`,
   Body mit den Kernentscheidungen (Lizenz, Sichtbarkeit, Modul), Abschluss
-  `Co-Authored-By: Claude <noreply@anthropic.com>`. Danach Push (bestätigt); ohne
-  Remote (Host `git`) entfällt er.
+  `Co-Authored-By: Claude <noreply@anthropic.com>`. Danach Push (bestätigt,
+  `git push -u origin main`); ohne Remote (Host `git`) entfällt er.
 
 ### 4g. Graphiti-Gründungsepisode (nur mit Graphiti-Block)
 
@@ -237,6 +289,23 @@ melden, mit dem Text der Episode zum Nachtragen.
 
 Kurz zusammenfassen: Repo-URL (bei `git` der Ordner), Host, Modul, Lizenz,
 Template-Version, Verifikationsstatus, die übersprungenen Host-Schritte (bei `git`: Repo
-anlegen, Settings, Topics, Push), was aufgeschoben wurde (TBD-Lizenz? Anforderungen
-später?) — und der Hinweis, dass es
+anlegen, Settings, Topics, Push; bei `azure`: Repo anlegen — im Web —, Beschreibung und
+Topics, Repo-Einstellungen, Sichtbarkeit — immer privat), was aufgeschoben wurde
+(TBD-Lizenz? Anforderungen später?) — und der Hinweis, dass es
 jetzt mit `/add-feature` → `/prep-step` → `/step-done` weitergeht.
+
+Auf `azure` zusätzlich, was nur im Web oder in der Organisation geht:
+
+- **Pipeline registrieren** (nach dem ersten Push, sie liest die Datei aus dem Repo):
+  Pipelines → New pipeline → Azure Repos Git → das Repo → Existing Azure Pipelines YAML
+  file → Branch `main`, Pfad `/azure-pipelines.yml` → Continue → Run. Beim ersten Lauf
+  kann Azure eine Freigabe verlangen (der Lauf wartet mit „needs permission", im Lauf
+  „Permit" wählen). Fehlen die Rechte für das Registrieren, macht es ein Projekt-Admin;
+  das Projekt bleibt verbunden.
+- **Agent:** `azure-pipelines.yml` läuft im Pool `Default`, also auf einem eigenen Agenten
+  der Organisation (Organization settings → Agent pools). Ohne Agenten — oder ohne
+  gekaufte Laufzeit, wenn die Zeile `pool` auf Microsoft-gehostete Agenten zeigt — bricht
+  der Lauf ab; das Kit kann das nicht prüfen.
+- **Renovate:** `renovate.json` wirkt nur, wenn die Organisation Renovate über ihre Repos
+  laufen lässt. Das Preset liegt auf GitHub; ein zentraler Lauf über viele Repos braucht
+  dafür einen GitHub-Token, sonst greift das Abruflimit von GitHub.

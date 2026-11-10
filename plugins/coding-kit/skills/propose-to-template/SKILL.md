@@ -153,8 +153,8 @@ Fehlt einer der Teile, „none" schreiben statt ihn wegzulassen.
   EOF
   ~~~~
 
-  Sonst — Host `git` (dann ohne jeden `gh`-Aufruf), kein `gh` oder nicht angemeldet:
-  Titel und Body je als eigener kopierfertiger Block, dazu die Seite
+  Sonst — Host `azure` oder `git` (dann ohne jeden `gh`-Aufruf), kein `gh` oder nicht
+  angemeldet: Titel und Body je als eigener kopierfertiger Block, dazu die Seite
   `https://github.com/<owner>/<repo>/issues/new` zum Einfügen; der Befehl entfällt.
 
 **Prompt** (in der Sprache des Gesprächs, das Material darin englisch) — ohne Vorwissen

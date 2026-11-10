@@ -191,11 +191,8 @@ run_render_cases() {
   for_host "$TEMPLATE/core/SECURITY.md" azure sec.azure
   check "host azure: SECURITY is the azure variant" cmp -s "$TMP/haz/SECURITY.md" "$TMP/sec.azure"
   check "host azure: private reporting like git" cmp -s "$TMP/sec.azure" "$TMP/sec.git"
-  check "host azure public renders" render hazp docs-only public --seeds HOST=azure -OWNER
-  check "host azure public: exactly the azure targets" core_exactly hazp public azure
-  check "host azure public: code of conduct without the Security tab" \
-    contains hazp/CODE_OF_CONDUCT.md 'channel named in `SECURITY.md`'
-  refute "host azure public: no CodeQL workflow" has hazp/.github/workflows/codeql.yml
+  refute "host azure public refused" render hazp docs-only public --seeds HOST=azure -OWNER
+  check "host azure public: refusal names the reason" err_mentions hazp 'no public projects'
 
   refute "host: unknown HOST refused" render hx1 docs-only private HOST=gitlab
   check "host: refusal lists the hosts" err_mentions hx1 'github azure git'

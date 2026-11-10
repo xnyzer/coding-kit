@@ -9,6 +9,7 @@
 #       Line per file: <target> <managed|seed> <core|module>. Without --seeds only the
 #       managed targets; with --seeds the seed files follow as raw instantiation
 #       (template:adapt spots and the license text stay with the calling skill).
+#       Refused: HOST azure with VISIBILITY public (Azure DevOps has no public projects).
 #   render-global KIT ENV OUT
 #       Renders the kit's global rules KIT (global/coding-kit.md of the plugin) with the
 #       personal values of ENV (the personal config ~/.claude/coding-kit.env, shell
@@ -94,15 +95,17 @@
 #       OUT/.zones/<kind>/<name>.<project|template|base> hold the blocks for the diffs.
 #   lock-check PROJECT
 #       Checks the mise.lock of PROJECT against lockfile_platforms in [settings] of its
-#       mise.toml and the platforms its CI installs on (runs-on of the workflows that
-#       use jdx/mise-action). Lines: platforms <list|missing>; ci <platform|unknown>
-#       <runs-on> <workflow> per runner, or ci none; lockfile missing. Without the
-#       setting or the lock file nothing follows. Then per lock entry or configured
-#       tool: tool <name> <version> <state> <missing platforms>, states complete, gaps
-#       (platforms missing, none of the CI), ci-gap (a CI platform missing — the CI
-#       installs with --locked and fails), no-url (a backend that records no download
-#       URL, e.g. npm or cargo — never a gap), unlocked (in mise.toml, not in the lock),
-#       stale (in the lock, not in mise.toml).
+#       mise.toml and the platforms its CI installs on: runs-on of the workflows that
+#       use jdx/mise-action, and the pools of an azure-pipelines.yml that runs mise
+#       install (vmImage ubuntu-* or windows-* by name; a pool of own agents, any other
+#       image or no pool unknown). Lines: platforms <list|missing>; ci
+#       <platform|unknown> <runs-on|vmImage:IMAGE|pool:NAME|-> <file> per runner, or ci
+#       none; lockfile missing. Without the setting or the lock file nothing follows.
+#       Then per lock entry or configured tool: tool <name> <version> <state> <missing
+#       platforms>, states complete, gaps (platforms missing, none of the CI), ci-gap (a
+#       CI platform missing — the CI installs with --locked and fails), no-url (a
+#       backend that records no download URL, e.g. npm or cargo — never a gap),
+#       unlocked (in mise.toml, not in the lock), stale (in the lock, not in mise.toml).
 #   detect [--changed] [--answers FILE] [--registry FILE] TEMPLATE PROJECT [SIGNAL…]
 #       Matches the signals of PROJECT against the stack modules and catalog fragments
 #       of TEMPLATE (MANIFEST § Detection). Without SIGNAL it reads the files git lists
@@ -703,6 +706,10 @@ render() {
   # A project without HOST predates it and lives on GitHub (MANIFEST § Answers).
   HOST=$(value_of HOST) || HOST=github
   check_host "$HOST"
+  # Azure DevOps creates no public projects any more and cannot make one public.
+  if [ "$HOST" = azure ] && [ "$VISIBILITY" = public ]; then
+    die "answers: VISIBILITY must be private on HOST azure: Azure DevOps has no public projects"
+  fi
   OPTIONAL=$(list_of OPTIONAL)
   FRAGMENTS=$(list_of FRAGMENTS)
   # Word splitting of the name lists is intended.
@@ -1956,10 +1963,17 @@ lock_entries() {  # MISE_LOCK
     END { for (x = 1; x <= n; x++) print name[x] tab ver[x] tab be[x] tab plats[x] }' "$1"
 }
 
-# The platforms the CI runs mise on: "platform<TAB>runs-on<TAB>workflow" per runs-on line
-# of each workflow that uses jdx/mise-action — from GitHub's runner labels, "unknown" for
-# expressions, self-hosted runners and anything else.
+# The platforms the CI runs mise on: "platform<TAB>runner<TAB>file" per runner, from the
+# GitHub workflows and the Azure pipeline below; "unknown" where the file does not tell.
 ci_platforms() {  # PROJECT
+  {
+    ci_github_platforms "$1"
+    ci_azure_platforms "$1"
+  } | LC_ALL=C sort -u
+}
+
+# GitHub: the runs-on of each workflow that uses jdx/mise-action.
+ci_github_platforms() {  # PROJECT
   for cp_wf in "$1"/.github/workflows/*.yml "$1"/.github/workflows/*.yaml; do
     [ -f "$cp_wf" ] || continue
     grep -q 'jdx/mise-action' "$cp_wf" || continue
@@ -1978,7 +1992,37 @@ ci_platforms() {  # PROJECT
         else if (v ~ /^windows-[a-z0-9.-]+$/) p = "windows-x64"
         print p tab v tab wf
       }' "$cp_wf"
-  done | LC_ALL=C sort -u
+  done
+}
+
+# Azure Pipelines: the pools of azure-pipelines.yml when it installs with mise. A
+# Microsoft-hosted image names its platform; a pool by name runs on the organization's
+# own agents, whose platform the file does not tell (unknown, like no pool at all).
+ci_azure_platforms() {  # PROJECT
+  for ca_file in "$1"/azure-pipelines.yml "$1"/azure-pipelines.yaml; do
+    [ -f "$ca_file" ] || continue
+    grep -q 'mise install' "$ca_file" || continue
+    awk -v wf="${ca_file#"$1"/}" -v tab="$TAB" '
+      function value(s) {
+        sub(/^[ \t]*[A-Za-z]+:[ \t]*/, "", s); sub(/[ \t]+#.*$/, "", s)
+        gsub(/^["\047]|["\047]$/, "", s)
+        return s
+      }
+      function indent(s) { match(s, /[^ \t]/); return RSTART }
+      { sub(/\r$/, "") }
+      /^[ \t]*(#.*)?$/ { next }
+      inpool && indent($0) <= pool_indent { inpool = 0 }
+      inpool && /^[ \t]*vmImage:/ {
+        v = value($0); p = "unknown"
+        if (v ~ /^ubuntu-/) p = "linux-x64"
+        else if (v ~ /^windows-/) p = "windows-x64"
+        print p tab "vmImage:" v tab wf; found = 1; next
+      }
+      inpool && /^[ \t]*name:/ { print "unknown" tab "pool:" value($0) tab wf; found = 1; next }
+      /^[ \t]*pool:[ \t]*(#.*)?$/ { inpool = 1; pool_indent = indent($0); next }
+      /^[ \t]*pool:/ { print "unknown" tab "pool:" value($0) tab wf; found = 1; next }
+      END { if (!found) print "unknown" tab "-" tab wf }' "$ca_file"
+  done
 }
 
 lock_check() {

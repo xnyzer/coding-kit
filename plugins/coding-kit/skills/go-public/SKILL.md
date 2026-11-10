@@ -1,6 +1,6 @@
 ---
 name: go-public
-description: Projekt nachträglich public machen — geführter Übergang mit blockierendem Preflight-Audit (Secrets über die volle Git-Historie, Privacy-Scan des committeten Baums, Lizenz, private/-Hygiene), Datei-Nachzug VOR dem Umstellen (via /update-conventions mit Sichtbarkeits-Prämisse) und Abschluss-Check. Drei Startfälle — privates GitHub-Repo, GitHub-Projekt noch ohne Repo, schon public; ohne Host (nur Git) erst der Host-Wechsel, der Preflight auf Wunsch als reine Prüfung. Nichts passiert ohne explizite Bestätigung; online geht das Repo erst, wenn es vollständig ist.
+description: Projekt nachträglich public machen — geführter Übergang mit blockierendem Preflight-Audit (Secrets über die volle Git-Historie, Privacy-Scan des committeten Baums, Lizenz, private/-Hygiene), Datei-Nachzug VOR dem Umstellen (via /update-conventions mit Sichtbarkeits-Prämisse) und Abschluss-Check. Drei Startfälle — privates GitHub-Repo, GitHub-Projekt noch ohne Repo, schon public; ohne Host (nur Git) erst der Host-Wechsel, auf Azure DevOps (keine öffentlichen Projekte) nur der Weg zu GitHub — der Preflight dort auf Wunsch als reine Prüfung. Nichts passiert ohne explizite Bestätigung; online geht das Repo erst, wenn es vollständig ist.
 disable-model-invocation: true
 user-invocable: true
 ---
@@ -47,6 +47,11 @@ Sichtbarkeit ist eine Host-Fähigkeit (`${CLAUDE_PLUGIN_ROOT}/template/MANIFEST.
   `/coding-kit:update-conventions host` dorthin um (das Repo entsteht privat), danach
   läuft dieser Skill als Fall A. Auf Wunsch läuft der Preflight (§ 2) schon jetzt als
   reine Prüfung, ohne Übergang.
+- **`azure`:** Azure DevOps hat keine öffentlichen Projekte mehr — es legt keine an und
+  stellt keines um; das Kit ruft dafür nichts auf. Öffentlich wird das Projekt nur auf
+  einem anderen Host: erst `/coding-kit:update-conventions host` nach `github` (das Repo
+  entsteht privat), danach dieser Skill als Fall A. Auf Wunsch läuft der Preflight (§ 2)
+  schon jetzt als reine Prüfung, ohne Nachzug und Übergang.
 - **`github`, aber `gh` nicht angemeldet:** den Übergang als übersprungen ausweisen
   (Hinweis `gh auth login`); der Preflight läuft auf Wunsch als reine Prüfung.
 
