@@ -46,6 +46,9 @@ Tensions can occur between community members even when they are trying their bes
 <!-- template:optional:host-github -->
 When an incident does occur, it is important to report it promptly. To report a possible violation, open a private report via the repository's **Security tab → "Report a vulnerability"** (in this solo-maintained project that channel is also monitored for conduct reports), or open a regular issue asking the maintainer for a private follow-up channel. <!-- template:adapt: replace with your community's reporting channel if different -->
 <!-- /template:optional:host-github -->
+<!-- template:optional:host-azure -->
+When an incident does occur, it is important to report it promptly. To report a possible violation, contact the maintainer privately through the channel named in `SECURITY.md` (in this solo-maintained project that channel is also monitored for conduct reports). <!-- template:adapt: replace with your community's reporting channel if different -->
+<!-- /template:optional:host-azure -->
 <!-- template:optional:host-git -->
 When an incident does occur, it is important to report it promptly. To report a possible violation, contact the maintainer privately through the channel named in `SECURITY.md` (in this solo-maintained project that channel is also monitored for conduct reports). <!-- template:adapt: replace with your community's reporting channel if different -->
 <!-- /template:optional:host-git -->

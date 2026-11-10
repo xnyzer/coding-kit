@@ -162,7 +162,8 @@ expected_core() {  # VISIBILITY [HOST]
       if (tgt == "same path") tgt = substr(src, 6)
       if ($4 ~ /^ *seed/) next
       if ($4 ~ /public-only/ && vis != "public") next
-      if (match($4, /host:[a-z]+/) && substr($4, RSTART + 5, RLENGTH - 5) != host) next
+      if (match($4, /host:[a-z]+(\/[a-z]+)*/) \
+        && index("/" substr($4, RSTART + 5, RLENGTH - 5) "/", "/" host "/") == 0) next
       print tgt
     }' "$TEMPLATE/MANIFEST.md"
 }

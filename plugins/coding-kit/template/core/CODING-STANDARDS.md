@@ -173,6 +173,10 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 <!-- template:optional:host-github -->
 - **Commit email = GitHub noreply** — verify before each commit; never a private address.
 <!-- /template:optional:host-github -->
+<!-- template:optional:host-azure -->
+- **Commit email = the address set for this project** — verify before each commit; never
+  a private address.
+<!-- /template:optional:host-azure -->
 <!-- template:optional:host-git -->
 - **Commit email = the address set for this project** — verify before each commit; never
   a private address.
@@ -183,6 +187,10 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
 - **Trunk-based:** short-lived feature branches onto `main`; PRs optional for solo work
   but CI must be green either way; **squash-merge**; delete the branch after merge.
 <!-- /template:optional:host-github -->
+<!-- template:optional:host-azure -->
+- **Trunk-based:** short-lived feature branches onto `main`; PRs optional for solo work
+  but CI must be green either way; **squash-merge**; delete the branch after merge.
+<!-- /template:optional:host-azure -->
 <!-- template:optional:host-git -->
 - **Trunk-based:** short-lived feature branches onto `main`; `just check` must be green
   before merging; **squash** each change into one commit; delete the branch after merge.

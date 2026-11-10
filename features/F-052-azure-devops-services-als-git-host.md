@@ -68,22 +68,29 @@ je Host).
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben ein Remote auf Azure DevOps (`dev.azure.com` per HTTPS mit und ohne
+- [x] AC-1 — Gegeben ein Remote auf Azure DevOps (`dev.azure.com` per HTTPS mit und ohne
   `<org>@`, `ssh.dev.azure.com:v3/…`, `<org>.visualstudio.com`,
   `vs-ssh.visualstudio.com:v3/…`), wenn `template-sync.sh host` läuft, dann nennt es
   `azure` als Vorschlag; `HOST=azure` in den Antworten gilt; `HOST=git` mit
   Azure-Remote meldet einen Widerspruch. Zugangsdaten aus der URL erscheinen nie in der
-  Ausgabe.
-- [ ] AC-2 — Gegeben `HOST=azure`, wenn gerendert wird, dann entstehen
+  Ausgabe. — belegt: `tests/template-sync/host.sh` (alle Adressformen, `HOST=azure`,
+  Widerspruch bei `HOST=git`, Token nie ausgegeben), `just check`.
+- [x] AC-2 — Gegeben `HOST=azure`, wenn gerendert wird, dann entstehen
   `azure-pipelines.yml`, `.azuredevops/pull_request_template.md` und `renovate.json`,
   aber kein `.github/`; die sechs Texte tragen ihren Azure-Block; `GO_MODULE` ist der
   Projektname; `OWNER` wird nicht verlangt. Ein gerendertes Azure-Projekt besteht
   `just check`. Renders für `github` und `git` bleiben byte-gleich zum Stand vor F-052.
-- [ ] AC-3 — Gegeben eine Template-Datei mit Host-Blöcken, wenn für einen Host aus
+  — belegt: `tests/template-sync/render.sh` (Ziele, kein `.github/`, Blöcke, Go-Modul,
+  ohne `OWNER`); Byte-Vergleich der Renders `github` und `git` aller Module mit dem Stand
+  davor; ein gerendertes Azure-Projekt besteht `just check`.
+- [x] AC-3 — Gegeben eine Template-Datei mit Host-Blöcken, wenn für einen Host aus
   `HOSTS` der Block fehlt, dann meldet `just check` das; mit allen Blöcken ist es grün.
-- [ ] AC-4 — Gegeben `HOST=azure`, wenn `commit-email` läuft, dann liefert es
+  — belegt: Gegenprobe mit entferntem `host-azure`-Block und einem Block für einen
+  unbekannten Host — `just check` meldet beides; mit allen Blöcken grün.
+- [x] AC-4 — Gegeben `HOST=azure`, wenn `commit-email` läuft, dann liefert es
   `CODING_KIT_EMAIL_AZURE`; fehlt sie, meldet es `missing` und step-done fragt — nie die
-  Adresse eines anderen Hosts.
+  Adresse eines anderen Hosts. — belegt: `tests/template-sync/host.sh`
+  (`CODING_KIT_EMAIL_AZURE`, `missing` ohne sie, nie die GitHub-Adresse).
 - [ ] AC-5 — Gegeben new-project mit Host `azure`, wenn der Lauf durchgeht, dann zeigt
   der Skill die Schritte zum Anlegen eines leeren Repos im Web, nimmt die Clone-Adresse
   entgegen, prüft sie mit `git ls-remote` (erreichbar, leer) und setzt `origin`;
@@ -365,3 +372,59 @@ Preset-Frage hängt nicht an der Plattform und ist lokal geklärt.
   Pool der Organisation).
 - Die ersten Läufe scheiterten am macOS-Gatekeeper des Test-Agenten; das betrifft nur den
   Testaufbau, nicht das Kit.
+
+### F-052b — fertig 2026-11-10
+
+**Umgesetzt:**
+
+- `template-sync.sh`: `HOSTS='github azure git'`; ein Azure-Remote schlägt `azure` vor
+  statt „nicht unterstützt“; `GO_MODULE` ist auf `azure` der Projektname; die Policy
+  `host:` nennt mehrere Hosts mit `/` (`host:github/azure`).
+- Neuer Befehl `remote-check URL`: weist Zugangsdaten in der Adresse ab, ohne den
+  Server zu fragen; sonst `git ls-remote` ohne Rückfrage (kein Terminal-Prompt, ssh im
+  Batch-Modus, nur übliche Transporte) mit dem Ergebnis `empty`, `refs`, `not-found`,
+  `host-key`, `timeout`, `denied` oder `failed`. Ausgegeben werden nur Hostname und
+  Ergebnis. Live gegen die Test-Organisation geprüft (Repo mit Inhalt, fehlendes Repo).
+- MANIFEST: Zeile `azure` in § Hosts, Core-Zeilen für `azure-pipelines.yml` und die
+  PR-Vorlage (dieselbe Quelle wie auf GitHub, Ziel `.azuredevops/`), `renovate.json` auf
+  `github/azure`, Marker-Liste.
+- Template: `core/azure-pipelines.yml` aus dem Spike; Blöcke `host-azure` in den sechs
+  Texten — Commit-Adresse und Meldeweg wie bei `git`, Pull Requests und CI wie bei
+  GitHub.
+- `validate.py`: Block je Host in jeder Datei mit Host-Blöcken; der Kontoname in
+  `<org>@vs-ssh.visualstudio.com` und `https://<org>@dev.azure.com` gilt nicht als
+  Mailadresse. Globale Regeln: `CODING_KIT_EMAIL_AZURE`, `azure` als Standard-Host
+  möglich. `default.json`: Regel für `MISE_VERSION` (Releases von jdx/mise), lokal mit
+  Renovate geprüft. Version 3.4.0.
+
+**Entscheidungen:**
+
+- Pool der Pipeline-Vorlage: `Default`, der Pool eigener Agenten, den jede Organisation
+  hat. Microsoft-gehostete Agenten wären die Alternative gewesen; entschieden `Default`,
+  weil er ohne gekaufte Laufzeit läuft und F-052d die Vorlage unverändert mit dem
+  Agenten auf dem Mac testet.
+- Der fehlende CI-Job des Go-Moduls (Lizenzprüfung) auf Azure wird eine eigene Aufgabe
+  (F-057), nicht Teil von F-052.
+
+**Abweichung vom Plan:**
+
+- `remote-check` braucht eine Zeitgrenze: Azure meldet `TF401019` sofort, hält die
+  Verbindung aber rund 4½ Minuten offen, und git wartet darauf (bei allen
+  Protokollversionen). Die Prüfung endet daher bei `TF401019`, sonst nach 60 Sekunden
+  (`REMOTE_CHECK_SECONDS`); git wird hart beendet, weil es sonst noch auf ssh wartet.
+  Folge: jeder Aufruf dauert mindestens eine Sekunde, die Skript-Tests rund 45 Sekunden
+  länger.
+- Der Validator lässt neben `<org>@vs-ssh.visualstudio.com` auch `<org>@dev.azure.com`
+  zu — dieselbe Lage in der HTTPS-Adresse.
+- Kein eigener Test für den Validator: das Repo hat keine Test-Suite dafür; AC-3 ist
+  per Gegenprobe belegt.
+
+**Funde:**
+
+- Vorhandener Fehler behoben (aus F-032): `host` gab den Hostnamen der Remote-Adresse
+  ungefiltert aus; ein Zeilenumbruch darin fälschte eine Zeile der Ausgabe. Hostnamen
+  werden nur noch ausgegeben, wenn sie aus Buchstaben, Ziffern, `.`, `_` und `-`
+  bestehen — gilt für `host` und `remote-check`, belegt mit Tests.
+- F-057 (CI-Jobs der Stack-Module auch in der Azure-Pipeline) angelegt.
+- Ohne eine Pause zwischen vielen neuen SSH-Verbindungen drosselt Azure sie
+  (Zeitüberschreitung beim Verbinden); `remote-check` meldet das als `timeout`.

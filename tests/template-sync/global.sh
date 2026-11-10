@@ -257,6 +257,10 @@ run_global_cases() {
   check "set-global: address replaced with its comment" grep -qxF \
     "CODING_KIT_EMAIL_GIT=\"new@example.org\"  # $(kit_c CODING_KIT_EMAIL_GIT)" "$TMP/gsaddr/coding-kit.env"
   check "set-global: address added" set_is gsaddr EMAIL_GITHUB added
+  check "set-global: Azure address runs" sglobal gsaz CODING_KIT_EMAIL_AZURE=me@work.example.com
+  check "set-global: Azure address written with its comment" grep -qxF \
+    "CODING_KIT_EMAIL_AZURE=\"me@work.example.com\"  # $(kit_c CODING_KIT_EMAIL_AZURE)" "$TMP/gsaz/coding-kit.env"
+  check "set-global: azure as default host runs" sglobal gsdaz CODING_KIT_DEFAULT_HOST=azure
   # --- the old commit address: reported by render-global, dropped by set-global ------
   envfile rgl 'CODING_KIT_GIT_NOREPLY_EMAIL="1+octo@users.noreply.github.com"'
   check "render-global: old address runs" rglobal rgl
@@ -294,7 +298,7 @@ run_global_cases() {
   check "set-global: default host written with its comment" grep -qxF \
     "CODING_KIT_DEFAULT_HOST=\"git\"  # $(kit_c CODING_KIT_DEFAULT_HOST)" "$TMP/gsdh/coding-kit.env"
   refute "set-global: an unknown default host is refused" sglobal gsdx CODING_KIT_DEFAULT_HOST=gitlab
-  check "set-global: the refusal lists the hosts" err_mentions gsdx 'github git'
+  check "set-global: the refusal lists the hosts" err_mentions gsdx 'github azure git'
   refute "set-global: a repeated key is refused" sglobal gsr CODING_KIT_REPLY_LANGUAGE=a \
     CODING_KIT_REPLY_LANGUAGE=b
   refute "set-global: a name without prefix is refused" sglobal gsx REPLY_LANGUAGE=x

@@ -27,7 +27,7 @@ lowercase and therefore never collide).
 | `{{LANG_COMMITS}}` | Language of commit-message prose (Conventional tokens stay English) | `/new-project` language preset (default: English) |
 | `{{LANG_README}}` | Language of README & public docs | `/new-project` language preset (default: English) |
 | `{{LICENSE_SPDX}}` | Chosen license SPDX id | `/choose-license` ("TBD" allowed) |
-| `{{GO_MODULE}}` | Go module path: `github.com/<OWNER>/<PROJECT_NAME>` on GitHub, the bare `<PROJECT_NAME>` on `git` | derived from `HOST`, `OWNER`, `PROJECT_NAME` |
+| `{{GO_MODULE}}` | Go module path: `github.com/<OWNER>/<PROJECT_NAME>` on GitHub, the bare `<PROJECT_NAME>` on `azure` and `git` | derived from `HOST`, `OWNER`, `PROJECT_NAME` |
 | `{{CODEQL_LANGUAGES}}` | CodeQL language for the module | stack module (`javascript-typescript`, `python`, `go`) |
 | `{{TEMPLATE_VERSION}}` | Plugin version at instantiation | `version` in the plugin's `.claude-plugin/plugin.json` |
 
@@ -69,14 +69,15 @@ NAS, a server the kit does not know) — and always carries the whole workflow.
 | Host | CLI | Create repository | Repository settings | Description, topics | Visibility | Issues | Commit address | Renovate | CI |
 |------|-----|-------------------|---------------------|---------------------|------------|--------|----------------|----------|----|
 | `github` | `gh` | `gh repo create` | yes — merge method, branch cleanup, secret scanning (`gh repo edit`, `gh api`) | yes | per repository | yes | noreply `<id>+<login>@users.noreply.github.com` | platform `github` | `.github/workflows/` |
+| `azure` | — (the kit never calls `az`) | no — the user creates an empty repository in the web; the skill checks its clone URL (`template-sync.sh remote-check`) and sets `origin` | no — never a branch policy | no | per Azure project — asked, never changed | no — work items, the kit creates none | set by the user, never a private one | `renovate.json` in the project; the run is the organization's | `azure-pipelines.yml`, registered once in the web; needs an agent |
 | `git` | — | no — `git init`, a remote is any git URL | no | no | no | no | set by the user, never a private one | no | no |
 
 `template-sync.sh host PROJECT` names the host in effect: `HOST` from the answers, else
 the value the remote `origin` suggests. It recognizes these servers by host name: GitHub
-(`github.com`), Azure DevOps (`dev.azure.com`, `*.visualstudio.com`), GitLab
-(`gitlab.com`) and Forgejo (`codeberg.org`). A recognized host without a row above runs
-as `git` until it gets one; any other server — GitHub Enterprise Server or a self-hosted
-one — is `git` as well.
+(`github.com`), Azure DevOps Services (`dev.azure.com`, `ssh.dev.azure.com`,
+`*.visualstudio.com`), GitLab (`gitlab.com`) and Forgejo (`codeberg.org`). A recognized
+host without a row above runs as `git` until it gets one; any other server — GitHub
+Enterprise Server, Azure DevOps Server or a self-hosted one — is `git` as well.
 
 **Host steps in a skill.** Before a step that needs the host, a skill (1) takes the host
 from `template-sync.sh host` — before the project exists, from the user's choice —, (2)
@@ -90,7 +91,7 @@ skipped with the reason — for a CLI that is not logged in, with its login comm
 | Marker | Meaning |
 |--------|---------|
 | `<!-- template:adapt: hint -->` | Spot `/new-project` must concretise from the short-info — never raw-copy. |
-| `<!-- template:optional:NAME -->` … `<!-- /template:optional:NAME -->` | Block kept or removed at instantiation (used: `graphiti`, `license`, `license-tbd`, `host-github`, `host-git`). |
+| `<!-- template:optional:NAME -->` … `<!-- /template:optional:NAME -->` | Block kept or removed at instantiation (used: `graphiti`, `license`, `license-tbd`, `host-github`, `host-azure`, `host-git`). |
 | `<!-- module:coding-standards -->` … `<!-- /module:coding-standards -->` | Slot in `CODING-STANDARDS.md` §13 where standards fragments are **appended** (each wrapped in `fragment:NAME`), not single-inserted. |
 | `<!-- fragment:NAME -->` … `<!-- /fragment:NAME -->` | Wraps one self-contained standards fragment inside the `module:coding-standards` slot. `NAME` = a catalog fragment (`modules/standards/`) or a stack module's own module fragment. See § Standards fragments. |
 | `<!-- section:NAME -->` … `<!-- /section:NAME -->` | Marks a template-owned zone inside a **seed** file that `/update-conventions` may diff and offer individually — never the whole file. Names are lowercase-kebab, unique across the template. See § Seed sections. |
@@ -120,7 +121,8 @@ issue there) — never as an automatic write from a project.
   individually (diff shown, confirmed per section); the file as a whole is never offered.
 - **public-only** — instantiated only for public repositories.
 - **host:NAME** — instantiated only for projects on host `NAME` (§ Hosts), e.g. the
-  `.github/` files and `renovate.json` only on `github`.
+  `.github/` files only on `github`; `host:NAME/NAME…` names several hosts, e.g.
+  `renovate.json` on `github` and `azure`.
 - **module** — provided/replaced by the stack module; synced like managed.
 
 ## Base snapshot
@@ -202,10 +204,12 @@ contains itself, is offered for removal.
 | `core/.github/PULL_REQUEST_TEMPLATE.md` | same path | managed, host:github |
 | `core/.github/workflows/ci.yml` | same path | managed, host:github (module may append jobs) |
 | `core/.github/workflows/codeql.yml` | same path | managed, public-only, host:github |
+| `core/.github/PULL_REQUEST_TEMPLATE.md` | `.azuredevops/pull_request_template.md` | managed, host:azure (the same source as on `github`) |
+| `core/azure-pipelines.yml` | `azure-pipelines.yml` | managed, host:azure |
 | `core/justfile` | `justfile` | module (core ships the docs-only default) |
 | `core/mise.toml` | `mise.toml` | managed (module merges `[tools]`) |
 | `core/lefthook.yml` | `lefthook.yml` | managed |
-| `core/renovate.json` | `renovate.json` | managed, host:github |
+| `core/renovate.json` | `renovate.json` | managed, host:github/azure |
 | `core/.editorconfig` | `.editorconfig` | managed |
 | `core/.gitattributes` | `.gitattributes` | managed |
 | `core/.gitignore` | `.gitignore` | managed (module appends below marker) |

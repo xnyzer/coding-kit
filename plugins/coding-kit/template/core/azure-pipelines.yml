@@ -1,0 +1,36 @@
+# CI for Azure Pipelines: the same gate as locally — just setup, then just check.
+# Register once in the web: Pipelines → New pipeline → Azure Repos Git → this
+# repository → Existing Azure Pipelines YAML file → /azure-pipelines.yml.
+
+# Every branch; Azure Repos ignores `pr:` — pull request runs need a branch policy.
+trigger:
+  branches:
+    include: ["*"]
+pr: none
+
+# The organization's default pool of self-hosted agents (Linux or macOS). Another pool,
+# or Microsoft-hosted agents (vmImage: ubuntu-latest), is a change of this line.
+pool:
+  name: Default
+
+variables:
+  # The installer of exactly this release carries the checksums of its own archives, so
+  # mise is installed at this version and verified, or not at all. Renovate updates it.
+  MISE_VERSION: v2026.11.5
+
+steps:
+  - checkout: self
+  - script: |
+      set -eu
+      dir="$(Agent.TempDirectory)/mise"
+      mkdir -p "$dir"
+      curl -fsSL "https://github.com/jdx/mise/releases/download/$MISE_VERSION/install.sh" -o "$dir/install.sh"
+      MISE_INSTALL_PATH="$dir/bin/mise" sh "$dir/install.sh"
+      echo "##vso[task.prependpath]$dir/bin"
+    displayName: Install mise
+  - script: mise install --locked
+    displayName: Install tools (mise.lock)
+  - script: mise exec -- just setup
+    displayName: just setup
+  - script: mise exec -- just check
+    displayName: just check

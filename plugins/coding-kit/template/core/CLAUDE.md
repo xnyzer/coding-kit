@@ -71,6 +71,11 @@ Project notes — knowledge with no other place in the repo: @docs/notes.md
   `Co-Authored-By: Claude <noreply@anthropic.com>`. Commit email = **GitHub noreply**
   (verify `git config user.email`; fix via `gh api user`). **Never auto-commit — ask first.**
 <!-- /template:optional:host-github -->
+<!-- template:optional:host-azure -->
+  `Co-Authored-By: Claude <noreply@anthropic.com>`. Commit email = the address set for
+  this project, **never a private one** (verify `git config user.email`). **Never
+  auto-commit — ask first.**
+<!-- /template:optional:host-azure -->
 <!-- template:optional:host-git -->
   `Co-Authored-By: Claude <noreply@anthropic.com>`. Commit email = the address set for
   this project, **never a private one** (verify `git config user.email`). **Never

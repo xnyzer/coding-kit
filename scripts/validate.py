@@ -71,6 +71,10 @@ ALLOWED_SSH_REMOTES = {
     "git@codeberg.org",
     "git@ssh.dev.azure.com",
 }
+# Azure DevOps puts the organization in front of the host name of a clone URL
+# (<org>@vs-ssh.visualstudio.com:v3/…, https://<org>@dev.azure.com/…) — an account name
+# on hosts that receive no mail, never a person's address.
+ALLOWED_URL_USER_HOSTS = ("vs-ssh.visualstudio.com", "dev.azure.com")
 
 # Private name blocklist: gitignored, so absent in CI — the check silently skips there.
 # One term per line; `#` starts a comment. The file itself is never scanned (private/ is
@@ -285,6 +289,8 @@ def check_privacy(path: Path, text: str, findings: list[str]) -> None:
     for match in EMAIL_RE.finditer(text):
         email = match.group(0)
         if email.endswith(ALLOWED_EMAIL_DOMAINS) or email in ALLOWED_SSH_REMOTES:
+            continue
+        if email.split("@", 1)[1].lower() in ALLOWED_URL_USER_HOSTS:
             continue
         findings.append(f"{rel}: email address leaked — {email}")
 
@@ -698,9 +704,32 @@ def check_detection(text: str, findings: list[str]) -> None:
     check_script_signal_types(types, findings)
 
 
+def check_host_blocks(hosts: set[str], findings: list[str]) -> None:
+    """Where a template text differs by host, each host has its own variant: as many
+    host-NAME blocks for every host of § Hosts as for any other, none for an unknown one.
+    A missing block would leave that host's projects without the text."""
+    for path in template_files(""):
+        content = path.read_text(encoding="utf-8", errors="replace")
+        names = [n[5:] for n in OPTIONAL_BLOCK_RE.findall(content) if n.startswith("host-")]
+        if not names:
+            continue
+        rel = display_path(path)
+        for name in sorted(set(names) - hosts):
+            findings.append(f"{rel}: block host-{name} names no host of MANIFEST § Hosts")
+        counts = {host: names.count(host) for host in hosts}
+        most = max(counts.values(), default=0)
+        for host in sorted(hosts):
+            if counts[host] < most:
+                findings.append(
+                    f"{rel}: {counts[host]} host-{host} block(s), other hosts have {most} — "
+                    "every host needs its own variant"
+                )
+
+
 def check_hosts(text: str, findings: list[str]) -> None:
     """MANIFEST § Hosts lists the supported hosts, `git` among them; `template-sync.sh`
-    knows exactly those (HOSTS)."""
+    knows exactly those (HOSTS); every template file with host blocks has a block for
+    each of them."""
     rel = display_path(MANIFEST_PATH)
     section = manifest_section(text, "Hosts")
     if section is None:
@@ -709,6 +738,7 @@ def check_hosts(text: str, findings: list[str]) -> None:
     hosts = set(HOST_ROW_RE.findall(section))
     if "git" not in hosts:
         findings.append(f"{rel}: § Hosts has no row for the base level `git`")
+    check_host_blocks(hosts, findings)
     if not TEMPLATE_SYNC.is_file():
         return  # reported by check_module_parts_known
     match = SCRIPT_HOSTS_RE.search(TEMPLATE_SYNC.read_text(encoding="utf-8"))

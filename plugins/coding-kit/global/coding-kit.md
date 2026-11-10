@@ -12,8 +12,9 @@ außer den Commit-Adressen (CODING_KIT_EMAIL_…), die gelten beim nächsten Com
 CODING_KIT_REPLY_LANGUAGE=""  # Sprache der Antworten, z. B. Deutsch, English; leer = Claude-Standard
 CODING_KIT_EXPLAIN_LEVEL=""   # einsteiger | junior | fortgeschritten | senior; leer = Claude-Standard
 CODING_KIT_EXPLAIN_NOTE=""    # freier Text, präzisiert die Stufe; leer = keine Notiz
-CODING_KIT_DEFAULT_HOST=""    # Git-Host neuer Projekte: github | git; leer = github
+CODING_KIT_DEFAULT_HOST=""    # Git-Host neuer Projekte: github | azure | git; leer = github
 CODING_KIT_EMAIL_GITHUB=""    # Commit-Adresse für GitHub-Projekte (Noreply); leer = über gh ermitteln
+CODING_KIT_EMAIL_AZURE=""     # Commit-Adresse für Azure-DevOps-Projekte (meist die Firmenadresse); leer = beim Commit fragen
 CODING_KIT_EMAIL_GIT=""       # Commit-Adresse für Projekte ohne Host; leer = beim Commit fragen
 
 Abweichen:

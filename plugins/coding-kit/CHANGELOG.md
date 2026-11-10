@@ -13,6 +13,54 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.4.0 — 2026-11-09
+
+Azure DevOps Services als dritter Git-Host neben GitHub und „nur Git“ (F-052, in
+Arbeit): Skript, MANIFEST und Template kennen `azure`; die Skills folgen.
+
+- **`template-sync.sh`:** `HOST=azure` gilt in den Antworten. `host` schlägt `azure` für
+  Remotes auf `dev.azure.com`, `ssh.dev.azure.com` und `*.visualstudio.com` vor, statt
+  sie als „nicht unterstützt“ zu melden; Azure DevOps Server mit eigenem Hostnamen
+  bleibt `git`. `commit-email` liefert für Azure-Projekte `CODING_KIT_EMAIL_AZURE`, nie
+  die Adresse eines anderen Hosts. Der Go-Modulpfad ist auf `azure` der Projektname.
+  `host` gibt einen Hostnamen nur noch aus, wenn er aus Buchstaben, Ziffern, `.`, `_`
+  und `-` besteht — ein Zeilenumbruch in der Remote-Adresse konnte eine Zeile der
+  Ausgabe fälschen.
+- **`template-sync.sh remote-check`** (neu): prüft eine Clone-Adresse, bevor ein
+  Projekt damit verbunden wird — Zugangsdaten in der Adresse werden abgewiesen, ohne den
+  Server zu fragen; sonst meldet `git ls-remote`, ob das Repo leer ist, Inhalt hat,
+  nicht gefunden wird (Azure unterscheidet fehlendes Repo und fehlende Rechte nicht),
+  den Host-Schlüssel noch nicht kennt, die Anmeldung ablehnt oder nicht antwortet. git
+  fragt dabei nichts, und die Prüfung endet nach spätestens 60 Sekunden — Azure hält
+  die Verbindung nach „Repo nicht gefunden“ sonst minutenlang offen. Ausgegeben werden
+  nur Hostname und Ergebnis, nie Adresse, Token oder Meldungen von git.
+- **MANIFEST:** § Hosts mit der Zeile `azure` (kein `az`, Repo im Web anlegen,
+  Sichtbarkeit je Azure-Projekt, Pipeline im Web registrieren). Die Policy `host:` darf
+  mehrere Hosts nennen (`host:github/azure`).
+- **`just check`:** Jede Template-Datei mit Host-Blöcken braucht einen Block je Host;
+  der Kontoname in Azure-Adressen (`<org>@vs-ssh.visualstudio.com`,
+  `https://<org>@dev.azure.com`) gilt nicht als Mailadresse.
+- **Globale Regeln:** neuer Schlüssel `CODING_KIT_EMAIL_AZURE`; `CODING_KIT_DEFAULT_HOST`
+  nimmt auch `azure`. `/coding-kit:update-conventions global` bringt die Zeile auf den
+  Rechner.
+- **Renovate-Preset:** hält die mise-Version in `azure-pipelines.yml` aktuell
+  (`MISE_VERSION`, Releases von jdx/mise).
+
+### Template
+
+- **`azure-pipelines.yml`** (neu, nur auf `azure`): dasselbe Prüftor wie lokal —
+  mise in fester Version mit Prüfsumme installieren, `mise install --locked`,
+  `just setup`, `just check`; läuft auf jedem Branch im Pool `Default` der Organisation
+  (eigene Agenten). Einmal im Web registrieren; der Kopf der Datei nennt den Klickweg.
+- **`.azuredevops/pull_request_template.md`** (neu, nur auf `azure`): dieselbe
+  PR-Vorlage wie auf GitHub, aus derselben Quelle.
+- **`renovate.json`** entsteht auf `github` und `azure`; den Renovate-Lauf stellt auf
+  Azure die Organisation.
+- **Host-Blöcke `host-azure`** in `CLAUDE.md`, `CODING-STANDARDS.md`, `CONTRIBUTING.md`,
+  `CODE_OF_CONDUCT.md`, `HOW-TO-CODE-WITH-CLAUDE.md` und `SECURITY.md`: Commit-Adresse
+  und privater Meldeweg wie ohne Host, Pull Requests und CI als Prüftor wie auf GitHub.
+  Für GitHub- und Git-Projekte ändert sich am gerenderten Text nichts.
+
 ## 3.3.1 — 2026-11-04
 
 GitHubs Abhängigkeitsgraph scheitert nicht mehr an der Go-Vorlage (F-056).

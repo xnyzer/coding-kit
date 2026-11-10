@@ -39,6 +39,12 @@ This repository's history may be public. Commit emails must use the GitHub norep
 
 Do not use a private or corporate email address. If a real email slips into history, it
 <!-- /template:optional:host-github -->
+<!-- template:optional:host-azure -->
+This repository's history may be public. Commit emails must use the address the
+maintainer sets for this project.
+
+Do not use a private email address. If a real email slips into history, it
+<!-- /template:optional:host-azure -->
 <!-- template:optional:host-git -->
 This repository's history may be public. Commit emails must use the address the
 maintainer sets for this project.
@@ -76,6 +82,13 @@ section at the end. Run `just check` before committing.
 - Describe the change and the reasoning. Keep changes focused — one concern per PR.
 - Squash-merge is the default; branches are deleted after merge.
 <!-- /template:optional:host-github -->
+<!-- template:optional:host-azure -->
+## Pull requests
+
+- Target the `main` branch; CI must be green.
+- Describe the change and the reasoning. Keep changes focused — one concern per PR.
+- Squash-merge is the default; branches are deleted after merge.
+<!-- /template:optional:host-azure -->
 <!-- template:optional:host-git -->
 ## Submitting changes
 

@@ -15,6 +15,13 @@ Instead, use GitHub's private reporting feature:
 2. Click **"Report a vulnerability"**
 3. Fill in the form and submit
 <!-- /template:optional:host-github -->
+<!-- template:optional:host-azure -->
+**Please do not report security vulnerabilities in public.**
+
+Instead, contact the maintainer privately:
+<!-- template:adapt: the private channel for reports — an address or another private
+contact; never a personal address in a public repository unless it is meant for this. -->
+<!-- /template:optional:host-azure -->
 <!-- template:optional:host-git -->
 **Please do not report security vulnerabilities in public.**
 

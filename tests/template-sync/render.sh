@@ -167,8 +167,38 @@ run_render_cases() {
   for_host "$TEMPLATE/core/SECURITY.md" git sec.git
   check "host git: SECURITY is the git variant" cmp -s "$TMP/hgit/SECURITY.md" "$TMP/sec.git"
 
+  # azure: commit address and private reporting like git, pull requests and CI like
+  # GitHub (F-052 R5); the pipeline, the PR template and renovate.json, no .github.
+  check "host azure renders without OWNER" render haz go private --seeds HOST=azure -OWNER
+  check "host azure: listing matches the files" listing_matches haz
+  check "host azure: exactly the azure targets" core_exactly haz private azure
+  refute "host azure: no .github" test -e "$TMP/haz/.github"
+  check "host azure: pipeline is the template's" \
+    cmp -s "$TMP/haz/azure-pipelines.yml" "$TEMPLATE/core/azure-pipelines.yml"
+  check "host azure: PR template from the GitHub source" \
+    cmp -s "$TMP/haz/.azuredevops/pull_request_template.md" "$TEMPLATE/core/.github/PULL_REQUEST_TEMPLATE.md"
+  check "host azure: renovate.json" cmp -s "$TMP/haz/renovate.json" "$TEMPLATE/core/renovate.json"
+  check "host azure: no placeholder left" no_placeholders haz
+  check "host azure: bare Go module" grep -qx 'module demo-app' "$TMP/haz/go.mod"
+  refute "host azure: no block markers left" grep -rq template:optional "$TMP/haz"
+  refute "host azure: no GitHub noreply rule" grep -rqF 'users.noreply.github.com' \
+    "$TMP/haz/CONTRIBUTING.md" "$TMP/haz/CODING-STANDARDS.md" "$TMP/haz/CLAUDE.md" \
+    "$TMP/haz/HOW-TO-CODE-WITH-CLAUDE.md"
+  check "host azure: commit address set for the project" \
+    contains haz/CODING-STANDARDS.md 'Commit email = the address set for this project'
+  check "host azure: CI is the gate" contains haz/CONTRIBUTING.md 'CI must be green'
+  check "host azure: pull requests section" contains haz/CONTRIBUTING.md '## Pull requests'
+  for_host "$TEMPLATE/core/SECURITY.md" azure sec.azure
+  check "host azure: SECURITY is the azure variant" cmp -s "$TMP/haz/SECURITY.md" "$TMP/sec.azure"
+  check "host azure: private reporting like git" cmp -s "$TMP/sec.azure" "$TMP/sec.git"
+  check "host azure public renders" render hazp docs-only public --seeds HOST=azure -OWNER
+  check "host azure public: exactly the azure targets" core_exactly hazp public azure
+  check "host azure public: code of conduct without the Security tab" \
+    contains hazp/CODE_OF_CONDUCT.md 'channel named in `SECURITY.md`'
+  refute "host azure public: no CodeQL workflow" has hazp/.github/workflows/codeql.yml
+
   refute "host: unknown HOST refused" render hx1 docs-only private HOST=gitlab
-  check "host: refusal lists the hosts" err_mentions hx1 'github git'
+  check "host: refusal lists the hosts" err_mentions hx1 'github azure git'
   refute "host: empty HOST refused" render hx2 docs-only private HOST=
   refute "host: host block in OPTIONAL refused" render hx3 docs-only private OPTIONAL=host-git
   check "host: OPTIONAL refusal names the derivation" err_mentions hx3 'derived from HOST'

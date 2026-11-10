@@ -2,8 +2,19 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": [
     "Shareable Renovate preset for xnyzer projects — reference it via extends: ['github>xnyzer/coding-kit'].",
-    "Base: config:recommended, GitHub Actions pinned to digests, PRs labelled 'dependencies'."
+    "Base: config:recommended, GitHub Actions pinned to digests, PRs labelled 'dependencies'.",
+    "Azure Pipelines: the mise release pinned in MISE_VERSION of azure-pipelines.yml."
   ],
   "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
-  "labels": ["dependencies"]
+  "labels": ["dependencies"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "mise release the Azure pipeline installs (azure-pipelines.yml)",
+      "managerFilePatterns": ["/(^|/)azure-pipelines\\.ya?ml$/"],
+      "matchStrings": ["MISE_VERSION:\\s*(?<currentValue>v\\S+)"],
+      "depNameTemplate": "jdx/mise",
+      "datasourceTemplate": "github-releases"
+    }
+  ]
 }

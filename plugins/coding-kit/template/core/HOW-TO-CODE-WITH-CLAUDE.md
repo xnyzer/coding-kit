@@ -142,6 +142,10 @@ substeps, M a short interview and 2–3 substeps, L the full interview and 3–5
 <!-- template:optional:host-github -->
    re-run and the commit made (commit email verified as a GitHub noreply address).
 <!-- /template:optional:host-github -->
+<!-- template:optional:host-azure -->
+   re-run and the commit made (commit email verified as the address set for this
+   project).
+<!-- /template:optional:host-azure -->
 <!-- template:optional:host-git -->
    re-run and the commit made (commit email verified as the address set for this
    project).

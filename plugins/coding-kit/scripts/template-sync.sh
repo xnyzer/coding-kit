@@ -170,13 +170,26 @@
 #       Names the git host of PROJECT (MANIFEST § Hosts). Lines: host <name>
 #       <answers|remote|none> — HOST of the answers, else what the remote origin
 #       suggests (a supported host as itself, anything else git), else git without a
-#       remote; remote <kind> <host name|->, kinds: a supported host, azure, gitlab,
-#       forgejo, other (another server, e.g. GitHub Enterprise), local (a path or
-#       file:// URL), none; unsupported <kind> for a recognized host the kit does not
-#       support yet (it runs as git); no-origin <names> when other remotes exist but no
-#       origin; mismatch <HOST> <kind> when the answers name another host than the
-#       remote suggests. Only the host name of a URL is printed, never a user or token.
+#       remote; remote <kind> <host name|->, kinds: a supported host, gitlab, forgejo,
+#       other (another server, e.g. GitHub Enterprise or Azure DevOps Server), local
+#       (a path or file:// URL), none; unsupported <kind> for a recognized host the kit
+#       does not support yet (it runs as git); no-origin <names> when other remotes exist
+#       but no origin; mismatch <HOST> <kind> when the answers name another host than
+#       the remote suggests. Only the host name of a URL is printed, never a user or
+#       token.
 #       Refused: a HOST that is no supported host.
+#   remote-check URL
+#       Checks a clone URL before a project is connected to it. Lines: remote <kind>
+#       <host name|-> as host names it; then credentials when the URL carries a password
+#       or token (scheme://user:secret@…; nothing is contacted), else reach <state>
+#       from git ls-remote: empty (no refs — the repository may be connected), refs
+#       <count>, not-found (missing repository or no rights; Azure does not tell them
+#       apart), host-key (ssh does not know the server's key yet), timeout (no answer
+#       within 60 seconds, REMOTE_CHECK_SECONDS sets another limit), denied (key or
+#       login not accepted), failed (anything else). git asks nothing: no terminal
+#       prompt, and ssh in batch mode unless the user configured an ssh command. Only
+#       the host name of the URL is printed, never the URL, a user, a token or git's
+#       messages. Refused: an empty URL or one starting with -.
 #   commit-email [--answers FILE] ENV PROJECT
 #       The commit address of PROJECT: the host as host names it, then the address the
 #       personal config ENV (read, never executed; a missing file has no values) holds
@@ -219,7 +232,7 @@ ANSWERS_FILE=.claude/template-answers
 SIGNAL_TYPES='npm pypi go tool file'
 # Git hosts the kit supports (MANIFEST § Hosts); the validator compares the list with the
 # MANIFEST table.
-HOSTS='github git'
+HOSTS='github azure git'
 SLOT_OPEN='<!-- module:coding-standards -->'
 SLOT_CLOSE='<!-- /module:coding-standards -->'
 # Set by parse_opts.
@@ -256,6 +269,7 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh set-settings CONFIG OUT NAME=value...
        sh template-sync.sh memory-dir CONFIG PROJECT
        sh template-sync.sh host [--answers FILE] PROJECT
+       sh template-sync.sh remote-check URL
        sh template-sync.sh commit-email [--answers FILE] ENV PROJECT
        sh template-sync.sh default-host ENV
 EOF
@@ -373,7 +387,8 @@ template_version() {
 
 # --- MANIFEST and MODULE.md tables ---------------------------------------------
 
-# § Core-managed files → "source<TAB>target<TAB>kind<TAB>public-only|-<TAB>host|-".
+# § Core-managed files → "source<TAB>target<TAB>kind<TAB>public-only|-<TAB>hosts|-",
+# hosts as the policy names them: host:NAME[/NAME…], e.g. github/azure.
 core_rows() {
   awk -F'|' '
     /^## / { insec = ($0 ~ /^## Core-managed files[ \t]*$/); next }
@@ -385,7 +400,7 @@ core_rows() {
       gsub(/^[ \t]+|[ \t]+$/, "", pol)
       kind = pol; sub(/[^a-z-].*$/, "", kind)
       host = "-"
-      if (match(pol, /host:[a-z]+/)) host = substr(pol, RSTART + 5, RLENGTH - 5)
+      if (match(pol, /host:[a-z]+(\/[a-z]+)*/)) host = substr(pol, RSTART + 5, RLENGTH - 5)
       print src "\t" tgt "\t" kind "\t" (pol ~ /public-only/ ? "public-only" : "-") "\t" host
     }' "$TEMPLATE/MANIFEST.md"
 }
@@ -712,11 +727,12 @@ render() {
   if ! value_of PROJECT_NAME_SNAKE > /dev/null && r_name=$(value_of PROJECT_NAME); then
     add_value PROJECT_NAME_SNAKE "$(printf '%s' "$r_name" | tr '-' '_')"
   fi
-  # The Go module path: below the repository URL on a host, the bare name without one.
-  # A host without a case here leaves it unset, so go.mod reports it as unresolved.
+  # The Go module path: below the repository URL on GitHub, else the bare name (Azure
+  # repository paths, …/_git/<repo>, make poor module paths). A host without a case here
+  # leaves it unset, so go.mod reports it as unresolved.
   if ! value_of GO_MODULE > /dev/null && r_name=$(value_of PROJECT_NAME); then
     case $HOST in
-      git) add_value GO_MODULE "$r_name" ;;
+      git | azure) add_value GO_MODULE "$r_name" ;;
       github)
         if r_owner=$(value_of OWNER); then add_value GO_MODULE "github.com/$r_owner/$r_name"; fi
         ;;
@@ -747,7 +763,12 @@ render() {
       *) die "MANIFEST: unknown policy '$r_kind' for $r_src" ;;
     esac
     if [ "$r_pub" = public-only ] && [ "$VISIBILITY" != public ]; then continue; fi
-    if [ "$r_host" != - ] && [ "$r_host" != "$HOST" ]; then continue; fi
+    if [ "$r_host" != - ]; then
+      case /$r_host/ in
+        */"$HOST"/*) ;;
+        *) continue ;;
+      esac
+    fi
     r_from=$TEMPLATE/$r_src
     [ -f "$r_from" ] || die "MANIFEST lists $r_src, which is missing"
     # A module part that replaces the core file (the justfile) becomes the source.
@@ -3304,8 +3325,8 @@ check_host() {  # VALUE
 }
 
 # The kind of server a remote URL points to, and its host name: "KIND<TAB>NAME". Kinds:
-# a name of HOSTS, a recognized host the kit does not support yet (azure, gitlab,
-# forgejo), other (any other server), local (a path or file:// URL). Only the host name
+# a name of HOSTS, a recognized host the kit does not support yet (gitlab, forgejo),
+# other (any other server), local (a path or file:// URL). Only the host name
 # leaves this function — never the user, a password or a token a URL may carry.
 remote_kind() {  # URL
   rk_url=$1
@@ -3330,6 +3351,8 @@ remote_kind() {  # URL
   case $rk_name in
     # A single letter is a Windows drive (C:\repo, C:/repo), not a server.
     ? | '') printf 'local\t-\n'; return 0 ;;
+    # Only a plain host name is printed: a tab or line break in it would forge a line.
+    *[!a-z0-9._-]*) printf 'other\t-\n'; return 0 ;;
     github.com | ssh.github.com) rk_kind=github ;;
     dev.azure.com | ssh.dev.azure.com | *.visualstudio.com) rk_kind=azure ;;
     gitlab.com) rk_kind=gitlab ;;
@@ -3398,6 +3421,94 @@ host() {
     printf 'mismatch\t%s\t%s\n' "$HO_HOST" "$HO_KIND"
   fi
   return 0
+}
+
+# --- remote-check: may a project connect to this clone URL? -------------------------
+
+# The refs of URL (git ls-remote), asked without any prompt, and what they say: the
+# repository is empty, has refs, or could not be read and why. Prints neither the URL
+# nor what git or ssh wrote — only the host name (remote_kind) and the outcome.
+remote_check() {
+  [ $# -eq 1 ] || usage
+  rc_url=$1
+  case $rc_url in
+    '' | -*) die "remote-check: not a clone URL" ;;
+  esac
+  setup_work
+  printf 'remote\t%s\n' "$(remote_kind "$rc_url")"
+  # A password or token in the URL (scheme://user:secret@host) would be stored in
+  # .git/config and shown in git's messages: refused before any contact. A user name
+  # alone (https://org@dev.azure.com/…, git@host:…) is fine.
+  case $rc_url in
+    *://*)
+      rc_auth=${rc_url#*://}
+      rc_auth=${rc_auth%%/*}
+      case $rc_auth in
+        *:*@*) printf 'credentials\n'; return 0 ;;
+      esac
+      ;;
+  esac
+  # No prompt may wait for an answer: no password prompt over HTTPS, and ssh fails
+  # instead of asking (unknown host key, passphrase) — unless the user set up their own
+  # ssh command, which stays as it is. Only the usual transports, never ext:: or fd::.
+  GIT_TERMINAL_PROMPT=0
+  GIT_ALLOW_PROTOCOL=ssh:https:http:git:file
+  export GIT_TERMINAL_PROMPT GIT_ALLOW_PROTOCOL
+  if [ -z "${GIT_SSH_COMMAND:-}" ] && [ -z "${GIT_SSH:-}" ] \
+    && ! git config --get core.sshCommand > /dev/null 2>&1; then
+    GIT_SSH_COMMAND='ssh -o BatchMode=yes -o ConnectTimeout=20'
+    export GIT_SSH_COMMAND
+  fi
+  rc_limit=${REMOTE_CHECK_SECONDS:-60}
+  case $rc_limit in
+    '' | *[!0-9]*) die "remote-check: REMOTE_CHECK_SECONDS must be a number of seconds" ;;
+  esac
+  # Azure writes TF401019 at once but keeps the connection open for minutes, and git
+  # waits for it: git runs in the background and is stopped at TF401019 or after
+  # rc_limit seconds, whichever comes first. With SIGKILL, because on SIGTERM git still
+  # waits for its ssh; ls-remote leaves nothing to clean up, and ssh ends once its input
+  # is closed.
+  git ls-remote "$rc_url" > "$WORK/refs" 2> "$WORK/err" < /dev/null &
+  rc_pid=$!
+  rc_waited=0 rc_late=0
+  while kill -0 "$rc_pid" 2> /dev/null; do
+    if grep -q TF401019 "$WORK/err"; then
+      kill -9 "$rc_pid" 2> /dev/null || true
+      break
+    fi
+    if [ "$rc_waited" -ge "$rc_limit" ]; then
+      kill -9 "$rc_pid" 2> /dev/null || true
+      rc_late=1
+      break
+    fi
+    sleep 1
+    rc_waited=$((rc_waited + 1))
+  done
+  if wait "$rc_pid" 2> /dev/null; then
+    if [ -s "$WORK/refs" ]; then
+      printf 'reach\trefs\t%s\n' "$(wc -l < "$WORK/refs" | tr -d ' ')"
+    else
+      printf 'reach\tempty\n'
+    fi
+    return 0
+  fi
+  # Success and refs come from the exit status and stdout alone; stderr only names the
+  # kind of failure (OpenSSH writes warnings there on success too). Azure answers
+  # TF401019 both for a missing repository and for missing rights.
+  if grep -Eqi 'TF401019|repository not found|does not appear to be a git repository' "$WORK/err"; then
+    rc_state=not-found
+  elif [ "$rc_late" -eq 1 ]; then
+    rc_state=timeout
+  elif grep -qi 'host key verification failed' "$WORK/err"; then
+    rc_state=host-key
+  elif grep -qi 'timed out' "$WORK/err"; then
+    rc_state=timeout
+  elif grep -Eqi 'permission denied|authentication failed|terminal prompts disabled|could not read (username|password)' "$WORK/err"; then
+    rc_state=denied
+  else
+    rc_state=failed
+  fi
+  printf 'reach\t%s\n' "$rc_state"
 }
 
 # --- commit-email: the commit address of a project's host ---------------------------
@@ -3486,6 +3597,7 @@ case $cmd in
   set-settings) set_settings "$@" ;;
   memory-dir) memory_dir "$@" ;;
   host) host "$@" ;;
+  remote-check) remote_check "$@" ;;
   commit-email) commit_email "$@" ;;
   default-host) default_host "$@" ;;
   *) usage ;;
