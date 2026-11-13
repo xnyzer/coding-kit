@@ -2,7 +2,7 @@
 id: F-060
 title: mise-Tools in jeder Shell erreichbar machen
 type: fix
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-11-13
 done:
@@ -32,8 +32,9 @@ weil sie mise selbst aufruft.
   `just check`.
 
 **Lösungsskizze:**
-- Der Installer prüft, ob mise aktiviert ist, zeigt die Zeile für die Startdatei der
-  Login-Shell und trägt sie nach Ja ein — wie heute das Angebot für `brew install`.
+- Der Installer prüft, ob mise aktiviert ist, zeigt die Zeile für das Ende der
+  Startdatei interaktiver Shells (zsh: `~/.zshrc`) und trägt sie nach Ja ein — wie
+  heute das Angebot für `brew install`.
 - `/coding-kit:update-conventions global`, der Weg für jeden weiteren Rechner, prüft
   dasselbe und trägt nur nach Freigabe ein.
 - Lädt ein Node-Manager wie nvm nach der Aktivierung und steht damit vor den Shims,
@@ -62,10 +63,11 @@ im Projekt die festgelegten Versionen und außerhalb die des Systems. nvm, in de
 ### Abnahmekriterien
 
 - [ ] AC-1 — Gegeben ein Rechner mit installiertem, aber nicht aktiviertem mise, wenn
-  `install.sh` läuft, dann meldet er das, zeigt die Zeile und trägt sie nach Ja in die
-  Startdatei der Login-Shell ein (zsh: `~/.zprofile`, bash: `~/.bash_profile`); ein
-  zweiter Lauf erkennt die Aktivierung und fragt nicht erneut. Negativ: Bei Nein oder
-  schon aktiviertem mise ändert er keine Datei.
+  `install.sh` läuft, dann meldet er das, zeigt die Zeile und trägt sie nach Ja ans
+  Ende der Startdatei interaktiver Shells ein (zsh: `~/.zshrc`; bash siehe offene
+  Fragen); ein zweiter Lauf findet die Zeile, fragt nicht erneut und nennt den Neustart,
+  solange sie noch nicht wirkt. Negativ: Bei Nein oder schon aktiviertem mise ändert er
+  keine Datei.
 - [ ] AC-2 — Gegeben derselbe Rechner, wenn `/coding-kit:update-conventions global`
   läuft, dann meldet der Skill die fehlende Aktivierung mit der Zeile und trägt sie nur
   nach Freigabe ein. Negativ: Ist mise aktiviert, meldet er nichts.
@@ -80,15 +82,16 @@ im Projekt die festgelegten Versionen und außerhalb die des Systems. nvm, in de
   `mise.lock`. Negativ: Außerhalb eines Projekts gelten die Versionen des Systems.
 - [ ] AC-5 — Gegeben das Kit-README (Abschnitt Toolchain) und die Template-Doku
   (`README`, `CONTRIBUTING`, `HOW-TO-CODE-WITH-CLAUDE`), wenn man sie liest, dann nennen
-  sie die Aktivierung mit Verweis auf `mise doctor`. Negativ: `just check` ist grün, der
-  CHANGELOG-Eintrag hat einen Abschnitt `### Template`.
+  sie die Aktivierung mit Verweis auf `mise doctor` und den Neustart von Terminal bzw.
+  Editor danach. Negativ: `just check` ist grün, der CHANGELOG-Eintrag hat einen
+  Abschnitt `### Template`.
 
 ### Randfälle
 
 - EC-1 — Die Startdatei fehlt → der Installer legt sie mit der Zeile an, nach Ja.
-- EC-2 — mise ist per `mise activate` ohne Shims in der `.zshrc` aktiviert
-  (`activated: yes`, `shims_on_path: no`) → ob das für die Shell von Claude reicht,
-  klärt der Spike; keine zweite Zeile eintragen, ohne das zu wissen.
+- EC-2 — mise ist per `mise activate` ohne Shims aktiviert (`mise doctor`:
+  `activated: yes`, `shims_on_path: no`) → zählt als aktiviert, keine zweite Zeile;
+  ob die Prüfung auf Überdeckung dann greift, ist im Durchlauf F-060c zu prüfen.
 - EC-3 — Eine andere Shell als zsh oder bash (etwa fish) → nur die Zeile nennen, nichts
   schreiben.
 - EC-4 — Windows mit Git Bash → nur Hinweis, nichts schreiben (→ F-027).
@@ -131,12 +134,19 @@ im Projekt die festgelegten Versionen und außerhalb die des Systems. nvm, in de
 
 ### Offene Fragen
 
-- [ ] [CLARIFY] Übernimmt die Shell von Claude Code die Shims aus der `.zprofile`, oder
-  braucht es die `.zshenv` oder die `.zshrc`? (Spike, nicht blockierend)
-- [ ] [CLARIFY] Wie stellt man die Reihenfolge gegenüber nvm sicher: Aktivierung am Ende
-  der `.zshrc` wiederholen, oder node über mise statt nvm? (Spike, nicht blockierend)
+- [x] [CLARIFY] Übernimmt die Shell von Claude Code die Shims aus der `.zprofile`, oder
+  braucht es die `.zshenv` oder die `.zshrc`? — Claude übernimmt den `PATH` vom
+  startenden Prozess; die Zeile gehört ans Ende der `.zshrc`, siehe Verlauf F-060a.
+- [x] [CLARIFY] Wie stellt man die Reihenfolge gegenüber nvm sicher: Aktivierung am Ende
+  der `.zshrc` wiederholen, oder node über mise statt nvm? — Aktivierung am Ende der
+  `.zshrc`, nach nvm; ein Umstieg von nvm ist nicht nötig, siehe Verlauf F-060a.
 - [ ] [CLARIFY] Wo steht die gemeinsame Prüfung, die Installer und Skill nutzen?
   (Plan, nicht blockierend)
+- [ ] [CLARIFY] Welche Startdatei gilt für bash — auf macOS liest bash als Login-Shell
+  `~/.bash_profile`, sonst `~/.bashrc`? (Durchlauf F-060c, nicht blockierend)
+- [ ] [CLARIFY] Projekte mit `.nvmrc`: Stellt ein automatischer Wechsel von nvm beim
+  Ordnerwechsel nvm wieder vor die Shims, und meldet die Prüfung das? (Durchlauf
+  F-060c, nicht blockierend)
 
 ### Entscheidungen
 
@@ -149,6 +159,19 @@ im Projekt die festgelegten Versionen und außerhalb die des Systems. nvm, in de
 - 2026-11-13 — nvm wird mitgelöst: erkennen und eine Lösung vorschlagen. Empfehlung war,
   nvm nur als Hinweis in der Doku zu nennen; entschieden ist das Mitlösen, damit
   Node-Projekte die Version aus mise bekommen.
+- 2026-11-13 — Für zsh gehört die Zeile `eval "$(mise activate zsh --shims)"` ans Ende
+  der `~/.zshrc`, nicht in die `.zprofile`; AC-1 und die Lösungsskizze sind angepasst,
+  AC-5 nennt zusätzlich den Neustart. Grund: Claude Code und VS Code übernehmen den
+  `PATH` einer interaktiven Login-Shell, und nur am Ende der `.zshrc` stehen die Shims
+  vor nvm. Für bash bleibt die Startdatei offen. Empfehlung aus dem Spike, vom Nutzer
+  auf seinem Rechner übernommen.
+- 2026-11-13 — Die Erkennung hat zwei Teile: Die Startdatei wird nach einer Zeile mit
+  `mise activate` durchsucht (auch auskommentiert oder in anderer Form, EC-5) — sie
+  entscheidet, ob eingetragen wird. Der `PATH` des laufenden Prozesses und
+  `mise doctor` zeigen, ob die Aktivierung wirkt und welches Werkzeug mit Shim ein
+  Ordner davor überdeckt; wirkt sie noch nicht, heißt die Meldung Neustart. Grund: Der
+  `PATH` ändert sich erst nach einem Neustart, ein zweiter Lauf im selben Terminal
+  würde die Zeile sonst doppelt eintragen.
 
 ## Plan
 
@@ -182,8 +205,9 @@ den Skills (siehe Lösungsskizze).
 
 - `template-sync.sh`: neuer Befehl für die Prüfung (Name im Plan nach dem Spike),
   Ausgabe in Zeilen wie die übrigen Befehle; Tests unter dash und bash, mit mawk.
-- `install.sh`, Schritt 5: ruft die Prüfung, bietet die Zeile an (Standard: Nein),
-  legt eine fehlende Startdatei an; nvm-Vorschlag nach Freigabe.
+- `install.sh`, Schritt 5: ruft die Prüfung, bietet die Zeile für das Ende der
+  `.zshrc` an (bash nach dem Durchlauf F-060c), Standard: Nein; legt eine fehlende
+  Startdatei an; nvm-Vorschlag nach Freigabe.
 - `/coding-kit:update-conventions`, Teil G: dieselbe Prüfung, Eintrag nur nach
   Freigabe — Änderung über `/add-skill`.
 - Version 3.5.0 (unveröffentlicht), CHANGELOG.
@@ -201,3 +225,46 @@ den Skills (siehe Lösungsskizze).
 
 **Erkennung (Schritt 2a):** entfällt; keine neuen Frameworks, Dependencies oder
 Sprachen. Neue Config oder Endpunkte gibt es nicht.
+
+## Verlauf
+
+### F-060a — fertig 2026-11-13
+
+**Umgesetzt:** Spike mit neuen Sessions von Claude Code (`claude -p`), Login-Shells und
+einem Hook-Skript, in einem kleinen Projekt mit golangci-lint und node über mise:
+
+- Claude Code übernimmt den `PATH` vom Prozess, der es startet (Terminal oder VS Code);
+  aus der `.zshrc` übernimmt es nur Funktionen wie `nvm`, keine Änderungen am `PATH`.
+  Terminal und VS Code laden `.zprofile` und `.zshrc`, deshalb kommt eine Aktivierung
+  dort auch bei Claude an.
+- Mit der Zeile am Ende der `.zshrc`: im Projekt node und golangci-lint aus mise,
+  außerhalb die Versionen des Systems (node aus nvm, go aus Homebrew); ebenso in einer
+  neuen Claude-Session, die aus dem Terminal startet. Mit der Zeile nur in der
+  `.zprofile` lädt nvm danach und überdeckt node.
+- Ein einfaches pre-commit-Skript, ausgelöst durch `git commit` aus dem Terminal, sieht
+  die Shims und node aus mise.
+- Entwurf der Prüfung auf Überdeckung: Steht der Shim-Ordner im `PATH` des Prozesses,
+  und welches Werkzeug mit Shim findet `command -v` in einem Ordner davor? Ohne die
+  Zeile meldet er node, npm, pnpm und weitere im Ordner von nvm, mit der Zeile keines.
+- Nach einer Änderung muss das Terminal bzw. VS Code neu starten; eine neue
+  Claude-Session allein übernimmt den alten `PATH`.
+
+**Entscheidungen:** siehe Spezifikation (Ort der Zeile für zsh, Erkennung in zwei
+Teilen).
+
+**Abweichung vom Plan:**
+
+- Varianten über `ZDOTDIR` blieben wirkungslos, weil Claude die `.zshrc` aus dem
+  Home-Ordner liest. Getestet wurde deshalb mit der echten `.zshrc` des Nutzers,
+  testweise und auf seinen Wunsch; danach war sie wieder wie vorher.
+- Starts von Claude mit fast leerer Umgebung sind künstlich; sie zeigten nur, dass
+  Claude den `PATH` nicht aus der `.zshrc` aufbaut.
+- Nicht geprüft und offen für den Durchlauf F-060c: bash, mise per `mise activate` ohne
+  Shims (EC-2), Projekte mit `.nvmrc`, Git-Hooks über lefthook und ein Commit aus einer
+  Claude-Session — dass Hooks den `PATH` der aufrufenden Shell übernehmen, ist für
+  Claude nur abgeleitet.
+
+**Funde:**
+
+- Auf dem Rechner des Nutzers steht die Aktivierung jetzt am Ende der `.zshrc`, die
+  Zeile in der `.zprofile` ist entfernt (auf seinen Wunsch).
