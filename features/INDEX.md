@@ -67,7 +67,7 @@ Stand 2026-11-13.
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
 | [F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md) | Lizenzprüfung für die Module python und ts-node | BACKLOG |  |
 | [F-059](F-059-renovate-hebt-mise-tools-in-mise-lock-an.md) | Renovate hebt die mise-Tools in mise.lock an | BACKLOG |  |
-| [F-060](F-060-mise-tools-in-jeder-shell-erreichbar.md) | mise-Tools in jeder Shell erreichbar machen | BACKLOG |  |
+| [F-060](F-060-mise-tools-in-jeder-shell-erreichbar.md) | mise-Tools in jeder Shell erreichbar machen | PLANNED |  |
 
 ### Closed
 
