@@ -2,10 +2,10 @@
 id: F-029
 title: Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren
 type: feature
-status: IN-PROGRESS
+status: DONE
 size: L
 created: 2026-10-09
-done:
+done: 2026-11-13
 depends-on: F-036
 superseded-by:
 ---
@@ -140,12 +140,16 @@ gelten. Je Feature entstehen heute 3–11 Episoden.
   (Validator OK, 2133 Skript-Tests, darunter der Render eines Projekts mit
   Graphiti-Block, aus dem `/update-conventions` die Zonen übernimmt); Template-Block,
   HOW-TO und Kit-CLAUDE.md gelesen; CHANGELOG 3.1.0 mit `### Template`.
-- [ ] AC-6 — Gegeben mindestens 7 Tage Arbeit nach dem Release, wenn die Ledger-Daten
+- [x] AC-6 — Gegeben mindestens 7 Tage Arbeit nach dem Release, wenn die Ledger-Daten
   wie in der Auswertung ausgewertet werden, dann haben Episoden aus Kit-Projektgruppen
   im Schnitt mindestens 40 % weniger Entitäten als in der Basis (coding-kit: 12,6), und
   je abgeschlossenem Feature gibt es höchstens 2 Episoden. Negativ: Wird das Ziel
   verfehlt, hält die Feature-Datei die Ursache fest, und eine Folge-Nummer wird
-  vorgeschlagen.
+  vorgeschlagen. — belegt: Graylog-Export vom 2026-10-31 bis 2026-11-13, Ergebnis im
+  Verlauf F-029d. Als Kit-Projektgruppe zählt ein Projekt aus dem Template ohne
+  Testgruppen (Entscheidung 2026-11-13); das ist im Zeitraum nur coding-kit: 5,0
+  Entitäten je Episode (−60 % gegen 12,6), je beendetem Feature höchstens zwei
+  Episoden.
 
 ### Regeln mit Beispielen
 
@@ -450,3 +454,60 @@ Die Testgruppen wurden nach Bestätigung gelöscht.
   Lauf hat die Schritte danach einzeln ausgeführt, ohne Einfluss auf das Ergebnis.
 
 **Funde:** keine.
+
+### F-029d — fertig 2026-11-13
+
+**Umgesetzt:** Nachmessung mit dem Graylog-Export vom 31.10. bis 13.11.2026: 74
+Episoden, die erste am 01.11., die letzte am 10.11. Ausgewertet wie die Basis, dazu die
+coding-kit-Episoden aus dem Graph.
+
+| Messgröße | Basis 19.–30.10. | Nachmessung 31.10.–13.11. |
+|---|---|---|
+| Entitäten je Episode, coding-kit | 13,1 (dokumentiert 12,6) | 5,0 (−62 %) |
+| Episoden je beendetem Feature | 3–11 | 1–2 |
+| Zeichen je Episode im Schnitt, coding-kit | 1.252 | 397 |
+| Kosten je Tag, coding-kit | 0,21 € | 0,005 € |
+| Kosten je Tag, alle Gruppen (Summe im Ledger) | 0,45 € | 0,06 € |
+
+- Die Kosten je Tag beruhen auf der Summe im Ledger, die nur Episoden zugeordnete
+  Aufrufe enthält. Deshalb steht dort für die Basis 0,45 € statt 0,46 € wie in der
+  Spezifikation.
+- Beendet wurden im Zeitraum acht Features: F-033, F-051, F-055, F-032, F-056 und
+  F-052 als `DONE`, F-030 als `DROPPED`, F-024 als `SUPERSEDED`. Jedes hat genau einen
+  Wegweiser in coding-kit.
+- Zu zwei Features kam in `main` je eine Stolperfalle von allgemeinem Wert dazu, wie
+  AC-3 es zulässt: zu F-030 eine zu Graphiti, zu F-052 eine zu Azure DevOps. Damit
+  haben sie zwei Episoden.
+- Zu F-052 entstand eine dritte Episode in `main` auf ausdrückliche Bitte des Nutzers
+  (EC-5). Sie zählt nicht als Schreibanlass des Kits.
+
+**Entscheidungen:**
+
+- 2026-11-13 — Als Kit-Projektgruppe zählt nur ein Projekt aus dem Template, ohne
+  Testgruppen. Im Zeitraum hat damit nur coding-kit geschrieben.
+  - Grund: Eine Gruppe außerhalb des Templates folgt einer eigenen Schreibregel in
+    ihrer CLAUDE.md, nicht dem Kit.
+  - Die Basis zählte sie noch zu den Gruppen mit Kit-Regeln; mitgezählt läge der
+    Schnitt bei 9,8 (−22 %).
+  - Entscheidung des Nutzers.
+
+**Abweichung vom Plan:**
+
+- Die Skripte der Basis gab es nicht mehr. Die Zuordnung der LLM-Aufrufe zu Episoden
+  ist neu geschrieben, Entitäten zählen als Attribut-Aufrufe (einer je Entität mit Typ).
+  - Auf die Basis-Daten angewandt ergibt sie für coding-kit 13,1 statt 12,6.
+  - Verglichen wird deshalb mit derselben Methode; die Grenze aus 12,6 ist zusätzlich
+    eingehalten.
+- 70 von 74 Episoden ließen sich sauber zuordnen, alle acht aus coding-kit.
+- Die Stichprobe ist klein: acht coding-kit-Episoden. Die einzige Episode aus einem
+  anderen Template-Projekt stammt aus einer Testgruppe.
+
+**Funde:**
+
+- Eine projekteigene Graphiti-Regel in der CLAUDE.md setzt sich gegen die Kit-Regel
+  durch: Ein Projekt außerhalb des Templates schreibt nach der alten Regel („nach
+  Änderungen, gesplittet“) 14,6 Entitäten je Episode. Die Anpassung liegt beim Projekt,
+  keine Kit-Arbeit.
+- Die Gruppe `main` bleibt bei 6,9 Entitäten je Episode. Die meisten Episoden dort
+  kommen aus Cloud-Sessions, oft als Serie zu einem Thema. Ob dort die Kit-Regeln
+  geladen sind, ist offen — ein Datenpunkt für F-046.
