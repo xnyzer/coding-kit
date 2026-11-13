@@ -2,7 +2,7 @@
 id: F-057
 title: Lizenzprüfung des Go-Moduls in just check
 type: feature
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-11-10
 done:
@@ -26,8 +26,8 @@ nicht unbemerkt hineinkommt.
 **Lösungsskizze:**
 - Die Lizenzprüfung wird Teil von `just check` im Go-Modul; damit prüft jeder Host gleich,
   auch ohne CI, und lokal vor jedem Commit.
-- `go-licenses` kommt mit fester Version über mise statt per `go run …@latest`; Renovate
-  hält die Version aktuell.
+- `go-licenses` kommt über mise statt per `go run …@latest`: mit Hauptversion wie die
+  übrigen Tools, die genaue Version legt `mise.lock` fest.
 - Der Zusatzjob `ci.part.yml` des Go-Moduls entfällt. Der Mechanismus `ci.part.yml`
   bleibt im Template für künftige Module, die einen eigenen Runner brauchen.
 - Verworfen: ein Modulteil je Host (wächst mit jedem Host, lässt Projekte ohne CI
@@ -51,9 +51,11 @@ auf v1.6.0 auf, v2 liegt unter einem eigenen Modulpfad.
   `forbidden`, `restricted`) lässt `just check` scheitern und nennt das Paket. Negativ:
   Mit nur permissiven Abhängigkeiten ist `just check` grün, auch ohne Netz nach
   `just setup`.
-- [ ] AC-2 — Gegeben das Go-Modul, wenn man `mise.part.toml` und `justfile` liest, dann
-  steht `go-licenses` mit fester Version in `mise.part.toml`, und Renovate erkennt den
-  Eintrag als aktualisierbar. Negativ: Im Go-Modul steht kein `@latest`.
+- [ ] AC-2 — Gegeben das Go-Modul und ein daraus gerendertes Projekt, wenn man
+  `mise.part.toml` und `justfile` liest und im Projekt `mise lock` und
+  `mise install --locked` laufen, dann steht `go-licenses` v2 über das `go:`-Backend mit
+  Hauptversion in `mise.part.toml`, `mise.lock` legt die genaue Version fest, und
+  `--locked` installiert sie. Negativ: Im Go-Modul steht kein `@latest`.
 - [ ] AC-3 — Gegeben ein gerendertes Go-Projekt auf GitHub, wenn man
   `.github/workflows/ci.yml` liest, dann gibt es keinen eigenen Lizenz-Job mehr; der
   Job `check` deckt die Prüfung ab. Negativ: Der Mechanismus `ci.part.yml` bleibt
@@ -78,8 +80,7 @@ auf v1.6.0 auf, v2 liegt unter einem eigenen Modulpfad.
   Eintrag für das neue Tool scheitert die Installation; `/update-conventions` bzw. der
   `### Template`-Abschnitt sagt, dass `mise lock` nötig ist.
 - EC-5 — `go-licenses` ist mit einer anderen Go-Version gebaut als das Projekt nutzt →
-  Spike klärt, ob das Fehler bei Standard-Paketen erzeugt; die Installation über mise
-  muss die Go-Version des Projekts nutzen.
+  tritt über mise nicht auf: mise baut das Tool mit der Go-Version des Projekts.
 
 ### Nicht-Ziele
 
@@ -94,8 +95,8 @@ auf v1.6.0 auf, v2 liegt unter einem eigenen Modulpfad.
 - AC-1: Skript-Test (Render: `check` im Go-justfile ruft die Lizenzprüfung) und
   manuell im Spike: Go-Projekt aus dem Template mit einer GPL-Abhängigkeit, `just check`
   rot; ohne sie grün, auch mit abgeschaltetem Netz (`GOFLAGS=-mod=mod`, `GOPROXY=off`).
-- AC-2: Check — grep auf `@latest` im Go-Modul; Spike: Renovate-Lauf bzw. Doku des
-  mise-Managers für `go:`-Einträge.
+- AC-2: Check — grep auf `@latest` im Go-Modul (F-057b); `mise lock` und
+  `mise install --locked` im gerenderten Projekt (F-057c).
 - AC-3: Skript-Test — gerendertes Go-`ci.yml` ohne Lizenz-Job; Test-Modul mit
   `ci.part.yml` unter `# module:ci-jobs`.
 - AC-4: Skript-Test — Render von Go und docs-only auf Azure, `azure-pipelines.yml`
@@ -106,7 +107,7 @@ auf v1.6.0 auf, v2 liegt unter einem eigenen Modulpfad.
 
 - Berührt im Go-Modul: `justfile`, `mise.part.toml`, `ci.part.yml` (fällt weg),
   `MODULE.md`, `CODING-STANDARDS.part.md`; dazu `tests/template-sync/render.sh` mit einem
-  Test-Modul für `ci.part.yml`; ggf. das Renovate-Preset `default.json`.
+  Test-Modul für `ci.part.yml`.
 - MANIFEST: Der Module contract bleibt; `ci.part.yml` ist kein Core-Ziel, also keine
   Zeile unter „Removed and renamed targets“.
 - Version 3.5.0, CHANGELOG mit `### Template`.
@@ -115,12 +116,12 @@ auf v1.6.0 auf, v2 liegt unter einem eigenen Modulpfad.
 
 ### Offene Fragen
 
-- [ ] [CLARIFY] v1.6.0 oder v2 von `go-licenses` — gleiche Flags, läuft mit Go 1.26?
-  (Spike, nicht blockierend)
-- [ ] [CLARIFY] Installiert mise das Tool über das `go:`-Backend und schreibt es in
-  `mise.lock`? (Spike, nicht blockierend)
-- [ ] [CLARIFY] Aktualisiert Renovate `go:`-Einträge in `mise.toml`, oder braucht das
-  Preset eine Regel? (Spike, nicht blockierend)
+- [x] [CLARIFY] v1.6.0 oder v2 von `go-licenses` — v2, siehe Verlauf F-057a.
+- [x] [CLARIFY] Installiert mise das Tool über das `go:`-Backend und schreibt es in
+  `mise.lock`? — ja, auch `--locked` geht, siehe Verlauf F-057a.
+- [x] [CLARIFY] Aktualisiert Renovate `go:`-Einträge in `mise.toml`, oder braucht das
+  Preset eine Regel? — keine Regel nötig; die Sperrdatei hebt Renovate aber nicht an
+  (→ F-059).
 
 ### Entscheidungen
 
@@ -128,6 +129,11 @@ auf v1.6.0 auf, v2 liegt unter einem eigenen Modulpfad.
   Grund: ein Weg für alle Hosts, auch ohne CI; F-053 und F-054 brauchen nichts Eigenes.
   Preis: `just check` in Go-Projekten etwas langsamer. Entscheidung des Nutzers nach
   Empfehlung.
+- 2026-11-13 — AC-2 geändert: Hauptversion in `mise.part.toml` statt fester Version,
+  genau in `mise.lock`, wie bei allen Tools des Templates; der Teil „Renovate erkennt
+  den Eintrag als aktualisierbar“ entfällt, das regelt F-059. Der Beleg über
+  `mise lock` und `--locked` kommt aus dem Durchlauf F-057c. Entscheidung des Nutzers
+  nach Empfehlung.
 
 ## Plan
 
@@ -136,7 +142,7 @@ kurzer Spike klärt. Formal reicht es in alle Go-Projekte, ändert dort aber nur
 bestehende Prüfung läuft.
 
 **Ansatz:** Die Lizenzprüfung wird ein Teil von `just check` im Go-Modul; `go-licenses`
-kommt mit fester Version über mise. Der Zusatzjob `ci.part.yml` des Go-Moduls entfällt,
+kommt über mise, mit Hauptversion wie die übrigen Tools. Der Zusatzjob `ci.part.yml` des Go-Moduls entfällt,
 `azure-pipelines.yml` bleibt unverändert. Verworfen: ein Modulteil je Host (wächst mit
 jedem Host, lässt Projekte ohne CI ungeprüft).
 
@@ -156,25 +162,68 @@ jedem Host, lässt Projekte ohne CI ungeprüft).
 
 ### F-057b — Go-Modul und Tests umstellen
 
-- `mise.part.toml`: `go-licenses` mit fester Version.
+- `mise.part.toml`: `"go:github.com/google/go-licenses/v2" = "2"`.
 - `justfile`: `check` ruft die Lizenzprüfung; das Rezept `license-check` bleibt einzeln
   aufrufbar, ohne `@latest`.
 - `ci.part.yml` des Go-Moduls entfernen; `MODULE.md` und `CODING-STANDARDS.part.md`
   nennen die Prüfung in `just check` statt des CI-Jobs.
-- Ggf. eine Regel im Renovate-Preset `default.json` (Ergebnis F-057a).
 - Tests in `tests/template-sync/render.sh`: Go-`ci.yml` ohne Lizenz-Job; Test-Modul mit
   `ci.part.yml` für den Mechanismus; `azure-pipelines.yml` gleich für go und docs-only.
 - Version 3.5.0, CHANGELOG mit `### Template`: was ein Go-Projekt tun muss
   (`mise install`, ggf. `mise lock`; bei eigener `justfile` die Zeile zum Nachtragen).
-- Erfüllt AC-2, AC-3 und AC-4, AC-5 bis auf den Durchlauf.
+- Erfüllt AC-3 und AC-4; AC-2 und AC-5 bis auf den Durchlauf.
 
 ### F-057c — Durchlauf mit echtem Go-Projekt
 
 - Go-Projekt aus dem Arbeitsstand rendern: mit einer GPL-Abhängigkeit ist `just check`
   rot und nennt das Paket, ohne sie grün, auch ohne Netz.
+- Im gerenderten Projekt `mise lock` und `mise install --locked`: `mise.lock` legt die
+  genaue Version von `go-licenses` fest, und `--locked` installiert sie.
 - Ein Go-Projekt vom Stand 3.4.0 per `/update-conventions` holen lassen: Rezept und
   mise-Eintrag kommen, der Lizenz-Job in `ci.yml` geht.
-- Erfüllt AC-1 und AC-5.
+- Erfüllt AC-1, AC-2 und AC-5.
 
 **Erkennung (Schritt 2a):** entfällt fürs Kit selbst; das neue Tool kommt nur ins
 Go-Modul des Templates. Neue Endpunkte oder Config gibt es nicht.
+
+## Verlauf
+
+### F-057a — fertig 2026-11-13
+
+**Umgesetzt:** Spike in einem Wegwerf-Projekt aus dem Template (Modul go, Host azure):
+
+- Beide Versionen von `go-licenses` laufen mit Go 1.26; mise baut das Tool mit der
+  Go-Version des Projekts, Fehler bei Standard-Paketen gab es nicht. Beide kennen
+  `--disallowed_types=forbidden,restricted`.
+- Eine LGPL-Abhängigkeit lässt die Prüfung mit Exit 1 scheitern und nennt das Paket;
+  eine permissive besteht. Die Prüfung dauert unter einer Sekunde und läuft mit
+  abgeschalteten Downloads (Go-Proxy und mise offline) gleich.
+- Das `go:`-Backend von mise installiert das Tool aus dem Quellcode; `mise.lock` hält
+  nur die Version fest, ohne Download-Adresse, und `mise install --locked` installiert
+  sie trotzdem.
+- Renovate erkennt `go:`-Einträge über die Go-Datenquelle; ein Eintrag mit genauer
+  Version bekommt Update-Vorschläge, das Preset braucht keine Regel.
+
+**Entscheidungen:**
+
+- `go-licenses` v2 über das `go:`-Backend von mise, als Eintrag
+  `"go:github.com/google/go-licenses/v2" = "2"`, statt v1.6.0, auf das `@latest` heute
+  auflöst. Grund: v2 ist die aktuelle Reihe, meldet Funde klarer und bringt `--ignore`
+  und `--allowed_licenses` mit, die F-058 braucht. Bei v1 schlägt Renovate die Version
+  2.0.1 auf dem Pfad ohne `/v2` vor, wo es sie nicht gibt.
+- In `mise.part.toml` steht die Hauptversion, die genaue Version in `mise.lock`, wie bei
+  allen Tools des Templates (AC-2 geändert, siehe Spezifikation).
+
+**Abweichung vom Plan:**
+
+- Ohne Netz wurde nur nachgestellt: Downloads über Go und mise abgeschaltet, das Netz
+  selbst nicht getrennt.
+- Der Beleg für AC-2 über `mise lock` und `--locked` wandert in den Durchlauf F-057c;
+  Plan und Zuordnung der Abnahmekriterien sind angepasst.
+
+**Funde:**
+
+- Renovate hebt Tools mit Hauptversion in `mise.lock` nicht an: In einem
+  Downstream-Projekt bleiben just und lefthook stehen, und ein lokaler Renovate-Lauf
+  findet für `go-licenses` mit gesperrter älterer Version kein Update. Das betrifft alle
+  Tools des Templates → F-059 aufgenommen.

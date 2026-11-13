@@ -44,8 +44,9 @@ with its reasons.
 
 Stand 2026-11-13.
 
-1. **[F-057](F-057-ci-jobs-der-stack-module-auf-azure.md) → [F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md)** — Lizenzprüfung in `just check`: erst Go, dann python und ts-node,
-   solange das Muster frisch ist.
+1. **[F-057](F-057-ci-jobs-der-stack-module-auf-azure.md) → [F-059](F-059-renovate-hebt-mise-tools-in-mise-lock-an.md) → [F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md)** — erst die Lizenzprüfung des Go-Moduls, dann die
+   Tool-Updates über Renovate (Sicherheitsupdates in allen Projekten), dann die
+   Lizenzprüfung für python und ts-node.
 2. **[F-025](F-025-install-sh-fehlender-gh-login-und.md) → [F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: der Installer, GitLab, Forgejo — auf der
    fertigen Grundlage „Git-Host je Projekt“.
 3. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
@@ -64,8 +65,9 @@ Stand 2026-11-13.
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
-| [F-057](F-057-ci-jobs-der-stack-module-auf-azure.md) | Lizenzprüfung des Go-Moduls in just check | PLANNED |  |
+| [F-057](F-057-ci-jobs-der-stack-module-auf-azure.md) | Lizenzprüfung des Go-Moduls in just check | IN-PROGRESS |  |
 | [F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md) | Lizenzprüfung für die Module python und ts-node | BACKLOG |  |
+| [F-059](F-059-renovate-hebt-mise-tools-in-mise-lock-an.md) | Renovate hebt die mise-Tools in mise.lock an | BACKLOG |  |
 
 ### Closed
 
@@ -124,4 +126,4 @@ Stand 2026-11-13.
 | [F-035](F-035-repo-uebergreifende-uebergabe-statt.md) | Repo-übergreifende Übergabe statt Parallelarbeit | SUPERSEDED → F-039 |  |
 <!-- /features-index -->
 
-next-feature: F-059
+next-feature: F-060

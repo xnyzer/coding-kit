@@ -27,8 +27,8 @@ begründet festhalten kann, damit eine verbotene Lizenz nicht unbemerkt hineinko
 eine bewusste Abweichung nicht die ganze `justfile` aus dem Template löst.
 
 **Lösungsskizze:**
-- Prüfung in `just check` beider Module, Werkzeug mit fester Version über mise — das
-  Muster aus F-057.
+- Prüfung in `just check` beider Module, Werkzeug über mise mit Hauptversion, genau in
+  `mise.lock` — das Muster aus F-057.
 - Option: eine gemeinsame Lizenzregel je Projekt (gesperrte Lizenzen, Ausnahmen je
   Paket mit Grund), die alle Prüfungen lesen, auch die von Go.
 - Option: je Modul die Einteilung seines Werkzeugs, ohne gemeinsame Regel.
