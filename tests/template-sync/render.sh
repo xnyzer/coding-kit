@@ -47,6 +47,11 @@ run_render_cases() {
   refute "go: no license job in the CI" contains go/.github/workflows/ci.yml 'license-check'
   check "go: check runs the license gate" contains go/justfile 'just license-check'
   refute "go: no @latest in the module" grep -rqF '@latest' "$M/go"
+  # go build of a single main package writes a program into the project root — check
+  # discards it, build installs programs into the ignored bin/ (and works for libraries)
+  check "go: check build discards the program" contains go/justfile 'go build -o /dev/null ./...'
+  check "go: build installs into bin/" contains go/justfile 'GOBIN="$PWD/bin" go install ./...'
+  check "go: bin/ is ignored" contains go/.gitignore 'bin/'
   check "go: CodeQL language" contains go/.github/workflows/codeql.yml "'go'"
   check "go: managed module file" has go/.golangci.yml
   refute "go: seed module file left out" has go/go.mod

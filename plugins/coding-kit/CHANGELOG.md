@@ -29,6 +29,12 @@ GitHub-CI, auf Azure und ohne Host gar nicht.
 - **Modul go — `justfile`:** `check` ruft am Ende `just license-check`; das Rezept prüft
   mit `go-licenses` aus mise statt per `go run …@latest`. Die Regel bleibt: keine
   Lizenzen der Typen `forbidden` und `restricted`.
+- **Modul go — `justfile`, kein Programm mehr im Hauptverzeichnis:** `go build ./...`
+  legte bei einem einzigen Hauptpaket eine Programmdatei mit dem Projektnamen ins
+  Hauptverzeichnis, die `.gitignore` nicht ausschloss — sie konnte so ins Repo geraten.
+  `check` baut jetzt mit `-o /dev/null` (prüft nur, dass alles kompiliert), `build`
+  installiert Programme nach `bin/` und kompiliert Bibliotheken nur. Liegt die Datei
+  schon im Repo: `git rm --cached <projektname>`.
 - **Modul go — `mise.part.toml`:** neuer Eintrag `"go:github.com/google/go-licenses/v2" =
   "2"`. Nach dem Update `mise install` ausführen; mit `mise.lock` zuerst `mise lock`, sonst
   scheitert `mise install --locked` in der CI.
@@ -36,9 +42,13 @@ GitHub-CI, auf Azure und ohne Host gar nicht.
   `.github/workflows/ci.yml`; der Job `check` deckt die Prüfung ab.
 - **Modul go — `CODING-STANDARDS.md` (Fragment `go`):** nennt die Prüfung in `just check`
   statt des CI-Jobs.
-- **Eigene `justfile` (`keep`):** Das Update ändert sie nicht. Im Rezept `check` als
-  letzte Zeile `just license-check` ergänzen und das Rezept `license-check` auf
-  `go-licenses check ./... --disallowed_types=forbidden,restricted` umstellen.
+- **Eigene `justfile` (`keep`):** Das Update ändert sie nicht. Von Hand nachtragen:
+  - im Rezept `check` als letzte Zeile `just license-check`, und `go build ./...` dort
+    durch `go build -o /dev/null ./...` ersetzen;
+  - das Rezept `license-check` auf
+    `go-licenses check ./... --disallowed_types=forbidden,restricted` umstellen;
+  - im Rezept `build` `go build ./...` durch `GOBIN="$PWD/bin" go install ./...`
+    ersetzen.
 
 ## 3.4.0 — 2026-11-10
 

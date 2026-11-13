@@ -2,10 +2,10 @@
 id: F-057
 title: Lizenzprüfung des Go-Moduls in just check
 type: feature
-status: IN-PROGRESS
+status: DONE
 size: M
 created: 2026-11-10
-done:
+done: 2026-11-13
 depends-on: F-052
 superseded-by:
 ---
@@ -46,16 +46,21 @@ auf v1.6.0 auf, v2 liegt unter einem eigenen Modulpfad.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben ein Go-Projekt aus dem Template, wenn `just check` läuft, dann
+- [x] AC-1 — Gegeben ein Go-Projekt aus dem Template, wenn `just check` läuft, dann
   läuft die Lizenzprüfung mit; eine Abhängigkeit mit verbotener Lizenz (Typen
   `forbidden`, `restricted`) lässt `just check` scheitern und nennt das Paket. Negativ:
   Mit nur permissiven Abhängigkeiten ist `just check` grün, auch ohne Netz nach
-  `just setup`.
-- [ ] AC-2 — Gegeben das Go-Modul und ein daraus gerendertes Projekt, wenn man
+  `just setup`. — belegt: Durchlauf F-057c in einem Go-Projekt aus dem Arbeitsstand:
+  `just check` grün mit `just license-check` als letztem Schritt; mit einer
+  LGPL-Abhängigkeit Exit 1 und Name des Pakets; ohne sie grün bei abgeschalteten
+  Downloads.
+- [x] AC-2 — Gegeben das Go-Modul und ein daraus gerendertes Projekt, wenn man
   `mise.part.toml` und `justfile` liest und im Projekt `mise lock` und
   `mise install --locked` laufen, dann steht `go-licenses` v2 über das `go:`-Backend mit
   Hauptversion in `mise.part.toml`, `mise.lock` legt die genaue Version fest, und
-  `--locked` installiert sie. Negativ: Im Go-Modul steht kein `@latest`.
+  `--locked` installiert sie. Negativ: Im Go-Modul steht kein `@latest`. — belegt: Test
+  „go: no @latest in the module“; im gerenderten Projekt legt `mise lock` go-licenses
+  2.0.1 fest, und `mise install --locked` installiert es nach dem Deinstallieren neu.
 - [x] AC-3 — Gegeben ein gerendertes Go-Projekt auf GitHub, wenn man
   `.github/workflows/ci.yml` liest, dann gibt es keinen eigenen Lizenz-Job mehr; der
   Job `check` deckt die Prüfung ab. Negativ: Der Mechanismus `ci.part.yml` bleibt
@@ -67,10 +72,13 @@ auf v1.6.0 auf, v2 liegt unter einem eigenen Modulpfad.
   `azure-pipelines.yml` ist für ein Go- und ein docs-only-Projekt gleich. — belegt:
   Skript-Tests „host azure: same pipeline for go and docs-only“ und „pipeline is the
   template's“; `check` ruft die Lizenzprüfung (Test „go: check runs the license gate“).
-- [ ] AC-5 — Gegeben ein bestehendes Go-Projekt, wenn es `/update-conventions` holt,
+- [x] AC-5 — Gegeben ein bestehendes Go-Projekt, wenn es `/update-conventions` holt,
   dann bekommt es Rezept und mise-Eintrag und verliert den Lizenz-Job in der CI; der
   CHANGELOG-Eintrag hat einen Abschnitt `### Template`, der nennt, was das Projekt tun
-  muss (`mise install`, ggf. `mise lock`). Negativ: `just check` des Kits ist grün.
+  muss (`mise install`, ggf. `mise lock`). Negativ: `just check` des Kits ist grün. —
+  belegt: Lauf von `/coding-kit:update-conventions` an einem Go-Projekt vom Stand 3.4.0
+  (siehe Verlauf F-057c); CHANGELOG 3.5.0 mit `### Template`; `just check` des Kits
+  grün.
 
 ### Randfälle
 
@@ -258,3 +266,54 @@ Go-Modul des Templates. Neue Endpunkte oder Config gibt es nicht.
   statt über `ci.part.yml` — auf Wunsch des Nutzers mitgenommen.
 
 **Funde:** keine.
+
+### F-057c — fertig 2026-11-13
+
+**Umgesetzt:**
+
+- Durchlauf in Wegwerf-Projekten aus dem Template (Modul go):
+  - AC-1: `just check` grün, mit LGPL-Abhängigkeit rot und mit Paketname, ohne sie grün
+    bei abgeschalteten Downloads.
+  - AC-2: `mise lock` schreibt go-licenses 2.0.1 in `mise.lock`, `--locked` installiert
+    es.
+  - AC-5: Der Nutzer hat `/coding-kit:update-conventions` mit dem Plugin aus dem
+    Arbeitsstand in einem Projekt vom Stand 3.4.0 ausgeführt. `ci.yml` verliert den
+    Lizenz-Job, `justfile` und `mise.toml` kommen aus dem Template, das Fragment `go`
+    wird einzeln angeboten; `lock-check` meldet go-licenses als fehlend, der Skill
+    trägt es mit `mise install && mise lock` ein; Stempel 3.5.0, `just check` grün.
+- Vorhandener Fehler im Go-Modul behoben: `go build ./...` legte bei einem einzigen
+  Hauptpaket eine Programmdatei mit dem Projektnamen ins Hauptverzeichnis, die
+  `.gitignore` nicht ausschloss. `check` baut jetzt mit `-o /dev/null`; `build`
+  installiert Programme per `GOBIN="$PWD/bin" go install ./...` nach `bin/` und
+  kompiliert Bibliotheken nur. Drei Tests in `tests/template-sync/render.sh`, ein Punkt
+  im `### Template` von 3.5.0 (mit `git rm --cached` für schon eingecheckte Dateien),
+  dazu die Zeilen zum Nachtragen für Projekte mit eigener `justfile`.
+
+**Entscheidungen:**
+
+- Den Fehler mit der Programmdatei in F-057 beheben statt unter eigener Nummer, weil
+  das Rezept hier schon angefasst war. Entscheidung des Nutzers nach Empfehlung.
+- AC-5 mit einem echten Lauf des Skills durch den Nutzer belegen statt nur mit den
+  Skript-Befehlen oder einem Lauf ohne Eingabe. Entscheidung des Nutzers.
+
+**Abweichung vom Plan:**
+
+- Die verbotene Lizenz im Gegentest ist LGPL statt GPL; go-licenses ordnet beide als
+  `restricted` ein.
+- Ohne Netz wurde nachgestellt: Downloads über Go und mise abgeschaltet.
+- Der Update-Lauf lag vor dem Fix der Programmdatei; den Fix belegt ein frisches
+  Projekt (`just check` ohne Programmdatei im Hauptverzeichnis, `just build` nach
+  `bin/`) und ein Test mit einer Bibliothek und mit zwei Programmen.
+- `build` erst mit `go build -o bin/ ./...` gebaut; das bricht in Bibliotheken ab („no
+  main packages to build“) — Befund aus dem unabhängigen Review, durch `go install`
+  ersetzt.
+- Die Frage nach dem Host im Lauf kam vom Testaufbau (`HOST=github` ohne Remote), nicht
+  von F-057.
+
+**Funde:**
+
+- Auf dem Entwicklungsrechner war mise nicht aktiviert: Tools, die nur über mise kommen,
+  fehlten, und Homebrew-Versionen liefen statt der festgelegten → F-060 aufgenommen. Auf
+  dem Rechner sind die Shims auf Wunsch des Nutzers aktiviert.
+- `mise lock` in einem frischen Projekt legte für just die lokal installierte Version
+  fest statt der neuesten derselben Hauptversion → als Punkt in F-059 aufgenommen.

@@ -57,3 +57,6 @@ davon ausgegangen, dass Renovate `mise lock` ausführt.
   aus anderen Quellen (aqua, go) nicht?
 - Freigabe über das Dashboard (`:dependencyDashboardApproval`) hält Updates zurück; ob
   das für Tool-Updates entfallen soll, entscheidet jedes Projekt selbst.
+- `mise lock` in einem frischen Projekt legt die lokal installierte Version fest, nicht
+  die neueste derselben Hauptversion (beobachtet bei just in F-057c) — gilt das auch für
+  neue Projekte aus `/coding-kit:new-project`?
