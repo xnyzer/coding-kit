@@ -41,10 +41,12 @@ run_render_cases() {
   check "ts-node: language fragment closes the slot" line_before ts/CODING-STANDARDS.md "<!-- /module:coding-standards -->" "<!-- /fragment:typescript-lang -->"
   check "ts-node: module fragment, then language fragment" slot_order ts/CODING-STANDARDS.md "ts-node typescript-lang"
 
-  # go, public: CI part
+  # go, public: the license gate runs in just check, not as an extra CI job (F-057)
   check "go renders" render go go public
   check "go: no placeholder left" no_placeholders go
-  check "go: CI part below its marker" line_after go/.github/workflows/ci.yml "# module:ci-jobs" "$(first_line "$M/go/ci.part.yml")"
+  refute "go: no license job in the CI" contains go/.github/workflows/ci.yml 'license-check'
+  check "go: check runs the license gate" contains go/justfile 'just license-check'
+  refute "go: no @latest in the module" grep -rqF '@latest' "$M/go"
   check "go: CodeQL language" contains go/.github/workflows/codeql.yml "'go'"
   check "go: managed module file" has go/.golangci.yml
   refute "go: seed module file left out" has go/go.mod
@@ -146,6 +148,15 @@ run_render_cases() {
   TEMPLATE=$t_template
   check "tmpl twin: names the target" err_mentions tdup 'two sources render to go.mod'
 
+  # ci.part.yml: no shipped module uses it now, a test module keeps the mechanism checked
+  cp -R "$TEMPLATE" "$TMP/tpl-ci"
+  printf '%s\n' '  extra-job:' '    runs-on: ubuntu-latest' > "$TMP/tpl-ci/modules/docs-only/ci.part.yml"
+  t_template=$TEMPLATE
+  TEMPLATE=$TMP/tpl-ci
+  check "ci part renders" render tci docs-only public
+  TEMPLATE=$t_template
+  check "ci part: job below its marker" line_after tci/.github/workflows/ci.yml "# module:ci-jobs" '  extra-job:'
+
   check "host git renders without OWNER" render hgit go public --seeds HOST=git -OWNER
   check "host git: listing matches the files" listing_matches hgit
   check "host git: exactly the git targets" core_exactly hgit public git
@@ -191,6 +202,9 @@ run_render_cases() {
   for_host "$TEMPLATE/core/SECURITY.md" azure sec.azure
   check "host azure: SECURITY is the azure variant" cmp -s "$TMP/haz/SECURITY.md" "$TMP/sec.azure"
   check "host azure: private reporting like git" cmp -s "$TMP/sec.azure" "$TMP/sec.git"
+  check "host azure docs-only renders" render hazd docs-only private HOST=azure -OWNER
+  check "host azure: same pipeline for go and docs-only" \
+    cmp -s "$TMP/haz/azure-pipelines.yml" "$TMP/hazd/azure-pipelines.yml"
   refute "host azure public refused" render hazp docs-only public --seeds HOST=azure -OWNER
   check "host azure public: refusal names the reason" err_mentions hazp 'no public projects'
 

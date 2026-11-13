@@ -9,10 +9,10 @@ Planned scope for a future Java module. Nothing here is instantiated yet;
   version catalog vs. Maven — verify current best practice when building the module).
 - **Recipes:** `setup` (dependency resolution, lefthook install), `test` (JUnit),
   `lint` (Checkstyle/Error Prone — verify current state), `format`
-  (google-java-format or Spotless), `check` (features index + format-check + lint + test), `build`
-  (jar/native), `dev` (run main class), `features-index` (as in core).
-- **CI:** ubuntu job extension via `ci.part.yml`; license gate candidate:
-  Gradle/Maven license plugins.
+  (google-java-format or Spotless), `check` (features index + format-check + lint + test +
+  license gate), `build` (jar/native), `dev` (run main class), `features-index` (as in core).
+- **License gate:** inside `just check`, like the go module, so every host runs it and no
+  `ci.part.yml` is needed; candidate: Gradle/Maven license plugins.
 - **CodeQL:** `{{CODEQL_LANGUAGES}}` → `java-kotlin`.
 
 ## Open questions (resolve when building the module)

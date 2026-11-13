@@ -37,11 +37,12 @@ check:
     golangci-lint run
     go build ./...
     go test -race ./...
+    just license-check
 
 # Build all packages
 build:
     go build ./...
 
-# License gate: no GPL/AGPL/LGPL dependencies (also runs as its own CI job)
+# License gate: no GPL/AGPL/LGPL dependencies (part of check; go-licenses comes via mise)
 license-check:
-    go run github.com/google/go-licenses@latest check ./... --disallowed_types=forbidden,restricted
+    go-licenses check ./... --disallowed_types=forbidden,restricted

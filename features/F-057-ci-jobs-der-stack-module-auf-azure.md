@@ -56,13 +56,17 @@ auf v1.6.0 auf, v2 liegt unter einem eigenen Modulpfad.
   `mise install --locked` laufen, dann steht `go-licenses` v2 über das `go:`-Backend mit
   Hauptversion in `mise.part.toml`, `mise.lock` legt die genaue Version fest, und
   `--locked` installiert sie. Negativ: Im Go-Modul steht kein `@latest`.
-- [ ] AC-3 — Gegeben ein gerendertes Go-Projekt auf GitHub, wenn man
+- [x] AC-3 — Gegeben ein gerendertes Go-Projekt auf GitHub, wenn man
   `.github/workflows/ci.yml` liest, dann gibt es keinen eigenen Lizenz-Job mehr; der
   Job `check` deckt die Prüfung ab. Negativ: Der Mechanismus `ci.part.yml` bleibt
-  geprüft — ein Test-Modul hängt einen Job unter `# module:ci-jobs` an.
-- [ ] AC-4 — Gegeben ein Go-Projekt auf Azure, wenn die Pipeline läuft, dann prüft sie
+  geprüft — ein Test-Modul hängt einen Job unter `# module:ci-jobs` an. — belegt:
+  Skript-Tests „go: no license job in the CI“ und „ci part: job below its marker“
+  (`just check`, 3060 Checks).
+- [x] AC-4 — Gegeben ein Go-Projekt auf Azure, wenn die Pipeline läuft, dann prüft sie
   die Lizenzen über `just check`, ohne Änderung an `azure-pipelines.yml`. Negativ:
-  `azure-pipelines.yml` ist für ein Go- und ein docs-only-Projekt gleich.
+  `azure-pipelines.yml` ist für ein Go- und ein docs-only-Projekt gleich. — belegt:
+  Skript-Tests „host azure: same pipeline for go and docs-only“ und „pipeline is the
+  template's“; `check` ruft die Lizenzprüfung (Test „go: check runs the license gate“).
 - [ ] AC-5 — Gegeben ein bestehendes Go-Projekt, wenn es `/update-conventions` holt,
   dann bekommt es Rezept und mise-Eintrag und verliert den Lizenz-Job in der CI; der
   CHANGELOG-Eintrag hat einen Abschnitt `### Template`, der nennt, was das Projekt tun
@@ -227,3 +231,30 @@ Go-Modul des Templates. Neue Endpunkte oder Config gibt es nicht.
   Downstream-Projekt bleiben just und lefthook stehen, und ein lokaler Renovate-Lauf
   findet für `go-licenses` mit gesperrter älterer Version kein Update. Das betrifft alle
   Tools des Templates → F-059 aufgenommen.
+
+### F-057b — fertig 2026-11-13
+
+**Umgesetzt:**
+
+- Go-Modul: `check` ruft am Ende `just license-check`; das Rezept nutzt `go-licenses`
+  aus mise (`mise.part.toml`: `"go:github.com/google/go-licenses/v2" = "2"`), ohne
+  `@latest`. `ci.part.yml` ist entfernt; `MODULE.md` und das Fragment `go` nennen die
+  Prüfung in `just check`.
+- Tests in `tests/template-sync/render.sh`: Go-`ci.yml` ohne Lizenz-Job, `check` ruft
+  die Prüfung, kein `@latest` im Modul; ein Test-Modul (Kopie des Templates mit
+  `ci.part.yml` in docs-only) hält den Mechanismus geprüft; die Azure-Pipeline ist für
+  go und docs-only gleich.
+- Version 3.5.0, CHANGELOG mit `### Template`: was ein Go-Projekt nach dem Update tun
+  muss, auch mit eigener `justfile`.
+
+**Entscheidungen:**
+
+- `check` ruft die Prüfung als letzten Schritt per `just license-check`: Der Befehl
+  steht nur im Rezept, und die schnellen Prüfungen laufen zuerst.
+
+**Abweichung vom Plan:**
+
+- Der Entwurf des Moduls java plant die Lizenzprüfung jetzt ebenfalls in `just check`
+  statt über `ci.part.yml` — auf Wunsch des Nutzers mitgenommen.
+
+**Funde:** keine.

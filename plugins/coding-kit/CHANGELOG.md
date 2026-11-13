@@ -13,6 +13,33 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.5.0 — unveröffentlicht
+
+Die Lizenzprüfung des Go-Moduls läuft in `just check` (F-057): auf jedem Host gleich,
+auch ohne CI und lokal vor jedem Commit. Vorher lief sie nur als eigener Job in der
+GitHub-CI, auf Azure und ohne Host gar nicht.
+
+- **Tests:** Ein Test-Modul hält den Mechanismus `ci.part.yml` geprüft, seit kein
+  mitgeliefertes Modul ihn mehr nutzt; die Azure-Pipeline ist für go und docs-only gleich.
+- **Modul java (Entwurf):** plant die Lizenzprüfung ebenfalls in `just check` statt als
+  CI-Job über `ci.part.yml`.
+
+### Template
+
+- **Modul go — `justfile`:** `check` ruft am Ende `just license-check`; das Rezept prüft
+  mit `go-licenses` aus mise statt per `go run …@latest`. Die Regel bleibt: keine
+  Lizenzen der Typen `forbidden` und `restricted`.
+- **Modul go — `mise.part.toml`:** neuer Eintrag `"go:github.com/google/go-licenses/v2" =
+  "2"`. Nach dem Update `mise install` ausführen; mit `mise.lock` zuerst `mise lock`, sonst
+  scheitert `mise install --locked` in der CI.
+- **Modul go — `ci.part.yml` entfällt:** Der Job `license-check` verschwindet aus
+  `.github/workflows/ci.yml`; der Job `check` deckt die Prüfung ab.
+- **Modul go — `CODING-STANDARDS.md` (Fragment `go`):** nennt die Prüfung in `just check`
+  statt des CI-Jobs.
+- **Eigene `justfile` (`keep`):** Das Update ändert sie nicht. Im Rezept `check` als
+  letzte Zeile `just license-check` ergänzen und das Rezept `license-check` auf
+  `go-licenses check ./... --disallowed_types=forbidden,restricted` umstellen.
+
 ## 3.4.0 — 2026-11-10
 
 Azure DevOps Services als dritter Git-Host neben GitHub und „nur Git“ (F-052): Skript,

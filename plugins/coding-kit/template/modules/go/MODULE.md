@@ -2,8 +2,9 @@
 
 Go — distilled from a production Go service gold standard: **gofmt/goimports** mandatory
 (via `golangci-lint fmt`), **go vet + golangci-lint** (v2 config, `standard` linter set),
-**tests with `-race`**, and a **license gate** (`go-licenses`, no GPL/AGPL/LGPL) both
-locally and as an extra CI job. Go version = current stable via mise + `go.mod` directive.
+**tests with `-race`**, and a **license gate** (`go-licenses`, no GPL/AGPL/LGPL) inside
+`just check`, so every host and every machine runs it. Go version = current stable via
+mise + `go.mod` directive.
 
 `{{CODEQL_LANGUAGES}}` → `go`
 
@@ -11,11 +12,10 @@ locally and as an extra CI job. Go version = current stable via mise + `go.mod` 
 
 | Part | Notes |
 |------|-------|
-| `justfile` | replaces core justfile; `check` = features index + fmt-check + vet + golangci-lint + build + test -race; `features-index` regenerates the index table |
-| `mise.part.toml` | go (current major.minor) + golangci-lint |
+| `justfile` | replaces core justfile; `check` = features index + fmt-check + vet + golangci-lint + build + test -race + license gate; `license-check` runs the gate alone; `features-index` regenerates the index table |
+| `mise.part.toml` | go (current major.minor) + golangci-lint + go-licenses v2 (Go backend, major only — the exact version is in `mise.lock`) |
 | `gitignore.part` | bin, dist, coverage.out |
 | `CODING-STANDARDS.part.md` | Go toolchain rules for §13 (module fragment) |
-| `ci.part.yml` | extra CI job: license gate |
 | `files/` | go.mod (as `go.mod.tmpl`), main.go + test sample, .golangci.yml |
 
 **Standards fragments:** `go-lang` — the language fragment with the Go rules that hold
