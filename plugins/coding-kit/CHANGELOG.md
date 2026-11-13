@@ -17,15 +17,34 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
 
 Die Lizenzprüfung des Go-Moduls läuft in `just check` (F-057): auf jedem Host gleich,
 auch ohne CI und lokal vor jedem Commit. Vorher lief sie nur als eigener Job in der
-GitHub-CI, auf Azure und ohne Host gar nicht.
+GitHub-CI, auf Azure und ohne Host gar nicht. Dazu prüfen Installer und
+`/coding-kit:update-conventions global`, ob mise in jeder Shell aktiv ist (F-060): Ohne
+Aktivierung fehlen Tools, die es nur über mise gibt — etwa go-licenses —, oder es laufen
+andere Versionen als die festgelegten.
 
 - **Tests:** Ein Test-Modul hält den Mechanismus `ci.part.yml` geprüft, seit kein
   mitgeliefertes Modul ihn mehr nutzt; die Azure-Pipeline ist für go und docs-only gleich.
 - **Modul java (Entwurf):** plant die Lizenzprüfung ebenfalls in `just check` statt als
   CI-Job über `ci.part.yml`.
+- **`template-sync.sh mise-check`** (neu): meldet, ob die Shims von mise im `PATH` dieser
+  Shell stehen, ob die Startdatei der Shell (zsh: `.zshrc`) die Aktivierung enthält — am
+  Ende, weiter oben oder nur auskommentiert — und welches Werkzeug ein Ordner vor den
+  Shims überdeckt, etwa node aus nvm. Die letzte Zeile `verdict` sagt, was zu tun ist
+  (`ok`, `commented`, `manual`, `restart`, `hook`, `offer`) — Installer und Skill
+  formulieren nur. Liest nur die Umgebung, schreibt nichts.
+- **`template-sync.sh set-mise`** (neu): schreibt die Startdatei mit der angehängten
+  Aktivierung in einen Ausgabeordner; kopiert wird nach Freigabe.
+- **Installer:** neuer Schritt 6 — meldet den Stand und bietet die Zeile für das Ende
+  der `.zshrc` an (Standard: Nein). Ein zweiter Lauf im selben Terminal fragt nicht
+  erneut, sondern nennt den Neustart. Für bash und fish nennt er nur die Zeile, für
+  andere Shells den Verweis auf `mise activate --help`.
+- **`/coding-kit:update-conventions global`:** neuer Schritt G8 mit derselben Prüfung;
+  eingetragen wird nur nach Freigabe, mit `global <ordner>` (Test) nur berichtet.
 
 ### Template
 
+- **`HOW-TO-CODE-WITH-CLAUDE.md`:** Die Skill-Übersicht nennt bei
+  `/update-conventions global` die Prüfung, ob mise in jeder Shell aktiv ist.
 - **Modul go — `justfile`:** `check` ruft am Ende `just license-check`; das Rezept prüft
   mit `go-licenses` aus mise statt per `go run …@latest`. Die Regel bleibt: keine
   Lizenzen der Typen `forbidden` und `restricted`.

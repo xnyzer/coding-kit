@@ -8,6 +8,8 @@
 #   4. Reports the kit's global rules; it never writes them or ~/.claude/CLAUDE.md —
 #      setting them up is /coding-kit:update-conventions global in a Claude session.
 #   5. Checks the base toolchain (mise, just, lefthook, gitleaks); offers brew install.
+#   6. Checks that the mise shims reach every shell (template-sync.sh mise-check); offers
+#      the activation line for the end of the shell's startup file.
 #
 # Usage:
 #   ./install.sh            # normal run (marketplace from GitHub)
@@ -145,6 +147,84 @@ if [ "${#MISSING[@]}" -gt 0 ]; then
   else
     warn "brew fehlt — Tools manuell installieren: ${MISSING[*]}"
   fi
+fi
+
+# --- 6. mise in every shell --------------------------------------------------
+# Terminals, VS Code and Claude Code take their PATH from an interactive shell; the tools
+# a project pins with mise reach them only when the activation line ends its startup
+# file, after other tool managers such as nvm. mise-check decides (its verdict line);
+# this step only words the result and appends the line on approval.
+if command -v mise >/dev/null 2>&1; then
+  say "mise in jeder Shell"
+  TEMPLATE_SYNC="$SCRIPT_DIR/plugins/coding-kit/scripts/template-sync.sh"
+  MISE_CHECK="$(sh "$TEMPLATE_SYNC" mise-check)"
+  mise_field() { # $1 line kind, $2 field number
+    printf '%s\n' "$MISE_CHECK" | awk -F '\t' -v k="$1" -v n="$2" '$1 == k { print $n; exit }'
+  }
+  RC="$(mise_field rc 2)"
+  LINE="$(mise_field line 2)"
+  ADD_LINE="$(mise_field add 2)"
+  VERDICT="$(mise_field verdict 2)"
+  # Shadowed tools grouped by the directory that holds them: "node, npm aus ~/<dir>".
+  SHADOWED="$(printf '%s\n' "$MISE_CHECK" | awk -F '\t' -v home="$HOME" '
+    $1 == "shadowed" {
+      if (!($3 in tools)) order[++n] = $3
+      tools[$3] = ($3 in tools) ? tools[$3] ", " $2 : $2
+    }
+    END {
+      for (i = 1; i <= n; i++) {
+        dir = order[i]
+        if (index(dir, home "/") == 1) dir = "~" substr(dir, length(home) + 1)
+        printf "%s%s aus %s", (i > 1 ? "; " : ""), tools[order[i]], dir
+      }
+    }')"
+
+  case "$VERDICT" in
+    ok)
+      ok "mise ist aktiv — in Projekten gelten die Versionen aus mise.toml"
+      ;;
+    commented)
+      warn "In $RC steht die Aktivierung nur auskommentiert — prüfen: $ADD_LINE"
+      ;;
+    manual)
+      [ -z "$SHADOWED" ] || warn "Vor den Shims von mise: $SHADOWED"
+      if [ "$ADD_LINE" = - ]; then
+        warn "Für diese Shell trägt der Installer nichts ein — siehe: mise activate --help"
+      else
+        warn "Für diese Shell trägt der Installer nichts ein — ans Ende ihrer Startdatei: $ADD_LINE"
+      fi
+      ;;
+    restart)
+      warn "Die Aktivierung steht in $RC — sie wirkt nach einem Neustart von Terminal bzw. VS Code"
+      ;;
+    hook)
+      warn "Die Aktivierung steht am Ende von $RC, trotzdem vor den Shims: $SHADOWED —" \
+        "nach einem Neustart von Terminal bzw. VS Code erneut prüfen; bleibt es," \
+        "wechselt etwas die Version beim Ordnerwechsel (etwa ein Hook von nvm)"
+      ;;
+    offer)
+      if [ -n "$SHADOWED" ]; then
+        warn "Vor den Shims von mise: $SHADOWED — die Aktivierung muss danach stehen"
+      else
+        warn "mise ist nicht aktiv — Werkzeuge aus mise fehlen oder laufen in anderen Versionen"
+      fi
+      if ask_yes_no "Zeile ans Ende von $RC anhängen ($ADD_LINE)?" n; then
+        MISE_OUT="$(mktemp -d)"
+        sh "$TEMPLATE_SYNC" set-mise "$RC" "$MISE_OUT/rc" >/dev/null
+        cp "$MISE_OUT/rc/$(basename "$RC")" "$RC"
+        rm -rf "$MISE_OUT"
+        ok "eingetragen — Terminal bzw. VS Code neu starten, dann gilt es"
+        if [ "$LINE" = present ]; then
+          ok "die ältere Zeile mit mise activate weiter oben in $RC kann raus"
+        fi
+      else
+        warn "übersprungen — von Hand ans Ende von $RC: $ADD_LINE"
+      fi
+      ;;
+    *)
+      fail "mise-check lieferte kein bekanntes Ergebnis: $VERDICT"
+      ;;
+  esac
 fi
 
 say "Fertig. Nächste Schritte: neue Claude-Code-Session starten, Skills unter /coding-kit:<name> prüfen;"

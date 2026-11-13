@@ -1,6 +1,6 @@
 ---
 name: update-conventions
-description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je seed-Zone (section:NAME); Abweichungs-Registry (skip, keep, adapt); erkennt per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt; Migration für Projekte ohne Snapshot und für das Dokumentmodell vor 2.0.0 (auch per Argument `features`); erkennt entfernte/umbenannte Dateien. Ohne Argument das Projekt im aktuellen Ordner, `alle` für alle; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente und Tools ohne Vorlage bietet er dem Template an (propose-to-template). Mit `global` — und einmal in jedem anderen Lauf — gleicht er die globalen Kit-Regeln auf dem Rechner ab (`~/.claude/rules/coding-kit.md`; Ersteinrichtung, Diff je Abschnitt, Migration einer alten Kit-Kopie; eine selbst angelegte CLAUDE.md nie); nur mit `global` bietet er zwei Settings an (Auto-Memory aus, Transkripte 365 Tage). Überträgt die Auto-Memory des Projekts in Graph oder docs/notes.md. Trägt bei Bestandsprojekten den Git-Host ein (GitHub und Azure DevOps ohne Frage, sonst Frage nach Umzug); `host` wechselt den Host eines Projekts. Nichts wird ungefragt überschrieben.
+description: Konventionen vom mitgelieferten Template in Projekte verteilen — ausschließlich abwärts. Managed Dateien per Drei-Wege-Merge gegen den Basis-Snapshot (Projektzusätze bleiben, nur echte Überschneidungen werden Konflikte), Diff und Bestätigung je Datei, je Standards-Fragment und je seed-Zone (section:NAME); Abweichungs-Registry (skip, keep, adapt); erkennt per Signal, wofür das Template inzwischen Module oder Fragmente hat und welche Tools es nicht kennt; Migration für Projekte ohne Snapshot und für das Dokumentmodell vor 2.0.0 (auch per Argument `features`); erkennt entfernte/umbenannte Dateien. Ohne Argument das Projekt im aktuellen Ordner, `alle` für alle; Modi `status` (nur Bericht) und `revise` (Registry prüfen). Projektlokale Fragmente und Tools ohne Vorlage bietet er dem Template an (propose-to-template). Mit `global` — und einmal in jedem anderen Lauf — gleicht er die globalen Kit-Regeln auf dem Rechner ab (`~/.claude/rules/coding-kit.md`; Ersteinrichtung, Diff je Abschnitt, Migration einer alten Kit-Kopie; eine selbst angelegte CLAUDE.md nie); nur mit `global` bietet er zwei Settings an (Auto-Memory aus, Transkripte 365 Tage) und prüft, ob mise in jeder Shell aktiv ist. Überträgt die Auto-Memory des Projekts in Graph oder docs/notes.md. Trägt bei Bestandsprojekten den Git-Host ein (GitHub und Azure DevOps ohne Frage, sonst Frage nach Umzug); `host` wechselt den Host eines Projekts. Nichts wird ungefragt überschrieben.
 argument-hint: "[Projekt | alle | global [Ordner] | features | host] [status | revise]"
 disable-model-invocation: true
 user-invocable: true
@@ -26,8 +26,9 @@ Fragmente nie selbst zusammenführen, einsetzen oder aus dem Template abschreibe
 - **Projektpfad oder -name:** genau dieses Projekt.
 - **`alle`:** alle Projekte (A1).
 - **`global`:** nur die globalen Kit-Regeln auf diesem Rechner (Teil G), auch außerhalb
-  eines Projekts; richtet sie beim ersten Mal ein. Folgt ein Ordner (`global <ordner>`),
-  gilt er als Claude-Config-Ordner — für Tests, das echte `~/.claude` bleibt unberührt.
+  eines Projekts; richtet sie beim ersten Mal ein und prüft die Aktivierung von mise
+  (G8). Folgt ein Ordner (`global <ordner>`), gilt er als Claude-Config-Ordner — für
+  Tests, das echte `~/.claude` bleibt unberührt.
 - **`status`:** nur Bericht — nichts im Projekt schreiben (keine Antworten, kein
   Snapshot, keine Registry, kein Stempel) und nichts im Config-Ordner.
 - **`revise`:** nur die Registry-Revision (A2 Schritt 10), ohne A5.
@@ -623,8 +624,8 @@ selben Ordner gehört allein dem Nutzer.
 **Wann:** mit `global` immer; in jedem anderen Lauf außer `revise` einmal nach dem letzten
 Projekt, aber nur, wenn `rules/coding-kit.md` existiert oder G1 eine alte Kit-Kopie
 findet. Im Modus `status` nur berichten (G1, die Zeilen aus G3, Hinweise aus G5, die
-Werte aus G7) und nichts schreiben — weder Werte noch Regeln noch Basis noch Settings.
-G7 läuft nur mit `global`.
+Werte aus G7, den Stand aus G8) und nichts schreiben — weder Werte noch Regeln noch
+Basis noch Settings noch Startdatei. G7 und G8 laufen nur mit `global`.
 
 ### G1. Stand
 
@@ -777,3 +778,38 @@ angeboten, nie ungefragt geschrieben:
 3. Die bestätigten Werte: `sh <skript> set-settings <config> <tmp>/settings NAME=value…`,
    den Diff `<config>/settings.json` → `<tmp>/settings/settings.json` zeigen und nach
    OK kopieren. Alle anderen Einträge bleiben; die Werte gelten ab der nächsten Session.
+
+### G8. mise in jeder Shell
+
+Die Tools, die ein Projekt mit mise festlegt (`mise.toml`), erreichen Terminal, VS Code
+und Claude Code nur, wenn die Aktivierung von mise am Ende der Startdatei der
+interaktiven Shell steht — nach anderen Tool-Managern wie nvm. Sonst fehlen Tools, die es
+nur über mise gibt, oder es laufen andere Versionen als die festgelegten. Claude Code
+übernimmt den `PATH` vom Programm, das es startet; die Shell dieser Session zeigt also,
+was zählt. Mit `global <ordner>` (Test) nur berichten: Die Startdatei liegt außerhalb
+des Stellvertreter-Ordners.
+
+1. `sh <skript> mise-check` (aufgelöster Pfad wie § 0). Er liest nur die Umgebung und
+   meldet `rc` (Startdatei), `line` (Stand der Zeile darin), `activated`, je überdecktem
+   Werkzeug `shadowed` mit dem Ordner davor, `add` (die Zeile für diese Shell) und als
+   letzte Zeile `verdict` — die Entscheidung trifft das Skript, der Skill formuliert nur.
+2. Je `verdict`:
+   - `ok` → nichts melden (im Modus `status`: mise aktiv).
+   - `commented` → melden, dass die Aktivierung in der Startdatei nur auskommentiert
+     ist, mit der Zeile aus `add`; nichts schreiben.
+   - `manual` (bash, fish oder eine andere Shell) → die Zeile aus `add` zum Eintragen am
+     Ende der Startdatei nennen, bei `add -` auf `mise activate --help` verweisen; dazu
+     überdeckte Werkzeuge mit ihrem Ordner. Nichts schreiben.
+   - `restart` → die Zeile steht schon; sie wirkt nach einem Neustart von Terminal bzw.
+     VS Code.
+   - `hook` → die überdeckten Werkzeuge und den Ordner nennen: nach einem Neustart
+     erneut prüfen; bleibt es, wechselt etwas die Version beim Ordnerwechsel (etwa ein
+     Hook von nvm). Nur melden.
+   - `offer` → die Zeile anbieten, mit dem Grund — mise nicht aktiv, bzw. welche
+     Werkzeuge aus welchem Ordner kommen: **anhängen** / **nicht anhängen** (der nächste
+     `global`-Lauf fragt wieder).
+3. Angenommen: `sh <skript> set-mise <rc> <tmp>/mise` schreibt die Startdatei mit der
+   angehängten Zeile; den Diff `<rc>` → `<tmp>/mise/<name>` zeigen und nach OK
+   kopieren. Stand die Zeile schon weiter oben (`present`), sagen, dass die ältere raus
+   kann — das entscheidet der Nutzer. Danach: Terminal bzw. VS Code neu starten; eine
+   neue Claude-Session allein übernimmt den alten `PATH`.

@@ -140,8 +140,8 @@ im Projekt die festgelegten Versionen und außerhalb die des Systems. nvm, in de
 - [x] [CLARIFY] Wie stellt man die Reihenfolge gegenüber nvm sicher: Aktivierung am Ende
   der `.zshrc` wiederholen, oder node über mise statt nvm? — Aktivierung am Ende der
   `.zshrc`, nach nvm; ein Umstieg von nvm ist nicht nötig, siehe Verlauf F-060a.
-- [ ] [CLARIFY] Wo steht die gemeinsame Prüfung, die Installer und Skill nutzen?
-  (Plan, nicht blockierend)
+- [x] [CLARIFY] Wo steht die gemeinsame Prüfung, die Installer und Skill nutzen? —
+  `template-sync.sh mise-check` und `set-mise`, siehe Verlauf F-060b.
 - [ ] [CLARIFY] Welche Startdatei gilt für bash — auf macOS liest bash als Login-Shell
   `~/.bash_profile`, sonst `~/.bashrc`? (Durchlauf F-060c, nicht blockierend)
 - [ ] [CLARIFY] Projekte mit `.nvmrc`: Stellt ein automatischer Wechsel von nvm beim
@@ -215,6 +215,9 @@ den Skills (siehe Lösungsskizze).
 
 ### F-060c — Doku und Durchläufe
 
+- Installer, Schritt 5: Ein Shim ohne Version außerhalb eines Projekts zählt nicht als
+  vorhandenes Werkzeug; die Doku nennt, dass ein Shim außerhalb eines Projekts nur mit
+  einer Version des Systems oder einer globalen Version von mise läuft (Fund F-060b).
 - Kit-README (Toolchain) und Template-Doku (`README`, `CONTRIBUTING`,
   `HOW-TO-CODE-WITH-CLAUDE`): Aktivierung mit Verweis auf `mise doctor`; CHANGELOG mit
   `### Template`.
@@ -268,3 +271,58 @@ Teilen).
 
 - Auf dem Rechner des Nutzers steht die Aktivierung jetzt am Ende der `.zshrc`, die
   Zeile in der `.zprofile` ist entfernt (auf seinen Wunsch).
+
+### F-060b — fertig 2026-11-14
+
+**Umgesetzt:**
+
+- `template-sync.sh mise-check` liest nur die Umgebung und meldet in Zeilen die Shell,
+  ihre Startdatei (zsh: `.zshrc`), den Stand der Aktivierung darin (`last`, `present`,
+  `commented`, `absent`), ob die Shims im `PATH` stehen, ob mise aktiv ist (Shims im
+  `PATH` oder `MISE_SHELL`), je Werkzeug, das ein Ordner vor den Shims überdeckt, eine
+  Zeile `shadowed`, die Zeile für diese Shell (zsh, bash, fish) und zuletzt `verdict`
+  mit der Entscheidung: `ok`, `commented`, `manual`, `restart`, `hook` oder `offer`.
+  `set-mise RC OUT` schreibt die Startdatei mit angehängter Zeile in einen
+  Ausgabeordner. Beide nutzen dieselbe Zuordnung von Shell zu Startdatei und Zeile.
+- Tests in `tests/template-sync/mise.sh` für beide Befehle und jedes `verdict` unter
+  dash, bash und mawk; eine Gegenprobe mit vertauschter Logik ließ sie scheitern.
+- `install.sh`, Schritt 6: formuliert je `verdict` eine Meldung, nennt überdeckte
+  Werkzeuge mit ihrem Ordner und bietet bei `offer` die Zeile an (Standard: Nein),
+  eingetragen über `set-mise`. In elf Szenarien mit Test-Home durchgespielt: Nein
+  schreibt nichts, Ja legt die Datei an, ein zweiter Lauf fragt nicht, Überdeckung durch
+  nvm wird erkannt (auch unter bash), ein fehlendes Zeilenende wird ergänzt, die
+  Dateirechte bleiben, für bash und fish nennt er die Zeile, für andere Shells
+  `mise activate --help`.
+- `/coding-kit:update-conventions`, Teil G: neuer Schritt G8 mit derselben Prüfung je
+  `verdict`; bei `ok` still, Eintrag nur nach Freigabe. Begleitend die Zeile des Skills
+  in der README, die Skill-Übersicht in `HOW-TO-CODE-WITH-CLAUDE.md` und CHANGELOG 3.5.0
+  mit `### Template`.
+
+**Entscheidungen:**
+
+- Die Entscheidung trifft `mise-check` (Zeile `verdict`); Installer und Skill wählen nur
+  den Text. Grund: Die Regeln standen sonst zweimal und liefen schon auseinander —
+  Befund aus dem unabhängigen Review.
+- Das Anhängen macht ein eigener Befehl `set-mise`; Installer und Skill kopieren nur.
+  Grund: Kit-Regel „auch das Einsetzen gehört ins Skript“ — Zeile und Kommentar stehen an
+  einer Stelle.
+- Steht die Zeile vor einem Tool-Manager, wird sie hinten neu angehängt; die ältere
+  entfernt der Nutzer selbst.
+- G8 bleibt bei `ok` still (AC-2) und berichtet im Testmodus `global <ordner>` nur, weil
+  die Startdatei außerhalb des Stellvertreter-Ordners liegt.
+
+**Abweichung vom Plan:**
+
+- Zweiter Befehl `set-mise` und die Zeile `verdict` dazugekommen (siehe Entscheidungen).
+- Den Schritt des Installers getestet, nicht den ganzen Installer (der braucht `gh` und
+  `claude` mit Anmeldung); der ganze Lauf folgt in F-060c.
+- shellcheck lief nicht (auf dem Rechner keine Version außerhalb eines Projekts); geprüft
+  mit `bash -n` und `sh -n`.
+
+**Funde:**
+
+- Vorhandener Fehler behoben: Der Link in der README auf die Prüfung von `gh` im
+  Installer zeigte auf falsche Zeilen.
+- Ein Shim ohne Version bricht außerhalb eines Projekts mit „No version is set“ ab,
+  statt auf das System zurückzufallen; `command -v` in Schritt 5 des Installers hält
+  das Werkzeug dann für vorhanden → in F-060c aufgenommen (Plan).

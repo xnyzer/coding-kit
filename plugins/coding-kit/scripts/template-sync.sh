@@ -206,6 +206,30 @@
 #       personal config ENV (read, never executed). Line: default-host <host>
 #       <config|none|invalid> [value]; without the key github (none), a value that is no
 #       name of HOSTS gives github with invalid and the value.
+#   mise-check
+#       Whether the tools a project pins with mise reach this shell. Terminals, VS Code
+#       and Claude Code take their PATH from an interactive shell, so the activation line
+#       belongs at the end of its startup file, after other tool managers such as nvm.
+#       Reads the environment only: SHELL, HOME, ZDOTDIR, PATH, MISE_DATA_DIR,
+#       XDG_DATA_HOME, MISE_SHELL. Lines: shell <name>; mise <found|missing>; rc
+#       <file|-> <exists|missing|-> — the startup file (zsh ${ZDOTDIR:-$HOME}/.zshrc,
+#       none for other shells yet); line <last|present|commented|absent|-> — a line with
+#       `mise activate` in it, last when no command follows the last active one; shims
+#       <dir> <on-path|off-path>; activated <yes|no> — shims on PATH, or MISE_SHELL set
+#       by an activation without shims; shadowed <tool> <dir> per shim that a directory
+#       before the shims on PATH also holds (shims on PATH only); add <line|-> — the
+#       activation line for this shell (zsh, bash, fish); then verdict — the first that
+#       fits: ok (activated, nothing shadowed), commented (only commented out in rc),
+#       manual (no startup file known: name the line), restart (the line is in rc but
+#       not yet active), hook (the line ends rc, yet something is shadowed: restart, and
+#       if it stays, something switches versions on cd), offer (offer to append the
+#       line). Writes nothing; PATH changes only after the terminal or editor restarts.
+#   set-mise RC OUT
+#       Writes the startup file RC (a missing file counts as empty) with the activation
+#       line for the shell of SHELL appended — after a blank line and a comment — into
+#       OUT/<name of RC> (OUT missing or empty). Every line of RC stays; the caller copies
+#       the file after approval. Line: written <name>. Refused: a shell without a known
+#       activation line (see mise-check).
 #
 # Options name a stand-in for a file of PROJECT, so a skill can go on with files it
 # prepared in a temp folder while a write below .claude/ waits for approval:
@@ -275,6 +299,8 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh remote-check URL
        sh template-sync.sh commit-email [--answers FILE] ENV PROJECT
        sh template-sync.sh default-host ENV
+       sh template-sync.sh mise-check
+       sh template-sync.sh set-mise RC OUT
 EOF
   exit 2
 }
@@ -3620,6 +3646,174 @@ commit_email() {
   return 0
 }
 
+# --- mise-check: do the mise shims reach this shell? --------------------------------
+
+# Where mise keeps its shims: MISE_DATA_DIR, else the XDG data folder, else the default.
+mise_shims_dir() {
+  if [ -n "${MISE_DATA_DIR:-}" ]; then
+    printf '%s/shims\n' "$MISE_DATA_DIR"
+  elif [ -n "${XDG_DATA_HOME:-}" ]; then
+    printf '%s/mise/shims\n' "$XDG_DATA_HOME"
+  else
+    printf '%s/.local/share/mise/shims\n' "$HOME"
+  fi
+}
+
+# The activation line in startup file FILE: last (no command follows the last active
+# one), present, commented (commented-out ones only) or absent.
+mise_line_state() {  # FILE
+  if [ ! -f "$1" ]; then
+    echo absent
+    return 0
+  fi
+  awk '
+    { t = $0; sub(/^[ \t]+/, "", t) }
+    t ~ /mise[ \t]+activate/ {
+      if (substr(t, 1, 1) == "#") {
+        commented = 1
+      } else {
+        active = 1
+        after = 0
+      }
+      next
+    }
+    active && t != "" && substr(t, 1, 1) != "#" { after = 1 }
+    END {
+      if (active) print (after ? "present" : "last")
+      else if (commented) print "commented"
+      else print "absent"
+    }' "$1"
+}
+
+# Prints a shadowed line per shim that a directory before SHIMS on PATH also holds.
+mise_shadowed() {  # SHIMS
+  for ms_shim in "$1"/*; do
+    [ -f "$ms_shim" ] || continue
+    ms_tool=${ms_shim##*/}
+    ms_ifs=$IFS
+    IFS=:
+    set -f
+    for ms_dir in $PATH; do
+      [ "$ms_dir" != "$1" ] || break
+      if [ -n "$ms_dir" ] && [ -f "$ms_dir/$ms_tool" ] && [ -x "$ms_dir/$ms_tool" ]; then
+        printf 'shadowed\t%s\t%s\n' "$ms_tool" "$ms_dir"
+        break
+      fi
+    done
+    set +f
+    IFS=$ms_ifs
+  done
+}
+
+# The shell of SHELL into MS_SHELL, its startup file into MS_RC and its activation line
+# into MS_ADD (empty when not known).
+mise_shell_setup() {
+  MS_SHELL=${SHELL:-}
+  MS_SHELL=${MS_SHELL##*/}
+  case $MS_SHELL in
+    zsh)
+      MS_RC=${ZDOTDIR:-$HOME}/.zshrc
+      MS_ADD='eval "$(mise activate zsh --shims)"'
+      ;;
+    bash)
+      # Which startup file bash reads depends on the system (login shells on macOS read
+      # ~/.bash_profile, others ~/.bashrc) — not settled yet, so only the line is named.
+      MS_RC=
+      MS_ADD='eval "$(mise activate bash --shims)"'
+      ;;
+    fish)
+      MS_RC=
+      MS_ADD='mise activate fish --shims | source'
+      ;;
+    *)
+      MS_RC=
+      MS_ADD=
+      ;;
+  esac
+}
+
+# The comment set-mise writes above the activation line.
+MISE_COMMENT='# mise: project-pinned tools via shims, last so they come before other tool managers.'
+
+mise_check() {
+  [ $# -eq 0 ] || usage
+  mise_shell_setup
+  mc_shell=$MS_SHELL mc_rc=$MS_RC mc_add=$MS_ADD
+  printf 'shell\t%s\n' "${mc_shell:--}"
+  if command -v mise > /dev/null 2>&1; then
+    printf 'mise\tfound\n'
+  else
+    printf 'mise\tmissing\n'
+  fi
+  if [ -z "$mc_rc" ]; then
+    printf 'rc\t-\t-\n'
+    mc_line=-
+  elif [ -f "$mc_rc" ]; then
+    printf 'rc\t%s\texists\n' "$mc_rc"
+    mc_line=$(mise_line_state "$mc_rc")
+  else
+    printf 'rc\t%s\tmissing\n' "$mc_rc"
+    mc_line=absent
+  fi
+  printf 'line\t%s\n' "$mc_line"
+  mc_shims=$(mise_shims_dir)
+  case ":$PATH:" in
+    *":$mc_shims:"*) mc_on=on-path ;;
+    *) mc_on=off-path ;;
+  esac
+  printf 'shims\t%s\t%s\n' "$mc_shims" "$mc_on"
+  if [ "$mc_on" = on-path ] || [ -n "${MISE_SHELL:-}" ]; then
+    mc_active=yes
+  else
+    mc_active=no
+  fi
+  printf 'activated\t%s\n' "$mc_active"
+  mc_shadowed=
+  if [ "$mc_on" = on-path ] && [ -d "$mc_shims" ]; then
+    mc_shadowed=$(mise_shadowed "$mc_shims")
+  fi
+  if [ -n "$mc_shadowed" ]; then
+    printf '%s\n' "$mc_shadowed"
+  fi
+  printf 'add\t%s\n' "${mc_add:--}"
+  # The one place that decides what a caller does; installer and skill only word it.
+  if [ "$mc_active" = yes ] && [ -z "$mc_shadowed" ]; then
+    mc_verdict=ok
+  elif [ "$mc_line" = commented ]; then
+    mc_verdict=commented
+  elif [ -z "$mc_rc" ]; then
+    mc_verdict=manual
+  elif [ "$mc_active" = no ] && { [ "$mc_line" = last ] || [ "$mc_line" = present ]; }; then
+    mc_verdict=restart
+  elif [ "$mc_line" = last ]; then
+    mc_verdict=hook
+  else
+    mc_verdict=offer
+  fi
+  printf 'verdict\t%s\n' "$mc_verdict"
+}
+
+set_mise() {
+  [ $# -eq 2 ] || usage
+  SM_RC=$1 SM_OUT=$2
+  mise_shell_setup
+  [ -n "$MS_ADD" ] || die "no activation line known for the shell '${MS_SHELL:-}'"
+  check_out_dir "$SM_OUT"
+  mkdir -p "$SM_OUT"
+  sm_file=$SM_OUT/${SM_RC##*/}
+  if [ -f "$SM_RC" ]; then
+    cat "$SM_RC" > "$sm_file"
+  else
+    : > "$sm_file"
+  fi
+  # Without a final newline the comment would join the last line of the file.
+  if [ -n "$(tail -c 1 "$sm_file")" ]; then
+    printf '\n' >> "$sm_file"
+  fi
+  printf '\n%s\n%s\n' "$MISE_COMMENT" "$MS_ADD" >> "$sm_file"
+  printf 'written\t%s\n' "${SM_RC##*/}"
+}
+
 cmd=${1:-}
 [ $# -eq 0 ] || shift
 parse_opts "$cmd" "$@"
@@ -3644,5 +3838,7 @@ case $cmd in
   remote-check) remote_check "$@" ;;
   commit-email) commit_email "$@" ;;
   default-host) default_host "$@" ;;
+  mise-check) mise_check "$@" ;;
+  set-mise) set_mise "$@" ;;
   *) usage ;;
 esac
