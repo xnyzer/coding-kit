@@ -1,7 +1,7 @@
 # {{PROJECT_NAME}} — standard recipes
 # Docs-only default: a stack module replaces this file with real implementations.
-# The recipe set (setup/dev/test/lint/format/check/build) is the stable contract —
-# skills and CI call only these names.
+# The recipe set (setup/dev/test/lint/format/check/build/features-index/bump-tools) is
+# the stable contract — skills and CI call only these names.
 
 default:
     @just --list
@@ -29,6 +29,11 @@ format:
 # Regenerate the table of all features in features/INDEX.md
 features-index:
     sh scripts/features-index.sh write
+
+# Raise each tool in mise.lock to the newest version of its major; Renovate does the
+# same weekly where it runs and may execute mise.
+bump-tools:
+    mise lock --bump
 
 # Full gate — must be green before every commit
 check:

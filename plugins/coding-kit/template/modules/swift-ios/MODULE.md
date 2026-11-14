@@ -10,7 +10,8 @@ Planned scope for a future Swift/iOS module. Nothing here is instantiated yet;
 - **Recipes:** `setup` (resolve SPM packages, lefthook install), `test`
   (`xcodebuild test` on a simulator destination), `lint` (SwiftLint), `format`
   (SwiftFormat), `check` (features index + format-check + lint + test), `build`
-  (`xcodebuild build`), `dev` (open in Xcode), `features-index` (as in core).
+  (`xcodebuild build`), `dev` (open in Xcode), `features-index` and `bump-tools` (as in
+  core).
 - **Structure:** SPM package or Xcode project; tests via XCTest/Swift Testing.
 - **CI:** requires a macOS runner (`runs-on: macos-*`) — the module's `ci.part.yml` will
   add a separate job rather than extending the ubuntu job.

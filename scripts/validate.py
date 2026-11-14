@@ -149,11 +149,13 @@ SNAPSHOT_ATTRIBUTE_RE = re.compile(r"^\.claude/template-base/\*\*\s.*linguist-ge
 # `${CLAUDE_PLUGIN_ROOT}/<path>` as written in skill text (substituted at load time).
 PLUGIN_ROOT_VAR = "${CLAUDE_PLUGIN_ROOT}"
 PLUGIN_PATH_RE = re.compile(re.escape(PLUGIN_ROOT_VAR) + r"/([^\s`'\"),;]+)")
-# Features index (MANIFEST § Features): every justfile a project can get runs the check in
-# `just check` and the generator as `just features-index`; the pre-commit hook checks too.
-FEATURES_RECIPES = {
+# Recipes every justfile a project can get must run (MANIFEST § Standard recipe set): the
+# features index check in `just check` and its generator as `just features-index` (the
+# pre-commit hook checks too), and `just bump-tools` for the tools in mise.lock.
+REQUIRED_RECIPES = {
     "check": "sh scripts/features-index.sh check",
     "features-index": "sh scripts/features-index.sh write",
+    "bump-tools": "mise lock --bump",
 }
 LEFTHOOK_TEMPLATE = TEMPLATE_ROOT / "core" / "lefthook.yml"
 JUST_RECIPE_RE = re.compile(r"^([a-z][a-z0-9-]*)(?:\s[^:\n]*)?:(?!=)[^\n]*\n((?:[ \t]+\S[^\n]*\n?)*)", re.M)
@@ -931,18 +933,18 @@ def check_template_contract(findings: list[str]) -> None:
     check_snapshot_contract(text, findings)
     check_detection(text, findings)
     check_hosts(text, findings)
-    check_features_recipes(findings)
+    check_required_recipes(findings)
 
 
-def check_features_recipes(findings: list[str]) -> None:
-    """The core justfile and every module justfile run the features index check in
-    `check` and its generator as `features-index`; the pre-commit hook runs the check."""
+def check_required_recipes(findings: list[str]) -> None:
+    """The core justfile and every module justfile run the commands of REQUIRED_RECIPES
+    in their recipes; the pre-commit hook runs the features index check."""
     justfiles = [TEMPLATE_ROOT / "core" / "justfile", *sorted(TEMPLATE_ROOT.glob("modules/*/justfile"))]
     for justfile in justfiles:
         recipes = {
             name: body for name, body in JUST_RECIPE_RE.findall(justfile.read_text(encoding="utf-8"))
         }
-        for recipe, command in FEATURES_RECIPES.items():
+        for recipe, command in REQUIRED_RECIPES.items():
             if command not in recipes.get(recipe, ""):
                 findings.append(
                     f"{display_path(justfile)}: recipe '{recipe}' does not run '{command}'"

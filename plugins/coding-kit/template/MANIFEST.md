@@ -280,10 +280,13 @@ above are exact. The plugin's `scripts/template-sync.sh render` implements them:
   placeholders. Two sources with the same target stop the render.
 
 **Standard recipe set** every module's justfile must implement (skills call only these):
-`setup`, `dev`, `test`, `lint`, `format`, `check`, `build`, `features-index`. `check` is
-the full gate (format check + lint + types + tests) and must be green before any commit;
-it also runs `sh scripts/features-index.sh check`, and `features-index` runs
-`sh scripts/features-index.sh write` (§ Features).
+`setup`, `dev`, `test`, `lint`, `format`, `check`, `build`, `features-index`,
+`bump-tools`. `check` is the full gate (format check + lint + types + tests) and must be
+green before any commit; it also runs `sh scripts/features-index.sh check`, and
+`features-index` runs `sh scripts/features-index.sh write` (§ Features). `bump-tools`
+runs `mise lock --bump`: it raises each tool in `mise.lock` to the newest version of its
+major — what Renovate's weekly lock file maintenance (the kit's preset) does where
+Renovate runs and may execute mise — and leaves the majors in `mise.toml` as they are.
 
 ## Standards fragments
 

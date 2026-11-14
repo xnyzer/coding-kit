@@ -92,14 +92,18 @@ lokal installierte Version fest, nicht die neueste (lefthook 2.1.9 statt 2.2.2).
   nicht an. — belegt: Durchlauf F-059a (just 1.59.0 und lefthook 2.2.2 statt lokal
   1.55.1 und 2.1.9, `lock-check` vollständig); choose-stack § Lock-Datei schließt
   `--bump` für bestehende Projekte aus, update-conventions unverändert.
-- [ ] AC-4 — Gegeben ein Projekt aus dem Template mit einem beliebigen Stack-Modul, wenn
+- [x] AC-4 — Gegeben ein Projekt aus dem Template mit einem beliebigen Stack-Modul, wenn
   `just bump-tools` läuft, dann hebt es `mise.lock` an wie Renovate
   (`mise lock --bump`), `mise.toml` bleibt unverändert. Negativ: Fehlt das Rezept in
-  einer justfile des Templates, meldet `just check` des Kits das.
-- [ ] AC-5 — Gegeben ein bestehendes Projekt, wenn es `/update-conventions` holt, dann
+  einer justfile des Templates, meldet `just check` des Kits das. — belegt: Validator
+  in `just check` mit Gegenprobe; Durchlauf F-059b (just von 1.55.1 auf 1.59.0,
+  `mise.toml` unverändert, alle vier Module kennen das Rezept).
+- [x] AC-5 — Gegeben ein bestehendes Projekt, wenn es `/update-conventions` holt, dann
   bekommt es das Rezept; der CHANGELOG-Eintrag 3.5.0 hat unter `### Template` das Rezept
   und sagt, dass die Preset-Regel ohne Zutun des Projekts wirkt. Negativ: `just check`
-  des Kits ist grün.
+  des Kits ist grün. — belegt: Drei-Wege-Merge eines Go-Projekts vom Stand vor F-059b
+  (justfile `merged` ohne Konflikt, mit `bump-tools` und eigenem Rezept); CHANGELOG
+  3.5.0 `### Template`; `just check` und Versionsregel grün.
 
 ### Randfälle
 
@@ -259,3 +263,40 @@ neues Tool. Neue Config nur im Preset; keine Endpunkte, keine Dependencies.
 
 **Funde:** Unabhängiges Review mit einem Befund, behoben: Der neue Satz in choose-stack
 nannte Renovate als einzigen Weg zum Anheben; jetzt auch den Handweg (EC-3, EC-6).
+
+### F-059b — fertig 2026-11-14
+
+**Umgesetzt:**
+
+- Rezept `bump-tools` (`mise lock --bump`) in den justfiles von `template/core` und den
+  Modulen go, python, ts-node; MANIFEST § Standard recipe set nimmt es auf. Der
+  Validator prüft es wie die Rezepte für den Feature-Index (`REQUIRED_RECIPES` in
+  `scripts/validate.py`); ohne `--bump` in der python-justfile meldet er genau diese
+  Datei.
+- Kopfkommentare: Die Core-justfile nennt den ganzen Rezeptsatz, `core/mise.toml` das
+  wöchentliche Anheben durch Renovate und `just bump-tools`. `docs/renovate-preset.md`
+  nennt `just bump-tools` als Handweg.
+- CHANGELOG 3.5.0 `### Template`: das Rezept mit Text zum Nachtragen bei eigener
+  justfile (`keep`); die Preset-Regel wirkt ohne Zutun des Projekts.
+- Durchlauf: Alle vier Module gerendert, jedes kennt `bump-tools`. Im docs-only-Projekt
+  hebt `just bump-tools` just von gesperrt 1.55.1 auf 1.59.0; `mise.toml` unverändert,
+  `lock-check` vollständig. Update eines Go-Projekts vom Stand vor F-059b mit eigenem
+  Rezept: Der Drei-Wege-Merge bringt `bump-tools`, das eigene Rezept bleibt, ohne
+  Konflikt.
+
+**Entscheidungen:** keine neuen.
+
+**Abweichung vom Plan:**
+
+- Entwurfs-Module java und swift-ios: `MODULE.md` nennt `bump-tools` im geplanten
+  Rezeptsatz.
+- CHANGELOG: Der Go-Hinweis aus F-057 heißt jetzt „Modul go — eigene `justfile`
+  (`keep`)“, weil es zwei solche Hinweise gibt.
+
+**Funde:**
+
+- Der Kopfkommentar der Core-justfile ließ `features-index` im Rezeptsatz aus;
+  mitbehoben.
+- Unabhängiges Review mit einem Befund, behoben: Die Kommentare nannten Renovate ohne
+  die Bedingung, dass es `mise` ausführen darf (EC-3); an allen gleichartigen Stellen
+  korrigiert.

@@ -21,7 +21,7 @@ wird.
   gemergt. Ohne Status-Checks im Projekt bleibt der PR offen; ein Projekt mit Freigabe
   über das Dashboard (`:dependencyDashboardApproval`) gibt ihn dort frei. Die
   Sperrdateien der Stack-Module (npm, uv …) pflegt die Regel nicht. Von Hand hebt
-  `mise lock --bump` dasselbe an.
+  `just bump-tools` (`mise lock --bump`) dasselbe an.
 
 ## Projekte anbinden
 
@@ -57,7 +57,7 @@ gehostete Dienst auf GitHub tut das bereits. Wer Renovate selbst betreibt — et
 Pipeline in Azure DevOps —, trägt in die globale Konfiguration des Laufs
 `"allowedUnsafeExecutions": ["mise"]` ein und nutzt ein aktuelles Renovate-Image, das
 mise enthält. Fehlt eines davon, bleibt die `mise.lock` stehen; die Projekte heben die
-Tools dann von Hand an.
+Tools dann von Hand an, mit `just bump-tools`.
 
 ## Dogfooding
 

@@ -36,6 +36,9 @@ Stand der Projektanlage.
   statt mit der lokal installierten. Der Abschlussbericht für Azure nennt die
   Freischaltung von `mise` für Renovate. `/coding-kit:choose-stack` § Lock-Datei nennt
   die Ausnahme; bestehende Projekte bekommen kein `--bump`.
+- **Validator (`just check` des Kits):** prüft, dass jede justfile des Templates das
+  Rezept `bump-tools` mit `mise lock --bump` hat — wie schon die Rezepte für den
+  Feature-Index.
 - **Tests:** Ein Test-Modul hält den Mechanismus `ci.part.yml` geprüft, seit kein
   mitgeliefertes Modul ihn mehr nutzt; die Azure-Pipeline ist für go und docs-only gleich.
 - **Modul java (Entwurf):** plant die Lizenzprüfung ebenfalls in `just check` statt als
@@ -89,7 +92,24 @@ Stand der Projektanlage.
   `.github/workflows/ci.yml`; der Job `check` deckt die Prüfung ab.
 - **Modul go — `CODING-STANDARDS.md` (Fragment `go`):** nennt die Prüfung in `just check`
   statt des CI-Jobs.
-- **Eigene `justfile` (`keep`):** Das Update ändert sie nicht. Von Hand nachtragen:
+- **`justfile` (Core und Module go, python, ts-node) — neues Rezept `bump-tools`:**
+  `mise lock --bump` hebt jedes Tool in `mise.lock` auf die neueste Version seiner
+  Hauptversion; `mise.toml` bleibt. Das ist der Handweg, wo Renovate nicht läuft (Host
+  `git`) oder `mise` nicht ausführen darf. Wo Renovate läuft, tut es dasselbe
+  wöchentlich über das Preset (siehe oben) — dafür muss das Projekt nichts tun. Eigene
+  `justfile` (`keep`): Das Update ändert sie nicht; von Hand anhängen:
+
+  ```just
+  # Raise each tool in mise.lock to the newest version of its major; Renovate does the
+  # same weekly where it runs and may execute mise.
+  bump-tools:
+      mise lock --bump
+  ```
+
+- **`mise.toml`:** Der Kopfkommentar nennt das wöchentliche Anheben durch Renovate (wo
+  es läuft und `mise` ausführen darf) und `just bump-tools`.
+- **Modul go — eigene `justfile` (`keep`):** Das Update ändert sie nicht. Von Hand
+  nachtragen:
   - im Rezept `check` als letzte Zeile `just license-check`, und `go build ./...` dort
     durch `go build -o /dev/null ./...` ersetzen;
   - das Rezept `license-check` auf
