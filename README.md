@@ -40,7 +40,7 @@ git clone https://github.com/xnyzer/coding-kit.git && cd coding-kit && ./install
 
 > **Der Installer läuft nur mit vollständig eingerichtetem GitHub.** Er prüft als erstes
 > `gh` **inklusive Login** und bricht sonst sofort ab (`gh auth status` muss grün sein,
-> [install.sh:44-45](install.sh#L44-L45)); die Personal-Config befüllt er über
+> [install.sh:45-46](install.sh#L45-L46)); die Personal-Config befüllt er über
 > `gh api user`. Ohne Konto oder ohne Login ist er kein gangbarer Weg — dann
 > [manuell](#manuell) bzw. [ohne GitHub](#ohne-github-nur-git) einrichten. Und ihn in
 > einer **Shell** starten, nicht per Doppelklick: bei einem Abbruch schließt sich das
@@ -97,6 +97,17 @@ schreibt. Was dabei mit deinen Einstellungen geschieht:
 **4. Toolchain** — `mise`, `just`, `lefthook`, `gitleaks`: die Skills rufen die
 just-Standardrezepte, die Projekt-Hooks nutzen lefthook + gitleaks. Auf macOS:
 `brew install mise just lefthook gitleaks`.
+
+Danach **mise aktivieren**, damit die Versionen aus der `mise.toml` eines Projekts in
+jeder Shell vorn stehen — Terminal, VS Code und Claude Code übernehmen ihren `PATH` von
+der interaktiven Shell. Die Zeile `eval "$(mise activate zsh --shims)"` gehört ans
+**Ende** der `~/.zshrc`, nach nvm und anderen Tool-Managern (bash: ans Ende der
+`~/.bashrc`, die auf macOS von der `~/.bash_profile` geladen werden muss). Danach Terminal
+und VS Code neu starten (eine neue Claude-Session allein behält den alten `PATH`); dann
+meldet `mise doctor` `shims_on_path: yes`. Der Installer (Schritt 6) und
+`/coding-kit:update-conventions global` prüfen das und bieten die Zeile an. Außerhalb
+eines Projekts führt ein Shim nur aus, was im System oder global in mise installiert
+ist; deshalb kommen `just`, `lefthook` und `gitleaks` zusätzlich per brew.
 
 Frisch installierte Skills sind ggf. erst nach einem Session-Neustart sichtbar.
 

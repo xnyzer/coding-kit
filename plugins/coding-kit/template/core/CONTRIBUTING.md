@@ -5,7 +5,10 @@ Thanks for your interest in contributing!
 ## Setup
 
 Toolchain management is via [mise](https://mise.jdx.dev) — it provides every tool this
-repo needs (including `just`, `lefthook`, `gitleaks` and the stack toolchain):
+repo needs (including `just`, `lefthook`, `gitleaks` and the stack toolchain). Activate it
+once per machine: `eval "$(mise activate zsh --shims)"` at the very end of `~/.zshrc`
+(bash: at the end of `~/.bashrc`, which `~/.bash_profile` must load on macOS), then
+restart the terminal and the editor; `mise doctor` reports `shims_on_path: yes`.
 
 ```
 mise install   # install pinned toolchain

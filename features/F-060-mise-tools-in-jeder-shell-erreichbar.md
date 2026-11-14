@@ -2,10 +2,10 @@
 id: F-060
 title: mise-Tools in jeder Shell erreichbar machen
 type: fix
-status: IN-PROGRESS
+status: DONE
 size: M
 created: 2026-11-13
-done:
+done: 2026-11-14
 depends-on:
 superseded-by:
 ---
@@ -62,29 +62,44 @@ im Projekt die festgelegten Versionen und außerhalb die des Systems. nvm, in de
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben ein Rechner mit installiertem, aber nicht aktiviertem mise, wenn
+- [x] AC-1 — Gegeben ein Rechner mit installiertem, aber nicht aktiviertem mise, wenn
   `install.sh` läuft, dann meldet er das, zeigt die Zeile und trägt sie nach Ja ans
   Ende der Startdatei interaktiver Shells ein (zsh: `~/.zshrc`; bash siehe offene
   Fragen); ein zweiter Lauf findet die Zeile, fragt nicht erneut und nennt den Neustart,
   solange sie noch nicht wirkt. Negativ: Bei Nein oder schon aktiviertem mise ändert er
-  keine Datei.
-- [ ] AC-2 — Gegeben derselbe Rechner, wenn `/coding-kit:update-conventions global`
+  keine Datei. — belegt: `install.sh` mit Test-Home in vier Läufen — Ja trägt die Zeile
+  ein, ein zweiter Lauf fragt nicht und nennt den Neustart, nach dem Neustart `ok` ohne
+  Änderung, Nein ändert keine Datei; dazu die Szenarien aus F-060b.
+- [x] AC-2 — Gegeben derselbe Rechner, wenn `/coding-kit:update-conventions global`
   läuft, dann meldet der Skill die fehlende Aktivierung mit der Zeile und trägt sie nur
-  nach Freigabe ein. Negativ: Ist mise aktiviert, meldet er nichts.
-- [ ] AC-3 — Gegeben ein Rechner, auf dem nvm nach der Aktivierung lädt, wenn Installer
+  nach Freigabe ein. Negativ: Ist mise aktiviert, meldet er nichts. — belegt:
+  `/coding-kit:update-conventions global` mit dem Arbeitsstand des Plugins aus einem
+  neuen Terminal ohne Aktivierung — G8 hängte die Zeile nach Freigabe genau einmal ans
+  Ende der `.zshrc`; danach `mise doctor`: `shims_on_path: yes`, und `mise-check` in
+  einer frischen Login-Shell ergibt `ok`, bei dem G8 nichts meldet.
+- [x] AC-3 — Gegeben ein Rechner, auf dem nvm nach der Aktivierung lädt, wenn Installer
   oder Skill die Aktivierung prüfen, dann erkennen sie, dass nvm vor dem node-Shim
   steht, und schlagen eine Lösung vor (Reihenfolge korrigieren oder node über mise
   statt nvm); geändert wird nur nach Freigabe. Negativ: Ohne nvm oder ohne node-Shim
-  keine Meldung.
-- [ ] AC-4 — Gegeben ein Rechner nach der Einrichtung laut Kit, wenn eine neue Session
+  keine Meldung. — belegt: Tests von `mise-check` (Überdeckung ergibt `hook` bzw.
+  `offer`, ohne Überdeckung `ok`, ein Shim ohne Ordner davor bleibt ohne Meldung); auf
+  diesem Rechner meldet `mise-check` nach `nvm use` node aus dem Ordner von nvm mit
+  `hook`; Szenarien des Installers aus F-060b.
+- [x] AC-4 — Gegeben ein Rechner nach der Einrichtung laut Kit, wenn eine neue Session
   von Claude Code in einem Go-Projekt aus dem Template `just check` ausführt, dann
   findet sie golangci-lint und go-licenses ohne `mise exec`, in den Versionen aus
-  `mise.lock`. Negativ: Außerhalb eines Projekts gelten die Versionen des Systems.
-- [ ] AC-5 — Gegeben das Kit-README (Abschnitt Toolchain) und die Template-Doku
+  `mise.lock`. Negativ: Außerhalb eines Projekts gelten die Versionen des Systems. —
+  belegt: `claude -p` aus einer Login-Shell in einem Go-Projekt aus dem Template —
+  `just check` grün ohne `mise exec`, golangci-lint und go-licenses über die Shims; in
+  einer frischen Login-Shell im Projekt dieselben Versionen wie in `mise.lock`,
+  außerhalb go aus dem System.
+- [x] AC-5 — Gegeben das Kit-README (Abschnitt Toolchain) und die Template-Doku
   (`README`, `CONTRIBUTING`, `HOW-TO-CODE-WITH-CLAUDE`), wenn man sie liest, dann nennen
   sie die Aktivierung mit Verweis auf `mise doctor` und den Neustart von Terminal bzw.
   Editor danach. Negativ: `just check` ist grün, der CHANGELOG-Eintrag hat einen
-  Abschnitt `### Template`.
+  Abschnitt `### Template`. — belegt: grep in Kit-README und Template-Doku
+  (Aktivierung, `mise doctor`, Neustart in jeder Datei), CHANGELOG 3.5.0 mit
+  `### Template`, `just check` grün.
 
 ### Randfälle
 
@@ -142,11 +157,13 @@ im Projekt die festgelegten Versionen und außerhalb die des Systems. nvm, in de
   `.zshrc`, nach nvm; ein Umstieg von nvm ist nicht nötig, siehe Verlauf F-060a.
 - [x] [CLARIFY] Wo steht die gemeinsame Prüfung, die Installer und Skill nutzen? —
   `template-sync.sh mise-check` und `set-mise`, siehe Verlauf F-060b.
-- [ ] [CLARIFY] Welche Startdatei gilt für bash — auf macOS liest bash als Login-Shell
-  `~/.bash_profile`, sonst `~/.bashrc`? (Durchlauf F-060c, nicht blockierend)
-- [ ] [CLARIFY] Projekte mit `.nvmrc`: Stellt ein automatischer Wechsel von nvm beim
-  Ordnerwechsel nvm wieder vor die Shims, und meldet die Prüfung das? (Durchlauf
-  F-060c, nicht blockierend)
+- [x] [CLARIFY] Welche Startdatei gilt für bash — auf macOS liest bash als Login-Shell
+  `~/.bash_profile`, sonst `~/.bashrc`? — Das Kit trägt für bash nichts ein und nennt
+  nur die Zeile (`manual`); die Doku empfiehlt das Ende der `~/.bashrc`, die auf macOS
+  von der `~/.bash_profile` geladen werden muss. Siehe Verlauf F-060c.
+- [x] [CLARIFY] Projekte mit `.nvmrc`: Stellt ein automatischer Wechsel von nvm beim
+  Ordnerwechsel nvm wieder vor die Shims, und meldet die Prüfung das? — Ja, er stellt
+  nvm wieder davor; `mise-check` meldet das als `hook`. Siehe Verlauf F-060c.
 
 ### Entscheidungen
 
@@ -326,3 +343,59 @@ Teilen).
 - Ein Shim ohne Version bricht außerhalb eines Projekts mit „No version is set“ ab,
   statt auf das System zurückzufallen; `command -v` in Schritt 5 des Installers hält
   das Werkzeug dann für vorhanden → in F-060c aufgenommen (Plan).
+
+### F-060c — fertig 2026-11-14
+
+**Umgesetzt:**
+
+- `template-sync.sh tool-check TOOL…` (neu) meldet je Werkzeug, ob es außerhalb eines
+  Projekts läuft: aus einem Ordner im `PATH`, der nicht zu mise gehört, oder mit einer
+  globalen Version in mise (`mise which` aus dem Home-Ordner). Shims und
+  Installationsordner von mise zählen nicht; die Regel für die Installationsordner
+  teilt es sich mit `mise-check`. Schritt 5 des Installers liest nur noch das Ergebnis.
+- `mise-check` übergeht beim Prüfen auf Überdeckung die Installationsordner von mise
+  selbst.
+- Tests in `tests/template-sync/mise.sh` für beide Änderungen, mit einem Ersatz für
+  mise; eine Gegenprobe ohne die neue Regel ließ den Test scheitern.
+- Doku: Kit-README (Toolchain) und Template-Doku (`README`, `CONTRIBUTING`,
+  `HOW-TO-CODE-WITH-CLAUDE`) nennen die Zeile am Ende der `.zshrc`, den Neustart von
+  Terminal und Editor und `mise doctor`; alle außer der Template-README auch bash. Kit-
+  README und HOW-TO sagen zusätzlich, dass ein Shim außerhalb eines Projekts nur
+  ausführt, was im System oder global in mise installiert ist.
+- Durchläufe:
+  - Installer mit Test-Home in vier Läufen (AC-1); `gh` bekam das Token nur in der
+    Umgebung dieses Laufs, weil die Anmeldung am Schlüsselbund des echten Home-Ordners
+    hängt.
+  - `/coding-kit:update-conventions global` mit dem Arbeitsstand des Plugins aus einem
+    neuen Terminal; die Zeile war vorher aus der `.zshrc` des Nutzers entfernt, auf
+    seinen Wunsch und mit Sicherung (AC-2).
+  - nvm auf diesem Rechner, auch ein automatisches `nvm use` aus einer `.nvmrc` (AC-3).
+  - Neue Claude-Session (`claude -p` aus einer Login-Shell) in einem Go-Projekt aus dem
+    Template, mit einem Commit über lefthook (AC-4); die Versionen im Projekt danach in
+    einer frischen Login-Shell gegen `mise.lock` geprüft.
+  - Schritt 5 des Installers mit den Installationsordnern von mise im `PATH`, mit und
+    ohne Homebrew; EC-2 (Aktivierung ohne Shims) ergibt `ok`.
+
+**Entscheidungen:**
+
+- bash: Das Kit nennt nur die Zeile und trägt nichts ein. Grund: Welche Datei bash
+  liest, hängt von System und Startart ab.
+- Die Prüfung aus Schritt 5 steht im Skript (`tool-check`), nicht im Installer. Grund:
+  Befund aus dem unabhängigen Review — die Lage der Ordner von mise stand sonst zweimal,
+  und das Skript ist unter dash und bash getestet.
+
+**Abweichung vom Plan:**
+
+- Neuer Befehl `tool-check` statt einer Änderung nur im Installer (siehe
+  Entscheidungen).
+- shellcheck lief diesmal, über `mise x`, weil es auf diesem Rechner nur als Shim ohne
+  Version vorliegt: keine neuen Warnungen.
+
+**Funde:**
+
+- Vorhandener Fehler behoben (aus F-060b): `mise-check` hielt bei einer Aktivierung
+  ohne Shims, aber mit Shims im `PATH`, die Installationsordner von mise für Überdeckung
+  und meldete `hook` statt `ok`; mit Test belegt.
+- Aus dem Review: Bei einer Aktivierung ohne Shims hielt Schritt 5 die Werkzeuge aus der
+  `mise.toml` des Kits für vorhanden, weil der Installer im Kit-Ordner startet; behoben
+  mit `tool-check`.

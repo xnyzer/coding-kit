@@ -7,7 +7,8 @@
 #   3. Creates the personal config ~/.claude/coding-kit.env (prefilled via gh api).
 #   4. Reports the kit's global rules; it never writes them or ~/.claude/CLAUDE.md —
 #      setting them up is /coding-kit:update-conventions global in a Claude session.
-#   5. Checks the base toolchain (mise, just, lefthook, gitleaks); offers brew install.
+#   5. Checks the base toolchain (mise, just, lefthook, gitleaks) outside any project
+#      (template-sync.sh tool-check); offers brew install.
 #   6. Checks that the mise shims reach every shell (template-sync.sh mise-check); offers
 #      the activation line for the end of the shell's startup file.
 #
@@ -126,15 +127,20 @@ fi
 # --- 5. Toolchain ------------------------------------------------------------
 say "Toolchain (mise, just, lefthook, gitleaks)"
 
+TEMPLATE_SYNC="$SCRIPT_DIR/plugins/coding-kit/scripts/template-sync.sh"
+# A tool counts only when it runs outside any project — a mise shim without a version
+# stops there with "No version is set"; tool-check decides.
+TOOL_CHECK="$(sh "$TEMPLATE_SYNC" tool-check mise just lefthook gitleaks)" ||
+  fail "template-sync.sh tool-check ist gescheitert"
 MISSING=()
-for tool in mise just lefthook gitleaks; do
-  if command -v "$tool" >/dev/null 2>&1; then
+while IFS=$'\t' read -r _ tool state; do
+  if [ "$state" = present ]; then
     ok "$tool vorhanden"
   else
     MISSING+=("$tool")
     warn "$tool fehlt"
   fi
-done
+done <<< "$TOOL_CHECK"
 
 if [ "${#MISSING[@]}" -gt 0 ]; then
   if command -v brew >/dev/null 2>&1; then
@@ -156,7 +162,6 @@ fi
 # this step only words the result and appends the line on approval.
 if command -v mise >/dev/null 2>&1; then
   say "mise in jeder Shell"
-  TEMPLATE_SYNC="$SCRIPT_DIR/plugins/coding-kit/scripts/template-sync.sh"
   MISE_CHECK="$(sh "$TEMPLATE_SYNC" mise-check)"
   mise_field() { # $1 line kind, $2 field number
     printf '%s\n' "$MISE_CHECK" | awk -F '\t' -v k="$1" -v n="$2" '$1 == k { print $n; exit }'

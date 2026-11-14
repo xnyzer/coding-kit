@@ -13,7 +13,16 @@ Guide for working with Claude Code in the {{PROJECT_NAME}} project.
    /plugin install coding-kit@xnyzer
    ```
 3. **Install the toolchain** — [mise](https://mise.jdx.dev) provides everything pinned in
-   `mise.toml` (including `just`, `lefthook`, `gitleaks` and the stack toolchain):
+   `mise.toml` (including `just`, `lefthook`, `gitleaks` and the stack toolchain).
+   Activate mise once per machine, or the project's versions never reach Claude Code:
+   Claude Code, the editor and the terminal take their `PATH` from your interactive
+   shell, so `eval "$(mise activate zsh --shims)"` belongs at the very end of `~/.zshrc`,
+   after nvm and other tool managers (bash: end of `~/.bashrc`, which `~/.bash_profile`
+   must load on macOS). Then restart the terminal and the editor — a new Claude Code
+   session alone keeps the old `PATH` — and check that `mise doctor` reports
+   `shims_on_path: yes`. `/update-conventions global` checks this and offers the line.
+   Outside a project a shim runs only a tool installed on the system or set globally in
+   mise.
    ```
    mise install
    just setup     # dependencies + git hooks

@@ -103,6 +103,16 @@ run_mise_cases() {
   refute "mise-check: no shadowing without shims on PATH" mt_kind noshims shadowed
   check "mise-check: activated without shims — verdict ok" mt_has noshims verdict ok
 
+  # Activated without shims, shims on PATH too: the install directories of mise put first
+  # by the activation hold the pinned versions and do not count as shadowing.
+  mt_installs=$TMP/mise/data/installs/node/24/bin
+  mkdir -p "$mt_installs"
+  mt_exe "$mt_installs/node"
+  check "mise-check: runs with mise install directories first" \
+    mt_run installs MISE_SHELL=zsh PATH="$mt_installs:$mt_shims:$mt_bin:$PATH"
+  refute "mise-check: its own install directories do not shadow" mt_kind installs shadowed
+  check "mise-check: install directories first — verdict ok" mt_has installs verdict ok
+
   # ZDOTDIR moves the startup file; XDG_DATA_HOME the shims when MISE_DATA_DIR is unset.
   check "mise-check: runs with ZDOTDIR and XDG_DATA_HOME" mt_run xdg \
     ZDOTDIR="$TMP/mise/zdot" MISE_DATA_DIR= XDG_DATA_HOME="$TMP/mise/xdg" PATH="$mt_bin:$PATH"
@@ -157,6 +167,37 @@ run_mise_cases() {
   : > "$TMP/mise/sm6/other"
   refute "set-mise: refuses a non-empty OUT" mt_set full "$TMP/mise/rc1" sm6
   refute "set-mise: needs RC and OUT" ts set-mise "$TMP/mise/rc1"
+
+  # tool-check: a tool counts only when it runs outside any project. The stand-in mise
+  # knows kt-global as a global version, and only when asked from the home folder
+  # (compared resolved: TMPDIR may end in a slash, so HOME can hold a //).
+  mt_fake=$TMP/mise/fake
+  mt_sys=$TMP/mise/sys
+  mt_inst=$TMP/mise/data/installs/kt-inst/1/bin
+  mkdir -p "$mt_fake" "$mt_sys" "$mt_inst"
+  printf '%s\n' '#!/bin/sh' \
+    '[ "$1" = which ] && [ "$2" = kt-global ] || exit 1' \
+    '[ "$(pwd -P)" = "$(cd "$HOME" && pwd -P)" ]' > "$mt_fake/mise"
+  chmod +x "$mt_fake/mise"
+  mt_exe "$mt_shims/kt-shim"
+  mt_exe "$mt_shims/kt-global"
+  mt_exe "$mt_sys/kt-sys"
+  mt_exe "$mt_inst/kt-inst"
+  check "tool-check: runs" mt_tool tools "$mt_fake:$mt_inst:$mt_shims:$mt_sys:$PATH" \
+    kt-sys kt-shim kt-inst kt-global kt-none
+  check "tool-check: a tool in a directory on PATH is present" \
+    mt_has tools tool kt-sys present
+  check "tool-check: a shim without a global version is missing" \
+    mt_has tools tool kt-shim missing
+  check "tool-check: an install directory of mise does not count" \
+    mt_has tools tool kt-inst missing
+  check "tool-check: a global version in mise counts" mt_has tools tool kt-global present
+  check "tool-check: a tool found nowhere is missing" mt_has tools tool kt-none missing
+  check "tool-check: one line per tool" sh -c '[ "$(wc -l < "$1")" -eq 5 ]' sh \
+    "$TMP/mise/tools.out"
+  refute "tool-check: needs a TOOL" ts tool-check
+  refute "tool-check: refuses a TOOL with a slash" ts tool-check ../kt-sys
+  refute "tool-check: refuses an empty TOOL" ts tool-check ''
 }
 
 # set-mise RC $TMP/mise/OUT with SHELL zsh unless given (VAR=value…), its output in
@@ -166,4 +207,13 @@ mt_set() {  # NAME RC OUT VAR=value…
   shift 3
   env HOME="$TMP/mise/home" ZDOTDIR= SHELL=/bin/zsh "$@" \
     $SH "$SCRIPT" set-mise "$ms_rc" "$TMP/mise/$ms_out" > "$TMP/mise/$ms_out.out"
+}
+
+# tool-check TOOL… with the home and data folder below $TMP/mise and PATH as given, its
+# output in $TMP/mise/NAME.out.
+mt_tool() {  # NAME PATH TOOL…
+  mt_name=$1 mt_path=$2
+  shift 2
+  env HOME="$TMP/mise/home" MISE_DATA_DIR="$TMP/mise/data" XDG_DATA_HOME= \
+    PATH="$mt_path" $SH "$SCRIPT" tool-check "$@" > "$TMP/mise/$mt_name.out"
 }

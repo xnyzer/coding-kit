@@ -26,12 +26,14 @@ andere Versionen als die festgelegten.
   mitgeliefertes Modul ihn mehr nutzt; die Azure-Pipeline ist für go und docs-only gleich.
 - **Modul java (Entwurf):** plant die Lizenzprüfung ebenfalls in `just check` statt als
   CI-Job über `ci.part.yml`.
-- **`template-sync.sh mise-check`** (neu): meldet, ob die Shims von mise im `PATH` dieser
-  Shell stehen, ob die Startdatei der Shell (zsh: `.zshrc`) die Aktivierung enthält — am
-  Ende, weiter oben oder nur auskommentiert — und welches Werkzeug ein Ordner vor den
-  Shims überdeckt, etwa node aus nvm. Die letzte Zeile `verdict` sagt, was zu tun ist
-  (`ok`, `commented`, `manual`, `restart`, `hook`, `offer`) — Installer und Skill
-  formulieren nur. Liest nur die Umgebung, schreibt nichts.
+- **`template-sync.sh mise-check`** (neu): meldet, ob die Shims von mise im `PATH`
+  dieser Shell stehen, ob die Startdatei der Shell (zsh: `.zshrc`) die Aktivierung
+  enthält — am Ende, weiter oben oder nur auskommentiert — und welches Werkzeug ein
+  Ordner vor den Shims überdeckt, etwa node aus nvm; die Installationsordner von mise
+  selbst, die eine Aktivierung ohne Shims nach vorn stellt, zählen nicht. Die letzte
+  Zeile `verdict` sagt, was zu tun ist (`ok`, `commented`, `manual`, `restart`, `hook`,
+  `offer`) — Installer und Skill formulieren nur. Liest nur die Umgebung, schreibt
+  nichts.
 - **`template-sync.sh set-mise`** (neu): schreibt die Startdatei mit der angehängten
   Aktivierung in einen Ausgabeordner; kopiert wird nach Freigabe.
 - **Installer:** neuer Schritt 6 — meldet den Stand und bietet die Zeile für das Ende
@@ -40,11 +42,23 @@ andere Versionen als die festgelegten.
   andere Shells den Verweis auf `mise activate --help`.
 - **`/coding-kit:update-conventions global`:** neuer Schritt G8 mit derselben Prüfung;
   eingetragen wird nur nach Freigabe, mit `global <ordner>` (Test) nur berichtet.
+- **`template-sync.sh tool-check`** (neu): meldet je Werkzeug, ob es außerhalb eines
+  Projekts läuft — aus einem Ordner im `PATH`, der nicht zu mise gehört, oder mit einer
+  globalen Version in mise. Shims und Installationsordner von mise zählen nicht.
+- **Installer, Schritt 5:** prüft die Werkzeuge mit `tool-check`. Vorher hielt er einen
+  Shim von mise ohne Version für vorhanden — oder, bei einer Aktivierung ohne Shims, die
+  Version aus dem Projekt, in dem er gestartet wurde —, und `brew install` blieb aus.
+- **README:** Abschnitt Toolchain nennt die Aktivierung von mise am Ende der `.zshrc`,
+  den Neustart von Terminal und VS Code und die Kontrolle mit `mise doctor`.
 
 ### Template
 
 - **`HOW-TO-CODE-WITH-CLAUDE.md`:** Die Skill-Übersicht nennt bei
-  `/update-conventions global` die Prüfung, ob mise in jeder Shell aktiv ist.
+  `/update-conventions global` die Prüfung, ob mise in jeder Shell aktiv ist; Schritt 3
+  der Einrichtung erklärt die Aktivierung (Ende der `.zshrc`, nach nvm), den Neustart
+  von Terminal und Editor und `mise doctor`.
+- **`README.md` (Zone `readme-getting-started`) und `CONTRIBUTING.md`:** nennen die
+  Aktivierung von mise einmal je Rechner, den Neustart und `mise doctor`.
 - **Modul go — `justfile`:** `check` ruft am Ende `just license-check`; das Rezept prüft
   mit `go-licenses` aus mise statt per `go run …@latest`. Die Regel bleibt: keine
   Lizenzen der Typen `forbidden` und `restricted`.

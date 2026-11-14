@@ -212,24 +212,33 @@
 #       belongs at the end of its startup file, after other tool managers such as nvm.
 #       Reads the environment only: SHELL, HOME, ZDOTDIR, PATH, MISE_DATA_DIR,
 #       XDG_DATA_HOME, MISE_SHELL. Lines: shell <name>; mise <found|missing>; rc
-#       <file|-> <exists|missing|-> — the startup file (zsh ${ZDOTDIR:-$HOME}/.zshrc,
-#       none for other shells yet); line <last|present|commented|absent|-> — a line with
+#       <file|-> <exists|missing|-> — the startup file (zsh ${ZDOTDIR:-$HOME}/.zshrc;
+#       none for other shells, which file bash reads depends on the system, so only the
+#       line is named); line <last|present|commented|absent|-> — a line with
 #       `mise activate` in it, last when no command follows the last active one; shims
 #       <dir> <on-path|off-path>; activated <yes|no> — shims on PATH, or MISE_SHELL set
 #       by an activation without shims; shadowed <tool> <dir> per shim that a directory
-#       before the shims on PATH also holds (shims on PATH only); add <line|-> — the
-#       activation line for this shell (zsh, bash, fish); then verdict — the first that
-#       fits: ok (activated, nothing shadowed), commented (only commented out in rc),
-#       manual (no startup file known: name the line), restart (the line is in rc but
-#       not yet active), hook (the line ends rc, yet something is shadowed: restart, and
-#       if it stays, something switches versions on cd), offer (offer to append the
-#       line). Writes nothing; PATH changes only after the terminal or editor restarts.
+#       before the shims on PATH also holds, the install directories of mise itself
+#       aside (shims on PATH only); add <line|-> — the activation line for this shell
+#       (zsh, bash, fish); then verdict — the first that fits: ok (activated, nothing
+#       shadowed), commented (only commented out in rc), manual (no startup file known:
+#       name the line), restart (the line is in rc but not yet active), hook (the line
+#       ends rc, yet something is shadowed: restart, and if it stays, something switches
+#       versions on cd), offer (offer to append the line). Writes nothing; PATH changes
+#       only after the terminal or editor restarts.
 #   set-mise RC OUT
 #       Writes the startup file RC (a missing file counts as empty) with the activation
 #       line for the shell of SHELL appended — after a blank line and a comment — into
 #       OUT/<name of RC> (OUT missing or empty). Every line of RC stays; the caller copies
 #       the file after approval. Line: written <name>. Refused: a shell without a known
 #       activation line (see mise-check).
+#   tool-check TOOL...
+#       Whether each TOOL runs outside any project: from a directory on PATH other than
+#       those of mise — its shims stop there without a version, its install directories
+#       (an activation without shims puts those of the current project first) hold
+#       project versions — or with a global version in mise (`mise which` from HOME).
+#       Reads PATH, HOME, MISE_DATA_DIR and XDG_DATA_HOME. Line per TOOL: tool <name>
+#       <present|missing>. Refused: a TOOL that is empty or holds a slash.
 #
 # Options name a stand-in for a file of PROJECT, so a skill can go on with files it
 # prepared in a temp folder while a write below .claude/ waits for approval:
@@ -301,6 +310,7 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh default-host ENV
        sh template-sync.sh mise-check
        sh template-sync.sh set-mise RC OUT
+       sh template-sync.sh tool-check TOOL...
 EOF
   exit 2
 }
@@ -3685,7 +3695,17 @@ mise_line_state() {  # FILE
     }' "$1"
 }
 
-# Prints a shadowed line per shim that a directory before SHIMS on PATH also holds.
+# Whether DIR is one of the install directories of mise next to SHIMS. An activation
+# without shims puts those of the current project first on PATH, with pinned versions.
+mise_install_dir() {  # DIR SHIMS
+  case $1 in
+    "${2%/shims}/installs"/*) return 0 ;;
+  esac
+  return 1
+}
+
+# Prints a shadowed line per shim that a directory before SHIMS on PATH also holds; the
+# install directories of mise itself do not count.
 mise_shadowed() {  # SHIMS
   for ms_shim in "$1"/*; do
     [ -f "$ms_shim" ] || continue
@@ -3695,6 +3715,9 @@ mise_shadowed() {  # SHIMS
     set -f
     for ms_dir in $PATH; do
       [ "$ms_dir" != "$1" ] || break
+      if mise_install_dir "$ms_dir" "$1"; then
+        continue
+      fi
       if [ -n "$ms_dir" ] && [ -f "$ms_dir/$ms_tool" ] && [ -x "$ms_dir/$ms_tool" ]; then
         printf 'shadowed\t%s\t%s\n' "$ms_tool" "$ms_dir"
         break
@@ -3716,8 +3739,9 @@ mise_shell_setup() {
       MS_ADD='eval "$(mise activate zsh --shims)"'
       ;;
     bash)
-      # Which startup file bash reads depends on the system (login shells on macOS read
-      # ~/.bash_profile, others ~/.bashrc) — not settled yet, so only the line is named.
+      # Which startup file bash reads depends on the system and how it starts (login
+      # shells on macOS read ~/.bash_profile, others ~/.bashrc), so only the line is
+      # named; the docs point to the end of ~/.bashrc, loaded from ~/.bash_profile.
       MS_RC=
       MS_ADD='eval "$(mise activate bash --shims)"'
       ;;
@@ -3814,6 +3838,49 @@ set_mise() {
   printf 'written\t%s\n' "${SM_RC##*/}"
 }
 
+# --- tool-check: does a tool run outside any project? -------------------------------
+
+# Whether TOOL lies in a directory on PATH that is none of those of mise next to SHIMS.
+tool_on_path() {  # TOOL SHIMS
+  tp_found=1
+  tp_ifs=$IFS
+  IFS=:
+  set -f
+  for tp_dir in $PATH; do
+    if [ -z "$tp_dir" ] || [ "$tp_dir" = "$2" ] || mise_install_dir "$tp_dir" "$2"; then
+      continue
+    fi
+    if [ -f "$tp_dir/$1" ] && [ -x "$tp_dir/$1" ]; then
+      tp_found=0
+      break
+    fi
+  done
+  set +f
+  IFS=$tp_ifs
+  return "$tp_found"
+}
+
+tool_check() {
+  [ $# -gt 0 ] || usage
+  for tc_tool in "$@"; do
+    case $tc_tool in
+      '' | */*) die "not a tool name: '$tc_tool'" ;;
+    esac
+  done
+  tc_shims=$(mise_shims_dir)
+  for tc_tool in "$@"; do
+    if tool_on_path "$tc_tool" "$tc_shims"; then
+      tc_state=present
+    elif command -v mise > /dev/null 2>&1 \
+      && (cd "$HOME" && mise which "$tc_tool") > /dev/null 2>&1; then
+      tc_state=present
+    else
+      tc_state=missing
+    fi
+    printf 'tool\t%s\t%s\n' "$tc_tool" "$tc_state"
+  done
+}
+
 cmd=${1:-}
 [ $# -eq 0 ] || shift
 parse_opts "$cmd" "$@"
@@ -3840,5 +3907,6 @@ case $cmd in
   default-host) default_host "$@" ;;
   mise-check) mise_check "$@" ;;
   set-mise) set_mise "$@" ;;
+  tool-check) tool_check "$@" ;;
   *) usage ;;
 esac

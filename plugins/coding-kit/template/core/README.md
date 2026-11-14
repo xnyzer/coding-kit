@@ -13,7 +13,12 @@ Early development — see [features/INDEX.md](features/INDEX.md) for the roadmap
 <!-- section:readme-getting-started -->
 ## Getting started
 
-Toolchain is pinned via [mise](https://mise.jdx.dev); everything else follows from it:
+Toolchain is pinned via [mise](https://mise.jdx.dev); everything else follows from it.
+Activate mise once per machine so the pinned versions come first in every shell —
+terminal, editor and Claude Code take their `PATH` from it: add
+`eval "$(mise activate zsh --shims)"` at the very end of `~/.zshrc` (after nvm and other
+tool managers), restart the terminal and the editor, and check that `mise doctor` reports
+`shims_on_path: yes`.
 
 ```
 mise install   # toolchain (incl. just, lefthook, gitleaks)
