@@ -13,7 +13,7 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 3.5.0 — unveröffentlicht
+## 3.5.0 — 2026-11-14
 
 Die Lizenzprüfung des Go-Moduls läuft in `just check` (F-057): auf jedem Host gleich,
 auch ohne CI und lokal vor jedem Commit. Vorher lief sie nur als eigener Job in der
