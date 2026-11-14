@@ -210,7 +210,8 @@ privat — Azure DevOps legt keine öffentlichen Projekte mehr an. Das Projekt b
 - **Renovate** läuft auf Azure nicht als App, sondern zentral in der Organisation über
   ihre Repos; `renovate.json` im Projekt wirkt erst dann. Das Preset liegt auf GitHub —
   ein zentraler Lauf braucht für den Abruf einen GitHub-Token, sonst greift das
-  Abruflimit von GitHub.
+  Abruflimit von GitHub. Für das Anheben der Tools in `mise.lock` schaltet der Betreiber
+  `mise` frei (`allowedUnsafeExecutions`) und nutzt ein Renovate-Image mit mise.
 
 **Was entfällt:** Repo-Einstellungen, Beschreibung und Topics, Branch-Policies (jede
 Policy auf `main` sperrt direkte Pushes), Work Items und der Wechsel auf öffentlich —
@@ -372,7 +373,8 @@ hast oder eine eigene Datei unter `~/.claude/rules/coding-kit.md` liegt. Abgeleh
 ```
 
 Inhalt: `config:recommended` + Digest-Pinning für GitHub Actions + Label `dependencies` +
-die mise-Version der Azure-Pipeline.
+die mise-Version der Azure-Pipeline + wöchentliches Anheben der Tools in `mise.lock`
+(`mise lock --bump`, automatisch gemergt bei grüner CI).
 Details und die (bewusst manuelle) App-Installation: [docs/renovate-preset.md](docs/renovate-preset.md).
 
 ## Globale Kit-Regeln

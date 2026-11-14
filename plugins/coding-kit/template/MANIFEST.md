@@ -501,5 +501,6 @@ template from the answers and merges against the snapshot, also when the stamp i
 current (answers can change). A project without snapshot or answers is migrated first:
 the answers are recovered from the project, the base comes from the template of the stamp
 version (or an older one) in the coding-kit history, or the first sync compares two-way.
-`mise.lock` is generated per project at instantiation with `mise lock` — the platform set
-comes from `lockfile_platforms` in `core/mise.toml` — and never shipped by the template.
+`mise.lock` is generated per project at instantiation with `mise lock --bump` — the newest
+version of each major, the platform set from `lockfile_platforms` in `core/mise.toml` —
+and never shipped by the template.

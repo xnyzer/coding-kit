@@ -179,6 +179,11 @@ existiert, und braucht dafür je Tool eine Download-URL für die Plattform des R
   Fehlt die Einstellung (Projekt vor dem Template-Stand mit `lockfile_platforms`), kein
   Flag als Ersatz setzen, sondern auf `/update-conventions` verweisen — die
   `mise.toml` ist managed und bringt die Einstellung mit.
+  Ausnahme `/new-project` (§ 4d): Es legt die Lock-Datei mit `mise lock --bump` an, vor
+  `mise install` — sonst übernähme sie lokal installierte, ältere Versionen. In
+  bestehenden Projekten kein `--bump`: Ein Modulwechsel hebt nicht nebenbei alle Tools.
+  Das Anheben übernimmt Renovate wöchentlich, wo es läuft und `mise` ausführen darf;
+  sonst hebt `mise lock --bump` von Hand an.
 - **Vertrauen:** Bricht mise ab, weil die Konfiguration des Projekts nicht vertraut ist,
   den Nutzer fragen, ob er `mise trust` ausführen will — nie ungefragt vertrauen: Danach
   führt mise Teile der Projektkonfiguration aus (Umgebung, Hooks). Einzige Ausnahme:

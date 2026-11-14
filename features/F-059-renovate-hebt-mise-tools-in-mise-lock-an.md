@@ -2,7 +2,7 @@
 id: F-059
 title: Renovate hebt die mise-Tools in mise.lock an
 type: fix
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-11-13
 done:
@@ -78,16 +78,20 @@ lokal installierte Version fest, nicht die neueste (lefthook 2.1.9 statt 2.2.2).
   öffnet es einen PR, der nur `mise.lock` ändert und die Tools auf die neueste Version
   ihrer Hauptversion hebt, und mergt ihn bei grüner CI selbst. Negativ: Andere
   Sperrdateien (`package-lock.json`, `uv.lock` …) und `mise.toml` bleiben unverändert.
-- [ ] AC-2 — Gegeben `docs/renovate-preset.md` und der Abschlussbericht von
+- [x] AC-2 — Gegeben `docs/renovate-preset.md` und der Abschlussbericht von
   `/coding-kit:new-project` auf Azure, wenn man sie liest, dann nennen sie die neue Regel
   und was ein selbst betriebenes Renovate dafür braucht (`mise` freischalten, ein Image
-  mit mise). Negativ: Der Text nennt keine Versionsstände.
-- [ ] AC-3 — Gegeben ein neues Projekt, dessen Tools auf dem Rechner in älterer Version
+  mit mise). Negativ: Der Text nennt keine Versionsstände. — belegt:
+  `docs/renovate-preset.md` und der Abschlussbericht für Azure in new-project nennen
+  Freischaltung und Image ohne Versionsstand; `just check` grün.
+- [x] AC-3 — Gegeben ein neues Projekt, dessen Tools auf dem Rechner in älterer Version
   installiert sind, wenn `/coding-kit:new-project` § 4d läuft, dann steht in `mise.lock`
   die neueste Version jeder Hauptversion, `mise install` installiert genau sie, und die
   Plattform-Einträge sind vollständig (`template-sync.sh lock-check`). Negativ:
   `/choose-stack` und `/update-conventions` heben eine bestehende `mise.lock` weiter
-  nicht an.
+  nicht an. — belegt: Durchlauf F-059a (just 1.59.0 und lefthook 2.2.2 statt lokal
+  1.55.1 und 2.1.9, `lock-check` vollständig); choose-stack § Lock-Datei schließt
+  `--bump` für bestehende Projekte aus, update-conventions unverändert.
 - [ ] AC-4 — Gegeben ein Projekt aus dem Template mit einem beliebigen Stack-Modul, wenn
   `just bump-tools` läuft, dann hebt es `mise.lock` an wie Renovate
   (`mise lock --bump`), `mise.toml` bleibt unverändert. Negativ: Fehlt das Rezept in
@@ -223,3 +227,35 @@ ausführt) und genaue Versionen in `mise.toml` (ein PR je Tool, Muster aller Pro
 
 **Erkennung (Schritt 2a):** entfällt; kein neues Framework, keine neue Sprache, kein
 neues Tool. Neue Config nur im Preset; keine Endpunkte, keine Dependencies.
+
+## Verlauf
+
+### F-059a — fertig 2026-11-14
+
+**Umgesetzt:**
+
+- `default.json`: Lock File Maintenance im Manager `mise`, mit Automerge; der Zeitplan
+  bleibt Renovates Vorgabe. `renovate-config-validator` meldet das Preset gültig; mit
+  einem Tippfehler im neuen Schlüssel meldet er „Invalid configuration option“.
+- `docs/renovate-preset.md` und README beschreiben die Regel, wann der PR offen bleibt,
+  und was ein selbst betriebenes Renovate braucht (`allowedUnsafeExecutions: ["mise"]`,
+  ein Image mit mise).
+- `/coding-kit:new-project` § 4d: `mise trust && mise lock --bump && mise install &&
+  just setup && just check`; der Abschlussbericht für Azure nennt die Freischaltung.
+  MANIFEST § Version stamp und CHANGELOG 3.5.0 nachgezogen.
+- Durchlauf mit einem Projekt aus dem Arbeitsstand (docs-only), lokal just 1.55.1 und
+  lefthook 2.1.9 installiert: `mise.lock` legt just 1.59.0 und lefthook 2.2.2 fest, die
+  neuesten ihrer Hauptversion; `mise install` installiert genau sie, `lock-check` meldet
+  alle sieben Plattformen `complete`, `just check` grün.
+
+**Entscheidungen:** siehe Spezifikation.
+
+**Abweichung vom Plan:**
+
+- `/coding-kit:choose-stack` § Lock-Datei geändert: Die Regel dort galt ausdrücklich auch
+  für new-project („nach `mise install` schlicht `mise lock`“) und hätte § 4d
+  widersprochen. Sie nennt jetzt die Ausnahme; bestehende Projekte bleiben ohne `--bump`.
+- README ergänzt (Renovate-Preset, Renovate auf Azure).
+
+**Funde:** Unabhängiges Review mit einem Befund, behoben: Der neue Satz in choose-stack
+nannte Renovate als einzigen Weg zum Anheben; jetzt auch den Handweg (EC-3, EC-6).

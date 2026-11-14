@@ -20,8 +20,22 @@ auch ohne CI und lokal vor jedem Commit. Vorher lief sie nur als eigener Job in 
 GitHub-CI, auf Azure und ohne Host gar nicht. Dazu prüfen Installer und
 `/coding-kit:update-conventions global`, ob mise in jeder Shell aktiv ist (F-060): Ohne
 Aktivierung fehlen Tools, die es nur über mise gibt — etwa go-licenses —, oder es laufen
-andere Versionen als die festgelegten.
+andere Versionen als die festgelegten. Und Renovate hebt die Tools in `mise.lock`
+wöchentlich auf die neueste Version ihrer Hauptversion (F-059); vorher blieben sie auf dem
+Stand der Projektanlage.
 
+- **Renovate-Preset (`default.json`):** Lock File Maintenance für den Manager `mise` —
+  einmal pro Woche `mise lock --bump`, ein PR für alle Tools, automatisch gemergt bei
+  grüner CI. Wirkt in allen Projekten mit dem Preset, sobald der Stand auf `main` des
+  Kit-Repos liegt, ohne `/update-conventions`. Die Sperrdateien der Stack-Module pflegt
+  die Regel nicht. Ein selbst betriebenes Renovate (etwa auf Azure) braucht
+  `"allowedUnsafeExecutions": ["mise"]` und ein Image mit mise
+  (`docs/renovate-preset.md`).
+- **`/coding-kit:new-project`:** erzeugt die `mise.lock` mit `mise lock --bump` vor
+  `mise install` — ein neues Projekt startet mit der neuesten Version jeder Hauptversion
+  statt mit der lokal installierten. Der Abschlussbericht für Azure nennt die
+  Freischaltung von `mise` für Renovate. `/coding-kit:choose-stack` § Lock-Datei nennt
+  die Ausnahme; bestehende Projekte bekommen kein `--bump`.
 - **Tests:** Ein Test-Modul hält den Mechanismus `ci.part.yml` geprüft, seit kein
   mitgeliefertes Modul ihn mehr nutzt; die Azure-Pipeline ist für go und docs-only gleich.
 - **Modul java (Entwurf):** plant die Lizenzprüfung ebenfalls in `just check` statt als

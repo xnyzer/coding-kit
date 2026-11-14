@@ -250,13 +250,16 @@ planabhängig — Fehler nicht fatal, gitleaks bleibt lokaler Backstop).
 ### 4d. Verifikation (Write-then-Verify)
 
 ```bash
-mise trust && mise install && mise lock && just setup && just check
+mise trust && mise lock --bump && mise install && just setup && just check
 ```
 
 Muss grün sein — rote Ergebnisse erst fixen. Die `mise.lock` erzeugt `mise lock` (nicht
 `mise install` — das schreibt keine Plattform-Einträge, und die CI scheitert dann im
 `--locked`-Modus); danach die Prüfung aus `/choose-stack` § Lock-Datei erzeugen und
-prüfen. Die Lock-Datei wird mitcommittet.
+prüfen. `--bump` legt je Tool die neueste Version seiner Hauptversion fest; ohne das
+Flag nähme `mise lock` eine schon auf dem Rechner installierte, ältere Version. Darum
+kommt `mise lock` hier vor `mise install`, das dann genau die festgelegten Versionen
+installiert. Die Lock-Datei wird mitcommittet.
 
 ### 4e. Anforderungen
 
@@ -310,4 +313,7 @@ Auf `azure` zusätzlich, was nur im Web oder in der Organisation geht:
   der Lauf ab; das Kit kann das nicht prüfen.
 - **Renovate:** `renovate.json` wirkt nur, wenn die Organisation Renovate über ihre Repos
   laufen lässt. Das Preset liegt auf GitHub; ein zentraler Lauf über viele Repos braucht
-  dafür einen GitHub-Token, sonst greift das Abruflimit von GitHub.
+  dafür einen GitHub-Token, sonst greift das Abruflimit von GitHub. Damit Renovate die
+  Tools in `mise.lock` wöchentlich anhebt, muss der Betreiber `mise` freischalten
+  (`"allowedUnsafeExecutions": ["mise"]` in der globalen Konfiguration) und ein
+  Renovate-Image mit mise nutzen (`docs/renovate-preset.md` im Kit-Repo).

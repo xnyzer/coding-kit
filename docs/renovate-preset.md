@@ -14,6 +14,14 @@ wird.
 - **`labels: ["dependencies"]`** — alle Update-PRs bekommen das Label `dependencies`.
 - **mise in der Azure-Pipeline** — eine Regel (`customManagers`) liest `MISE_VERSION` in
   `azure-pipelines.yml` und schlägt neue Releases von jdx/mise vor.
+- **Tools in `mise.lock`** — Lock File Maintenance nur für den Manager `mise`: einmal
+  pro Woche (Renovates Vorgabe, montags früh) führt Renovate `mise lock --bump` aus und
+  hebt jedes Tool auf die neueste Version seiner Hauptversion; `mise.toml` mit den
+  Hauptversionen bleibt, wie sie ist. Ein PR für alle Tools, bei grüner CI automatisch
+  gemergt. Ohne Status-Checks im Projekt bleibt der PR offen; ein Projekt mit Freigabe
+  über das Dashboard (`:dependencyDashboardApproval`) gibt ihn dort frei. Die
+  Sperrdateien der Stack-Module (npm, uv …) pflegt die Regel nicht. Von Hand hebt
+  `mise lock --bump` dasselbe an.
 
 ## Projekte anbinden
 
@@ -42,6 +50,14 @@ Auf Azure DevOps gibt es die App nicht: Renovate läuft dort zentral in der Orga
 (eine eigene Pipeline über die Repos), das Projekt bringt nur die `renovate.json` mit. Das
 Preset holt Renovate auch dort von GitHub, ohne Anmeldung; ein Lauf über viele Repos
 braucht dafür einen GitHub-Token, sonst greift das Abruflimit von GitHub.
+
+**`mise.lock` bei selbst betriebenem Renovate:** `mise lock` kann Befehle aus dem Repo
+ausführen, deshalb führt Renovate es nur aus, wenn der Betreiber es erlaubt. Der
+gehostete Dienst auf GitHub tut das bereits. Wer Renovate selbst betreibt — etwa als
+Pipeline in Azure DevOps —, trägt in die globale Konfiguration des Laufs
+`"allowedUnsafeExecutions": ["mise"]` ein und nutzt ein aktuelles Renovate-Image, das
+mise enthält. Fehlt eines davon, bleibt die `mise.lock` stehen; die Projekte heben die
+Tools dann von Hand an.
 
 ## Dogfooding
 
