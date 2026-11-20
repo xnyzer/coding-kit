@@ -37,7 +37,28 @@ bump-tools:
 # Full gate — must be green before every commit
 check: lint test
     sh scripts/features-index.sh check
+    just license-check
 
 # Production build (tests excluded via tsconfig.build.json)
 build:
     pnpm exec tsc -p tsconfig.build.json
+
+# License gate (part of check): every runtime dependency's license must be allowed in
+# license-policy.txt. pnpm lists the `dependencies` with their licenses; devDependencies
+# and the project itself stay out. Without runtime dependencies pnpm prints a sentence
+# instead of JSON — that one means an empty list.
+license-check:
+    #!/bin/sh
+    set -eu
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    pnpm licenses list --prod --json > "$tmp/licenses.json"
+    node -e '
+      const fs = require("node:fs");
+      const text = fs.readFileSync(process.argv[1], "utf8").trim();
+      if (text === "No licenses in packages found") process.exit(0);
+      for (const [license, packages] of Object.entries(JSON.parse(text))) {
+        for (const p of packages) console.log(p.name + "\t" + license.replace(/\s+/g, " "));
+      }
+    ' "$tmp/licenses.json" > "$tmp/licenses.tsv"
+    sh scripts/license-check.sh "$tmp/licenses.tsv"

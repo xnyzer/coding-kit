@@ -18,8 +18,9 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
 Die Lizenzprüfung hat eine gemeinsame Regel je Projekt (F-058): `license-policy.txt`
 führt die erlaubten Lizenzen und Ausnahmen je Paket mit Grund, und ein Prüfskript im
 Core bewertet die Liste, die das Modul liefert. Gesperrt bleiben GPL, AGPL und LGPL, MPL
-ist erlaubt — die Regel in Worten nennt das jetzt auch so. Das Modul go nutzt die Regel
-als erstes; eine bewusste Ausnahme löst nicht mehr die ganze `justfile` aus dem Template.
+ist erlaubt — die Regel in Worten nennt das jetzt auch so. Neben go prüfen jetzt auch
+python und ts-node ihre Laufzeit-Abhängigkeiten in `just check`; eine bewusste Ausnahme
+löst nicht mehr die ganze `justfile` aus dem Template.
 
 - **Skills add-feature, prep-step und audit-code:** nennen die Regel „kein GPL, AGPL
   oder LGPL; MPL erlaubt; Ausnahmen begründet in `license-policy.txt`“ statt „kein
@@ -67,6 +68,87 @@ als erstes; eine bewusste Ausnahme löst nicht mehr die ganze `justfile` aus dem
         if (f[1] != self && index(f[1], self "/") != 1) print f[1] "\t" lic
       }' "$report" > "$report.tsv"
       sh scripts/license-check.sh "$report.tsv"
+  ```
+
+- **Modul python — `justfile`, neues Rezept `license-check`, `check` ruft es am Ende:**
+  exportiert die Laufzeit-Abhängigkeiten samt Extras (`uv export --no-dev
+  --all-extras`), installiert sie in eine Wegwerf-Umgebung, listet sie mit
+  `pip-licenses` und gibt die Liste an
+  `scripts/license-check.sh`. `.venv`, die Gruppe `dev` und das Projekt selbst bleiben
+  draußen.
+- **Modul python — `pyproject.toml` (Seed), neue Gruppe `licenses`:** hält
+  `pip-licenses`; die genaue Version steht in `uv.lock`, in die `.venv` kommt es nicht.
+  Bestehende Projekte tragen die Gruppe unter `[dependency-groups]` von Hand nach — ohne
+  sie bricht `just license-check` mit einem Hinweis ab — und führen danach `uv lock`
+  aus:
+
+  ```toml
+  # Only for `just license-check`: not installed into .venv, the exact version is in uv.lock
+  licenses = [
+      "pip-licenses>=5.5",
+  ]
+  ```
+
+- **Modul ts-node — `justfile`, neues Rezept `license-check`, `check` ruft es am Ende:**
+  bewertet `pnpm licenses list --prod --json`; `devDependencies` zählen nicht — ein
+  Paket, das ein Bundler mit ausliefert, gehört deshalb in `dependencies`.
+- **Modul python — eigene `justfile` (`keep`) mit Konflikt:** in `check` als letzte
+  Zeile `just license-check` ergänzen und das Rezept so übernehmen:
+
+  ```just
+  # License gate (part of check): every runtime dependency's license must be allowed in
+  # license-policy.txt. The runtime dependencies, extras included, go into a throwaway
+  # environment, where pip-licenses (group `licenses`, version in uv.lock) lists them;
+  # .venv, the dev group and the project itself stay out. A license text spanning several
+  # lines becomes one line.
+  license-check:
+      #!/bin/sh
+      set -eu
+      tmp=$(mktemp -d)
+      trap 'rm -rf "$tmp"' EXIT
+      if ! grep -q '^licenses[[:space:]]*=' pyproject.toml; then
+        echo "license-check: pyproject.toml needs the dependency group licenses with pip-licenses" >&2
+        exit 1
+      fi
+      uv export -q --only-group licenses --no-emit-project --no-hashes \
+        --format requirements.txt -o "$tmp/tool.txt"
+      uv export -q --no-dev --all-extras --no-emit-project --no-hashes \
+        --format requirements.txt -o "$tmp/runtime.txt"
+      uv venv -q "$tmp/env"
+      uv pip install -q --python "$tmp/env/bin/python" -r "$tmp/runtime.txt"
+      uv run -q --isolated --no-project --with-requirements "$tmp/tool.txt" \
+        pip-licenses --python "$tmp/env/bin/python" --with-system --format=json \
+        --output-file "$tmp/licenses.json" > /dev/null
+      "$tmp/env/bin/python" -c 'import json, sys
+      for p in json.load(open(sys.argv[1])):
+          print(p["Name"] + "\t" + " ".join(p["License"].split()))' "$tmp/licenses.json" \
+        > "$tmp/licenses.tsv"
+      sh scripts/license-check.sh "$tmp/licenses.tsv"
+  ```
+
+- **Modul ts-node — eigene `justfile` (`keep`) mit Konflikt:** in `check` als letzte
+  Zeile `just license-check` ergänzen und das Rezept so übernehmen:
+
+  ```just
+  # License gate (part of check): every runtime dependency's license must be allowed in
+  # license-policy.txt. pnpm lists the `dependencies` with their licenses; devDependencies
+  # and the project itself stay out. Without runtime dependencies pnpm prints a sentence
+  # instead of JSON — that one means an empty list.
+  license-check:
+      #!/bin/sh
+      set -eu
+      tmp=$(mktemp -d)
+      trap 'rm -rf "$tmp"' EXIT
+      pnpm licenses list --prod --json > "$tmp/licenses.json"
+      node -e '
+        const fs = require("node:fs");
+        const text = fs.readFileSync(process.argv[1], "utf8").trim();
+        if (text === "No licenses in packages found") process.exit(0);
+        for (const [license, packages] of Object.entries(JSON.parse(text))) {
+          for (const p of packages) console.log(p.name + "\t" + license.replace(/\s+/g, " "));
+        }
+      ' "$tmp/licenses.json" > "$tmp/licenses.tsv"
+      sh scripts/license-check.sh "$tmp/licenses.tsv"
   ```
 
 ## 3.5.0 — 2026-11-14

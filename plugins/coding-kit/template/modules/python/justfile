@@ -42,7 +42,37 @@ check:
     uv run ruff check .
     uv run pyright
     uv run pytest
+    just license-check
 
 # Build distribution artifacts
 build:
     uv build
+
+# License gate (part of check): every runtime dependency's license must be allowed in
+# license-policy.txt. The runtime dependencies, extras included, go into a throwaway
+# environment, where pip-licenses (group `licenses`, version in uv.lock) lists them;
+# .venv, the dev group and the project itself stay out. A license text spanning several
+# lines becomes one line.
+license-check:
+    #!/bin/sh
+    set -eu
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    if ! grep -q '^licenses[[:space:]]*=' pyproject.toml; then
+      echo "license-check: pyproject.toml needs the dependency group licenses with pip-licenses" >&2
+      exit 1
+    fi
+    uv export -q --only-group licenses --no-emit-project --no-hashes \
+      --format requirements.txt -o "$tmp/tool.txt"
+    uv export -q --no-dev --all-extras --no-emit-project --no-hashes \
+      --format requirements.txt -o "$tmp/runtime.txt"
+    uv venv -q "$tmp/env"
+    uv pip install -q --python "$tmp/env/bin/python" -r "$tmp/runtime.txt"
+    uv run -q --isolated --no-project --with-requirements "$tmp/tool.txt" \
+      pip-licenses --python "$tmp/env/bin/python" --with-system --format=json \
+      --output-file "$tmp/licenses.json" > /dev/null
+    "$tmp/env/bin/python" -c 'import json, sys
+    for p in json.load(open(sys.argv[1])):
+        print(p["Name"] + "\t" + " ".join(p["License"].split()))' "$tmp/licenses.json" \
+      > "$tmp/licenses.tsv"
+    sh scripts/license-check.sh "$tmp/licenses.tsv"

@@ -12,7 +12,7 @@ bundler-free Node ESM), **Biome** as formatter + linter (warnings fail the gate)
 
 | Part | Notes |
 |------|-------|
-| `justfile` | replaces core justfile; `check` = Biome CI (format+lint) + `tsc --noEmit` + vitest, then the features index; `features-index` regenerates the index table |
+| `justfile` | replaces core justfile; `check` = Biome CI (format+lint) + `tsc --noEmit` + vitest, then the features index and the license gate; `license-check` runs the gate alone (`pnpm licenses list --prod --json` → `scripts/license-check.sh`; devDependencies are not checked, so a bundled package belongs in `dependencies`); `features-index` regenerates the index table |
 | `mise.part.toml` | node (LTS major) + pnpm |
 | `gitignore.part` | node_modules, dist, coverage |
 | `CODING-STANDARDS.part.md` | TypeScript toolchain rules for §13 (module fragment) |

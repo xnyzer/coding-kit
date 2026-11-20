@@ -61,20 +61,29 @@ braucht Netz und einen Google-Dienst und scheidet für `just check` aus.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben ein Projekt aus dem Modul python, dessen Laufzeit-Abhängigkeiten
+- [x] AC-1 — Gegeben ein Projekt aus dem Modul python, dessen Laufzeit-Abhängigkeiten
   nur Lizenzen der Freigabeliste tragen, wenn `just check` läuft, dann ist die
   Lizenzprüfung grün. Kommt eine Laufzeit-Abhängigkeit mit GPL, AGPL, LGPL oder ohne
   erkennbare Lizenz dazu, ohne Ausnahme, dann wird `just check` rot und nennt Paket und
   Lizenz. Negativ: Eine solche Abhängigkeit nur in der Dev-Gruppe lässt die Prüfung grün;
-  die `.venv` für Tests und Lint bleibt unverändert.
-- [ ] AC-2 — Gegeben ein Projekt aus dem Modul ts-node, dasselbe wie AC-1 für
+  die `.venv` für Tests und Lint bleibt unverändert. — belegt: Durchlauf F-058c (python
+  aus dem Arbeitsstand): Vorlage grün; html2text (GPL) und paramiko (LGPL) zur Laufzeit
+  rot mit Paket und Lizenz, html2text als Extra ebenfalls rot; nur in der Dev-Gruppe
+  grün, `.venv` unverändert; voller `just check` grün bzw. mit GPL rot.
+- [x] AC-2 — Gegeben ein Projekt aus dem Modul ts-node, dasselbe wie AC-1 für
   `dependencies` gegenüber `devDependencies`. Ein Lizenzausdruck mit `OR` ist erlaubt,
-  wenn eine Alternative erlaubt ist; mit `AND` nur, wenn alle erlaubt sind.
-- [ ] AC-3 — Gegeben die gemeinsame Lizenzregel des Projekts (eine Datei: erlaubte
+  wenn eine Alternative erlaubt ist; mit `AND` nur, wenn alle erlaubt sind. — belegt:
+  Durchlauf F-058c (ts-node): Vorlage grün; lokale Testpakete mit GPL und LGPL in
+  `dependencies` rot, GPL nur in `devDependencies` grün; jszip
+  `(MIT OR GPL-3.0-or-later)` und pako `(MIT AND Zlib)` grün; voller `just check` grün;
+  Kit-Tests für `OR` und `AND`.
+- [x] AC-3 — Gegeben die gemeinsame Lizenzregel des Projekts (eine Datei: erlaubte
   Lizenzen, Ausnahmen je Paket mit Grund), wenn ein Projekt eine Ausnahme mit Grund
   einträgt, dann lässt die Prüfung jedes Moduls genau dieses Paket durch. Negativ: Eine
   Ausnahme ohne Grund ist ein Fehler; LGPL steht nicht in der Freigabeliste der
-  Vorlage, MPL-2.0 schon.
+  Vorlage, MPL-2.0 schon. — belegt: Eine Ausnahme mit Grund lässt das Paket in go
+  (F-058b), python und ts-node (F-058c) durch, ohne Grund ist sie ein Fehler; Kit-Tests:
+  die Vorlage sperrt LGPL und erlaubt MPL-2.0.
 - [x] AC-4 — Gegeben ein Projekt aus dem Modul go, wenn `just check` läuft, dann liest
   die Lizenzprüfung dieselbe Datei (Freigabeliste und Ausnahmen) statt der festen
   Gruppen. Negativ: Ein Go-Projekt aus der Vorlage bleibt grün; eine Abhängigkeit mit
@@ -336,3 +345,38 @@ mit Abhängigkeiten; die Skill-Änderungen liefen über `/add-skill`.
 (MPL 2.0)`) fiel durch — Auswertung angepasst, Tests ergänzt, der Klammer-Test prüft
 jetzt die Regel selbst; ein zusammengepresster `eval`-Einzeiler im Test ist in einzelne
 Prüfungen aufgeteilt.
+
+### F-058c — fertig 2026-11-20
+
+**Umgesetzt:**
+
+- Modul python: `license-check` prüft, ob die Gruppe `licenses` da ist, exportiert die
+  Laufzeit-Abhängigkeiten samt Extras, installiert sie in eine Wegwerf-Umgebung und
+  lässt sie dort von `pip-licenses` (Gruppe `licenses`, Version in `uv.lock`) auflisten;
+  mehrzeilige Lizenztexte werden zu einer Zeile. `pyproject.toml` hat die neue Gruppe,
+  `check` ruft das Rezept am Ende.
+- Modul ts-node: `license-check` wandelt `pnpm licenses list --prod --json` in die
+  Liste um; „No licenses in packages found“ zählt als leere Liste, jeder andere
+  Text muss JSON sein. `check` ruft das Rezept am Ende.
+- `MODULE.md` beider Module; CHANGELOG 3.6.0 mit beiden Rezepten wörtlich, der Gruppe
+  `licenses` zum Nachtragen und dem Hinweis zu Bundlern.
+- Durchläufe beider Module aus dem Arbeitsstand: alle Fälle aus AC-1 bis AC-3, dazu
+  EC-1, EC-8 und EC-9.
+
+**Entscheidungen:**
+
+- 2026-11-20 — python prüft eine eigene Wegwerf-Umgebung mit
+  `pip-licenses --python … --with-system`. Grund: Liefe `pip-licenses` in derselben
+  Umgebung, blendete es seine eigenen Abhängigkeiten aus — ein Projekt mit denselben
+  Paketen hätte dort eine blinde Stelle.
+- 2026-11-20 — Extras (`[project.optional-dependencies]`) zählen bei python als
+  Laufzeit-Abhängigkeiten. Grund: Sie werden mit dem Paket ausgeliefert; ts-node prüft
+  `optionalDependencies` ebenso mit.
+
+**Abweichung vom Plan:** Der Sonderfall „No licenses in packages found“ bei pnpm.
+
+**Funde:** Unabhängiges Review mit fünf Befunden, alle bestätigt und behoben:
+mehrzeilige Lizenztexte hätten die Prüfung trotz Ausnahme rot gemacht (python und
+ts-node); Extras fehlten in der Prüfung; der Hinweis auf die fehlende Gruppe kam bei
+jedem Fehler von `uv export`; die Meldung nannte einen Versionsstand; im CHANGELOG
+fehlten die Rezepte für python und ts-node.

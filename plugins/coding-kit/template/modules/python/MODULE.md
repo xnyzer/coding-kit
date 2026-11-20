@@ -11,7 +11,7 @@ enforces the floor. Build backend: `uv_build`.
 
 | Part | Notes |
 |------|-------|
-| `justfile` | replaces core justfile; `check` = features index + ruff format-check + ruff lint + pyright + pytest; `features-index` regenerates the index table |
+| `justfile` | replaces core justfile; `check` = features index + ruff format-check + ruff lint + pyright + pytest + license gate; `license-check` runs the gate alone (runtime dependencies from `uv export --no-dev` in a throwaway environment, listed by `pip-licenses` from the group `licenses` → `scripts/license-check.sh`); `features-index` regenerates the index table |
 | `mise.part.toml` | python (current stable major.minor) + uv |
 | `gitignore.part` | .venv, caches, dist |
 | `CODING-STANDARDS.part.md` | Python toolchain rules for §13 (module fragment) |
@@ -29,7 +29,7 @@ the rules of this toolchain.
 
 | File | Policy |
 |------|--------|
-| `pyproject.toml` | seed for `[project]` (evolves with the project); the `[tool.*]` sections are managed conventions |
+| `pyproject.toml` | seed for `[project]` (evolves with the project); the `[tool.*]` sections are managed conventions; the dependency group `licenses` holds `pip-licenses` for `just license-check` (not installed into `.venv`) |
 | `src/{{PROJECT_NAME_SNAKE}}/__init__.py`, `src/{{PROJECT_NAME_SNAKE}}/py.typed` | seed (sample code — replace freely) |
 | `tests/test_smoke.py` | seed |
 

@@ -13,6 +13,10 @@ dev = [
     "pyright>=1.1",
     "ruff>=0.15",
 ]
+# Only for `just license-check`: not installed into .venv, the exact version is in uv.lock
+licenses = [
+    "pip-licenses>=5.5",
+]
 
 [build-system]
 requires = ["uv_build>=0.11,<0.12"]
