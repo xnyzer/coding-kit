@@ -2,10 +2,10 @@
 id: F-059
 title: Renovate hebt die mise-Tools in mise.lock an
 type: fix
-status: IN-PROGRESS
+status: DONE
 size: M
 created: 2026-11-13
-done:
+done: 2026-11-20
 depends-on:
 superseded-by:
 ---
@@ -73,11 +73,15 @@ lokal installierte Version fest, nicht die neueste (lefthook 2.1.9 statt 2.2.2).
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben ein Projekt, dessen `renovate.json` das Preset nutzt und das eine
+- [x] AC-1 — Gegeben ein Projekt, dessen `renovate.json` das Preset nutzt und das eine
   `mise.lock` hat, wenn Renovate im Zeitfenster der Lock File Maintenance läuft, dann
   öffnet es einen PR, der nur `mise.lock` ändert und die Tools auf die neueste Version
   ihrer Hauptversion hebt, und mergt ihn bei grüner CI selbst. Negativ: Andere
   Sperrdateien (`package-lock.json`, `uv.lock` …) und `mise.toml` bleiben unverändert.
+  — belegt: PR #4 „Lock file maintenance“ (`a2f7cc7`) ändert nur `mise.lock`, hebt
+  just, lefthook und uv auf die neueste Version ihrer Hauptversion, CI grün, von
+  Renovate selbst gemergt; `mise.toml` und andere Sperrdateien unverändert. Ausgelöst
+  über das Dependency Dashboard statt im Zeitfenster am Montag.
 - [x] AC-2 — Gegeben `docs/renovate-preset.md` und der Abschlussbericht von
   `/coding-kit:new-project` auf Azure, wenn man sie liest, dann nennen sie die neue Regel
   und was ein selbst betriebenes Renovate dafür braucht (`mise` freischalten, ein Image
@@ -157,8 +161,9 @@ lokal installierte Version fest, nicht die neueste (lefthook 2.1.9 statt 2.2.2).
 
 ### Offene Fragen
 
-- [ ] [CLARIFY] Ist das mise im gehosteten Dienst neu genug für `--bump`? Sonst frischt
-  Renovate nur auf, ohne zu heben. Nicht blockierend; zeigt F-059c.
+- [x] [CLARIFY] Ist das mise im gehosteten Dienst neu genug für `--bump`? Sonst frischt
+  Renovate nur auf, ohne zu heben. Nicht blockierend; zeigt F-059c. — geklärt
+  2026-11-20: ja, PR #4 hebt die Versionen.
 
 ### Entscheidungen
 
@@ -300,3 +305,30 @@ nannte Renovate als einzigen Weg zum Anheben; jetzt auch den Handweg (EC-3, EC-6
 - Unabhängiges Review mit einem Befund, behoben: Die Kommentare nannten Renovate ohne
   die Bedingung, dass es `mise` ausführen darf (EC-3); an allen gleichartigen Stellen
   korrigiert.
+
+### F-059c — fertig 2026-11-20
+
+**Umgesetzt:**
+
+- PR #4 „Lock file maintenance“ im Kit-Repo: ändert nur `mise.lock` und hebt just,
+  lefthook und uv auf die neueste Version ihrer Hauptversion (etwa just 1.55.1 →
+  1.59.0); gitleaks war schon aktuell. Die CI war grün, Renovate hat den PR selbst
+  gemergt. Das mise im gehosteten Dienst kann also `--bump`.
+
+**Entscheidungen:** keine neuen.
+
+**Abweichung vom Plan:**
+
+- Der PR kam nicht am Montag nach dem Push: Renovate lief im Kit-Repo im Silent-Modus
+  (Einstellung im Mend-Portal) — es erkannte Updates, öffnete aber weder PRs noch das
+  Dependency Dashboard. Nach dem Umstellen auf Interactive am 2026-11-20 wurde der PR
+  über das Häkchen im Dashboard ausgelöst statt im Zeitfenster am Montag.
+
+**Funde:**
+
+- Renovate-PRs auf Dateien unter `plugins/coding-kit/template/` bleiben an der
+  Versionsregel rot → F-061 (Template-Versionen als Startwerte statt Renovate-Pflege im
+  Kit).
+- Renovate warnt „Unexpected downgrade detected“ bei den Selektoren in `mise.toml` —
+  harmlos, in F-061 vermerkt.
+- Unabhängiges Review: keine Befunde.
