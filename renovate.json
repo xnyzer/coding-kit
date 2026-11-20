@@ -1,7 +1,17 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": [
-    "Renovate config for the coding-kit repo itself — dogfoods the shareable preset from default.json."
+    "Renovate config for the coding-kit repo itself — dogfoods the shareable preset from default.json.",
+    "Versions under plugins/coding-kit/template/ are start values for new projects: Renovate lists their updates on the Dependency Dashboard for approval, on their own branch prefix, instead of opening PRs."
   ],
-  "extends": ["github>xnyzer/coding-kit"]
+  "extends": ["github>xnyzer/coding-kit"],
+  "packageRules": [
+    {
+      "description": "Template start values: raised deliberately, PR only after approval on the dashboard",
+      "matchFileNames": ["plugins/coding-kit/template/**"],
+      "dependencyDashboardApproval": true,
+      "additionalBranchPrefix": "template-",
+      "commitMessageSuffix": "in the template"
+    }
+  ]
 }

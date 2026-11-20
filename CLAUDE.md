@@ -81,7 +81,8 @@ Details: `README.md`.
   privater Blocklist (`private/blocklist.txt`); vor jedem Push zusätzlich
   Personendaten-grep.
 - **Keine statischen Versionsstände** in Texten; technisch nötige Pins (Action-SHAs,
-  mise-Tools) hält Renovate aktuell.
+  mise-Tools) des Kits hält Renovate aktuell. Versionen im Template sind Startwerte für
+  neue Projekte und werden bewusst angehoben (`docs/renovate-preset.md`, Dogfooding).
 - **Versionsregel:** Jede inhaltliche Änderung an Skills, Hooks, Skripten oder Template
   braucht eine Version über dem gepushten Stand
   (`plugins/coding-kit/.claude-plugin/plugin.json`) und einen Eintrag dafür in

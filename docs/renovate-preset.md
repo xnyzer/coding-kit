@@ -62,12 +62,29 @@ Tools dann von Hand an, mit `just bump-tools`.
 ## Dogfooding
 
 Das Kit nutzt das Preset selbst: `renovate.json` im Repo-Root extendet
-`github>xnyzer/coding-kit` (dieses Repo). Damit bekommen die gepinnten Action-SHAs und
-mise-Tools automatisch Update-PRs — auch die im Template unter
-`plugins/coding-kit/template/`. Ein PR, der dort Pins ändert, ist Plugin-Inhalt: die CI
-(Versionsregel) bleibt rot, bis die Version angehoben und der CHANGELOG-Eintrag mit
-Abschnitt `### Template` ergänzt ist — so kommt die neue Pin-Fassung auch über
-`/update-conventions` in die Projekte.
+`github>xnyzer/coding-kit` (dieses Repo). Damit bekommen die Kit-eigenen Dateien —
+Workflows im Root, `mise.lock` — automatisch Update-PRs.
+
+**Versionen im Template sind Startwerte.** Was unter `plugins/coding-kit/template/` steht
+(Actions in den Workflows, Sprachen und Tools der Module, Abhängigkeiten in
+`package.json` …), bekommt ein neues Projekt beim Anlegen; danach entscheidet das
+Projekt mit seinem eigenen Renovate, ob es eine neuere Version übernimmt. Das Kit hebt
+diese Werte nur bewusst an, etwa wenn ein Modul überarbeitet und mit der neuen Version
+geprüft wird. Deshalb öffnet Renovate dafür keine PRs: Eine Regel in `renovate.json`
+führt die Updates im Dependency Dashboard unter „Pending Approval“, auf Branches mit dem
+Präfix `template-`. Die Liste zeigt jederzeit, welche Startwerte veraltet sind.
+
+So hebt das Kit einen Startwert an:
+
+1. Im Dashboard das Häkchen beim Update setzen — Renovate öffnet den PR.
+2. Der PR ist Plugin-Inhalt: Die CI (Versionsregel) bleibt rot, bis die Plugin-Version
+   angehoben und der CHANGELOG-Eintrag mit Abschnitt `### Template` ergänzt ist. Das
+   betroffene Modul vorher mit der neuen Version prüfen.
+3. Mergen und veröffentlichen. Steht die Version in einer managed Datei (Workflows,
+   `azure-pipelines.yml`, `mise.toml` der Module), bietet `/update-conventions` die
+   Anhebung jedem Projekt an, und das Projekt bestätigt sie je Datei. Eine Version, die
+   das Kit nicht ändert, löst dort nichts aus; Seed-Dateien wie `package.json` erreicht
+   die Anhebung nur in neuen Projekten.
 
 ## Preset ändern
 

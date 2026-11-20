@@ -2,7 +2,7 @@
 id: F-061
 title: Template-Versionen als Startwerte statt Renovate-Pflege im Kit
 type: change
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-11-20
 done:
@@ -73,11 +73,14 @@ bestehende pflegt es weiter, deshalb bekommen die Template-Updates eigene Branch
   Dateien unter `plugins/coding-kit/template/`; reine Template-PRs und -Branches sind
   geschlossen (von Renovate oder von Hand). Negativ: Das Update von actions/checkout
   für die Kit-CI bleibt als grüner PR.
-- [ ] AC-3 — Gegeben `docs/renovate-preset.md` (Abschnitt Dogfooding) und die
+- [x] AC-3 — Gegeben `docs/renovate-preset.md` (Abschnitt Dogfooding) und die
   `CLAUDE.md` des Kits, wenn man sie liest, dann sagen sie: Versionen im Template sind
   Startwerte, das Kit hebt sie bewusst an (Häkchen im Dashboard, PR, Version und
   CHANGELOG mit `### Template`), `/update-conventions` bietet eine solche Anhebung je
   Datei zur Bestätigung an. Negativ: keine Versionsstände im Text; `just check` grün.
+  — belegt: `docs/renovate-preset.md` (Dogfooding) und `CLAUDE.md` nennen Startwerte,
+  den Weg zum Anheben und das Angebot je Datei in `/update-conventions`, ohne
+  Versionsstände; `just check` grün.
 
 ### Randfälle
 
@@ -178,3 +181,26 @@ Vorgaben von `config:recommended` und zeigt ebenfalls nichts an.
 
 **Erkennung (Schritt 2a):** entfällt; kein neues Framework, keine neue Sprache, kein
 neues Tool, keine Dependencies.
+
+## Verlauf
+
+### F-061a — fertig 2026-11-20
+
+**Umgesetzt:**
+
+- `renovate.json`: eine Regel für `plugins/coding-kit/template/**` — Updates nur nach
+  Freigabe im Dependency Dashboard, Branch-Präfix `template-`, im PR-Titel der Zusatz
+  „in the template“; dazu eine Zeile in `description`. `renovate-config-validator`
+  meldet die Datei gültig; mit Tippfehler im Schlüssel meldet er „Invalid configuration
+  option“.
+- `docs/renovate-preset.md`, Abschnitt Dogfooding: Template-Versionen sind Startwerte;
+  der Weg zum bewussten Anheben in drei Schritten; was `/update-conventions` danach mit
+  managed und Seed-Dateien tut.
+- `CLAUDE.md`, Regel zu Versionsständen: Renovate hält die Pins des Kits aktuell, die
+  im Template sind Startwerte.
+
+**Entscheidungen:** keine neuen.
+
+**Abweichung vom Plan:** keine.
+
+**Funde:** Unabhängiges Review: keine Befunde.
