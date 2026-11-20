@@ -44,8 +44,8 @@ with its reasons.
 
 Stand 2026-11-20.
 
-1. **[F-061](F-061-template-versionen-als-startwerte.md) → [F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md)** — erst die Template-Versionen als Startwerte klären (beendet die
-   roten Renovate-PRs im Kit), dann die Lizenzprüfung für python und ts-node.
+1. **[F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md)** — Lizenzprüfung für die Module python und ts-node; kann deren Startwerte
+   bewusst mit auffrischen (Liste im Dependency Dashboard).
 2. **[F-025](F-025-install-sh-fehlender-gh-login-und.md) → [F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: der Installer, GitLab, Forgejo — auf der
    fertigen Grundlage „Git-Host je Projekt“.
 3. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
@@ -65,13 +65,13 @@ Stand 2026-11-20.
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
 | [F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md) | Lizenzprüfung für die Module python und ts-node | BACKLOG |  |
-| [F-061](F-061-template-versionen-als-startwerte.md) | Template-Versionen als Startwerte statt Renovate-Pflege im Kit | IN-PROGRESS |  |
 
 ### Closed
 
 | ID | Title | Status | Done |
 |----|-------|--------|------|
 | [F-059](F-059-renovate-hebt-mise-tools-in-mise-lock-an.md) | Renovate hebt die mise-Tools in mise.lock an | DONE | 2026-11-20 |
+| [F-061](F-061-template-versionen-als-startwerte.md) | Template-Versionen als Startwerte statt Renovate-Pflege im Kit | DONE | 2026-11-20 |
 | [F-060](F-060-mise-tools-in-jeder-shell-erreichbar.md) | mise-Tools in jeder Shell erreichbar machen | DONE | 2026-11-14 |
 | [F-029](F-029-graphiti-schreibzugriffe-auf-server-llm.md) | Graphiti-Schreibzugriffe auf Server-LLM-Kosten optimieren | DONE | 2026-11-13 |
 | [F-057](F-057-ci-jobs-der-stack-module-auf-azure.md) | Lizenzprüfung des Go-Moduls in just check | DONE | 2026-11-13 |

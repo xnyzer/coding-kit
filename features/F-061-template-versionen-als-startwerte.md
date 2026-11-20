@@ -2,10 +2,10 @@
 id: F-061
 title: Template-Versionen als Startwerte statt Renovate-Pflege im Kit
 type: change
-status: IN-PROGRESS
+status: DONE
 size: M
 created: 2026-11-20
-done:
+done: 2026-11-20
 depends-on:
 superseded-by:
 ---
@@ -63,16 +63,22 @@ bestehende pflegt es weiter, deshalb bekommen die Template-Updates eigene Branch
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben die `renovate.json` des Kit-Repos, wenn Renovate läuft, dann
+- [x] AC-1 — Gegeben die `renovate.json` des Kit-Repos, wenn Renovate läuft, dann
   öffnet es für Versionen unter `plugins/coding-kit/template/` keine PRs, sondern führt
   sie im Dependency Dashboard unter „Pending Approval“; ein Häkchen dort erzeugt den PR.
   Negativ: Updates der Kit-eigenen Dateien (Workflows im Root, `mise.lock`) kommen
-  weiter als eigene PRs; `default.json` bleibt unverändert.
-- [ ] AC-2 — Gegeben die offenen Renovate-PRs und -Branches vom 2026-11-20, wenn nach
+  weiter als eigene PRs; `default.json` bleibt unverändert. — belegt: Dashboard (#3)
+  führt 13 Template-Updates unter „Pending Approval“ mit „in the template“, ohne PR;
+  Kit-eigene Updates kamen als PRs #1, #7, #8 (nur `.github/workflows/ci.yml`);
+  `default.json` seit dem Release unverändert. Den Präfix `template-` zeigt erst ein
+  freigegebener Branch.
+- [x] AC-2 — Gegeben die offenen Renovate-PRs und -Branches vom 2026-11-20, wenn nach
   dem Push der erste Lauf mit der neuen Regel war, dann enthält kein offener PR mehr
   Dateien unter `plugins/coding-kit/template/`; reine Template-PRs und -Branches sind
   geschlossen (von Renovate oder von Hand). Negativ: Das Update von actions/checkout
-  für die Kit-CI bleibt als grüner PR.
+  für die Kit-CI bleibt als grüner PR. — belegt: Renovate schloss #2, #5 und #6 selbst
+  („autoclosed“); kein offener PR mit Template-Dateien, auf GitHub nur noch die
+  Branches der Kit-eigenen PRs; #1 ändert nur die Kit-CI, CI grün.
 - [x] AC-3 — Gegeben `docs/renovate-preset.md` (Abschnitt Dogfooding) und die
   `CLAUDE.md` des Kits, wenn man sie liest, dann sagen sie: Versionen im Template sind
   Startwerte, das Kit hebt sie bewusst an (Häkchen im Dashboard, PR, Version und
@@ -204,3 +210,25 @@ neues Tool, keine Dependencies.
 **Abweichung vom Plan:** keine.
 
 **Funde:** Unabhängiges Review: keine Befunde.
+
+### F-061b — fertig 2026-11-20
+
+**Umgesetzt:**
+
+- Nach dem Push von F-061a und einem von Hand angestoßenen Renovate-Lauf: Das Dashboard
+  führt die Template-Updates unter „Pending Approval“, darunter die großen Sprünge;
+  Renovate hat die reinen Template-PRs selbst geschlossen und #1 auf die Kit-CI
+  zurückgebaut. Von Hand geschlossen werden musste nichts (EC-5 trat nicht ein).
+
+**Entscheidungen:** keine neuen.
+
+**Abweichung vom Plan:** keine.
+
+**Funde:**
+
+- Unter „Pending Approval“ steht auch „lock file maintenance in the template“, obwohl
+  das Template keine `mise.lock` hat — harmlos, solange es nicht angehakt wird; die
+  Lock File Maintenance der Root-`mise.lock` läuft getrennt weiter.
+- #7 und #8 heben mise-action in der Kit-CI auf 4.3.0 bzw. 5 und ändern dieselbe Zeile
+  — eine Entscheidung fürs Kit, nicht Teil von F-061.
+- Unabhängiges Review: keine Befunde.
