@@ -65,7 +65,7 @@ Stand 2026-11-20.
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
 | [F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md) | Lizenzprüfung für die Module python und ts-node | BACKLOG |  |
-| [F-061](F-061-template-versionen-als-startwerte.md) | Template-Versionen als Startwerte statt Renovate-Pflege im Kit | BACKLOG |  |
+| [F-061](F-061-template-versionen-als-startwerte.md) | Template-Versionen als Startwerte statt Renovate-Pflege im Kit | PLANNED |  |
 
 ### Closed
 
