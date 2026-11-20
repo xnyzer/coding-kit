@@ -44,10 +44,6 @@ check:
     uv run pytest
     just license-check
 
-# Build distribution artifacts
-build:
-    uv build
-
 # License gate (part of check): every runtime dependency's license must be allowed in
 # license-policy.txt. The runtime dependencies, extras included, go into a throwaway
 # environment, where pip-licenses (group `licenses`, version in uv.lock) lists them;
@@ -76,3 +72,7 @@ license-check:
         print(p["Name"] + "\t" + " ".join(p["License"].split()))' "$tmp/licenses.json" \
       > "$tmp/licenses.tsv"
     sh scripts/license-check.sh "$tmp/licenses.tsv"
+
+# Build distribution artifacts
+build:
+    uv build

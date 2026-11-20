@@ -39,10 +39,6 @@ check: lint test
     sh scripts/features-index.sh check
     just license-check
 
-# Production build (tests excluded via tsconfig.build.json)
-build:
-    pnpm exec tsc -p tsconfig.build.json
-
 # License gate (part of check): every runtime dependency's license must be allowed in
 # license-policy.txt. pnpm lists the `dependencies` with their licenses; devDependencies
 # and the project itself stay out. Without runtime dependencies pnpm prints a sentence
@@ -62,3 +58,7 @@ license-check:
       }
     ' "$tmp/licenses.json" > "$tmp/licenses.tsv"
     sh scripts/license-check.sh "$tmp/licenses.tsv"
+
+# Production build (tests excluded via tsconfig.build.json)
+build:
+    pnpm exec tsc -p tsconfig.build.json

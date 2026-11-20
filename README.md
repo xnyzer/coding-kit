@@ -293,6 +293,12 @@ Alle Skills sind **stack-agnostisch**: Sie rufen nur die just-Standardrezepte
 Sprache der lebenden Doku, Sicherheits-Postur) aus der Projekt-CLAUDE.md — nichts ist
 hartkodiert.
 
+**Lizenzen der Abhängigkeiten:** In Projekten mit den Modulen go, python und ts-node
+prüft `just check` die Lizenzen der Laufzeit-Abhängigkeiten gegen `license-policy.txt`
+im Projekt — keine GPL, AGPL oder LGPL, MPL ist erlaubt. Eine bewusste Ausnahme steht
+dort als Zeile `except <Paket> <Grund>`; ein Paket, das ein Bundler mit ausliefert,
+gehört in die Laufzeit-Abhängigkeiten.
+
 ### Projektwissen: Graphiti oder `docs/notes.md`
 
 Graphiti ist optional; das Kit läuft ohne vollständig. Wissen, das ein Projekt braucht
@@ -504,7 +510,7 @@ docs/                             Pflege-Doku (Skill-Authoring, Renovate-Preset,
 install.sh                        Neuer-Rechner-Bootstrap (idempotent)
 scripts/validate.py               Validator für Kit, Template und Vertrag (`just check` + CI)
 scripts/version-rule.py           Versionsregel (Pre-Commit + CI, `just version-rule`)
-tests/template-sync/              Tests des Skripts und des Session-Hinweises unter dash und bash, dazu mawk/gawk (`just test`)
+tests/template-sync/              Tests des Skripts, des Session-Hinweises und der Template-Skripte (Feature-Index, Lizenzprüfung) unter dash und bash, dazu mawk/gawk (`just test`)
 features/                         Aufgaben (F-NNN): je Feature eine Datei, INDEX.md als Übersicht
 private/                          Gitignoriert — private Notizen/Quellen
 ```

@@ -25,6 +25,9 @@ löst nicht mehr die ganze `justfile` aus dem Template.
 - **Skills add-feature, prep-step und audit-code:** nennen die Regel „kein GPL, AGPL
   oder LGPL; MPL erlaubt; Ausnahmen begründet in `license-policy.txt`“ statt „kein
   GPL/AGPL“.
+- **Validator (`just check` des Kits):** prüft, dass `check` in den `justfile`s der
+  Module go, python und ts-node `just license-check` aufruft und dieses Rezept die Liste
+  an `scripts/license-check.sh` gibt.
 - **Tests:** neue Fälle für `scripts/license-check.sh` des Templates (`OR`, `AND`, „; “,
   `WITH`, Klammern, Ausnahmen mit und ohne Grund, leere Liste, Freigabeliste der
   Vorlage) unter dash, bash und mawk.

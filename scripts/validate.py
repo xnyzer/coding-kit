@@ -157,6 +157,13 @@ REQUIRED_RECIPES = {
     "features-index": "sh scripts/features-index.sh write",
     "bump-tools": "mise lock --bump",
 }
+# Modules with dependencies also gate their licenses (MANIFEST § Standard recipe set):
+# `check` runs `just license-check`, and that recipe hands its list to the core script.
+LICENSE_MODULES = ("go", "python", "ts-node")
+LICENSE_RECIPES = {
+    "check": "just license-check",
+    "license-check": "sh scripts/license-check.sh",
+}
 LEFTHOOK_TEMPLATE = TEMPLATE_ROOT / "core" / "lefthook.yml"
 JUST_RECIPE_RE = re.compile(r"^([a-z][a-z0-9-]*)(?:\s[^:\n]*)?:(?!=)[^\n]*\n((?:[ \t]+\S[^\n]*\n?)*)", re.M)
 
@@ -938,17 +945,26 @@ def check_template_contract(findings: list[str]) -> None:
 
 def check_required_recipes(findings: list[str]) -> None:
     """The core justfile and every module justfile run the commands of REQUIRED_RECIPES
-    in their recipes; the pre-commit hook runs the features index check."""
+    in their recipes, the modules of LICENSE_MODULES also those of LICENSE_RECIPES; the
+    pre-commit hook runs the features index check."""
     justfiles = [TEMPLATE_ROOT / "core" / "justfile", *sorted(TEMPLATE_ROOT.glob("modules/*/justfile"))]
     for justfile in justfiles:
         recipes = {
             name: body for name, body in JUST_RECIPE_RE.findall(justfile.read_text(encoding="utf-8"))
         }
-        for recipe, command in REQUIRED_RECIPES.items():
+        # (recipe, command) pairs: `check` carries a command from both tables.
+        required = list(REQUIRED_RECIPES.items())
+        if justfile.parent.name in LICENSE_MODULES:
+            required += LICENSE_RECIPES.items()
+        for recipe, command in required:
             if command not in recipes.get(recipe, ""):
                 findings.append(
                     f"{display_path(justfile)}: recipe '{recipe}' does not run '{command}'"
                 )
+    for module in LICENSE_MODULES:
+        module_dir = TEMPLATE_ROOT / "modules" / module
+        if not (module_dir / "justfile").is_file():
+            findings.append(f"{display_path(module_dir)}: no justfile with the license check")
     if "sh scripts/features-index.sh check" not in LEFTHOOK_TEMPLATE.read_text(encoding="utf-8"):
         findings.append(f"{display_path(LEFTHOOK_TEMPLATE)}: no pre-commit job runs the features index check")
 

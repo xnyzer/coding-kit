@@ -2,10 +2,10 @@
 id: F-058
 title: Lizenzprüfung für die Module python und ts-node
 type: feature
-status: IN-PROGRESS
+status: DONE
 size: L
 created: 2026-11-13
-done:
+done: 2026-11-20
 depends-on: F-057
 superseded-by:
 ---
@@ -90,12 +90,17 @@ braucht Netz und einen Google-Dienst und scheidet für `just check` aus.
   GPL, AGPL oder LGPL macht es weiter rot. — belegt: Durchlauf F-058b: Go-Projekt aus
   dem Arbeitsstand mit `just check` grün; LGPL-Paket (juju/errors) und lokales Modul mit
   GPL-3-Text rot; die Prüfung liest `license-policy.txt`, eine Ausnahme mit Grund wirkt.
-- [ ] AC-5 — Gegeben die Regel in Worten (`CODING-STANDARDS.md` § 8, Projekt-CLAUDE.md,
+- [x] AC-5 — Gegeben die Regel in Worten (`CODING-STANDARDS.md` § 8, Projekt-CLAUDE.md,
   die Skills add-feature, prep-step und audit-code) und das Kit, wenn man sie liest bzw.
   `just check` des Kits läuft, dann nennen sie „keine GPL, AGPL, LGPL; MPL erlaubt;
   Ausnahmen begründet in der Lizenzregel“; das MANIFEST führt die neuen Dateien; der
   Validator meldet eine Modul-`justfile` ohne Lizenzprüfung in `check`; der
   CHANGELOG-Eintrag hat `### Template`. Negativ: keine Versionsstände im Text.
+  — belegt: Regel in Worten in `CODING-STANDARDS.md` § 8, `core/CLAUDE.md` und den
+  Skills add-feature, prep-step und audit-code (F-058b); das MANIFEST führt
+  `license-policy.txt` und `scripts/license-check.sh`; der Validator meldet eine
+  fehlende Lizenzprüfung (Gegenprobe F-058d); CHANGELOG 3.6.0 mit `### Template`, ohne
+  Versionsstände im Text; `just check` grün.
 
 ### Randfälle
 
@@ -380,3 +385,35 @@ mehrzeilige Lizenztexte hätten die Prüfung trotz Ausnahme rot gemacht (python 
 ts-node); Extras fehlten in der Prüfung; der Hinweis auf die fehlende Gruppe kam bei
 jedem Fehler von `uv export`; die Meldung nannte einen Versionsstand; im CHANGELOG
 fehlten die Rezepte für python und ts-node.
+
+### F-058d — fertig 2026-11-20
+
+**Umgesetzt:**
+
+- Validator (`scripts/validate.py`): Für go, python und ts-node (`LICENSE_MODULES`) ruft
+  `check` `just license-check` auf, und das Rezept gibt die Liste an
+  `scripts/license-check.sh`; fehlt die `justfile` eines dieser Module, meldet er das.
+  Gegenprobe: ohne Lizenzprüfung in python bzw. ohne Prüfskript in go je genau eine
+  Meldung.
+- Update-Probe per Drei-Wege-Merge an Projekten vom Stand vor F-058 mit eigenem Rezept:
+  python und ts-node mergen die `justfile` ohne Konflikt, `license-policy.txt` und
+  `scripts/license-check.sh` kommen neu, `CODING-STANDARDS.md` wird aktualisiert;
+  python meldet ohne die Gruppe `licenses` den Hinweis aus EC-9 und ist mit ihr im
+  vollen `just check` grün; go hat erwartungsgemäß einen Konflikt im Rezept
+  `license-check` und ist nach dem CHANGELOG aufgelöst grün; das eigene Rezept läuft
+  weiter.
+- README: Absatz „Lizenzen der Abhängigkeiten“ und die Zeile zu den Tests; CHANGELOG
+  3.6.0 nennt den Validator.
+
+**Entscheidungen:**
+
+- 2026-11-20 — Das Rezept `license-check` steht bei python und ts-node direkt hinter
+  `check`. Grund: Am Dateiende kollidierte es beim Update mit Rezepten, die Projekte dort
+  anhängen; hinter `check` mergt es ohne Konflikt.
+
+**Abweichung vom Plan:** die Position der Rezepte (siehe Entscheidung).
+
+**Funde:** Unabhängiges Review mit einem Befund, bestätigt und behoben: Im Validator
+überschrieben die Lizenz-Pflichten die Pflicht, dass `check` den Feature-Index prüft
+(go, python, ts-node); jetzt gelten Paare aus Rezept und Befehl, die Gegenprobe meldet
+beide.
