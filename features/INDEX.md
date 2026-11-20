@@ -44,8 +44,8 @@ with its reasons.
 
 Stand 2026-11-20.
 
-1. **[F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md)** — Lizenzprüfung für die Module python und ts-node; kann deren Startwerte
-   bewusst mit auffrischen (Liste im Dependency Dashboard).
+1. **[F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md) → [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md)** — erst die Lizenzprüfung für python und ts-node, dann die Startwerte
+   beider Module auffrischen, solange sie frisch angefasst sind.
 2. **[F-025](F-025-install-sh-fehlender-gh-login-und.md) → [F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: der Installer, GitLab, Forgejo — auf der
    fertigen Grundlage „Git-Host je Projekt“.
 3. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
@@ -64,7 +64,8 @@ Stand 2026-11-20.
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
-| [F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md) | Lizenzprüfung für die Module python und ts-node | BACKLOG |  |
+| [F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md) | Lizenzprüfung für die Module python und ts-node | PLANNED |  |
+| [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md) | Startwerte der Module python und ts-node auffrischen | BACKLOG |  |
 
 ### Closed
 
@@ -127,4 +128,4 @@ Stand 2026-11-20.
 | [F-035](F-035-repo-uebergreifende-uebergabe-statt.md) | Repo-übergreifende Übergabe statt Parallelarbeit | SUPERSEDED → F-039 |  |
 <!-- /features-index -->
 
-next-feature: F-062
+next-feature: F-063
