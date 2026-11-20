@@ -13,7 +13,7 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 3.6.0 — unveröffentlicht
+## 3.6.0 — 2026-11-20
 
 Die Lizenzprüfung hat eine gemeinsame Regel je Projekt (F-058): `license-policy.txt`
 führt die erlaubten Lizenzen und Ausnahmen je Paket mit Grund, und ein Prüfskript im
