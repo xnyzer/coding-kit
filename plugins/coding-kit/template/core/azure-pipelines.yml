@@ -17,7 +17,7 @@ pool:
 variables:
   # The installer of exactly this release carries the checksums of its own archives, so
   # mise is installed at this version and verified, or not at all. Renovate updates it.
-  MISE_VERSION: v2026.11.5
+  MISE_VERSION: v2026.11.10
 
 steps:
   - checkout: self
