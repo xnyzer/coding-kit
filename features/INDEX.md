@@ -64,7 +64,7 @@ Stand 2026-11-20.
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
-| [F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md) | Lizenzprüfung für die Module python und ts-node | PLANNED |  |
+| [F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md) | Lizenzprüfung für die Module python und ts-node | IN-PROGRESS |  |
 | [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md) | Startwerte der Module python und ts-node auffrischen | BACKLOG |  |
 
 ### Closed

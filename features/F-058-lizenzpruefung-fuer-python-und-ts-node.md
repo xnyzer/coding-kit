@@ -2,7 +2,7 @@
 id: F-058
 title: Lizenzprüfung für die Module python und ts-node
 type: feature
-status: PLANNED
+status: IN-PROGRESS
 size: L
 created: 2026-11-13
 done:
@@ -79,12 +79,12 @@ braucht Netz und einen Google-Dienst und scheidet für `just check` aus.
   die Lizenzprüfung dieselbe Datei (Freigabeliste und Ausnahmen) statt der festen
   Gruppen. Negativ: Ein Go-Projekt aus der Vorlage bleibt grün; eine Abhängigkeit mit
   GPL, AGPL oder LGPL macht es weiter rot.
-- [ ] AC-5 — Gegeben die Regel in Worten (`CODING-STANDARDS.md` § 8, Projekt-CLAUDE.md)
-  und das Kit, wenn man sie liest bzw. `just check` des Kits läuft, dann nennen sie
-  „keine GPL, AGPL, LGPL; MPL erlaubt; Ausnahmen begründet in der Lizenzregel“; das
-  MANIFEST führt die neue Datei; der Validator meldet eine Modul-`justfile` ohne
-  Lizenzprüfung in `check`; der CHANGELOG-Eintrag hat `### Template`. Negativ: keine
-  Versionsstände im Text.
+- [ ] AC-5 — Gegeben die Regel in Worten (`CODING-STANDARDS.md` § 8, Projekt-CLAUDE.md,
+  die Skills add-feature, prep-step und audit-code) und das Kit, wenn man sie liest bzw.
+  `just check` des Kits läuft, dann nennen sie „keine GPL, AGPL, LGPL; MPL erlaubt;
+  Ausnahmen begründet in der Lizenzregel“; das MANIFEST führt die neuen Dateien; der
+  Validator meldet eine Modul-`justfile` ohne Lizenzprüfung in `check`; der
+  CHANGELOG-Eintrag hat `### Template`. Negativ: keine Versionsstände im Text.
 
 ### Randfälle
 
@@ -100,8 +100,15 @@ braucht Netz und einen Google-Dienst und scheidet für `just check` aus.
   Prüfumgebung den uv-Cache und meldet sonst einen klaren Fehler.
 - EC-6 — Frontend mit Bundler, das `devDependencies` mit ausliefert → nicht erkannt;
   die Doku sagt, gebündelte Pakete gehören in `dependencies`.
-- EC-7 — Projekt mit eigener `justfile` (`keep`) → `/update-conventions` ändert sie
-  nicht; der `### Template`-Abschnitt nennt die Zeilen zum Nachtragen.
+- EC-7 — Projekt mit eigener `justfile` (`keep`) → `/update-conventions` mergt das neue
+  Rezept ein; bei einem Konflikt gewinnt die Projektseite, dann nennt der
+  `### Template`-Abschnitt die Zeilen zum Nachtragen.
+- EC-8 — Das Projekt steht selbst unter GPL, AGPL oder „TBD“ → das eigene Projekt wird
+  nicht geprüft (python `--no-emit-project`, go ohne das eigene Modul, pnpm listet es
+  nicht); die Prüfung bleibt grün, wenn die Abhängigkeiten erlaubt sind.
+- EC-9 — Bestehendes Python-Projekt ohne die Gruppe `licenses` in `pyproject.toml`
+  (Seed) → `license-check` bricht mit klarer Meldung ab; der `### Template`-Abschnitt
+  nennt die Zeilen zum Nachtragen.
 
 ### Nicht-Ziele
 
@@ -124,9 +131,10 @@ braucht Netz und einen Google-Dienst und scheidet für `just check` aus.
 
 ### Einbettung
 
-- Berührt: `template/core` (neue Lizenzregel, `CODING-STANDARDS.md` § 8, `CLAUDE.md`),
-  die Module go, python und ts-node (`justfile`, `MODULE.md`, ggf. ein kleines Skript
-  für die Bewertung), MANIFEST, `scripts/validate.py`, CHANGELOG und Version, README.
+- Berührt: `template/core` (Lizenzregel, Prüfskript, `CODING-STANDARDS.md` § 8,
+  `CLAUDE.md`), die Module go, python und ts-node (`justfile`, `MODULE.md`, python dazu
+  `pyproject.toml`), die Skills add-feature, prep-step und audit-code, MANIFEST,
+  `scripts/validate.py`, Kit-Tests, CHANGELOG und Version, README.
 - Bestehende Projekte bekommen Datei und Rezepte über `/update-conventions`; die
   Go-Prüfung ändert dort ihr Verfahren, nicht ihr Ergebnis.
 - Folge: F-062 frischt danach die Startwerte auf; pnpm 12 muss `pnpm licenses` weiter
@@ -135,14 +143,18 @@ braucht Netz und einen Google-Dienst und scheidet für `just check` aus.
 
 ### Offene Fragen
 
-- [ ] [CLARIFY] Format und Ort der Lizenzregel (Vorschlag: eine schlichte Textdatei im
+- [x] [CLARIFY] Format und Ort der Lizenzregel (Vorschlag: eine schlichte Textdatei im
   Core, managed, mit Abschnitten für Freigaben und Ausnahmen) — klärt der Spike.
-  Nicht blockierend.
-- [ ] [CLARIFY] Wie entsteht die Prüfumgebung für python ohne Dev-Gruppe, ohne die
-  `.venv` anzufassen? Klärt der Spike. Nicht blockierend.
-- [ ] [CLARIFY] Womit bewertet ts-node die Liste von pnpm (Shell und awk oder ein
+  Nicht blockierend. — geklärt 2026-11-20: `license-policy.txt` im Projekt-Root (Core,
+  managed) mit Zeilen `allow` und `except` (F-058a).
+- [x] [CLARIFY] Wie entsteht die Prüfumgebung für python ohne Dev-Gruppe, ohne die
+  `.venv` anzufassen? Klärt der Spike. Nicht blockierend. — geklärt 2026-11-20:
+  `uv export --no-dev --no-emit-project` und `uv run --isolated --no-project
+  --with-requirements …` (F-058a).
+- [x] [CLARIFY] Womit bewertet ts-node die Liste von pnpm (Shell und awk oder ein
   kleines Node-Skript), und wie werden `OR`/`AND` sicher ausgewertet? Klärt der Spike.
-  Nicht blockierend.
+  Nicht blockierend. — geklärt 2026-11-20: ein gemeinsames Prüfskript für alle Module
+  (Shell und awk), Regeln unter Entscheidungen in F-058a.
 
 ### Entscheidungen
 
@@ -155,20 +167,28 @@ braucht Netz und einen Google-Dienst und scheidet für `just check` aus.
   § 8, Ausnahmen ohne eigene `justfile`. Entscheidung des Nutzers nach Empfehlung.
 - 2026-11-20 — Kein Auffrischen der Startwerte in F-058; dafür F-062. Entscheidung des
   Nutzers nach Empfehlung.
+- 2026-11-20 — `pip-licenses` steht in einer eigenen Gruppe `licenses` der
+  `pyproject.toml`; die genaue Version liegt in `uv.lock`, das Renovate des Projekts
+  hält sie aktuell. Grund: § 8 verlangt feste Versionen; die Gruppe ist nicht Teil der
+  `.venv` (uv installiert nur `dev` als Standard). Entscheidung des Nutzers nach
+  Empfehlung.
 
 ## Plan
 
 **Größe:** L. Drei Module, eine neue Datei für alle Projekte, ein Werkzeug, das erst
 erprobt werden muss; das Ergebnis erreicht jedes Go-, Python- und ts-node-Projekt.
 
-**Ansatz:** Eine Lizenzregel im Core (Textdatei, managed — eigene Zeilen eines Projekts
-bleiben beim Drei-Wege-Abgleich erhalten) mit Freigabeliste und Ausnahmen je Paket mit
-Grund. Jedes Modul hat ein Rezept `license-check` in `check`: go übergibt die Liste an
-`go-licenses` (`--allowed_licenses`, `--ignore`), python prüft mit `pip-licenses` über
-`uv run --with` eine Umgebung ohne Dev-Gruppe, ts-node bewertet
-`pnpm licenses list --prod --json`. Verworfen: `osv-scanner` für alle (Netz, Google-
-Dienst, Schwachstellen im selben Exit-Code); je Modul eine eigene Regel (drei Stellen,
-laufen auseinander).
+**Ansatz:** Eine Lizenzregel `license-policy.txt` im Core (managed — eigene Zeilen eines
+Projekts bleiben beim Drei-Wege-Abgleich erhalten) mit Zeilen `allow <Lizenz>` und
+`except <Paket> <Grund…>`. Ein gemeinsames Prüfskript `scripts/license-check.sh`
+(POSIX-Shell und awk) bewertet Zeilen „Paket ⇥ Lizenz“ dagegen und meldet alle Verstöße
+auf einmal. Jedes Modul hat ein Rezept `license-check` in `check`, das nur die Liste
+liefert: go über `go-licenses report` ohne das eigene Modul, python über `pip-licenses`
+in einer abgeschotteten Umgebung aus `uv export --no-dev`, ts-node über
+`pnpm licenses list --prod --json`. Verworfen: die Sperrfunktion der Werkzeuge
+(`pip-licenses` meldet nur den ersten Verstoß und wertet Ausdrücke nicht aus, pnpm
+sperrt gar nicht — F-058a); `osv-scanner` für alle (Netz, Google-Dienst, Schwachstellen
+im selben Exit-Code); je Modul eine eigene Regel (drei Stellen, laufen auseinander).
 
 ### F-058a — Spike
 
@@ -179,21 +199,33 @@ laufen auseinander).
 - Daraus Format und Ort der Lizenzregel und die Freigabeliste der Vorlage festlegen.
 - Ergebnis im Verlauf; keine Template-Änderung. Klärt die drei offenen Fragen.
 
-### F-058b — Lizenzregel und Go
+### F-058b — Lizenzregel, Prüfskript und Go
 
-- Neue Lizenzregel im Core, Zeile im MANIFEST; `CODING-STANDARDS.md` § 8 und
-  `core/CLAUDE.md` nennen „keine GPL, AGPL, LGPL; MPL erlaubt; Ausnahmen begründet“.
-- Modul go: `license-check` liest die Lizenzregel; `MODULE.md` nachgezogen.
-- Durchlauf Go-Projekt: grün, GPL-Paket rot, Ausnahme wirkt.
+- `license-policy.txt` und `scripts/license-check.sh` im Core, Zeilen im MANIFEST;
+  Tests des Skripts in den Kit-Tests (`OR`, `AND`, „; “, `WITH`, Klammern, Ausnahme mit
+  und ohne Grund, leere Liste) unter dash, bash und mawk.
+- `CODING-STANDARDS.md` § 8, `core/CLAUDE.md` und die Skills add-feature, prep-step und
+  audit-code nennen „keine GPL, AGPL, LGPL; MPL erlaubt; Ausnahmen begründet in
+  `license-policy.txt`“.
+- CHANGELOG 3.5.0: die beiden Hinweise zu `keep` richtigstellen (das Update mergt ein,
+  bei Konflikt gewinnt die Projektseite).
+- Modul go: `license-check` gibt `go-licenses report` ohne das eigene Modul an das
+  Prüfskript; `MODULE.md` nachgezogen.
+- Durchlauf Go-Projekt: grün, LGPL- bzw. GPL-Paket rot, Ausnahme wirkt.
 - Neue Plugin-Version, CHANGELOG mit `### Template`.
 - Erfüllt AC-4, AC-3 für go, AC-5 für den Text.
 
 ### F-058c — python und ts-node
 
-- `license-check` in beiden `justfile`s und in `check`; für ts-node ggf. ein kleines
-  Bewertungsskript in `files/`; `MODULE.md` beider Module.
+- `license-check` in beiden `justfile`s und in `check`: python mit
+  `uv export --no-dev --no-emit-project` und `uv run --isolated …` mit `pip-licenses`
+  aus der Gruppe `licenses` (Version in `uv.lock`), ts-node mit
+  `pnpm licenses list --prod --json`; die Umwandlung in „Paket ⇥ Lizenz“ übernimmt die
+  Sprache des Moduls; `pyproject.toml` (Gruppe `licenses`) und `MODULE.md` beider
+  Module.
 - Durchlauf beider Module: grün; GPL- bzw. LGPL-Paket als Laufzeit rot, nur Dev grün;
-  `OR`-Ausdruck; Ausnahme mit und ohne Grund; `.venv` unverändert.
+  `OR`-Ausdruck; Ausnahme mit und ohne Grund; `.venv` unverändert. Für ts-node ein
+  kleines lokales Testpaket mit GPL.
 - CHANGELOG ergänzt (bei eigener `justfile` die Zeilen zum Nachtragen).
 - Erfüllt AC-1, AC-2, AC-3.
 
@@ -209,3 +241,58 @@ laufen auseinander).
 **Erkennung (Schritt 2a):** Im Kit entfällt sie (kein gerendertes Projekt). Neu in den
 Modulen ist nur `pip-licenses` (MIT), das `uv run --with` für den Lauf holt; es kommt
 nicht in die Abhängigkeiten der Projekte.
+
+## Verlauf
+
+### F-058a — fertig 2026-11-20
+
+**Umgesetzt:**
+
+- Spike in Projekten aus dem Arbeitsstand (python, ts-node, go), ohne Änderung am
+  Template.
+- python: `uv export --no-dev --no-emit-project` und `uv run --isolated --no-project
+  --with-requirements … --with pip-licenses` listen nur die Laufzeit-Pakete; die
+  `.venv` bleibt unverändert, ein GPL-Paket nur in der Dev-Gruppe erscheint nicht.
+  `pip-licenses` liefert SPDX-Kürzel (auch Ausdrücke nach PEP 639) oder alte
+  Klassennamen wie „Apache Software License“, mehrere Klassen durch „; “ getrennt.
+- ts-node: `pnpm licenses list --prod --json` trennt Laufzeit und Dev und gruppiert nach
+  Lizenztext; Ausdrücke kommen mit oder ohne Klammern, fehlende Lizenzen als „Unknown“.
+- go: `go-licenses report ./...` liefert Paket und SPDX-Kürzel, ohne Test-Importe, aber
+  mit dem eigenen Modul.
+- Muster eines gemeinsamen Prüfskripts (awk) gegen eine Lizenzregel mit `allow`- und
+  `except`-Zeilen: rot für GPL, LGPL, „Unknown“, `… WITH …`, `(A OR B) AND GPL-3.0` und
+  „MIT; GPL“; grün für `Apache-2.0 OR BSD-3-Clause`, `(MIT OR GPL-3.0-or-later)`,
+  `(MIT AND Zlib)`, MPL-2.0 und eine begründete Ausnahme. Eine leere Liste ist grün,
+  eine Ausnahme ohne Grund ein Fehler; mawk verhält sich gleich.
+
+**Entscheidungen:**
+
+- 2026-11-20 — Ein gemeinsames Prüfskript `scripts/license-check.sh` im Core
+  (POSIX-Shell und awk) bewertet für alle drei Module Zeilen „Paket ⇥ Lizenz“; jedes
+  Modul liefert nur die Liste. Grund: `pip-licenses --allow-only` meldet nur den ersten
+  Verstoß und vergleicht Ausdrücke als ganzen Text, pnpm sperrt gar nicht; so gelten
+  in allen Modulen dieselben Regeln und Meldungen. Entscheidung des Nutzers nach
+  Empfehlung.
+- 2026-11-20 — Die Lizenzregel ist `license-policy.txt` im Projekt-Root (Core,
+  managed): `allow <Lizenz>` in der Schreibweise der Werkzeuge, `except <Paket>
+  <Grund…>` mit Pflicht-Grund. Entscheidung des Nutzers nach Empfehlung.
+- 2026-11-20 — Auswertung: bei `OR` reicht eine erlaubte Alternative; bei `AND` und „; “
+  (Klassenlisten aus Python) müssen alle erlaubt sein; `WITH` und verschachtelte
+  Klammern nur, wenn der ganze Text freigegeben ist; das eigene Projekt wird nicht
+  geprüft. Entscheidung des Nutzers nach Empfehlung.
+
+**Abweichung vom Plan:** Ansatz, F-058b und F-058c nach den Entscheidungen oben
+angepasst; neu sind Tests des Prüfskripts in den Kit-Tests, die Gruppe `licenses` für
+python und die Korrektur der Skills.
+
+**Funde:**
+
+- CHANGELOG 3.5.0 sagt zweimal, `/update-conventions` ändere eine `justfile` mit `keep`
+  nicht; laut MANIFEST mergt es ein, nur bei Konflikt gewinnt das Projekt. Korrektur in
+  F-058b.
+- Unabhängiges Review mit fünf Befunden zu Spezifikation und Plan: EC-7 (`keep`) —
+  bestätigt, korrigiert; das eigene Projekt in der Prüfung — durch den Spike gelöst,
+  EC-8 ergänzt; `OR`/`AND` auch für python — durch das gemeinsame Prüfskript erledigt;
+  `pip-licenses` ohne feste Version — bestätigt, Gruppe `licenses` (EC-9); die Skills
+  add-feature, prep-step und audit-code nennen die alte Regel — bestätigt, AC-5 und
+  F-058b erweitert.
