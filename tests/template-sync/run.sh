@@ -1,7 +1,7 @@
 #!/bin/sh
 # Tests for plugins/coding-kit/scripts/template-sync.sh against the bundled template and
 # the kit's global rules (plugins/coding-kit/global/), plus the session-start hook that
-# reads them and the template's own scripts/features-index.sh.
+# reads them and the template's own scripts/features-index.sh and scripts/license-check.sh.
 # Every case runs under dash and bash (the shells skills meet on Linux and macOS); the
 # script must behave the same in both. Then one more pass under the first shell for each
 # of mawk and gawk that is installed but not the default awk: awk implementations differ
@@ -232,6 +232,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 . "$HERE/lock.sh"
 . "$HERE/detect.sh"
 . "$HERE/features.sh"
+. "$HERE/license.sh"
 . "$HERE/migrate.sh"
 . "$HERE/settings.sh"
 . "$HERE/host.sh"
@@ -260,6 +261,7 @@ run_cases() {  # DIR
   run_lock_cases
   run_detect_cases
   run_features_cases
+  run_license_cases
   run_migrate_cases
   run_settings_cases
   run_host_cases

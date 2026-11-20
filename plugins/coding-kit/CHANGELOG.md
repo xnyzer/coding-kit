@@ -13,6 +13,62 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.6.0 — unveröffentlicht
+
+Die Lizenzprüfung hat eine gemeinsame Regel je Projekt (F-058): `license-policy.txt`
+führt die erlaubten Lizenzen und Ausnahmen je Paket mit Grund, und ein Prüfskript im
+Core bewertet die Liste, die das Modul liefert. Gesperrt bleiben GPL, AGPL und LGPL, MPL
+ist erlaubt — die Regel in Worten nennt das jetzt auch so. Das Modul go nutzt die Regel
+als erstes; eine bewusste Ausnahme löst nicht mehr die ganze `justfile` aus dem Template.
+
+- **Skills add-feature, prep-step und audit-code:** nennen die Regel „kein GPL, AGPL
+  oder LGPL; MPL erlaubt; Ausnahmen begründet in `license-policy.txt`“ statt „kein
+  GPL/AGPL“.
+- **Tests:** neue Fälle für `scripts/license-check.sh` des Templates (`OR`, `AND`, „; “,
+  `WITH`, Klammern, Ausnahmen mit und ohne Grund, leere Liste, Freigabeliste der
+  Vorlage) unter dash, bash und mawk.
+- **CHANGELOG 3.5.0:** Die beiden Hinweise zu eigener `justfile` (`keep`) sind
+  richtiggestellt — das Update mergt ein, nur bei einem Konflikt gewinnt die
+  Projektseite.
+
+### Template
+
+- **`license-policy.txt` (neu, managed):** die Lizenzregel des Projekts. Zeilen
+  `allow <Lizenz>` in der Schreibweise der Werkzeuge (SPDX-Kürzel und ältere Namen) und
+  `except <Paket> <Grund…>`; der Grund ist Pflicht. Eigene Zeilen bleiben beim Update
+  erhalten.
+- **`scripts/license-check.sh` (neu, managed):** bewertet eine Liste
+  `Paket<TAB>Lizenz` gegen die Regel und meldet alle Verstöße auf einmal. Bei `OR`
+  reicht eine erlaubte Alternative; bei `AND` und „; “ müssen alle Teile erlaubt sein;
+  `WITH` und verschachtelte Klammern nur, wenn der ganze Text freigegeben ist.
+- **`CODING-STANDARDS.md` § 8 und `CLAUDE.md` (Zone `claude-conventions`):** die Regel
+  „keine GPL, AGPL oder LGPL; MPL erlaubt“, Ausnahmen mit Grund in `license-policy.txt`.
+- **Modul go — `justfile`, Rezept `license-check`:** listet die Bibliotheken mit
+  `go-licenses report`, ohne das eigene Modul, und gibt sie an
+  `scripts/license-check.sh`. Das Ergebnis bleibt wie bisher (LGPL und GPL rot, MPL
+  grün); neu ist die Ausnahme je Bibliothek in `license-policy.txt`. Eigene `justfile`
+  (`keep`) mit Konflikt: das Rezept so übernehmen:
+
+  ```just
+  # License gate (part of check): every dependency's license must be allowed in
+  # license-policy.txt. go-licenses (via mise) lists the libraries the code imports, tests
+  # left out; the project's own module is not checked.
+  license-check:
+      #!/bin/sh
+      set -eu
+      report=$(mktemp)
+      trap 'rm -f "$report" "$report.err" "$report.tsv"' EXIT
+      if ! go-licenses report ./... > "$report" 2> "$report.err"; then
+        cat "$report.err" >&2
+        exit 1
+      fi
+      awk -v self="$(go list -m)" '{
+        split($0, f, ","); lic = $0; sub(/^[^,]*,[^,]*,/, "", lic)
+        if (f[1] != self && index(f[1], self "/") != 1) print f[1] "\t" lic
+      }' "$report" > "$report.tsv"
+      sh scripts/license-check.sh "$report.tsv"
+  ```
+
 ## 3.5.0 — 2026-11-14
 
 Die Lizenzprüfung des Go-Moduls läuft in `just check` (F-057): auf jedem Host gleich,
@@ -97,7 +153,8 @@ Stand der Projektanlage.
   Hauptversion; `mise.toml` bleibt. Das ist der Handweg, wo Renovate nicht läuft (Host
   `git`) oder `mise` nicht ausführen darf. Wo Renovate läuft, tut es dasselbe
   wöchentlich über das Preset (siehe oben) — dafür muss das Projekt nichts tun. Eigene
-  `justfile` (`keep`): Das Update ändert sie nicht; von Hand anhängen:
+  `justfile` (`keep`): Das Update mergt das Rezept ein; nur wenn es dabei einen Konflikt
+  gibt, gewinnt die Projektseite — dann von Hand anhängen:
 
   ```just
   # Raise each tool in mise.lock to the newest version of its major; Renovate does the
@@ -108,8 +165,8 @@ Stand der Projektanlage.
 
 - **`mise.toml`:** Der Kopfkommentar nennt das wöchentliche Anheben durch Renovate (wo
   es läuft und `mise` ausführen darf) und `just bump-tools`.
-- **Modul go — eigene `justfile` (`keep`):** Das Update ändert sie nicht. Von Hand
-  nachtragen:
+- **Modul go — eigene `justfile` (`keep`):** Das Update mergt die Änderungen ein; nur
+  wenn es dabei einen Konflikt gibt, gewinnt die Projektseite. Dann von Hand nachtragen:
   - im Rezept `check` als letzte Zeile `just license-check`, und `go build ./...` dort
     durch `go build -o /dev/null ./...` ersetzen;
   - das Rezept `license-check` auf

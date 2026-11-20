@@ -48,6 +48,20 @@ check:
 build:
     GOBIN="$PWD/bin" go install ./...
 
-# License gate: no GPL/AGPL/LGPL dependencies (part of check; go-licenses comes via mise)
+# License gate (part of check): every dependency's license must be allowed in
+# license-policy.txt. go-licenses (via mise) lists the libraries the code imports, tests
+# left out; the project's own module is not checked.
 license-check:
-    go-licenses check ./... --disallowed_types=forbidden,restricted
+    #!/bin/sh
+    set -eu
+    report=$(mktemp)
+    trap 'rm -f "$report" "$report.err" "$report.tsv"' EXIT
+    if ! go-licenses report ./... > "$report" 2> "$report.err"; then
+      cat "$report.err" >&2
+      exit 1
+    fi
+    awk -v self="$(go list -m)" '{
+      split($0, f, ","); lic = $0; sub(/^[^,]*,[^,]*,/, "", lic)
+      if (f[1] != self && index(f[1], self "/") != 1) print f[1] "\t" lic
+    }' "$report" > "$report.tsv"
+    sh scripts/license-check.sh "$report.tsv"

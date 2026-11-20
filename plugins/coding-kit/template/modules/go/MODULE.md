@@ -2,9 +2,10 @@
 
 Go — distilled from a production Go service gold standard: **gofmt/goimports** mandatory
 (via `golangci-lint fmt`), **go vet + golangci-lint** (v2 config, `standard` linter set),
-**tests with `-race`**, and a **license gate** (`go-licenses`, no GPL/AGPL/LGPL) inside
-`just check`, so every host and every machine runs it. Go version = current stable via
-mise + `go.mod` directive.
+**tests with `-race`**, and a **license gate** inside `just check`, so every host and
+every machine runs it: `go-licenses report` lists the libraries, and the core script
+`scripts/license-check.sh` judges them against `license-policy.txt` (no GPL/AGPL/LGPL,
+MPL allowed). Go version = current stable via mise + `go.mod` directive.
 
 `{{CODEQL_LANGUAGES}}` → `go`
 
@@ -12,7 +13,7 @@ mise + `go.mod` directive.
 
 | Part | Notes |
 |------|-------|
-| `justfile` | replaces core justfile; `check` = features index + fmt-check + vet + golangci-lint + build + test -race + license gate; `license-check` runs the gate alone; `features-index` regenerates the index table |
+| `justfile` | replaces core justfile; `check` = features index + fmt-check + vet + golangci-lint + build + test -race + license gate; `license-check` runs the gate alone (`go-licenses report` without the project's own module → `scripts/license-check.sh`; an exception names the library path); `features-index` regenerates the index table |
 | `mise.part.toml` | go (current major.minor) + golangci-lint + go-licenses v2 (Go backend, major only — the exact version is in `mise.lock`) |
 | `gitignore.part` | bin, dist, coverage.out |
 | `CODING-STANDARDS.part.md` | Go toolchain rules for §13 (module fragment) |

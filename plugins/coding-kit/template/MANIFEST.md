@@ -223,6 +223,8 @@ contains itself, is offered for removal.
 | `core/private/README.md` | `private/README.md` | managed |
 | `core/scripts/privacy-lint.sh` | `scripts/privacy-lint.sh` | managed |
 | `core/scripts/features-index.sh` | same path | managed |
+| `core/scripts/license-check.sh` | same path | managed |
+| `core/license-policy.txt` | `license-policy.txt` | managed (project lines `allow`/`except` survive the three-way merge) |
 | `core/docs/adr/README.md` | same path | managed |
 | `core/docs/adr/0000-template.md` | same path | managed |
 | `core/docs/notes.md` | same path | seed |
@@ -287,6 +289,10 @@ green before any commit; it also runs `sh scripts/features-index.sh check`, and
 runs `mise lock --bump`: it raises each tool in `mise.lock` to the newest version of its
 major — what Renovate's weekly lock file maintenance (the kit's preset) does where
 Renovate runs and may execute mise — and leaves the majors in `mise.toml` as they are.
+A module with dependencies also implements `license-check`, and `check` runs it: it
+lists every runtime dependency as `package<TAB>license`, without the project itself,
+and passes the list to `sh scripts/license-check.sh`, which judges it against
+`license-policy.txt` (allowed licenses and per-package exceptions with a reason).
 
 ## Standards fragments
 

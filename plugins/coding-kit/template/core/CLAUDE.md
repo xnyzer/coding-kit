@@ -81,8 +81,9 @@ Project notes — knowledge with no other place in the repo: @docs/notes.md
   this project, **never a private one** (verify `git config user.email`). **Never
   auto-commit — ask first.**
 <!-- /template:optional:host-git -->
-- License: **{{LICENSE_SPDX}}**; dependencies must be permissive-licensed (no GPL/AGPL) —
-  deviations only as a conscious, documented decision.
+- License: **{{LICENSE_SPDX}}**; dependencies must be permissive-licensed (no GPL, AGPL
+  or LGPL; MPL is fine) — deviations only as a conscious decision, recorded with its
+  reason in `license-policy.txt`.
 - Toolchain: **mise + just + lefthook** are mandatory; all checks run via **`just check`**
   and it must be green before any commit.
 - Secrets and private material never enter the tree; operational internals go to

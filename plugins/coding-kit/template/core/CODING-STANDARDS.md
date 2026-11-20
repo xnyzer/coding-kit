@@ -130,8 +130,10 @@ apply; **stack-specific rules are in the final section** (provided by the stack 
   message, never silent misbehaviour.
 - **No secrets in logs** (mask keys, tokens, credentials).
 - **Pinned versions** instead of `latest` for images, actions, and dependencies.
-  **All dependencies permissive-licensed (no GPL/AGPL)** — deviations only as a conscious,
-  documented decision.
+  **All dependencies permissive-licensed — no GPL, AGPL or LGPL; MPL is fine.** Where the
+  module has a license check, `just check` enforces this for the runtime dependencies
+  against `license-policy.txt`; a deviation is a conscious decision, recorded there as an
+  `except` line with its reason.
 
 ---
 

@@ -71,7 +71,8 @@ Schritt weitermachen — erledigte Arbeit nicht wiederholen, nichts raten.
 - Welche Dateien/Komponenten müssen entstehen oder geändert werden? Gibt es Bestehendes
   zum Wiederverwenden?
 - Welche neue Config (Env-Vars), Endpunkte, Dependencies werden nötig? Neue Dependencies
-  nur permissiv lizenziert (kein GPL/AGPL).
+  nur permissiv lizenziert (kein GPL, AGPL oder LGPL; MPL ist erlaubt; Ausnahmen
+  begründet in `license-policy.txt`).
 - Bei Security-Postur (THREAT-MODEL.md vorhanden bzw. Security-/Auth-Charakter laut
   CLAUDE.md): bleibt das Design fail-closed? Eigenbau-Krypto (verboten — nur geprüfte
   Bibliotheken)? Berührt es Auth-, Token- oder Consent-Pfade?

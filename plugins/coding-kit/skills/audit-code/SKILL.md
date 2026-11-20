@@ -69,7 +69,8 @@ Verstöße sind severity: high:**
 - **Secrets:** Tokens/Passwörter/private Schlüssel/private E-Mails/Deployment-IPs in Code
   oder Git-History? Inhalte, die nach `private/` gehören, im öffentlichen Baum?
 - **Dependency-Security:** bekannte CVEs; noch gepflegt? Runtime im Support-Fenster?
-  **Alle Dependencies permissiv lizenziert (kein GPL/AGPL)?**
+  **Alle Dependencies permissiv lizenziert (kein GPL, AGPL oder LGPL; MPL erlaubt)?
+  Ausnahmen mit Grund in `license-policy.txt`?**
 - **Input-Validierung:** validieren alle Schnittstellen ihre Eingaben? Config beim Start
   validiert?
 - **Credentials:** nichts in Logs/Artefakten; Bearer/Keys maskiert.

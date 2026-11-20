@@ -75,10 +75,12 @@ braucht Netz und einen Google-Dienst und scheidet für `just check` aus.
   einträgt, dann lässt die Prüfung jedes Moduls genau dieses Paket durch. Negativ: Eine
   Ausnahme ohne Grund ist ein Fehler; LGPL steht nicht in der Freigabeliste der
   Vorlage, MPL-2.0 schon.
-- [ ] AC-4 — Gegeben ein Projekt aus dem Modul go, wenn `just check` läuft, dann liest
+- [x] AC-4 — Gegeben ein Projekt aus dem Modul go, wenn `just check` läuft, dann liest
   die Lizenzprüfung dieselbe Datei (Freigabeliste und Ausnahmen) statt der festen
   Gruppen. Negativ: Ein Go-Projekt aus der Vorlage bleibt grün; eine Abhängigkeit mit
-  GPL, AGPL oder LGPL macht es weiter rot.
+  GPL, AGPL oder LGPL macht es weiter rot. — belegt: Durchlauf F-058b: Go-Projekt aus
+  dem Arbeitsstand mit `just check` grün; LGPL-Paket (juju/errors) und lokales Modul mit
+  GPL-3-Text rot; die Prüfung liest `license-policy.txt`, eine Ausnahme mit Grund wirkt.
 - [ ] AC-5 — Gegeben die Regel in Worten (`CODING-STANDARDS.md` § 8, Projekt-CLAUDE.md,
   die Skills add-feature, prep-step und audit-code) und das Kit, wenn man sie liest bzw.
   `just check` des Kits läuft, dann nennen sie „keine GPL, AGPL, LGPL; MPL erlaubt;
@@ -239,8 +241,9 @@ im selben Exit-Code); je Modul eine eigene Regel (drei Stellen, laufen auseinand
 - Erfüllt AC-5.
 
 **Erkennung (Schritt 2a):** Im Kit entfällt sie (kein gerendertes Projekt). Neu in den
-Modulen ist nur `pip-licenses` (MIT), das `uv run --with` für den Lauf holt; es kommt
-nicht in die Abhängigkeiten der Projekte.
+Modulen ist nur `pip-licenses` (MIT) in der eigenen Gruppe `licenses` der
+`pyproject.toml` (Version in `uv.lock`); es gehört nicht zur `.venv` und nicht zu den
+Laufzeit-Abhängigkeiten.
 
 ## Verlauf
 
@@ -296,3 +299,40 @@ python und die Korrektur der Skills.
   `pip-licenses` ohne feste Version — bestätigt, Gruppe `licenses` (EC-9); die Skills
   add-feature, prep-step und audit-code nennen die alte Regel — bestätigt, AC-5 und
   F-058b erweitert.
+
+### F-058b — fertig 2026-11-20
+
+**Umgesetzt:**
+
+- `license-policy.txt` (Core, managed): Zeilen `allow` und `except`; die Vorlage gibt
+  gängige freie Lizenzen frei (SPDX-Kürzel und ältere Python-Namen) und MPL-2.0, ohne
+  Ausnahmen.
+- `scripts/license-check.sh` (Core, managed, POSIX-Shell und awk): bewertet
+  „Paket ⇥ Lizenz“ — „; “-Listen Name für Name (Namen dürfen Klammern enthalten),
+  SPDX-Ausdrücke mit `OR`/`AND`, `WITH` und verschachtelte Klammern im Zweifel rot;
+  meldet alle Verstöße und eine Zusammenfassung.
+- Modul go: `license-check` listet mit `go-licenses report` ohne das eigene Modul und
+  übergibt die Liste dem Prüfskript; `MODULE.md` nachgezogen.
+- Regel in Worten: `CODING-STANDARDS.md` § 8, `core/CLAUDE.md` (Zone
+  `claude-conventions`), Skills add-feature, prep-step und audit-code. MANIFEST: zwei
+  Zeilen und ein Absatz zu `license-check` im Rezeptsatz.
+- Kit-Tests `tests/template-sync/license.sh` unter dash, bash und mawk; Version 3.6.0,
+  CHANGELOG mit `### Template`; die beiden `keep`-Hinweise in 3.5.0 korrigiert.
+- Durchlauf Go-Projekt aus dem Arbeitsstand: `just check` grün; juju/errors (LGPL) und
+  ein lokales Modul mit GPL-3-Text rot, auch im vollen `just check`; Ausnahme mit Grund
+  grün.
+
+**Entscheidungen:**
+
+- 2026-11-20 — Die Go-Liste geht über eine Datei statt einer Pipe an das Prüfskript.
+  Grund: Bei einer Pipe sähe die Shell nur den Exit-Code des Prüfskripts; bräche awk ab,
+  ginge eine halbe Liste als grün durch.
+
+**Abweichung vom Plan:** Der Rezeptsatz im MANIFEST nennt `license-check` für Module
+mit Abhängigkeiten; die Skill-Änderungen liefen über `/add-skill`.
+
+**Funde:** Unabhängiges Review mit zwei Befunden, beide bestätigt und behoben: Eine
+„; “-Liste mit Klammern im Namen (etwa `MIT License; Mozilla Public License 2.0
+(MPL 2.0)`) fiel durch — Auswertung angepasst, Tests ergänzt, der Klammer-Test prüft
+jetzt die Regel selbst; ein zusammengepresster `eval`-Einzeiler im Test ist in einzelne
+Prüfungen aufgeteilt.

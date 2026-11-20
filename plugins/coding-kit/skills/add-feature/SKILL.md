@@ -138,7 +138,8 @@ der Erfassung.
 - **Lösungsskizze:** unverbindliche Richtung in wenigen Stichpunkten; eine mitgebrachte
   Lösung steht hier als Option. Keine Dateilisten, keine Zerlegung, keine
   Abnahmekriterien — das macht `/coding-kit:prep-step` gegen den dann aktuellen
-  Codestand. Neue Dependencies nur permissiv lizenziert (kein GPL/AGPL).
+  Codestand. Neue Dependencies nur permissiv lizenziert (kein GPL, AGPL oder LGPL; MPL
+  ist erlaubt; Ausnahmen begründet in `license-policy.txt`).
 - **Abhängigkeiten:** F-Nummern (auch im Feld `depends-on`) oder „keine".
 - **Noch zu analysieren:** optional, offene Fragen und Entscheidungen.
 
