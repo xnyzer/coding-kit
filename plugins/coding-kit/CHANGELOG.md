@@ -31,6 +31,10 @@ bekommen sie beim Anlegen; bestehende sehen die Werte in managed Dateien als Ang
   Stunden alt sind.
 - **`azure-pipelines.yml` (managed):** mise v2026.11.12.
 - **Modul go — `mise.toml` (managed) und `go.mod` (nur neue Projekte):** go 1.27.
+- **Modul python — `mise.toml` (managed):** python 3.15. Ein Projekt mit älterer
+  `pyproject.toml` (`requires-python >=3.13`, uv_build 0.11) läuft damit weiter.
+- **Modul python — `pyproject.toml` (nur neue Projekte):** `requires-python >=3.15`,
+  `uv_build >=0.13,<0.14`, Untergrenzen pytest 9 und ruff 0.17.
 
 ## 3.6.0 — 2026-11-20
 

@@ -37,10 +37,14 @@ Lizenzprüfung aus F-058.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben ein Projekt mit Modul python, aus dem Arbeitsstand gerendert,
+- [x] AC-1 — Gegeben ein Projekt mit Modul python, aus dem Arbeitsstand gerendert,
   wenn `mise install` und `just check` laufen (mit Lizenzprüfung), dann ist alles grün
   mit python 3.15, `requires-python >=3.15`, uv_build 0.13 und den angehobenen
-  Untergrenzen von pytest, pyright, ruff und pip-licenses.
+  Untergrenzen von pytest, pyright, ruff und pip-licenses. — belegt: Projekt mit
+  Modul python aus dem Arbeitsstand, `just check` grün mit python 3.15.2, uv 0.13.9,
+  ruff 0.17.6, pyright 1.1.414 (0 errors) und pytest 9.2.0; Lizenzprüfung ohne und
+  mit einer Abhängigkeit (1 Paket, 0 nicht erlaubt); `uv build` erzeugt Wheel und
+  sdist mit uv_build 0.13.
 - [ ] AC-2 — Gegeben ein Projekt mit Modul ts-node, aus dem Arbeitsstand gerendert,
   wenn `mise install`, `pnpm install` und `just check` laufen, dann ist alles grün mit
   node 26, `engines >=26`, pnpm 12, TypeScript 7, vitest 5 und aktuellem Biome; die
@@ -194,5 +198,23 @@ von 24 Stunden für neue mise-Releases, wenn keine Version gesetzt ist; die Work
 brauchen dafür keine Anpassung, der CHANGELOG nennt es.
 
 **Abweichung vom Plan:** keine.
+
+**Funde:** keine.
+
+### F-062b — fertig 2026-11-22
+
+**Umgesetzt:** Das Modul python startet auf python 3.15 (`mise.part.toml`). Die
+`pyproject.toml` neuer Projekte verlangt `requires-python >=3.15`, baut mit
+`uv_build >=0.13,<0.14` und hebt die Untergrenzen von pytest auf 9 und von ruff auf
+0.17. Der CHANGELOG trennt, was Bestandsprojekte als Angebot sehen (`mise.toml`) und
+was nur neue Projekte bekommen (`pyproject.toml`).
+
+**Entscheidungen:** `pyright>=1.1` und `pip-licenses>=5.5` bleiben: pip-licenses steht
+mit 5.5 auf der aktuellen Minor-Version, und pyright heißt in allen Versionen `1.1.x` —
+eine Untergrenze auf Patch-Ebene brächte nur Unruhe, die genaue Version legt `uv.lock`
+fest.
+
+**Abweichung vom Plan:** keine — die beiden unveränderten Untergrenzen sind oben
+begründet.
 
 **Funde:** keine.
