@@ -28,6 +28,9 @@ sind unsicher. Jedes Projekt muss sie einzeln umgehen.
   - `bug_report.yml` schlägt „Node 24“ auch in Go- und Python-Projekten vor.
   - Die Tabelle „Supported versions“ in `SECURITY.md` muss jedes Projekt mit Releases
     ändern, sie ist aber kein `template:adapt`-Punkt.
+  - §13 der `CODING-STANDARDS.md` verweist auf `MANIFEST.md` § Standards fragments. Die
+    Datei liegt im Kit-Template, nicht im Projekt, und eine Link-Prüfung meldet den
+    Verweis als kaputt.
 - **Soll:** sichere, modulneutrale Defaults, die ohne Abweichung passen.
 
 **Lösungsskizze:**
@@ -37,6 +40,7 @@ sind unsicher. Jedes Projekt muss sie einzeln umgehen.
 - `license-check.sh` liest die Operatoren ohne Beachtung der Groß-/Kleinschreibung.
 - `*.pem` und `*.key` kommen in `core/.gitignore`. Der Platzhalter im Bug-Report wird
   modulneutral, die Tabelle in `SECURITY.md` ein `template:adapt`-Punkt.
+- §13 nennt die Herkunft des Verweises: das `MANIFEST.md` des coding-kit-Templates.
 - Größer, als eigener Teilschritt: actionlint in der Core-CI und ein Smoke-Test für den
   Image-Build über das Fragment `docker`. Fragmente sind heute Textbausteine für
   CODING-STANDARDS, ein CI-Teil erweitert also den Vertrag (vgl. F-022).

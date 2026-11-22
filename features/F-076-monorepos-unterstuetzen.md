@@ -34,6 +34,10 @@ umgehen muss.
   3. die übrigen Ökosysteme (uv, Go, Maven, Gradle)
 - Die Rezepte laufen über alle Pakete (`pnpm -r` oder das Gegenstück des Ökosystems).
   Configs für ein einzelnes Paket werden übersprungen, jedes Paket behält seine eigenen.
+- Tests im Workspace (aus F-089): eine Root-Config des Testrunners mit einem Projekt je
+  Paket, die Dependency nicht je Paket. Ein Paket mit eigener Bundler-Config bindet sie
+  per `extends` ein, `root` allein verliert Plugins und Pfad-Aliase. Ein neues Paket
+  bekommt seinen Build-Ausschluss für Tests im selben Schritt.
 - render und merge kombinieren justfile, `mise.toml`, CI und Standards-Fragmente mehrerer
   Module. choose-stack und new-project fragen je Paketordner.
 
@@ -43,3 +47,5 @@ umgehen muss.
 - just-Muster für pnpm-Workspaces und die Gegenstücke der anderen Ökosysteme.
 - Ob mehrere Module in einem Repo ein eigenes Feature werden.
 - Wie bestehende Workspace-Projekte mit ihren `keep`-Zeilen migrieren.
+- Ob das Fragment `docker` für Workspaces `pnpm deploy --prod` nennt (ein flaches
+  `node_modules` fürs Produktions-Image).

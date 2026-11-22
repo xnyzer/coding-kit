@@ -62,13 +62,16 @@ Stand 2026-11-22.
     Renovate-Prüfung aus [F-074](F-074-renovate-laufend-pruefen.md) an.
 11. **[F-077](F-077-eigene-lizenzpolitik-im-vertrag.md)** — sobald der Prompt zum Lizenz-Gate eingearbeitet ist.
 12. **[F-078](F-078-template-defaults-korrigieren.md), [F-080](F-080-stop-hook-und-reine-erfassungen.md), [F-081](F-081-index-pruefung-genauer.md)** — kleine Korrekturen, gut zwischendurch.
+    Ebenso **[F-090](F-090-ci-lauf-nach-dem-push-melden.md)**, damit ein roter CI-Lauf nicht tagelang unbemerkt bleibt.
 13. **[F-079](F-079-widersprueche-zu-globalen-regeln.md) → [F-082](F-082-bedienung-update-conventions.md) → [F-083](F-083-stabile-standards-nummern.md)** — Regel-Konsistenz und Bedienung des Abgleichs.
 14. **[F-084](F-084-tool-versionen-gegen-mise-abgleichen.md) → [F-085](F-085-gates-in-bestandscodebasen-einfuehren.md)** — Werkzeug-Stand von Bestandsprojekten: erst die Versionen, dann die
     Gates.
 15. **[F-086](F-086-sprach-matrix-konsequent-anwenden.md)** — Sprach-Matrix; eine Umgehung gibt es.
 16. **[F-087](F-087-sicherheitsluecken-lokal-pruefen.md)** — lokale Sicherheitsprüfung, nach [F-074](F-074-renovate-laufend-pruefen.md).
-17. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) + [F-067](F-067-installer-unter-windows-git-bash.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist.
-18. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+17. **[F-088](F-088-regeln-typescript-react-api-docker.md) → [F-089](F-089-regeln-fuer-unit-und-integrationstests.md)** — Regeln aus der Projektpraxis für den Standards-Katalog: erst die
+    kleinen Ergänzungen, dann die Test-Regeln.
+18. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) + [F-067](F-067-installer-unter-windows-git-bash.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist.
+19. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
     Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
 ## All features
@@ -104,6 +107,9 @@ Stand 2026-11-22.
 | [F-085](F-085-gates-in-bestandscodebasen-einfuehren.md) | Format- und Lint-Gates in Bestandscodebasen einführen | BACKLOG |  |
 | [F-086](F-086-sprach-matrix-konsequent-anwenden.md) | Sprach-Matrix in Template-Texten und Doku-Struktur anwenden | BACKLOG |  |
 | [F-087](F-087-sicherheitsluecken-lokal-pruefen.md) | Sicherheitslücken ohne Git-Host lokal prüfen | BACKLOG |  |
+| [F-088](F-088-regeln-typescript-react-api-docker.md) | Regeln für TypeScript, React, API, Docker und Dependencies ergänzen | BACKLOG |  |
+| [F-089](F-089-regeln-fuer-unit-und-integrationstests.md) | Regeln und Vorlagen für Unit- und Integrationstests aufnehmen | BACKLOG |  |
+| [F-090](F-090-ci-lauf-nach-dem-push-melden.md) | Nach jedem Push den CI-Lauf abwarten und das Ergebnis melden | BACKLOG |  |
 
 ### Closed
 
@@ -172,4 +178,4 @@ Stand 2026-11-22.
 | [F-035](F-035-repo-uebergreifende-uebergabe-statt.md) | Repo-übergreifende Übergabe statt Parallelarbeit | SUPERSEDED → F-039 |  |
 <!-- /features-index -->
 
-next-feature: F-088
+next-feature: F-091

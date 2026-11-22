@@ -33,6 +33,10 @@ Dazu blockieren Fehlalarme legitime Commits.
   - Fehlalarme:
     - Vierteilige Versionen in Lock-Dateien (`uv.lock`) und Abschnittsnummern aus
       RFCs gelten als IP.
+    - Browser-Versionen in Test-Strings gelten als IP: Ein User-Agent führt nach
+      `Chrome/` eine vierteilige Versionsnummer.
+    - Ein Pfad mitten in Fließtext gilt als lokaler Pfad, etwa eine Spaltenliste
+      „Name/Users/…“ in einer Aufzählung.
     - Doku mit Sperrbereichen oder Platzhaltern blockiert jeden Commit, der die Datei
       stagt, denn eine versionierte Projekt-Allowlist gibt es nicht.
     - `.example` und `example.net` sind nicht erlaubt.
@@ -54,6 +58,9 @@ Dazu blockieren Fehlalarme legitime Commits.
 - In Lock-Dateien zählt eine IP nur als Host einer URL (nach `://` oder `@`), Pfade,
   E-Mails und Blocklist werden dort weiter geprüft. Eine Zahl nach `§` ist keine IP.
   `.example` und `example.net` kommen in die Allow-Liste.
+- Eine Zahl direkt hinter einem Bezeichner mit Schrägstrich (`Chrome/`, `OPR/`) ist eine
+  Produktversion, keine IP. Ein Pfad zählt nur, wenn vor seinem ersten Schrägstrich
+  weder Buchstabe noch Ziffer, `.`, `_` oder `-` steht.
 - Eine versionierte Projekt-Allowlist: ein exakter Wert je Zeile mit Grund, nie Bereiche.
   Projektzeilen überstehen den Merge wie in `license-policy.txt`, Bereiche wie 10.x,
   172.16.x und 192.168.x bleiben gesperrt.
