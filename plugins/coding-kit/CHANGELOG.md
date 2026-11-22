@@ -13,7 +13,7 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 3.7.0 — unveröffentlicht
+## 3.7.0 — 2026-11-22
 
 Die Startwerte im Template stehen wieder auf aktuellen Versionen (F-062). Neue Projekte
 bekommen sie beim Anlegen; bestehende sehen die Werte in managed Dateien als Angebot von
