@@ -42,6 +42,3 @@ können, damit Gate, Standards und Skills ihr folgen und der Abgleich sie nicht 
   Allow-Liste.
 
 **Abhängigkeiten:** keine. Die Lizenz-Zone kommt aus F-075.
-
-**Noch zu analysieren:** Zum Lizenz-Gate liegt ein eigener ausführlicher Prompt vor, der
-vor prep-step eingearbeitet wird.

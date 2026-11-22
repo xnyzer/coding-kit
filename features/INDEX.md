@@ -60,7 +60,7 @@ Stand 2026-11-22.
 10. **[F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: GitLab, Forgejo — auf der fertigen Grundlage
     „Git-Host je Projekt“; beide ergänzen die Host-Liste des Installers und docken an die
     Renovate-Prüfung aus [F-074](F-074-renovate-laufend-pruefen.md) an.
-11. **[F-077](F-077-eigene-lizenzpolitik-im-vertrag.md)** — sobald der Prompt zum Lizenz-Gate eingearbeitet ist.
+11. **[F-077](F-077-eigene-lizenzpolitik-im-vertrag.md)** — eigene Lizenzpolitik je Projekt; nach [F-075](F-075-seed-zonen-bei-der-migration.md), das die Lizenz-Zone liefert.
 12. **[F-078](F-078-template-defaults-korrigieren.md), [F-080](F-080-stop-hook-und-reine-erfassungen.md), [F-081](F-081-index-pruefung-genauer.md)** — kleine Korrekturen, gut zwischendurch.
     Ebenso **[F-090](F-090-ci-lauf-nach-dem-push-melden.md)**, damit ein roter CI-Lauf nicht tagelang unbemerkt bleibt.
 13. **[F-079](F-079-widersprueche-zu-globalen-regeln.md) → [F-082](F-082-bedienung-update-conventions.md) → [F-083](F-083-stabile-standards-nummern.md)** — Regel-Konsistenz und Bedienung des Abgleichs.
