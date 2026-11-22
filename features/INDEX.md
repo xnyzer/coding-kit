@@ -70,7 +70,7 @@ Stand 2026-11-22.
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
 | [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md) | Startwerte der Module python und ts-node auffrischen | BACKLOG |  |
 | [F-063](F-063-projekt-als-fork-eines-github-repos.md) | Neues Projekt als Fork eines GitHub-Repos anlegen | BACKLOG |  |
-| [F-064](F-064-just-check-tests-nur-bei-aenderungen.md) | Skript-Tests in just check nur bei passenden Änderungen ausführen | PLANNED |  |
+| [F-064](F-064-just-check-tests-nur-bei-aenderungen.md) | Skript-Tests in just check nur bei passenden Änderungen ausführen | IN-PROGRESS |  |
 
 ### Closed
 

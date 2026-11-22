@@ -7,8 +7,12 @@ default:
 setup:
     lefthook install
 
-# Full gate: repo validation, the feature index, then the plugin script tests
-check: validate features test
+# Gate before every commit: repo validation, the feature index, and the plugin script
+# tests when a change since the last commit touches them
+check: validate features test-changed
+
+# Everything, the script tests always — what CI runs
+check-all: validate features test
 
 # Check the feature files and the generated table in features/INDEX.md
 features:
@@ -25,6 +29,11 @@ validate:
 # Tests of the plugin scripts under dash and bash, plus mawk and gawk when installed
 test:
     sh tests/template-sync/run.sh
+
+# The script tests only when a change since the last commit touches them; the path list
+# lives in scripts/script-tests.sh
+test-changed:
+    sh scripts/script-tests.sh
 
 # Version rule for plugin content: --staged (pre-commit) or --since <rev> (CI)
 version-rule *args:

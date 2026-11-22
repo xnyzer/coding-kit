@@ -193,14 +193,15 @@ braucht, gibt ihm der Skill im Auftrag mit.
 - **Form:** POSIX sh mit Standardwerkzeugen (git, awk, sed …), kein Python-Zwang. Der
   Kopfkommentar beschreibt Befehle, Ausgabezeilen (tabulatorgetrennt) und Exit-Codes;
   geschrieben wird nur in die genannten Ordner.
-- **Tests:** unter `tests/<name>/`, laufen unter dash und bash in `just check` (der
-  Pre-Commit-Hook nur, wenn Skript, Template oder Tests sich ändern). Sind mawk oder gawk
-  installiert und nicht das Standard-awk, hängt der Testlauf je einen Durchgang mit ihnen
-  an; die Zusammenfassung nennt die geprüften awks. mawk ist Standard auf Debian und
-  Ubuntu, gawk auf Fedora und Arch, und das macOS-awk nimmt mehr hin als beide (z. B. ein
-  Array namens `NF`) — wer am Skript arbeitet, installiert deshalb mawk. Der Validator
-  prüft `sh -n` und das Ausführungsrecht; die Versionsregel zählt
-  `plugins/coding-kit/scripts/` zum Plugin-Inhalt.
+- **Tests:** unter `tests/<name>/`, laufen unter dash und bash in `just check-all` und
+  der CI; `just check` und der Pre-Commit-Hook nur, wenn eine Änderung einen Pfad aus
+  `scripts/script-tests.sh` trifft — ein neuer Testordner kommt dort in die Liste.
+  Sind mawk oder gawk installiert und nicht das Standard-awk, hängt der Testlauf je
+  einen Durchgang mit ihnen an; die Zusammenfassung nennt die geprüften awks. mawk ist
+  Standard auf Debian und Ubuntu, gawk auf Fedora und Arch, und das macOS-awk nimmt mehr
+  hin als beide (z. B. ein Array namens `NF`) — wer am Skript arbeitet, installiert
+  deshalb mawk. Der Validator prüft `sh -n` und das Ausführungsrecht; die Versionsregel
+  zählt `plugins/coding-kit/scripts/` zum Plugin-Inhalt.
 
 ## Versionierung & Test
 

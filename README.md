@@ -510,6 +510,7 @@ docs/                             Pflege-Doku (Skill-Authoring, Renovate-Preset,
 install.sh                        Neuer-Rechner-Bootstrap (idempotent)
 scripts/validate.py               Validator für Kit, Template und Vertrag (`just check` + CI)
 scripts/version-rule.py           Versionsregel (Pre-Commit + CI, `just version-rule`)
+scripts/script-tests.sh           Skript-Tests nur bei passenden Änderungen (`just check` + Pre-Commit)
 tests/template-sync/              Tests des Skripts, des Session-Hinweises und der Template-Skripte (Feature-Index, Lizenzprüfung) unter dash und bash, dazu mawk/gawk (`just test`)
 features/                         Aufgaben (F-NNN): je Feature eine Datei, INDEX.md als Übersicht
 private/                          Gitignoriert — private Notizen/Quellen
@@ -528,9 +529,11 @@ private/                          Gitignoriert — private Notizen/Quellen
   und in der CI.
 - Skills und Template testen: `claude --plugin-dir plugins/coding-kit` — eine normale
   Session im Repo läuft mit dem installierten Plugin, nicht mit dem Arbeitsstand.
-- `just setup` installiert die Git-Hooks (gitleaks, Validator, Versionsregel; die
-  Skript-Tests, wenn Skript, Template oder Tests sich ändern), `just check` ist das
-  Vollgate — muss vor jedem Commit grün sein.
+- `just setup` installiert die Git-Hooks (gitleaks, Validator, Versionsregel, die
+  Skript-Tests). `just check` muss vor jedem Commit grün sein. Hook und `just check`
+  lassen die Skript-Tests nur laufen, wenn eine Änderung Skripte, Hooks, globale Regeln,
+  Template oder Tests betrifft — die Pfadliste steht in `scripts/script-tests.sh`.
+  `just check-all` prüft immer alles und ist das Gate der CI.
 - Für Arbeit an `template-sync.sh` mawk installieren (`brew install mawk`), optional
   gawk: Die Skript-Tests laufen dann zusätzlich mit ihnen. mawk ist das Standard-awk auf
   Debian und Ubuntu, gawk auf Fedora und Arch, und das macOS-awk nimmt mehr hin als beide.

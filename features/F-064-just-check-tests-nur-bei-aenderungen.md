@@ -2,7 +2,7 @@
 id: F-064
 title: Skript-Tests in just check nur bei passenden Änderungen ausführen
 type: change
-status: PLANNED
+status: IN-PROGRESS
 size: S
 created: 2026-11-22
 done:
@@ -51,14 +51,21 @@ jedem Commit“; die Projekte aus dem Template.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben nur Änderungen außerhalb der Pfadliste (z. B. in `features/` oder
+- [x] AC-1 — Gegeben nur Änderungen außerhalb der Pfadliste (z. B. in `features/` oder
   am CHANGELOG), wenn `just check` läuft, dann laufen Validator und Feature-Tabelle,
   die Skript-Tests nicht, und die Ausgabe sagt, dass und warum sie übersprungen wurden.
-- [ ] AC-2 — Gegeben eine Änderung unter einem Pfad der Liste — bereitgestellt, nicht
+  — belegt: Wegwerf-Klon unter dash und bash — nach reiner Doku-Änderung meldet
+  `just check` „script tests skipped …“, Validator und Feature-Tabelle liefen; ein
+  Commit nur mit Doku übersprang den Hook-Job.
+- [x] AC-2 — Gegeben eine Änderung unter einem Pfad der Liste — bereitgestellt, nicht
   bereitgestellt, neu oder gelöscht —, wenn `just check` oder der Pre-Commit-Hook
-  läuft, dann laufen die Skript-Tests.
+  läuft, dann laufen die Skript-Tests. — belegt: Wegwerf-Klon unter dash und bash —
+  Template-Änderung nicht bereitgestellt, neu, gelöscht und bereitgestellt startet die
+  Tests, ebenso ein Commit mit Template-Datei über den Hook; im Repo `just check` nach
+  Änderung am justfile (3432 Checks, 0 failed).
 - [ ] AC-3 — Gegeben die CI, wenn sie läuft, dann prüft sie über `just check-all`
-  immer alles, auch bei sauberem Arbeitsbaum.
+  immer alles, auch bei sauberem Arbeitsbaum. — offen: braucht einen CI-Lauf nach dem
+  Push; lokal `just check-all` grün (3432 Checks, 0 failed).
 
 ### Randfälle
 
@@ -124,3 +131,27 @@ und es betrifft nur das Werkzeug des Kit-Repos.
   ohne Glob.
 - CI auf `just check-all`; Doku an den drei Stellen nachziehen.
 - Prüfen nach den Tests oben, dann `just check-all` einmal komplett.
+
+## Verlauf
+
+### F-064 — fertig 2026-11-22
+
+**Umgesetzt:** `scripts/script-tests.sh` entscheidet, ob die Skript-Tests laufen. Es
+holt die geänderten Dateien von git — ohne Option Arbeitsbaum und neue Dateien
+gegenüber dem letzten Commit, mit `--staged` nur die bereitgestellten, Umbenennungen
+als zwei Pfade — und prüft sie gegen die einzige Pfadliste (`affects_tests`). Bei
+einem Treffer laufen die Tests mit dem Grund in der Ausgabe, sonst steht dort eine
+Zeile „skipped“; ohne Commit oder bei einem Fehler von git laufen sie immer. `just
+check` ruft das Skript über `test-changed` auf, `just check-all` prüft alles und ist
+das Gate der CI; der Pre-Commit-Hook ruft es mit `--staged`, seine Glob-Liste ist
+entfallen. Doku in CLAUDE.md, README und `docs/skill-authoring.md`.
+
+**Entscheidungen:** Pfade, die git in Anführungszeichen ausgibt (ungewöhnliche
+Zeichen), zählen als Treffer — sie lassen sich nicht sicher zuordnen, im Zweifel
+laufen die Tests.
+
+**Abweichung vom Plan:** Die Dateiübersicht der README bekam eine Zeile für das
+Skript. Mehr als ein Argument lehnt das Skript ab (Exit 2) — Befund des unabhängigen
+Reviews.
+
+**Funde:** keine.
