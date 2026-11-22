@@ -31,11 +31,35 @@ Private Inhalte gelangen beim Abgleich nicht mehr unbemerkt ins Repo (F-069).
 - **`/coding-kit:update-conventions`:** klärt `ignored` vor allen anderen Dateien
   (umbenennen, etwa nach `private/notes.md`, oder `skip`) und zeigt die
   `unignored`-Dateien, bevor er die `.gitignore` anbietet.
+- **`/coding-kit:go-public`:** Die Liste erlaubter Platzhalter im Privacy-Scan nennt
+  dieselben Beispiel-Domains wie der Privacy-Lint.
 
 ### Template
 
 - **`HOW-TO-CODE-WITH-CLAUDE.md` (managed):** Die Übersicht von `/update-conventions`
   nennt den Schutz für ignorierte Dateien.
+- **`scripts/privacy-lint.sh` (managed):** prüft jede Datei, die er bekommt — auch
+  unter `private/` und die `mise.lock`. Bisher übersprang er jeden Pfad mit `/private/`,
+  unter macOS also alles unter `/private/tmp`, und ein versioniertes
+  `private/README.md` blieb ungeprüft. Weniger Fehlalarme:
+  - Eine IP zählt nur, wenn jede Zahl höchstens 255 ist und keine weitere Ziffer
+    angrenzt.
+  - In Lock-Dateien und Pin-Listen (`*.lock`, `package-lock.json`, `requirements*.txt`
+    und andere) zählt eine IP nur als Host einer URL; Pfade, E-Mails und Blocklist
+    gelten dort weiter.
+  - Keine IP sind Abschnittsnummern nach `§` und Versionen direkt nach einem
+    Produktnamen mit Schrägstrich, etwa in einem User-Agent.
+  - Ein Pfad zählt nur, wenn vor seinem ersten Schrägstrich nichts Wortartiges steht —
+    eine Spaltenliste wie „Name/Users/…“ ist keiner. Der Fund nennt jetzt den Pfad.
+  - Erlaubt sind auch `example.net`, Subdomains der Beispiel-Domains und die Endungen
+    `.example`, `.test`, `.invalid` und `.localhost`.
+
+  Eine Datei, die er nicht prüfen kann, zählt jetzt als Fund, statt still
+  durchzugehen; Dateinamen und Blocklist-Begriffe, die mit `-` beginnen, prüft er
+  jetzt auch, und `--all` endet bei Funden überall mit 1 (GNU-xargs lieferte 123). Der
+  Lint braucht dafür awk neben grep; beides ist in Git Bash und WSL enthalten.
+- **`private/README.md` (managed):** sagt, dass die Datei versioniert ist und keine
+  Notizen aufnimmt — die gehören in eine andere Datei, etwa `private/notes.md`.
 
 ## 3.7.0 — 2026-11-22
 

@@ -1,7 +1,8 @@
 #!/bin/sh
 # Tests for plugins/coding-kit/scripts/template-sync.sh against the bundled template and
 # the kit's global rules (plugins/coding-kit/global/), plus the session-start hook that
-# reads them and the template's own scripts/features-index.sh and scripts/license-check.sh,
+# reads them and the template's own scripts/features-index.sh, scripts/license-check.sh
+# and scripts/privacy-lint.sh,
 # the kit's scripts/release-notes.sh and scripts/publish-release.sh, and the kit's
 # install.sh (run with bash, whatever the shell of the pass).
 # Every case runs under dash and bash (the shells skills meet on Linux and macOS); the
@@ -235,6 +236,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 . "$HERE/detect.sh"
 . "$HERE/features.sh"
 . "$HERE/license.sh"
+. "$HERE/privacy.sh"
 . "$HERE/migrate.sh"
 . "$HERE/settings.sh"
 . "$HERE/host.sh"
@@ -267,6 +269,7 @@ run_cases() {  # DIR
   run_detect_cases
   run_features_cases
   run_license_cases
+  run_privacy_cases
   run_migrate_cases
   run_settings_cases
   run_host_cases

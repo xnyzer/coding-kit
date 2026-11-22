@@ -140,13 +140,20 @@ Kit-Validator die Beispiele nicht, die Tests nutzen volle Werte.
   Ausschluss durch das Ergebnis, eine verschachtelte `.gitignore`, `.git/info/exclude`
   oder `core.excludesFile`; unveränderte `.gitignore` ohne Zeile), Ablauf in
   `/update-conventions` A2 Schritt 5; `just check` grün.
-- [ ] AC-3 — Gegeben eine Datei mit einer echten E-Mail-Adresse, wenn der Lint sie
+- [x] AC-3 — Gegeben eine Datei mit einer echten E-Mail-Adresse, wenn der Lint sie
   prüft, dann meldet er den Fund (R1). Das gilt auch unter `/private/tmp`, als
   gestagtes `private/README.md` und als `mise.lock`. Negativ: Die Template-Fassung von
   `private/README.md` ergibt keinen Fund.
-- [ ] AC-4 — Gegeben die Werte der Spalte „Kein Fund“ zu R2 bis R7, wenn der Lint sie
+  — belegt: Kit-Tests in `tests/template-sync/privacy.sh` (E-Mail in einem gestagten
+  `private/README.md`, unter `…/private/tmp/` und in einer `mise.lock`; die
+  Template-Fassung von `private/README.md` ohne Fund), von Hand unter dem echten
+  `/private/tmp`; `just check` grün.
+- [x] AC-4 — Gegeben die Werte der Spalte „Kein Fund“ zu R2 bis R7, wenn der Lint sie
   prüft, dann meldet er nichts. Negativ: Jeder Wert der Spalte „Fund“ bleibt ein Fund,
   vor allem eine IP als URL-Host und ein lokaler Pfad in einer Lock-Datei.
+  — belegt: Kit-Tests in `privacy.sh` zu R2 bis R7 (beide Spalten, darunter URL-Host
+  und lokaler Pfad in Lock-Dateien); das ganze Template und je ein frisch gerendertes
+  Projekt für python, ts-node und go ohne Fund; `just check` grün.
 - [ ] AC-5 — Gegeben eine `privacy-allowlist.txt` mit
   `allow <Netzadresse> SSRF-Sperrliste in der Doku` für die Netzadresse eines privaten
   Bereichs, wenn eine Datei diese Adresse mit Präfixlänge enthält (etwa `/8`), dann gibt
@@ -404,3 +411,45 @@ Erfüllt AC-5, AC-6 und den Rest von AC-7.
 - Unabhängiges Review: Eine gelöschte `.gitignore` wurde nicht geprüft (behoben, Test
   ergänzt). In Schritt 9 fehlte `ignored` bei den Ausnahmen (behoben). Der Hinweis,
   nach `skip` neu zu mergen, ist verworfen (siehe Entscheidungen).
+
+### F-069b — fertig 2026-11-23
+
+**Umgesetzt:**
+
+- `plugins/coding-kit/template/core/scripts/privacy-lint.sh`:
+  - Die Ausnahmen für `private/` und `mise.lock` entfallen.
+  - Pfade, IPs und E-Mails sucht ein awk-Programm je Datei (`scan_patterns`) nach R2
+    bis R7. Lock-Dateien und Pin-Listen erkennt `is_lock_file` am Namen.
+  - Ein Pfad-Fund nennt den Pfad.
+  - Eine Datei, die nicht geprüft werden kann, zählt als Fund, und `--all` endet bei
+    Funden mit 1.
+- `private/README.md` im Template sagt, dass die Datei versioniert ist und keine
+  Notizen aufnimmt. `/go-public` nennt dieselben Beispiel-Domains.
+- Neue Suite `tests/template-sync/privacy.sh` mit 38 Prüfungen je Durchlauf und den
+  Werten der Regeltabelle, zur Laufzeit zusammengesetzt. Gegen den alten Lint scheitern
+  17 davon. Das ganze Template und je ein frisch gerendertes Projekt für python,
+  ts-node und go ergeben keinen Fund.
+
+**Entscheidungen:**
+
+- 2026-11-23 — R6 schaut auf den ersten Schrägstrich des ganzen Pfads, nicht auf den
+  vor `Users`. So bleibt ein Pfad auf einem anderen Laufwerk (`/Volumes/…/Users/…`) ein
+  Fund.
+- 2026-11-23 — Vor dem Produktnamen in R5 dürfen auch `[`, `{` und ein Backtick stehen
+  (Klammern und Anführungszeichen).
+- 2026-11-23 — Der Dateiname geht über die Umgebung an awk, weil awk einen Namen wie
+  `a=b.md` sonst als Zuweisung läse.
+
+**Abweichung vom Plan:** keine.
+
+**Funde:**
+
+- Vorhandene Fehler im berührten Lint, aus dem unabhängigen Review; alle behoben und
+  mit Tests belegt:
+  - Scheiterte das Prüfen (awk oder grep), ging der Commit still durch.
+  - Dateinamen und Blocklist-Begriffe, die mit `-` beginnen, wurden übersprungen.
+  - Mit GNU-xargs endete `--all` bei Funden mit 123 statt 1; der Test wäre in der CI
+    rot geworden.
+  - Der Kopf nannte `anthropic.com` nicht als erlaubte Domain.
+- Idee, nicht gebaut: SSH-Remotes von Git-Abhängigkeiten in Lock-Dateien (`git@` vor
+  einem Host) gelten als E-Mail. Ein Vorschlag als eigenes Feature ist offen.

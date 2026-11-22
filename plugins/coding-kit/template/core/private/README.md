@@ -5,7 +5,9 @@ deployment notes, customer or personal data, local paths, source prompts, scratc
 
 Everything in this directory is gitignored **except this README** (see the `private/*` /
 `!private/README.md` rules in `.gitignore`). The directory is tracked only so the convention
-stays discoverable; its contents are not.
+stays discoverable; its contents are not. Because this README is tracked, it holds nothing
+private: notes belong in another file here, such as `private/notes.md`. The privacy lint
+checks this README like every other staged file.
 
 ## What goes here
 
