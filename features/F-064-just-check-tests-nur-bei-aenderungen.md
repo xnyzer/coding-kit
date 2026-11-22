@@ -2,10 +2,10 @@
 id: F-064
 title: Skript-Tests in just check nur bei passenden Änderungen ausführen
 type: change
-status: IN-PROGRESS
+status: DONE
 size: S
 created: 2026-11-22
-done:
+done: 2026-11-22
 depends-on:
 superseded-by:
 ---
@@ -63,9 +63,9 @@ jedem Commit“; die Projekte aus dem Template.
   Template-Änderung nicht bereitgestellt, neu, gelöscht und bereitgestellt startet die
   Tests, ebenso ein Commit mit Template-Datei über den Hook; im Repo `just check` nach
   Änderung am justfile (3432 Checks, 0 failed).
-- [ ] AC-3 — Gegeben die CI, wenn sie läuft, dann prüft sie über `just check-all`
-  immer alles, auch bei sauberem Arbeitsbaum. — offen: braucht einen CI-Lauf nach dem
-  Push; lokal `just check-all` grün (3432 Checks, 0 failed).
+- [x] AC-3 — Gegeben die CI, wenn sie läuft, dann prüft sie über `just check-all`
+  immer alles, auch bei sauberem Arbeitsbaum. — belegt: CI-Lauf zu 628b312 —
+  `just check-all` mit `sh tests/template-sync/run.sh` direkt, 3432 Checks, 0 failed.
 
 ### Randfälle
 
