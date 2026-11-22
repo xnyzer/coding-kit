@@ -44,14 +44,16 @@ with its reasons.
 
 Stand 2026-11-22.
 
-1. **[F-062](F-062-startwerte-python-und-ts-node-auffrischen.md)** — die Startwerte der Module python und ts-node auffrischen, solange sie
+1. **[F-064](F-064-just-check-tests-nur-bei-aenderungen.md)** — Skript-Tests in `just check` nur bei passenden Änderungen: klein, spart
+   bei jedem folgenden Commit Zeit, auch bei [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md) und [F-063](F-063-projekt-als-fork-eines-github-repos.md).
+2. **[F-062](F-062-startwerte-python-und-ts-node-auffrischen.md)** — die Startwerte der Module python und ts-node auffrischen, solange sie
    frisch angefasst sind.
-2. **[F-063](F-063-projekt-als-fork-eines-github-repos.md)** — Projekt als Fork anlegen: konkreter Bedarf, nur GitHub, auf der fertigen
+3. **[F-063](F-063-projekt-als-fork-eines-github-repos.md)** — Projekt als Fork anlegen: konkreter Bedarf, nur GitHub, auf der fertigen
    Grundlage „Git-Host je Projekt“; der Host-Strang kann den Fork-Modus danach mitnehmen.
-3. **[F-025](F-025-install-sh-fehlender-gh-login-und.md) → [F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: der Installer, GitLab, Forgejo — auf der
+4. **[F-025](F-025-install-sh-fehlender-gh-login-und.md) → [F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: der Installer, GitLab, Forgejo — auf der
    fertigen Grundlage „Git-Host je Projekt“.
-4. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
-5. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+5. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist, gern mit [F-025](F-025-install-sh-fehlender-gh-login-und.md).
+6. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
 ## All features
@@ -68,6 +70,7 @@ Stand 2026-11-22.
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
 | [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md) | Startwerte der Module python und ts-node auffrischen | BACKLOG |  |
 | [F-063](F-063-projekt-als-fork-eines-github-repos.md) | Neues Projekt als Fork eines GitHub-Repos anlegen | BACKLOG |  |
+| [F-064](F-064-just-check-tests-nur-bei-aenderungen.md) | Skript-Tests in just check nur bei passenden Änderungen ausführen | PLANNED |  |
 
 ### Closed
 
@@ -131,4 +134,4 @@ Stand 2026-11-22.
 | [F-035](F-035-repo-uebergreifende-uebergabe-statt.md) | Repo-übergreifende Übergabe statt Parallelarbeit | SUPERSEDED → F-039 |  |
 <!-- /features-index -->
 
-next-feature: F-064
+next-feature: F-065
