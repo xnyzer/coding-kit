@@ -45,11 +45,15 @@ Lizenzprüfung aus F-058.
   ruff 0.17.6, pyright 1.1.414 (0 errors) und pytest 9.2.0; Lizenzprüfung ohne und
   mit einer Abhängigkeit (1 Paket, 0 nicht erlaubt); `uv build` erzeugt Wheel und
   sdist mit uv_build 0.13.
-- [ ] AC-2 — Gegeben ein Projekt mit Modul ts-node, aus dem Arbeitsstand gerendert,
+- [x] AC-2 — Gegeben ein Projekt mit Modul ts-node, aus dem Arbeitsstand gerendert,
   wenn `mise install`, `pnpm install` und `just check` laufen, dann ist alles grün mit
   node 26, `engines >=26`, pnpm 12, TypeScript 7, vitest 5 und aktuellem Biome; die
   Lizenzprüfung liest die Ausgabe von pnpm 12 wie bisher, auch ohne
-  Laufzeit-Abhängigkeiten.
+  Laufzeit-Abhängigkeiten. — belegt: Projekt mit Modul ts-node aus dem Arbeitsstand,
+  `just check` grün mit node 26.13.1, pnpm 12.21.0, Biome 2.6.8, TypeScript 7.0.2 und
+  vitest 5.1.1; `just build` erzeugt `dist/`; Lizenzprüfung ohne
+  Laufzeit-Abhängigkeiten (pnpm 12 gibt `{}` aus) und mit einer (1 Paket, 0 nicht
+  erlaubt).
 - [x] AC-3 — Gegeben ein Projekt mit Modul go, aus dem Arbeitsstand gerendert, wenn
   `just check` läuft, dann ist es grün mit go 1.27 in `mise.toml` und `go.mod`, mit
   golangci-lint und Lizenzprüfung. — belegt: Projekt mit Modul go aus dem
@@ -63,13 +67,19 @@ Lizenzprüfung aus F-058.
   als Fehler. — belegt: je Action der SHA per `gh api` über Tag-Referenz und
   Commits-API aufgelöst, beide gleich dem SHA in der Datei, Kommentar nennt den Tag;
   `install.sh` von mise v2026.11.12 antwortet mit HTTP 200.
-- [ ] AC-5 — Gegeben der Abschluss jedes Substeps, wenn `just check` läuft, dann ist es
+- [x] AC-5 — Gegeben der Abschluss jedes Substeps, wenn `just check` läuft, dann ist es
   grün (Skript-Tests eingeschlossen), und Version 3.7.0 hat einen CHANGELOG-Eintrag mit
-  Abschnitt `### Template`, der die neuen Startwerte nennt.
-- [ ] AC-6 — Gegeben ein Bestandsprojekt, das über `/update-conventions` nur die
+  Abschnitt `### Template`, der die neuen Startwerte nennt. — belegt: nach F-062a,
+  F-062b und F-062c je `just check` grün (3432 Checks, 0 failed) und
+  `just version-rule` OK; CHANGELOG 3.7.0 mit `### Template`.
+- [x] AC-6 — Gegeben ein Bestandsprojekt, das über `/update-conventions` nur die
   managed `mise.toml` übernimmt (pnpm 12, node 26 bzw. python 3.15), während seine
   Seeds die alten Werte behalten (`packageManager pnpm@11…`, `engines >=24`,
-  `requires-python >=3.13`), wenn `just check` läuft, dann bleibt es grün.
+  `requires-python >=3.13`), wenn `just check` läuft, dann bleibt es grün. — belegt:
+  je ein Projekt mit den Seeds aus 3.6.0 und den neuen managed Dateien — python:
+  `just check` und `uv build` grün unter python 3.15.2; ts-node: `just check` grün
+  unter node 26, pnpm wechselt auf 11.10.0 aus `packageManager`, der Satz von pnpm 11
+  gilt als leere Liste.
 - [ ] AC-7 — Gegeben der Push der Änderungen, wenn Renovate das Dashboard neu aufbaut,
   dann stehen die Template-Updates nicht mehr unter „Pending Approval“ — außer „lock
   file maintenance in the template“.
@@ -216,5 +226,23 @@ fest.
 
 **Abweichung vom Plan:** keine — die beiden unveränderten Untergrenzen sind oben
 begründet.
+
+**Funde:** keine.
+
+### F-062c — fertig 2026-11-22
+
+**Umgesetzt:** Das Modul ts-node startet auf node 26, der LTS seit Oktober 2026, und
+pnpm 12 (`mise.part.toml`). Die `package.json` neuer Projekte verlangt `engines >=26`,
+pinnt pnpm 12.21.0 und startet mit TypeScript 7, vitest 5, Biome 2.6 und
+`@types/node` 26.6. Konfiguration und Rezepte brauchten für keine der Hauptversionen
+eine Anpassung; nur der Kommentar zu `license-check` im `justfile` nennt jetzt beide
+Ausgaben ohne Laufzeit-Abhängigkeiten.
+
+**Entscheidungen:** Die Prüfung auf den Satz „No licenses in packages found“ bleibt im
+Rezept: pnpm 12 gibt `{}` aus, aber Bestandsprojekte mit `packageManager pnpm@11…`
+laufen über diesen Satz.
+
+**Abweichung vom Plan:** Der Kommentar im managed `justfile` ist geändert, damit er zum
+Verhalten von pnpm 12 passt.
 
 **Funde:** keine.

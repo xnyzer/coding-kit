@@ -35,6 +35,14 @@ bekommen sie beim Anlegen; bestehende sehen die Werte in managed Dateien als Ang
   `pyproject.toml` (`requires-python >=3.13`, uv_build 0.11) läuft damit weiter.
 - **Modul python — `pyproject.toml` (nur neue Projekte):** `requires-python >=3.15`,
   `uv_build >=0.13,<0.14`, Untergrenzen pytest 9 und ruff 0.17.
+- **Modul ts-node — `mise.toml` (managed):** node 26 (die aktuelle LTS) und pnpm 12. Ein
+  Projekt mit älterer `package.json` läuft damit weiter: pnpm nimmt die Version aus
+  `packageManager`, node 26 erfüllt `engines >=24`.
+- **Modul ts-node — `justfile` (managed):** Der Kommentar zu `license-check` nennt,
+  was pnpm 12 ohne Laufzeit-Abhängigkeiten ausgibt (`{}`); das Rezept selbst bleibt.
+- **Modul ts-node — `package.json` (nur neue Projekte):** `engines >=26`,
+  `packageManager` pnpm 12.21.0, TypeScript 7, vitest 5, Biome 2.6 und `@types/node`
+  26.6.
 
 ## 3.6.0 — 2026-11-20
 

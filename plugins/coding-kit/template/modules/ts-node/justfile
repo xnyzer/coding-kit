@@ -41,8 +41,8 @@ check: lint test
 
 # License gate (part of check): every runtime dependency's license must be allowed in
 # license-policy.txt. pnpm lists the `dependencies` with their licenses; devDependencies
-# and the project itself stay out. Without runtime dependencies pnpm prints a sentence
-# instead of JSON — that one means an empty list.
+# and the project itself stay out. Without runtime dependencies pnpm 12 prints `{}`, while
+# pnpm 11 prints a sentence instead of JSON — both mean an empty list.
 license-check:
     #!/bin/sh
     set -eu

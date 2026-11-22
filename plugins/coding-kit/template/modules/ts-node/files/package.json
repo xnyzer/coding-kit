@@ -5,9 +5,9 @@
   "description": "{{PROJECT_DESCRIPTION}}",
   "type": "module",
   "engines": {
-    "node": ">=24"
+    "node": ">=26"
   },
-  "packageManager": "pnpm@11.10.0",
+  "packageManager": "pnpm@12.21.0",
   "scripts": {
     "test": "vitest run",
     "lint": "biome ci --error-on-warnings .",
@@ -16,9 +16,9 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.2",
-    "@types/node": "^26.1.0",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.10"
+    "@biomejs/biome": "^2.6.8",
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
   }
 }
