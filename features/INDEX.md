@@ -67,7 +67,7 @@ Stand 2026-11-22.
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
 | [F-063](F-063-projekt-als-fork-eines-github-repos.md) | Neues Projekt als Fork eines GitHub-Repos anlegen | BACKLOG |  |
-| [F-065](F-065-releases-als-tag-und-github-release.md) | Releases als Git-Tag und GitHub-Release veröffentlichen | BACKLOG |  |
+| [F-065](F-065-releases-als-tag-und-github-release.md) | Releases als Git-Tag und GitHub-Release veröffentlichen | PLANNED |  |
 
 ### Closed
 
