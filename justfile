@@ -37,9 +37,17 @@ test-changed:
 
 # Release notes of a dated version from the CHANGELOG, for gh release create (the
 # release flow is in CLAUDE.md)
+[positional-arguments]
 release-notes *args:
-    @sh scripts/release-notes.sh {{args}}
+    @sh scripts/release-notes.sh "$@"
+
+# Publish the GitHub release of a pushed tag vX.Y.Z by hand, the same way the release
+# workflow does; the tag goes in as an argument, not as text of the command
+[positional-arguments]
+publish-release tag:
+    @sh scripts/publish-release.sh "$1"
 
 # Version rule for plugin content: --staged (pre-commit) or --since <rev> (CI)
+[positional-arguments]
 version-rule *args:
-    uv run python3 scripts/version-rule.py {{args}}
+    uv run python3 scripts/version-rule.py "$@"

@@ -123,16 +123,18 @@ Details: `README.md`.
   `scripts/script-tests.sh`); `just check-all` prüft alles und läuft in der CI.
 - **Release:** Jede Version ab 1.0.0 erscheint als annotierter Git-Tag `vX.Y.Z` und als
   GitHub-Release mit ihrem CHANGELOG-Abschnitt; die eingefrorenen Reihen bekommen keine
-  Tags. Ablauf — Commit, Push und Release je erst nach Freigabe:
+  Tags. Ablauf — Commit und Push je erst nach Freigabe:
   1. Die Überschrift im CHANGELOG datieren („— unveröffentlicht“ → „— JJJJ-MM-TT“),
      `just check`, Commit „chore: release X.Y.Z“.
   2. `git tag -a vX.Y.Z -m "coding-kit X.Y.Z"` auf diesen Commit — der Tagger ist
      `git config user.email`, also dieselbe Adresse wie beim Commit.
   3. Personendaten-Scan wie vor jedem Push, dann `git push origin main vX.Y.Z`.
-  4. `just release-notes X.Y.Z` in eine temporäre Datei schreiben, dann
-     `gh release create vX.Y.Z --verify-tag --notes-file <datei>` — ohne eigenen Titel,
-     GitHub zeigt den Tag-Namen, und das Datum ist der Tag des Anlegens. Das Skript
-     bricht ab, wenn die Version fehlt oder nicht datiert ist.
+  4. Das Release legt der Workflow `.github/workflows/release.yml` nach dem Push des Tags
+     an (`scripts/publish-release.sh`): ohne eigenen Titel, GitHub zeigt den Tag-Namen;
+     Text aus dem CHANGELOG des getaggten Commits; „Latest“ nur für die höchste Version.
+     Danach prüfen, ob der Lauf grün ist. Scheitert er, nach Freigabe
+     `gh workflow run release.yml -f tag=vX.Y.Z` oder `just publish-release vX.Y.Z` —
+     beide überspringen ein Release, das es schon gibt.
 
 ## Workflow & Skills
 

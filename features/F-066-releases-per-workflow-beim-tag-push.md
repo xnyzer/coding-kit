@@ -2,7 +2,7 @@
 id: F-066
 title: Releases per GitHub-Workflow beim Tag-Push anlegen
 type: feature
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-11-22
 done:
@@ -43,33 +43,45 @@ CHANGELOG des getaggten Stands stammt.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben ein Tag `vX.Y.Z`, dessen Commit die Version im CHANGELOG datiert
+- [x] AC-1 — Gegeben ein Tag `vX.Y.Z`, dessen Commit die Version im CHANGELOG datiert
   hat, und noch kein Release dafür, wenn `just publish-release vX.Y.Z` läuft, dann legt
   es mit `gh release create vX.Y.Z --verify-tag` ein Release ohne eigenen Titel an; der
   Text ist die Ausgabe von `scripts/release-notes.sh` für den CHANGELOG **im getaggten
-  Commit**, nicht im Arbeitsbaum.
-- [ ] AC-2 — Gegeben der Tag ist die höchste Version unter allen Tags `v*`, dann
+  Commit**, nicht im Arbeitsbaum. — belegt: Fall „creates the release of the highest
+  tag“ — Release ohne `--title`, Text aus dem getaggten Commit statt aus dem geänderten
+  Arbeitsbaum; `just check` (3561 Checks, 0 failed).
+- [x] AC-2 — Gegeben der Tag ist die höchste Version unter allen Tags `v*`, dann
   übergibt das Skript `--latest=true`; sonst `--latest=false` (z. B. ein Patch `v3.6.1`,
-  während `v3.7.0` existiert).
-- [ ] AC-3 — Gegeben es gibt das Release für den Tag schon, dann ruft das Skript
-  `gh release create` nicht auf, meldet „übersprungen“ und endet mit Exit 0.
-- [ ] AC-4 — Gegeben ein Tag, den es nicht gibt, ein Name, der nicht `vX.Y.Z` ist, oder
+  während `v3.7.0` existiert). — belegt: v1.2.0 mit `--latest=true`, der spätere Patch
+  v1.0.1 mit `--latest=false`.
+- [x] AC-3 — Gegeben es gibt das Release für den Tag schon, dann ruft das Skript
+  `gh release create` nicht auf, meldet „übersprungen“ und endet mit Exit 0. — belegt:
+  Fall „existing release is skipped“ ohne `release create`; am echten Repo meldet
+  `just publish-release v3.7.0` „skipped“.
+- [x] AC-4 — Gegeben ein Tag, den es nicht gibt, ein Name, der nicht `vX.Y.Z` ist, oder
   eine Version, die im CHANGELOG des getaggten Commits fehlt oder nicht datiert ist, wenn
   das Skript läuft, dann bricht es mit einer Meldung auf stderr und einem Exit-Code
-  ungleich 0 ab, ohne `gh release create` aufzurufen.
-- [ ] AC-5 — Gegeben der Push eines Tags `v*` oder ein manueller Start des Workflows mit
+  ungleich 0 ab, ohne `gh release create` aufzurufen. — belegt: undatiert, ohne
+  Abschnitt und fehlender Tag mit Exit 1; `v2.0.0-rc`, `1.2.0`, eingeschleuster Befehl,
+  zwei Zeilen und falsche Argumente mit Exit 2, jeweils ohne `gh release create`; die
+  Gegenprobe mit vier kaputten Kopien des Skripts schlug an.
+- [x] AC-5 — Gegeben der Push eines Tags `v*` oder ein manueller Start des Workflows mit
   einem Tag, dann ruft der Workflow das Skript für diesen Tag auf. Schreibrecht
   (`contents: write`) hat nur dieser Job, die Workflow-Ebene hat keine Rechte; die
   Action ist per SHA gepinnt; der Tag aus dem manuellen Start kommt als
-  Umgebungsvariable ins Skript, nie als Text in den Befehl. actionlint findet nichts.
+  Umgebungsvariable ins Skript, nie als Text in den Befehl. actionlint findet nichts. —
+  belegt: actionlint 1.7.12 mit shellcheck 0.11.0 ohne Befund für beide Workflows;
+  Rechte (`permissions: {}`, `contents: write` nur im Job), Pin und Übergabe des Tags als
+  Umgebungsvariable durchgesehen.
 - [ ] AC-6 — Gegeben das Release `v3.7.0` existiert, wenn der Workflow manuell für
   `v3.7.0` startet, dann überspringt er es; nach dem Löschen des Releases `v3.7.0` legt
   ein zweiter Start es neu an — Titel der Tag-Name, Text gleich der Skriptausgabe,
   „Latest“.
-- [ ] AC-7 — Gegeben ein anstehendes Release, wenn man in der Kit-CLAUDE.md nachliest,
+- [x] AC-7 — Gegeben ein anstehendes Release, wenn man in der Kit-CLAUDE.md nachliest,
   dann steht dort: Schritt 4 übernimmt der Workflow nach dem Push des Tags; scheitert er,
   startet man ihn manuell (`gh workflow run`) oder ruft `just publish-release vX.Y.Z` von
-  Hand auf. Die README nennt Workflow und Skript.
+  Hand auf. Die README nennt Workflow und Skript. — belegt: CLAUDE.md (Schritt 4) und
+  README (Repo-Struktur, Pflege) nach dem Schreiben neu gelesen.
 
 ### Randfälle
 
@@ -212,3 +224,32 @@ Text aus PRs, nicht aus dem CHANGELOG).
 
 **Erkennung:** keine neuen Frameworks, Dependencies oder Toolchains — `gh`, `git` und
 awk sind auf den Runnern vorhanden; actionlint läuft nur einmal von Hand.
+
+## Verlauf
+
+### F-066a — fertig 2026-11-22
+
+**Umgesetzt:** `scripts/publish-release.sh vX.Y.Z` prüft den Namen (genau eine Zeile
+`vX.Y.Z`), sucht den Tag, überspringt ein vorhandenes Release, schneidet den Text mit
+`release-notes.sh` aus dem CHANGELOG des getaggten Commits (`git show`) und legt das
+Release mit `gh release create --verify-tag` ohne eigenen Titel an; `--latest=true` nur,
+wenn der Tag die höchste Version unter allen Tags `vX.Y.Z` ist.
+`.github/workflows/release.yml` ruft es beim Push eines Tags `v*` und beim manuellen
+Start mit der Eingabe `tag` auf; Rechte nur im Job (`contents: write`), Checkout gepinnt
+und ohne gespeicherte Zugangsdaten, Tag und Token als Umgebungsvariablen. Dazu das Rezept
+`just publish-release` und 22 Fälle in `tests/template-sync/publish-release.sh` mit
+Wegwerf-Repo und `gh`-Attrappe. CLAUDE.md (Schritt 4) und README beschreiben Workflow und
+Rückweg.
+
+**Entscheidungen:** Auch `release-notes` und `version-rule` reichen ihre Argumente jetzt
+mit `[positional-arguments]` weiter statt als Text in der Shell-Zeile — so arbeiten alle
+Rezepte mit Argumenten gleich.
+
+**Abweichung vom Plan:** actionlint lief zusammen mit shellcheck (beide einmalig per
+`mise x`), shellcheck zusätzlich über beide Skripte; die README hat drei Stellen bekommen
+statt zwei.
+
+**Funde:** Die Rezepte `release-notes` und `version-rule` setzten `{{args}}` als Text in
+die Shell-Zeile — vorhandener Fehler, Befund des unabhängigen Reviews, behoben. Beim
+Bauen ließ die erste Namensprüfung zwei gültige Zeilen durch; der Testfall deckte das
+auf, behoben.

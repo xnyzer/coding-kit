@@ -67,7 +67,7 @@ Stand 2026-11-22.
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
 | [F-063](F-063-projekt-als-fork-eines-github-repos.md) | Neues Projekt als Fork eines GitHub-Repos anlegen | BACKLOG |  |
-| [F-066](F-066-releases-per-workflow-beim-tag-push.md) | Releases per GitHub-Workflow beim Tag-Push anlegen | PLANNED |  |
+| [F-066](F-066-releases-per-workflow-beim-tag-push.md) | Releases per GitHub-Workflow beim Tag-Push anlegen | IN-PROGRESS |  |
 
 ### Closed
 

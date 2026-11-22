@@ -21,7 +21,7 @@ affects_tests() {
       return 0 ;;
     plugins/coding-kit/template/* | tests/template-sync/* | justfile | scripts/script-tests.sh)
       return 0 ;;
-    scripts/release-notes.sh)
+    scripts/release-notes.sh | scripts/publish-release.sh)
       return 0 ;;
     # git quotes paths with unusual characters; such a path cannot be matched reliably.
     '"'*)
