@@ -3,7 +3,9 @@
 Eine Version für Plugin und Template, seit 1.0.0
 (`plugins/coding-kit/.claude-plugin/plugin.json`, semver). Jede inhaltliche Änderung an
 Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen Eintrag;
-`scripts/version-rule.py` prüft das vor jedem Commit und in der CI.
+`scripts/version-rule.py` prüft das vor jedem Commit und in der CI. Ab 1.0.0 erscheint
+jede Version zusätzlich als Git-Tag `vX.Y.Z` und GitHub-Release mit ihrem Abschnitt von
+hier.
 
 - **`### Template`:** Ändert ein Release Template-Inhalt (`template/`), beschreibt dieser
   Abschnitt, was in Projekten ankommt — `/update-conventions` zeigt ihn als

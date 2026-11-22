@@ -2,7 +2,7 @@
 id: F-065
 title: Releases als Git-Tag und GitHub-Release veröffentlichen
 type: feature
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-11-22
 done:
@@ -45,21 +45,27 @@ Version ohne Blick in den CHANGELOG zu finden sind.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben eine datierte Version ab 1.0.0 im CHANGELOG, wenn
+- [x] AC-1 — Gegeben eine datierte Version ab 1.0.0 im CHANGELOG, wenn
   `just release-notes X.Y.Z` läuft, dann gibt es den Abschnitt dieser Version aus — ohne
   Überschrift, ohne Leerzeilen am Anfang und Ende, bis vor die nächste `## `-Überschrift —
   und endet mit Exit 0; mit `--title` gibt es stattdessen den Text der Überschrift aus
-  (z. B. „3.7.0 — 2026-11-22“).
-- [ ] AC-2 — Gegeben eine Version, die im CHANGELOG fehlt, noch nicht datiert ist
+  (z. B. „3.7.0 — 2026-11-22“). — belegt: `just check` (3498 Checks, 0 failed) mit den
+  Fällen zu Abschnitt und Titel; am echten CHANGELOG liefern alle 21 Versionen 1.0.0 bis
+  3.7.0 Titel und Text ohne fremde Überschrift.
+- [x] AC-2 — Gegeben eine Version, die im CHANGELOG fehlt, noch nicht datiert ist
   („— unveröffentlicht“), nur in den eingefrorenen Reihen steht oder kein `X.Y.Z` ist,
   wenn das Skript läuft, dann schreibt es eine Fehlermeldung auf stderr, nichts auf stdout
-  und endet mit einem Exit-Code ungleich 0.
-- [ ] AC-3 — Gegeben ein anstehendes Release, wenn man in der Kit-CLAUDE.md nachliest,
+  und endet mit einem Exit-Code ungleich 0. — belegt: Fälle für undatiert, eingefroren,
+  fehlend und unlesbar (Exit 1) sowie für `3.2.0-rc`, `3x2x0`, `3.2` und falsche
+  Argumente (Exit 2), jeweils ohne Ausgabe auf stdout; die Gegenprobe mit kaputten Kopien
+  des Skripts schlug an.
+- [x] AC-3 — Gegeben ein anstehendes Release, wenn man in der Kit-CLAUDE.md nachliest,
   dann beschreibt der Abschnitt Konventionen den Ablauf: Überschrift datieren, Commit
   „chore: release X.Y.Z“, annotierter Tag `vX.Y.Z` auf diesen Commit, main und Tag
   pushen, `gh release create` mit Titel und Text aus dem Skript — jeder Schritt nach
   außen erst nach Freigabe. Die README (Pflege) verweist darauf, der CHANGELOG-Kopf nennt
-  Tag und Release.
+  Tag und Release. — belegt: CLAUDE.md (Konventionen), README (Pflege, Repo-Struktur) und
+  CHANGELOG-Kopf nach dem Schreiben neu gelesen.
 - [ ] AC-4 — Gegeben die Versionen 1.0.0 bis 3.7.0 (21 Stück), wenn das Nachtragen
   durch ist, dann hat jede einen annotierten Tag `vX.Y.Z` auf GitHub, der auf den
   festgelegten Commit zeigt (Tabelle im Plan), und ein GitHub-Release mit Titel = Text der
@@ -199,3 +205,27 @@ liest kaum jemand.
 
 **Erkennung:** keine neuen Frameworks, Dependencies oder Toolchains (`gh` und `git` sind
 schon da).
+
+## Verlauf
+
+### F-065a — fertig 2026-11-22
+
+**Umgesetzt:** `scripts/release-notes.sh` liest den Plugin-CHANGELOG mit einem awk-Lauf.
+Es sucht die Überschrift, die mit genau der Versionsnummer beginnt und danach ein Datum
+trägt, und hört an „## Eingefroren“ auf zu suchen. Ausgegeben wird der Abschnitt bis vor
+die nächste `## `-Überschrift ohne Leerzeilen an den Rändern, mit `--title` der Text der
+Überschrift. Ist die Version kein Release (fehlend, undatiert, eingefroren) oder die
+Datei unlesbar, endet es mit Exit 1; bei falschen Argumenten oder einer Nummer, die nicht
+`X.Y.Z` ist, mit Exit 2 — jeweils nur mit Meldung auf stderr. Dazu das Rezept
+`just release-notes` und 22 Fälle in `tests/template-sync/release-notes.sh`; das Skript
+steht in der Pfadliste der Skript-Tests. Den Ablauf in vier Schritten beschreibt die
+CLAUDE.md (Konventionen), README und CHANGELOG-Kopf verweisen darauf.
+
+**Entscheidungen:** Exit 1 heißt „kein Release“, Exit 2 „falscher Aufruf“ — so
+unterscheidet ein Aufrufer einen Tippfehler von einer noch nicht datierten Version.
+
+**Abweichung vom Plan:** Fälle für eine unlesbare Datei und für `--title` an falscher
+Stelle sind dazugekommen; das Zweite war ein Befund des unabhängigen Reviews (Meldung
+„cannot read --title“ statt der Usage-Meldung).
+
+**Funde:** keine.

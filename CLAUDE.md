@@ -121,6 +121,18 @@ Details: `README.md`.
   gitleaks und die Versionsregel (`just setup` installiert die Hooks). Beide lassen die
   Skript-Tests nur laufen, wenn eine Änderung sie betrifft (Pfadliste in
   `scripts/script-tests.sh`); `just check-all` prüft alles und läuft in der CI.
+- **Release:** Jede Version ab 1.0.0 erscheint als annotierter Git-Tag `vX.Y.Z` und als
+  GitHub-Release mit ihrem CHANGELOG-Abschnitt; die eingefrorenen Reihen bekommen keine
+  Tags. Ablauf — Commit, Push und Release je erst nach Freigabe:
+  1. Die Überschrift im CHANGELOG datieren („— unveröffentlicht“ → „— JJJJ-MM-TT“),
+     `just check`, Commit „chore: release X.Y.Z“.
+  2. `git tag -a vX.Y.Z -m "coding-kit X.Y.Z"` auf diesen Commit — der Tagger ist
+     `git config user.email`, also dieselbe Adresse wie beim Commit.
+  3. Personendaten-Scan wie vor jedem Push, dann `git push origin main vX.Y.Z`.
+  4. `just release-notes X.Y.Z` in eine temporäre Datei schreiben, dann
+     `gh release create vX.Y.Z --verify-tag --title "$(just release-notes --title X.Y.Z)"
+     --notes-file <datei>`. Das Skript bricht ab, wenn die Version fehlt oder nicht
+     datiert ist.
 
 ## Workflow & Skills
 
