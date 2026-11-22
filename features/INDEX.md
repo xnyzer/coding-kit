@@ -42,7 +42,7 @@ with its reasons.
 
 ## Recommended order
 
-Stand 2026-11-22.
+Stand 2026-11-23.
 
 1. **[F-069](F-069-private-inhalte-im-abgleich-schuetzen.md)** — private Inhalte können heute still in ein öffentliches Repo geraten; zuerst,
    solange Migrationen laufen.
@@ -66,6 +66,7 @@ Stand 2026-11-22.
 12. **[F-077](F-077-eigene-lizenzpolitik-im-vertrag.md)** — eigene Lizenzpolitik je Projekt; nach [F-075](F-075-seed-zonen-bei-der-migration.md), das die Lizenz-Zone liefert.
 13. **[F-078](F-078-template-defaults-korrigieren.md), [F-080](F-080-stop-hook-und-reine-erfassungen.md), [F-081](F-081-index-pruefung-genauer.md)** — kleine Korrekturen, gut zwischendurch.
     Ebenso **[F-090](F-090-ci-lauf-nach-dem-push-melden.md)**, damit ein roter CI-Lauf nicht tagelang unbemerkt bleibt.
+    Ebenso **[F-093](F-093-ssh-remotes-im-privacy-lint-erlauben.md)** nach [F-069](F-069-private-inhalte-im-abgleich-schuetzen.md), damit Git-Abhängigkeiten über SSH den Commit nicht blockieren.
 14. **[F-079](F-079-widersprueche-zu-globalen-regeln.md) → [F-082](F-082-bedienung-update-conventions.md) → [F-083](F-083-stabile-standards-nummern.md)** — Regel-Konsistenz und Bedienung des Abgleichs.
 15. **[F-084](F-084-tool-versionen-gegen-mise-abgleichen.md) → [F-085](F-085-gates-in-bestandscodebasen-einfuehren.md)** — Werkzeug-Stand von Bestandsprojekten: erst die Versionen, dann die
     Gates.
@@ -115,6 +116,7 @@ Stand 2026-11-22.
 | [F-090](F-090-ci-lauf-nach-dem-push-melden.md) | Nach jedem Push den CI-Lauf abwarten und das Ergebnis melden | BACKLOG |  |
 | [F-091](F-091-migrationsprotokoll-nach-jedem-abgleich.md) | Migrationsprotokoll und Kit-Vorschläge nach jedem Abgleich schreiben | BACKLOG |  |
 | [F-092](F-092-projekt-mit-template-vergleichen.md) | Projekt jederzeit vollständig mit dem aktuellen Template vergleichen | BACKLOG |  |
+| [F-093](F-093-ssh-remotes-im-privacy-lint-erlauben.md) | Privacy-Lint erlaubt SSH-Remotes öffentlicher Git-Hosts | BACKLOG |  |
 
 ### Closed
 
@@ -183,4 +185,4 @@ Stand 2026-11-22.
 | [F-035](F-035-repo-uebergreifende-uebergabe-statt.md) | Repo-übergreifende Übergabe statt Parallelarbeit | SUPERSEDED → F-039 |  |
 <!-- /features-index -->
 
-next-feature: F-093
+next-feature: F-094
