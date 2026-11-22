@@ -46,10 +46,9 @@ Stand 2026-11-22.
 
 1. **[F-063](F-063-projekt-als-fork-eines-github-repos.md)** — Projekt als Fork anlegen: konkreter Bedarf, nur GitHub, auf der fertigen
    Grundlage „Git-Host je Projekt“; der Host-Strang kann den Fork-Modus danach mitnehmen.
-2. **[F-025](F-025-install-sh-fehlender-gh-login-und.md) → [F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: der Installer, GitLab, Forgejo — auf der
-   fertigen Grundlage „Git-Host je Projekt“.
-3. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) + [F-067](F-067-installer-unter-windows-git-bash.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist; [F-067](F-067-installer-unter-windows-git-bash.md)
-   baut auf [F-025](F-025-install-sh-fehlender-gh-login-und.md) auf.
+2. **[F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: GitLab, Forgejo — auf der fertigen Grundlage
+   „Git-Host je Projekt“; beide ergänzen auch die Host-Liste des Installers.
+3. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) + [F-067](F-067-installer-unter-windows-git-bash.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist.
 4. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
@@ -60,7 +59,6 @@ Stand 2026-11-22.
 
 | ID | Title | Status | Done |
 |----|-------|--------|------|
-| [F-025](F-025-install-sh-fehlender-gh-login-und.md) | Installer läuft ohne GitHub und installiert die Toolchain über mise | IN-PROGRESS |  |
 | [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) | Stop-Hook plattformfähig machen (Windows greift ins WSL) | BACKLOG |  |
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
@@ -72,6 +70,7 @@ Stand 2026-11-22.
 
 | ID | Title | Status | Done |
 |----|-------|--------|------|
+| [F-025](F-025-install-sh-fehlender-gh-login-und.md) | Installer läuft ohne GitHub und installiert die Toolchain über mise | DONE | 2026-11-22 |
 | [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md) | Startwerte der Module und Core-Workflows im Template auffrischen | DONE | 2026-11-22 |
 | [F-064](F-064-just-check-tests-nur-bei-aenderungen.md) | Skript-Tests in just check nur bei passenden Änderungen ausführen | DONE | 2026-11-22 |
 | [F-065](F-065-releases-als-tag-und-github-release.md) | Releases als Git-Tag und GitHub-Release veröffentlichen | DONE | 2026-11-22 |

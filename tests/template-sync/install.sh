@@ -1,23 +1,32 @@
 # Installer cases for tests/template-sync/run.sh — sourced, uses its helpers. They run the
 # kit's install.sh with bash in an empty environment (env -i): a test HOME, the answers on
 # stdin, and a PATH of fake folders only — links to the system tools the installer and
-# template-sync.sh call (sh is the shell of the pass), a fake claude, and per case a fake
-# gh, brew or xdg-user-dir. A real gh or brew of the machine never takes part. The fakes
-# log their calls to $IN_LOG.
+# template-sync.sh call (sh is the shell of the pass), fakes for claude and uname, and per
+# case fakes for gh, brew, pacman with sudo, mise or xdg-user-dir. A real gh, brew or mise
+# of the machine never takes part. The fakes log their calls to $IN_LOG.
 
 IN=$ROOT/install.sh
 IN_BASH=$(command -v bash || true)
 
 # Tools the installer and template-sync.sh call, linked from where this machine has them.
 IN_TOOLS='awk basename cat chmod cksum cp cut date dirname env find git grep head id ls
-mkdir mktemp mv od rm sed sort tail tr uname wc xargs'
+mkdir mktemp mv od rm sed sort tail tr wc xargs'
 
 # in_new NAME — a fresh case folder: HOME in $IN_HOME, the state of the fakes in
-# $TMP/in/NAME/state.
+# $TMP/in/NAME/state, and $IN_PKG — the folder brew and pacman install mise into (put it
+# on PATH to see it).
 in_new() {
   rm -rf "${TMP:?}/in/$1"
-  mkdir -p "$TMP/in/$1/test-home" "$TMP/in/$1/state"
+  mkdir -p "$TMP/in/$1/test-home" "$TMP/in/$1/state/bin"
   IN_HOME=$TMP/in/$1/test-home
+  IN_PKG=$TMP/in/$1/state/bin
+}
+
+# in_config — an existing personal config in $IN_HOME, so the run asks nothing before the
+# toolchain.
+in_config() {
+  mkdir -p "$IN_HOME/.claude"
+  printf '%s\n' 'CODING_KIT_PROJECTS_DIR="/somewhere"' > "$IN_HOME/.claude/coding-kit.env"
 }
 
 # in_input NAME LINE… — the answers, one per line.
@@ -79,13 +88,17 @@ run_install_cases() {
     return
   fi
 
-  # The folders on PATH: base (system tools, sh, claude), gh, brew, xdg-user-dir.
+  # The folders on PATH: base (system tools, sh, claude, uname), gh, brew, pacman with
+  # sudo, mise, the three tools mise installs, xdg-user-dir.
   rm -rf "${TMP:?}/in"
   IN_BIN=$TMP/in/bin
   IN_GH=$TMP/in/gh-bin
   IN_BREW=$TMP/in/brew-bin
+  IN_PACMAN=$TMP/in/pacman-bin
+  IN_MISE=$TMP/in/mise-bin
+  IN_TOOLS_BIN=$TMP/in/tools-bin
   IN_XDG=$TMP/in/xdg-bin
-  mkdir -p "$IN_BIN" "$IN_GH" "$IN_BREW" "$IN_XDG"
+  mkdir -p "$IN_BIN" "$IN_GH" "$IN_BREW" "$IN_PACMAN" "$IN_MISE" "$IN_TOOLS_BIN" "$IN_XDG"
   for it_tool in $IN_TOOLS; do
     it_path=$(command -v "$it_tool") && ln -s "$it_path" "$IN_BIN/$it_tool"
   done
@@ -123,10 +136,51 @@ case "$1 $2" in
   *) exit 3 ;;
 esac
 EOF
+  # uname: macOS unless IN_UNAME_S says otherwise; the kernel release from IN_UNAME_R.
+  in_fake "$IN_BIN/uname" <<'EOF'
+#!/bin/sh
+case "${1:-}" in
+  -r) printf '%s\n' "${IN_UNAME_R:-23.0.0}" ;;
+  *) printf '%s\n' "${IN_UNAME_S:-Darwin}" ;;
+esac
+EOF
+  # mise: a tool counts as installed globally when $IN_STATE/mise-TOOL exists.
+  in_fake "$IN_MISE/mise" <<'EOF'
+#!/bin/sh
+printf 'mise %s\n' "$*" >> "$IN_LOG"
+case "$1" in
+  which) [ -f "$IN_STATE/mise-$2" ] ;;
+  use)
+    shift
+    [ "$1" = -g ] && shift
+    for tool in "$@"; do : > "$IN_STATE/mise-$tool"; done ;;
+esac
+EOF
+  # brew and pacman install the mise fake (next to their own folder) into $IN_STATE/bin;
+  # brew fails with IN_BREW_FAIL=1.
   in_fake "$IN_BREW/brew" <<'EOF'
 #!/bin/sh
 printf 'brew %s\n' "$*" >> "$IN_LOG"
+[ "${IN_BREW_FAIL:-}" != 1 ] || exit 1
+if [ "$*" = "install mise" ]; then
+  cp "$(dirname "$0")/../mise-bin/mise" "$IN_STATE/bin/mise"
+fi
 EOF
+  in_fake "$IN_PACMAN/pacman" <<'EOF'
+#!/bin/sh
+printf 'pacman %s\n' "$*" >> "$IN_LOG"
+if [ "$*" = "-S mise" ]; then
+  cp "$(dirname "$0")/../mise-bin/mise" "$IN_STATE/bin/mise"
+fi
+EOF
+  in_fake "$IN_PACMAN/sudo" <<'EOF'
+#!/bin/sh
+printf 'sudo %s\n' "$*" >> "$IN_LOG"
+exec "$@"
+EOF
+  for it_tool in just lefthook gitleaks; do
+    printf '%s\n' '#!/bin/sh' | in_fake "$IN_TOOLS_BIN/$it_tool"
+  done
   in_fake "$IN_XDG/xdg-user-dir" <<'EOF'
 #!/bin/sh
 printf '%s\n' "$IN_XDG_DIR"
@@ -340,4 +394,131 @@ EOF
   in_run no-docs
   check "install: no documents folder, projects folder in the home folder" \
     in_value no-docs PROJECTS_DIR "$TMP/in/no-docs/test-home/Coding-Projects"
+
+  # --- toolchain (step 5); an existing config, so only step 5 asks ---
+
+  # mise there, the three tools missing, mise use -g accepted: installed, nothing open.
+  in_new mise-use
+  in_config
+  in_input mise-use j
+  in_run mise-use PATH="$IN_MISE:$IN_BIN"
+  check "install: mise use -g runs through" in_status mise-use 0
+  check "install: mise use -g is offered and run for the missing tools" \
+    in_called mise-use "mise use -g just lefthook gitleaks"
+  check "install: after mise use -g tool-check finds the tools" in_says mise-use "gitleaks vorhanden"
+  refute "install: after mise use -g nothing is open" in_says mise-use "Offen:"
+  check "install: mise not active, step 6 still runs" in_says mise-use "mise in jeder Shell"
+
+  # mise use -g declined: the tools are open, mise is not called to install.
+  in_new mise-decline
+  in_config
+  in_run mise-decline PATH="$IN_MISE:$IN_BIN"
+  check "install: declined mise use -g runs through" in_status mise-decline 0
+  refute "install: declined mise use -g installs nothing" in_calls_like mise-decline '^mise use'
+  check "install: declined tools are open" in_says mise-decline "Offen: just lefthook gitleaks"
+  check "install: declined tools get the way by hand" \
+    in_says mise-decline "übersprungen — von Hand: mise use -g just lefthook gitleaks"
+
+  # brew install mise declined: the way by hand above the closing line, mise is open.
+  in_new brew-decline
+  in_config
+  in_run brew-decline PATH="$IN_PKG:$IN_BREW:$IN_BIN"
+  refute "install: declined brew install mise installs nothing" \
+    in_called brew-decline "brew install mise"
+  check "install: declined brew install mise gets the way by hand" \
+    in_says brew-decline "übersprungen — von Hand: brew install mise"
+  check "install: declined brew install mise, mise is open" \
+    in_says brew-decline "Offen: mise just lefthook gitleaks"
+
+  # The tools already there (e.g. from brew): nothing offered, nothing rebuilt.
+  in_new tools-there
+  in_config
+  in_run tools-there PATH="$IN_MISE:$IN_TOOLS_BIN:$IN_BIN"
+  check "install: tools already there run through" in_status tools-there 0
+  refute "install: tools already there, no mise use -g" in_calls_like tools-there '^mise use'
+  refute "install: tools already there, nothing open" in_says tools-there "Offen:"
+
+  # mise missing, macOS with brew: brew install mise, then mise use -g in the same run;
+  # brew is never asked for the three tools.
+  in_new brew-mise
+  in_config
+  in_input brew-mise j j
+  in_run brew-mise PATH="$IN_PKG:$IN_BREW:$IN_BIN"
+  check "install: mise via brew runs through" in_status brew-mise 0
+  check "install: brew install mise is offered and run" in_called brew-mise "brew install mise"
+  check "install: after brew, mise use -g in the same run" \
+    in_called brew-mise "mise use -g just lefthook gitleaks"
+  refute "install: brew is not used for the three tools" in_calls_like brew-mise '^brew install just'
+  refute "install: mise via brew, nothing open" in_says brew-mise "Offen:"
+
+  # brew install mise fails: the run goes on, mise and the tools are open.
+  in_new brew-fails
+  in_config
+  in_input brew-fails j
+  in_run brew-fails PATH="$IN_PKG:$IN_BREW:$IN_BIN" IN_BREW_FAIL=1
+  check "install: a failed brew install still runs through" in_status brew-fails 0
+  check "install: a failed brew install is named" in_says brew-fails "brew install mise ist gescheitert"
+  check "install: after a failed brew install mise is open" \
+    in_says brew-fails "Offen: mise just lefthook gitleaks"
+
+  # Linux with brew: the same way.
+  in_new linux-brew
+  in_config
+  in_input linux-brew j j
+  in_run linux-brew PATH="$IN_PKG:$IN_BREW:$IN_BIN" IN_UNAME_S=Linux
+  check "install: Linux with brew offers brew install mise" in_called linux-brew "brew install mise"
+
+  # Arch: sudo pacman -S mise; the three tools declined stay open.
+  in_new arch
+  in_config
+  in_input arch j n
+  in_run arch PATH="$IN_PKG:$IN_PACMAN:$IN_BIN" IN_UNAME_S=Linux
+  check "install: Arch runs through" in_status arch 0
+  check "install: Arch offers and runs sudo pacman -S mise" in_called arch "sudo pacman -S mise"
+  check "install: Arch, mise is installed" in_says arch "mise installiert"
+  check "install: Arch, declined tools are open" in_says arch "Offen: just lefthook gitleaks"
+
+  # Linux without brew and pacman: the official command named, nothing run, all open.
+  in_new linux-bare
+  in_config
+  in_run linux-bare IN_UNAME_S=Linux
+  check "install: Linux without brew and pacman runs through" in_status linux-bare 0
+  check "install: names the official mise command" in_says linux-bare "curl https://mise.run | sh"
+  check "install: names the mise install page" \
+    in_says linux-bare "https://mise.jdx.dev/installing-mise.html"
+  refute "install: without brew and pacman nothing is installed" \
+    grep -qE '^(brew|pacman|sudo|mise) ' "$TMP/in/linux-bare.log"
+  check "install: without mise everything is open" \
+    in_says linux-bare "Offen: mise just lefthook gitleaks"
+
+  # Windows (Git Bash) with brew on PATH: no package manager, the way by hand, F-067.
+  in_new windows
+  in_config
+  in_run windows PATH="$IN_PKG:$IN_BREW:$IN_BIN" IN_UNAME_S=MINGW64_NT-10.0-19045
+  check "install: Windows runs through" in_status windows 0
+  check "install: Windows names winget" in_says windows "winget install jdx.mise"
+  check "install: Windows names scoop" in_says windows "scoop install mise"
+  check "install: Windows points to F-067" in_says windows "F-067"
+  refute "install: Windows offers no brew" in_calls_like windows '^brew'
+  refute "install: Windows asks nothing about brew" in_says windows "brew install mise"
+
+  # An unknown system: nothing installed, the install page named.
+  in_new unknown-os
+  in_config
+  in_run unknown-os PATH="$IN_PKG:$IN_BREW:$IN_BIN" IN_UNAME_S=SunOS
+  check "install: an unknown system is named" in_says unknown-os "Unbekanntes System"
+  check "install: an unknown system names the mise install page" \
+    in_says unknown-os "https://mise.jdx.dev/installing-mise.html"
+  refute "install: an unknown system offers no brew" in_calls_like unknown-os '^brew'
+
+  # WSL: treated as Linux, with the note.
+  in_new wsl
+  in_config
+  in_run wsl IN_UNAME_S=Linux IN_UNAME_R=5.15.153-microsoft-standard-WSL2
+  check "install: WSL is named" in_says wsl "WSL erkannt"
+  check "install: WSL is treated as Linux" in_says wsl "curl https://mise.run | sh"
+  in_new linux-not-wsl
+  in_config
+  in_run linux-not-wsl IN_UNAME_S=Linux IN_UNAME_R=6.8.0-45-generic
+  refute "install: plain Linux is not WSL" in_says linux-not-wsl "WSL erkannt"
 }

@@ -12,7 +12,9 @@
 #   4. Reports the kit's global rules; it never writes them or ~/.claude/CLAUDE.md —
 #      setting them up is /coding-kit:update-conventions global in a Claude session.
 #   5. Checks the base toolchain (mise, just, lefthook, gitleaks) outside any project
-#      (template-sync.sh tool-check); offers brew install.
+#      (template-sync.sh tool-check). Offers mise through brew or pacman, else names the
+#      way by hand (Windows and unknown systems: by hand only); then offers just,
+#      lefthook and gitleaks through mise use -g. A closing line names what is open.
 #   6. Checks that the mise shims reach every shell (template-sync.sh mise-check); offers
 #      the activation line for the end of the shell's startup file.
 #
@@ -303,30 +305,98 @@ fi
 # --- 5. Toolchain ------------------------------------------------------------
 say "Toolchain (mise, just, lefthook, gitleaks)"
 
-# A tool counts only when it runs outside any project — a mise shim without a version
-# stops there with "No version is set"; tool-check decides.
-TOOL_CHECK="$(sh "$TEMPLATE_SYNC" tool-check mise just lefthook gitleaks)" ||
-  fail "template-sync.sh tool-check ist gescheitert"
-MISSING=()
-while IFS=$'\t' read -r _ tool state; do
-  if [ "$state" = present ]; then
-    ok "$tool vorhanden"
-  else
-    MISSING+=("$tool")
-    warn "$tool fehlt"
-  fi
-done <<< "$TOOL_CHECK"
+# Only mise itself comes from a package manager of the platform; just, lefthook and
+# gitleaks then come through mise (`mise use -g`), the same way everywhere.
+MISE_DOCS="https://mise.jdx.dev/installing-mise.html"
+case "$(uname -s)" in
+  Darwin) PLATFORM=macos ;;
+  Linux) PLATFORM=linux ;;
+  MINGW* | MSYS* | CYGWIN*) PLATFORM=windows ;;
+  *) PLATFORM=unknown ;;
+esac
+# WSL runs a Linux kernel built by Microsoft.
+if [ "$PLATFORM" = linux ] && uname -r | grep -qi microsoft; then
+  warn "WSL erkannt — die Einrichtung gilt nur für ein Claude Code innerhalb von WSL"
+fi
 
-if [ "${#MISSING[@]}" -gt 0 ]; then
-  if command -v brew >/dev/null 2>&1; then
-    if ask_yes_no "Fehlende Tools via brew installieren (${MISSING[*]})?" n; then
-      brew install "${MISSING[@]}"
-      ok "installiert: ${MISSING[*]}"
+# missing_tools TOOL… — leaves the tools tool-check does not find in MISSING, reporting
+# each one. A tool counts only when it runs outside any project — a mise shim without a
+# version stops there with "No version is set"; tool-check decides.
+MISSING=()
+missing_tools() {
+  local check tool state
+  check="$(sh "$TEMPLATE_SYNC" tool-check "$@")" || fail "template-sync.sh tool-check ist gescheitert"
+  MISSING=()
+  while IFS=$'\t' read -r _ tool state; do
+    if [ "$state" = present ]; then
+      ok "$tool vorhanden"
     else
-      warn "übersprungen — manuell: brew install ${MISSING[*]}"
+      MISSING+=("$tool")
+      warn "$tool fehlt"
     fi
+  done <<< "$check"
+}
+
+# offer_install COMMAND… — runs COMMAND after a yes (default no); a no or a failure is
+# named, so the closing line "Offen: …" has a hint above it.
+offer_install() {
+  if ! ask_yes_no "mise installieren ($*)?" n; then
+    warn "übersprungen — von Hand: $*"
+    return 0
+  fi
+  "$@" || warn "$* ist gescheitert"
+}
+
+# offer_mise — offers mise through the package manager of the platform, or names the way
+# by hand; Windows and unknown systems get only the way by hand.
+offer_mise() {
+  case "$PLATFORM" in
+    windows)
+      warn "Auf Windows installiert der Installer nichts — mise von Hand: winget install jdx.mise oder scoop install mise (Windows-Unterstützung: F-067)"
+      return 0
+      ;;
+    unknown)
+      warn "Unbekanntes System — der Installer installiert nichts; mise von Hand: $MISE_DOCS"
+      return 0
+      ;;
+  esac
+  if command -v brew >/dev/null 2>&1; then
+    offer_install brew install mise
+  elif command -v pacman >/dev/null 2>&1; then
+    offer_install sudo pacman -S mise
   else
-    warn "brew fehlt — Tools manuell installieren: ${MISSING[*]}"
+    # Never run here: the official script comes from the network, and the folder it
+    # installs into must be on PATH first.
+    warn "Weder brew noch pacman — mise von Hand: curl https://mise.run | sh (oder $MISE_DOCS), danach erneut ausführen"
+  fi
+}
+
+# What is still missing at the end, for the closing line "Offen: …".
+OPEN=()
+
+missing_tools mise
+if [ "${#MISSING[@]}" -gt 0 ]; then
+  offer_mise
+  if command -v mise >/dev/null 2>&1; then
+    ok "mise installiert"
+  else
+    OPEN+=(mise)
+  fi
+fi
+
+missing_tools just lefthook gitleaks
+if [ "${#MISSING[@]}" -gt 0 ]; then
+  if ! command -v mise >/dev/null 2>&1; then
+    warn "${MISSING[*]} kommen über mise — erst mise installieren"
+    OPEN+=("${MISSING[@]}")
+  elif ask_yes_no "Fehlende Tools global über mise installieren (mise use -g ${MISSING[*]})?" n; then
+    # From the home folder, so no project mise.toml takes part.
+    (cd "$HOME" && mise use -g "${MISSING[@]}") || warn "mise use -g ist gescheitert"
+    missing_tools "${MISSING[@]}"
+    if [ "${#MISSING[@]}" -gt 0 ]; then OPEN+=("${MISSING[@]}"); fi
+  else
+    warn "übersprungen — von Hand: mise use -g ${MISSING[*]}"
+    OPEN+=("${MISSING[@]}")
   fi
 fi
 
@@ -407,5 +477,8 @@ if command -v mise >/dev/null 2>&1; then
   esac
 fi
 
+if [ "${#OPEN[@]}" -gt 0 ]; then
+  warn "Offen: ${OPEN[*]} — siehe die Hinweise oben, danach erneut ausführen"
+fi
 say "Fertig. Nächste Schritte: neue Claude-Code-Session starten, Skills unter /coding-kit:<name> prüfen;"
 say "für die globalen Kit-Regeln dort /coding-kit:update-conventions global (fragt Antwortsprache und Erklär-Niveau ab)."

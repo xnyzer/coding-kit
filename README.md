@@ -32,8 +32,8 @@ Installer kann auch das.
 Repo klonen und den Installer ausführen — er prüft die Voraussetzungen, richtet
 Marketplace + Plugin ein, legt die Personal-Config an (via `gh api` vorbefüllt bzw. ohne
 GitHub abgefragt), meldet den Stand der [globalen Kit-Regeln](#globale-kit-regeln) und
-prüft die Toolchain (Installation auf Wunsch via brew). Die Kit-Regeln schreibt er
-nicht; die richtest du danach in einer Claude-Session mit
+prüft die Toolchain (auf Wunsch mise über brew oder pacman, den Rest über mise). Die
+Kit-Regeln schreibt er nicht; die richtest du danach in einer Claude-Session mit
 `/coding-kit:update-conventions global` ein:
 
 ```bash
@@ -102,8 +102,19 @@ schreibt. Was dabei mit deinen Einstellungen geschieht:
 [Globale Kit-Regeln](#globale-kit-regeln).
 
 **4. Toolchain** — `mise`, `just`, `lefthook`, `gitleaks`: die Skills rufen die
-just-Standardrezepte, die Projekt-Hooks nutzen lefthook + gitleaks. Auf macOS:
-`brew install mise just lefthook gitleaks`.
+just-Standardrezepte, die Projekt-Hooks nutzen lefthook + gitleaks. Nur mise kommt über
+den Paketmanager — `brew install mise` (macOS, Linux mit brew) bzw. `sudo pacman -S mise`
+(Arch) —, die übrigen drei global über mise:
+
+```bash
+mise use -g just lefthook gitleaks
+```
+
+Ohne brew und pacman (etwa Linux mit apt oder dnf): mise über den offiziellen Befehl
+`curl https://mise.run | sh` oder einen der Wege auf
+[mise.jdx.dev](https://mise.jdx.dev/installing-mise.html) (für apt und dnf braucht es
+dort ein zusätzliches Paket-Repo); der Installer nennt den Befehl nur und führt ihn nicht
+selbst aus. Werkzeuge, die schon per brew da sind, bleiben, wie sie sind.
 
 Danach **mise aktivieren**, damit die Versionen aus der `mise.toml` eines Projekts in
 jeder Shell vorn stehen — Terminal, VS Code und Claude Code übernehmen ihren `PATH` von
@@ -114,7 +125,7 @@ und VS Code neu starten (eine neue Claude-Session allein behält den alten `PATH
 meldet `mise doctor` `shims_on_path: yes`. Der Installer (Schritt 6) und
 `/coding-kit:update-conventions global` prüfen das und bieten die Zeile an. Außerhalb
 eines Projekts führt ein Shim nur aus, was im System oder global in mise installiert
-ist; deshalb kommen `just`, `lefthook` und `gitleaks` zusätzlich per brew.
+ist; deshalb kommen `just`, `lefthook` und `gitleaks` mit `mise use -g`.
 
 Frisch installierte Skills sind ggf. erst nach einem Session-Neustart sichtbar.
 
@@ -122,8 +133,9 @@ Frisch installierte Skills sind ggf. erst nach einem Session-Neustart sichtbar.
 > Snippets sind Bash, und die Hooks des Plugins rufen `bash` auf. Ausführen in
 > derselben Umgebung, in der `claude` läuft: in Git Bash ist `$HOME` das
 > Windows-Benutzerverzeichnis, ein Lauf unter WSL schreibt dagegen ins WSL-Home und
-> bleibt für eine native Windows-Installation unsichtbar. Die Toolchain kommt dort über
-> scoop/winget statt brew.
+> bleibt für eine native Windows-Installation unsichtbar. mise kommt dort von Hand über
+> `winget install jdx.mise` oder `scoop install mise` — der Installer installiert auf
+> Windows nichts selbst.
 
 ### Ohne GitHub (nur Git)
 

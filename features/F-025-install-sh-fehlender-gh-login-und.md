@@ -2,10 +2,10 @@
 id: F-025
 title: Installer läuft ohne GitHub und installiert die Toolchain über mise
 type: feature
-status: IN-PROGRESS
+status: DONE
 size: M
 created: 2026-08-12
-done:
+done: 2026-11-22
 depends-on: F-032
 superseded-by:
 ---
@@ -91,11 +91,14 @@ dieselbe Antwort auf „welcher Git-Server, welche Fähigkeiten").
   `xdg-user-dir DOCUMENTS` nennt (z. B. `~/Dokumente`), wenn es ihn gibt und er nicht das
   Home selbst ist; sonst `~/Coding-Projects`. — belegt: Fälle „Documents“, „xdg“, „xdg =
   home“, „xdg missing“ und „no documents folder“.
-- [ ] AC-8 — Gegeben `mise` ist da, aber `just`, `lefthook` oder `gitleaks` fehlen, wenn
+- [x] AC-8 — Gegeben `mise` ist da, aber `just`, `lefthook` oder `gitleaks` fehlen, wenn
   der Installer läuft, dann bietet er `mise use -g <fehlende Tools>` an (Standard: Nein).
   Danach meldet `tool-check` sie als vorhanden. brew wird für diese drei nicht mehr
-  angeboten.
-- [ ] AC-9 — Gegeben `mise` fehlt, dann gilt:
+  angeboten. — belegt: Fälle „mise use -g“ (angeboten, für genau die fehlenden Tools
+  ausgeführt, danach meldet `tool-check` sie als vorhanden, nichts offen) und „declined“
+  (nichts installiert, Weg von Hand, offen); brew wird in keinem Fall für die drei Tools
+  aufgerufen.
+- [x] AC-9 — Gegeben `mise` fehlt, dann gilt:
   - mit brew (macOS oder Linux) bietet der Installer `brew install mise` an,
   - auf Arch mit pacman bietet er `sudo pacman -S mise` an,
   - nach der Installation geht es im selben Lauf mit AC-8 weiter.
@@ -103,14 +106,24 @@ dieselbe Antwort auf „welcher Git-Server, welche Fähigkeiten").
   die Installationsseite von mise, bittet um einen erneuten Lauf danach und führt selbst
   nichts aus dem Netz aus. Am Ende fasst er alles Offene in einer Zeile „Offen: …“
   zusammen.
-- [ ] AC-10 — Gegeben Windows (Git Bash, MSYS, Cygwin) oder ein unbekanntes System, dann
-  bietet der Installer keine Installation über einen Paketmanager an. Er nennt
-  `winget install jdx.mise` bzw. `scoop install mise` als Weg von Hand, verweist für
-  Windows auf F-067 und richtet den Rest ein wie überall.
-- [ ] AC-11 — Gegeben man liest die README, dann steht dort: Der Installer läuft auch
-  ohne GitHub-Konto oder -Login. Der Satz „install.sh ist hier keine Option“ und der
-  Kasten „läuft nur mit vollständig eingerichtetem GitHub“ sind weg. Die Toolchain kommt
-  über mise (`mise use -g just lefthook gitleaks`), mit dem Hinweis zu Linux ohne brew.
+  — belegt: Fälle „brew-mise“ und „linux-brew“ (`brew install mise`, danach `mise use -g`
+  im selben Lauf), „arch“ (`sudo pacman -S mise`), „linux-bare“ (Befehl und
+  Installationsseite genannt, kein Aufruf von brew, pacman, sudo oder mise, „Offen: mise
+  just lefthook gitleaks“), „brew-decline“ und „brew-fails“ (Hinweis, Lauf geht weiter,
+  mise offen).
+- [x] AC-10 — Gegeben Windows (Git Bash, MSYS, Cygwin) oder ein unbekanntes System, dann
+  bietet der Installer keine Installation über einen Paketmanager an. Er nennt `winget
+  install jdx.mise` bzw. `scoop install mise` als Weg von Hand, verweist für Windows auf
+  F-067 und richtet den Rest ein wie überall. — belegt: Fälle „windows“ (mit brew auf dem
+  PATH: winget und scoop genannt, Verweis auf F-067, brew weder aufgerufen noch angeboten,
+  Rest eingerichtet) und „unknown-os“ (Installationsseite genannt, kein brew).
+- [x] AC-11 — Gegeben man liest die README, dann steht dort: Der Installer läuft auch ohne
+  GitHub-Konto oder -Login. Der Satz „install.sh ist hier keine Option“ und der Kasten
+  „läuft nur mit vollständig eingerichtetem GitHub“ sind weg. Die Toolchain kommt über
+  mise (`mise use -g just lefthook gitleaks`), mit dem Hinweis zu Linux ohne brew. —
+  belegt: README nach dem Schreiben neu gelesen — Einrichtung und „Ohne GitHub“ (F-025a),
+  Toolchain über mise mit `mise use -g just lefthook gitleaks` und dem Weg ohne brew und
+  pacman, Windows-Kasten (F-025b).
 - [x] AC-12 — Gegeben eine Änderung an `install.sh`, wenn `just check` läuft, dann laufen
   die Installer-Tests mit (Pfadliste in `scripts/script-tests.sh`). — belegt: `just check`
   meldet „script tests: install.sh changed — running them“.
@@ -280,3 +293,32 @@ abgelehnt und neu gefragt; ein solcher Name aus `gh api` weicht dem Login); der 
 „leer lassen“ stimmte neben einem Vorschlag nicht (jetzt `-`); der README-Kasten nannte
 mit GitHub nur die Host-Frage. Gegenprobe: sechs kaputte Kopien des Installers fielen
 durch die Tests.
+
+### F-025b — fertig 2026-11-22
+
+**Umgesetzt:** Schritt 5 von `install.sh` bestimmt die Plattform aus `uname -s` (macOS,
+Linux, Windows über Git Bash/MSYS/Cygwin, sonst unbekannt) und nennt WSL anhand von
+`uname -r`. Fehlt mise, bietet `offer_mise` es über `brew install mise` bzw.
+`sudo pacman -S mise` an (Standard: Nein); ohne beide nennt es `curl https://mise.run | sh`
+und die Installationsseite, auf Windows winget/scoop, auf unbekannten Systemen die
+Installationsseite — ausgeführt wird dann nichts. Danach bietet der Installer just,
+lefthook und gitleaks per `mise use -g` (aus dem Home-Ordner) an und prüft mit
+`tool-check` nach. Abgelehntes und Gescheitertes bekommt einen Hinweis; die Zeile
+„Offen: …“ am Ende nennt, was fehlt. Die Testdatei hat Attrappen für `uname`, `mise`,
+`brew`, `pacman` und `sudo` und Fälle je Plattform (124 Checks je Durchlauf). README:
+Toolchain über mise, Weg ohne brew und pacman, Windows-Kasten.
+
+**Entscheidungen:** WSL wird über `uname -r` erkannt (Kernel von Microsoft), weil sich das
+mit der `uname`-Attrappe testen lässt.
+
+**Abweichung vom Plan:** Die Kernel-Version im WSL-Fall hat drei Stellen, weil der
+Validator vier als IP-Adresse liest.
+
+**Funde:** Vorhandener Fehler, behoben und getestet: Ein scheiterndes `brew install`
+beendete den Installer wegen `set -e` mitten im Lauf; jetzt meldet er es, führt das Tool
+als offen und macht weiter (ebenso für pacman und `mise use -g`). Befunde des
+unabhängigen Reviews, behoben: Eine abgelehnte mise-Installation bekam keinen Hinweis,
+obwohl „Offen: …“ darauf verweist; der mise-Zweig war vier Ebenen tief verschachtelt
+(jetzt `offer_mise` mit frühem Rücksprung und `offer_install`); ein Testname versprach
+die Installationsseite, ohne sie zu prüfen. Schritt 6 ist ähnlich tief verschachtelt,
+blieb aber unverändert. Gegenprobe: fünf kaputte Kopien des Installers fielen durch.
