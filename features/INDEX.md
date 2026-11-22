@@ -44,8 +44,8 @@ with its reasons.
 
 Stand 2026-11-22.
 
-1. **[F-062](F-062-startwerte-python-und-ts-node-auffrischen.md)** — die Startwerte der Module python und ts-node auffrischen, solange sie
-   frisch angefasst sind.
+1. **[F-062](F-062-startwerte-python-und-ts-node-auffrischen.md)** — die Startwerte im Template auffrischen, Module und Core-Workflows,
+   solange python und ts-node frisch angefasst sind.
 2. **[F-063](F-063-projekt-als-fork-eines-github-repos.md)** — Projekt als Fork anlegen: konkreter Bedarf, nur GitHub, auf der fertigen
    Grundlage „Git-Host je Projekt“; der Host-Strang kann den Fork-Modus danach mitnehmen.
 3. **[F-025](F-025-install-sh-fehlender-gh-login-und.md) → [F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: der Installer, GitLab, Forgejo — auf der
@@ -66,7 +66,7 @@ Stand 2026-11-22.
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
-| [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md) | Startwerte der Module python und ts-node auffrischen | BACKLOG |  |
+| [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md) | Startwerte der Module und Core-Workflows im Template auffrischen | PLANNED |  |
 | [F-063](F-063-projekt-als-fork-eines-github-repos.md) | Neues Projekt als Fork eines GitHub-Repos anlegen | BACKLOG |  |
 
 ### Closed
