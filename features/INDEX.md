@@ -59,7 +59,7 @@ Stand 2026-11-22.
 
 | ID | Title | Status | Done |
 |----|-------|--------|------|
-| [F-025](F-025-install-sh-fehlender-gh-login-und.md) | install.sh — fehlender gh-Login und Plattform-Abdeckung | BACKLOG |  |
+| [F-025](F-025-install-sh-fehlender-gh-login-und.md) | Installer läuft ohne GitHub und installiert die Toolchain über mise | PLANNED |  |
 | [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) | Stop-Hook plattformfähig machen (Windows greift ins WSL) | BACKLOG |  |
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
