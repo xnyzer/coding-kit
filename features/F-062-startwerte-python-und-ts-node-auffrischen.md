@@ -2,10 +2,10 @@
 id: F-062
 title: Startwerte der Module und Core-Workflows im Template auffrischen
 type: change
-status: IN-PROGRESS
+status: DONE
 size: L
 created: 2026-11-20
-done:
+done: 2026-11-22
 depends-on: F-058
 superseded-by:
 ---
@@ -80,9 +80,11 @@ Lizenzprüfung aus F-058.
   `just check` und `uv build` grün unter python 3.15.2; ts-node: `just check` grün
   unter node 26, pnpm wechselt auf 11.10.0 aus `packageManager`, der Satz von pnpm 11
   gilt als leere Liste.
-- [ ] AC-7 — Gegeben der Push der Änderungen, wenn Renovate das Dashboard neu aufbaut,
+- [x] AC-7 — Gegeben der Push der Änderungen, wenn Renovate das Dashboard neu aufbaut,
   dann stehen die Template-Updates nicht mehr unter „Pending Approval“ — außer „lock
-  file maintenance in the template“.
+  file maintenance in the template“. — belegt: Dashboard (#3) nach dem Push von
+  784e922 neu aufgebaut; unter „Pending Approval“ steht nur noch „lock file
+  maintenance in the template“.
 
 ### Randfälle
 
