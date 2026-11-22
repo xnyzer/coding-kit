@@ -91,7 +91,7 @@ Stand 2026-11-22.
 | [F-063](F-063-projekt-als-fork-eines-github-repos.md) | Neues Projekt als Fork eines GitHub-Repos anlegen | BACKLOG |  |
 | [F-067](F-067-installer-unter-windows-git-bash.md) | Installer unter Windows in Git Bash lauffähig machen | BACKLOG |  |
 | [F-068](F-068-dokumentmodell-migration-verlustfrei.md) | Dokumentmodell-Migration verlustfrei und nachweisbar machen | BACKLOG |  |
-| [F-069](F-069-private-inhalte-im-abgleich-schuetzen.md) | Private Inhalte beim Abgleich und im Privacy-Lint schützen | BACKLOG |  |
+| [F-069](F-069-private-inhalte-im-abgleich-schuetzen.md) | Private Inhalte beim Abgleich und im Privacy-Lint schützen | PLANNED |  |
 | [F-070](F-070-merge-klassen-und-hunk-rueckstellung.md) | Merge-Klassen korrigieren und einzelne Hunks zurückstellen | BACKLOG |  |
 | [F-071](F-071-erstabgleich-ohne-verlust.md) | Erstabgleich von Bestandsprojekten ohne Verlust führen | BACKLOG |  |
 | [F-072](F-072-workspaces-erkennen-lizenz-gate.md) | Workspaces erkennen und das Lizenz-Gate dort absichern | BACKLOG |  |
