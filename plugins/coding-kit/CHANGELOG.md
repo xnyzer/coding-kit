@@ -673,7 +673,7 @@ Der Feature-Index wird übersichtlicher, und Titel halten den Kopfblock als YAML
 - **Titelregel:** `check` meldet Titel mit Doppelpunkt, mit `#` oder mit einem
   Sonderzeichen am Anfang (Anführungszeichen, Klammer, Strich, Backtick u. a.) an der
   Feature-Datei. Markdown-Vorschauen lesen den Kopfblock als YAML-Front-Matter: Ein
-  Titel wie „install.sh: …" machte ihn dort ungültig, „… #12" schnitt ihn still ab.
+  Titel wie `install.sh: …` machte ihn dort ungültig, `… #12` schnitt ihn still ab.
   Solange ein Titel die Regel bricht, schreibt `write` keine Tabelle.
 - **add-feature** nennt die Regel in der Titelregel, **prep-step** verweist darauf.
   **update-conventions** A4: Migrierte Titel mit Doppelpunkt (sie entstehen oft aus

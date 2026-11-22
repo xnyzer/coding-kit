@@ -2,10 +2,10 @@
 id: F-065
 title: Releases als Git-Tag und GitHub-Release veröffentlichen
 type: feature
-status: IN-PROGRESS
+status: DONE
 size: M
 created: 2026-11-22
-done:
+done: 2026-11-22
 depends-on:
 superseded-by:
 ---
@@ -48,10 +48,9 @@ Version ohne Blick in den CHANGELOG zu finden sind.
 - [x] AC-1 — Gegeben eine datierte Version ab 1.0.0 im CHANGELOG, wenn
   `just release-notes X.Y.Z` läuft, dann gibt es den Abschnitt dieser Version aus — ohne
   Überschrift, ohne Leerzeilen am Anfang und Ende, bis vor die nächste `## `-Überschrift —
-  und endet mit Exit 0; mit `--title` gibt es stattdessen den Text der Überschrift aus
-  (z. B. „3.7.0 — 2026-11-22“). — belegt: `just check` (3498 Checks, 0 failed) mit den
-  Fällen zu Abschnitt und Titel; am echten CHANGELOG liefern alle 21 Versionen 1.0.0 bis
-  3.7.0 Titel und Text ohne fremde Überschrift.
+  und endet mit Exit 0. — belegt: `just check` (3495 Checks, 0 failed), darin der Fall mit
+  dem Abschnitt von 3.7.0 aus dem echten CHANGELOG; am echten CHANGELOG liefern alle 21
+  Versionen ihren Abschnitt.
 - [x] AC-2 — Gegeben eine Version, die im CHANGELOG fehlt, noch nicht datiert ist
   („— unveröffentlicht“), nur in den eingefrorenen Reihen steht oder kein `X.Y.Z` ist,
   wenn das Skript läuft, dann schreibt es eine Fehlermeldung auf stderr, nichts auf stdout
@@ -62,18 +61,27 @@ Version ohne Blick in den CHANGELOG zu finden sind.
 - [x] AC-3 — Gegeben ein anstehendes Release, wenn man in der Kit-CLAUDE.md nachliest,
   dann beschreibt der Abschnitt Konventionen den Ablauf: Überschrift datieren, Commit
   „chore: release X.Y.Z“, annotierter Tag `vX.Y.Z` auf diesen Commit, main und Tag
-  pushen, `gh release create` mit Titel und Text aus dem Skript — jeder Schritt nach
-  außen erst nach Freigabe. Die README (Pflege) verweist darauf, der CHANGELOG-Kopf nennt
-  Tag und Release. — belegt: CLAUDE.md (Konventionen), README (Pflege, Repo-Struktur) und
-  CHANGELOG-Kopf nach dem Schreiben neu gelesen.
-- [ ] AC-4 — Gegeben die Versionen 1.0.0 bis 3.7.0 (21 Stück), wenn das Nachtragen
+  pushen, `gh release create` ohne eigenen Titel und mit dem Text aus dem Skript — jeder
+  Schritt nach außen erst nach Freigabe. Die README (Pflege) verweist darauf, der
+  CHANGELOG-Kopf nennt Tag und Release. — belegt: CLAUDE.md (Konventionen, Schritt 4 ohne
+  eigenen Titel), README (Pflege, Repo-Struktur) und CHANGELOG-Kopf nach dem Schreiben neu
+  gelesen.
+- [x] AC-4 — Gegeben die Versionen 1.0.0 bis 3.7.0 (21 Stück), wenn das Nachtragen
   durch ist, dann hat jede einen annotierten Tag `vX.Y.Z` auf GitHub, der auf den
-  festgelegten Commit zeigt (Tabelle im Plan), und ein GitHub-Release mit Titel = Text der
-  Überschrift und Text = Ausgabe des Skripts; nur 3.7.0 ist „Latest“. Negativfall: Es gibt
-  keinen Tag `v0.*` und keinen für eine Version der eingefrorenen Reihen.
-- [ ] AC-5 — Gegeben ein neuer Tag, wenn man ihn ansieht, dann ist die Tagger-Adresse die
+  festgelegten Commit zeigt (Tabelle im Plan), und ein GitHub-Release mit dem Tag-Namen
+  als Titel; sein Text ist die Ausgabe des Skripts, bei 1.0.0 bis 3.6.0 mit einer ersten
+  Zeile „_Erschienen am <Datum der Überschrift>, als GitHub-Release nachgetragen am
+  2026-11-22._“ davor. Nur 3.7.0 ist „Latest“. Negativfall: Es gibt keinen Tag `v0.*` und
+  keinen für eine Version der eingefrorenen Reihen; 3.7.0 hat keine Nachtrags-Zeile. —
+  belegt: `gh release list` zeigt 21 Releases, keine Entwürfe oder Vorabversionen, nur
+  `v3.7.0` als Latest, alle ohne eigenen Titel; der Text auf GitHub ist bei allen 21 gleich
+  dem vorbereiteten (Skriptausgabe, bei 1.0.0 bis 3.6.0 mit der Nachtrags-Zeile davor);
+  `git ls-remote` zeigt 21 Tags auf den Commits der Tabelle und keinen `v0.*`.
+- [x] AC-5 — Gegeben ein neuer Tag, wenn man ihn ansieht, dann ist die Tagger-Adresse die
   GitHub-Noreply-Adresse aus der Personal-Config und das Tag-Datum das des getaggten
-  Commits.
+  Commits. — belegt: `git for-each-ref` zeigt je Tag die Noreply-Adresse aus der
+  Personal-Config als Tagger und das Datum des getaggten Commits; auf GitHub zeigen
+  dieselben Tags auf dieselben Commits.
 
 ### Randfälle
 
@@ -83,9 +91,11 @@ Version ohne Blick in den CHANGELOG zu finden sind.
   die Nummer exakt, nicht als Muster.
 - EC-3 — Ein Tag oder Release gibt es schon (lokal oder auf GitHub) → nicht überschreiben,
   sondern melden und überspringen; das Nachtragen lässt sich gefahrlos wiederholen.
-- EC-4 — Im Abschnitt 2.1.0 steht „#12“ im Fließtext → GitHub verlinkt das auf Issue
-  oder PR 12 und benachrichtigt niemanden; hingenommen. Ein freies `@name` außerhalb von
-  Code gibt es in keinem Abschnitt ab 1.0.0 (geprüft am 2026-11-22).
+- EC-4 — Im Abschnitt 2.1.0 stand „#12“ im Fließtext, als Beispiel, nicht als Verweis →
+  GitHub verlinkt so etwas beim Anzeigen auf Issue oder PR mit dieser Nummer, sobald es sie
+  gibt (Renovate zählt die Nummern hoch). Deshalb stehen beide Beispiele der Zeile jetzt
+  als Code, den GitHub nicht verlinkt. Ein freies `@name` außerhalb von Code gibt es in
+  keinem Abschnitt ab 1.0.0 (geprüft am 2026-11-22).
 
 ### Nicht-Ziele
 
@@ -100,12 +110,12 @@ Version ohne Blick in den CHANGELOG zu finden sind.
 
 - AC-1, AC-2, EC-1, EC-2 → automatisch: Fälle in `tests/template-sync/release-notes.sh`
   gegen einen kleinen Test-CHANGELOG (unter dash und bash, mit mawk), dazu ein Fall gegen
-  den echten CHANGELOG (Titel von 3.7.0).
+  den echten CHANGELOG (Abschnitt von 3.7.0).
 - AC-3 → Durchsicht: Kit-CLAUDE.md, README und CHANGELOG-Kopf nach dem Schreiben neu lesen.
 - AC-4 → nach dem Nachtragen: `git ls-remote --tags origin` zeigt genau
   v1.0.0 bis v3.7.0, jeder auf dem Commit der Tabelle; `gh release list` zeigt 21
-  Releases, nur 3.7.0 als Latest; für alle 21 ist der Text auf GitHub gleich der
-  Skriptausgabe.
+  Releases, nur 3.7.0 als Latest; für alle 21 ist der Titel der Tag-Name und der Text auf
+  GitHub gleich der Skriptausgabe, bei 1.0.0 bis 3.6.0 mit der Nachtrags-Zeile davor.
 - AC-5 → `git for-each-ref refs/tags` mit Tagger-Adresse und Tagger-Datum je Tag.
 - EC-3 → den Nachtrage-Lauf ein zweites Mal starten: alles wird übersprungen.
 
@@ -122,7 +132,7 @@ Version ohne Blick in den CHANGELOG zu finden sind.
   Commit-E-Mail; die Release-Texte sind die schon öffentlichen CHANGELOG-Abschnitte.
 - Die Absprache „Ein Release heißt: datieren und committen, ohne Tags“ gilt danach nicht
   mehr.
-- Keine Folge-F-Nummer nötig.
+- Folge-F-Nummer: F-066 (Releases per GitHub-Workflow beim Tag-Push anlegen).
 
 ### Offene Fragen
 
@@ -144,6 +154,15 @@ keine
 - 2026-11-22 — Titel des Releases ist der Text der CHANGELOG-Überschrift, damit steht das
   Datum sichtbar da — GitHub setzt das Erstelldatum auf den Tag des Anlegens. Annotierte
   Tags mit dem Datum des getaggten Commits.
+- 2026-11-22 — Das Release bekommt keinen eigenen Titel, GitHub zeigt den Tag-Namen;
+  `--title` entfällt im Skript. Die nachgetragenen Releases 1.0.0 bis 3.6.0 tragen als
+  erste Zeile „Erschienen am …, als GitHub-Release nachgetragen am 2026-11-22.“, weil
+  GitHub als Datum den Tag des Anlegens zeigt. 3.7.0 und alle künftigen Releases haben
+  die Zeile nicht, dort stimmt das GitHub-Datum. Das überstimmt die Entscheidung zum
+  Titel oben: Das Datum im Titel stünde künftig doppelt und könnte abweichen, wenn das
+  Release erst nach dem Datieren angelegt wird. Empfehlung war, auch bei den Altfällen
+  auf die Zeile zu verzichten; entschieden mit Zeile, weil die Release-Seite sonst ein
+  falsches Datum zeigt.
 
 ## Plan
 
@@ -151,20 +170,19 @@ keine
 geklärt; die Reichweite hebt es an: 21 Tags und Releases sind öffentlich und lassen sich
 nur von Hand zurücknehmen.
 
-**Ansatz:** `scripts/release-notes.sh [--title] X.Y.Z [CHANGELOG]` — POSIX-Shell, die
+**Ansatz:** `scripts/release-notes.sh X.Y.Z [CHANGELOG]` — POSIX-Shell, die
 Arbeit macht ein awk-Lauf über den CHANGELOG (Standard `plugins/coding-kit/CHANGELOG.md`,
 der zweite Parameter dient den Tests). awk sucht die Zeile, deren Nummer genau `X.Y.Z`
 ist und hinter dem Gedankenstrich ein Datum `JJJJ-MM-TT` trägt, und hört an der
-Überschrift `## Eingefroren` auf zu suchen. Ausgegeben wird der Text der Überschrift
-(`--title`) oder alles bis vor die nächste `## `-Überschrift, ohne Leerzeilen an den
-Rändern. Das Rezept `just release-notes *args` ruft das Skript auf. Der Ablauf steht als
-nummerierte Liste in der Kit-CLAUDE.md (Konventionen):
+Überschrift `## Eingefroren` auf zu suchen. Ausgegeben wird alles bis vor die nächste
+`## `-Überschrift, ohne Leerzeilen an den Rändern. Das Rezept `just release-notes *args`
+ruft das Skript auf. Der Ablauf steht als nummerierte Liste in der Kit-CLAUDE.md
+(Konventionen):
 
 1. Überschrift datieren, `just check`, Commit „chore: release X.Y.Z“.
 2. `git tag -a vX.Y.Z -m "coding-kit X.Y.Z"` auf den Release-Commit.
 3. Nach Freigabe: `git push origin main vX.Y.Z`.
-4. Nach Freigabe: `gh release create vX.Y.Z --verify-tag --title "<--title>"
-   --notes-file <Skriptausgabe>`.
+4. Nach Freigabe: `gh release create vX.Y.Z --verify-tag --notes-file <Skriptausgabe>`.
 
 Verworfen: den Text in die Tag-Nachricht schreiben und `gh release create
 --notes-from-tag` nutzen — der Abschnitt stünde doppelt im Repo, und lange Tag-Nachrichten
@@ -186,11 +204,17 @@ liest kaum jemand.
 - Commit-E-Mail prüfen (Tagger = Noreply-Adresse aus der Personal-Config).
 - Annotierte Tags lokal anlegen, je mit `GIT_COMMITTER_DATE` = Datum des getaggten
   Commits; einen vorhandenen Tag überspringen und melden.
-- Vorschau: Liste Tag → Commit → Titel; nach Freigabe die 21 Tags pushen.
-- Nach Freigabe die Releases in aufsteigender Reihenfolge anlegen, alle mit
-  `--latest=false`, zuletzt 3.7.0 mit `--latest`; ein vorhandenes Release überspringen.
-- Prüfen nach AC-4, AC-5, EC-3 (zweiter Lauf überspringt alles), EC-4.
-- Erfüllt AC-4, AC-5, EC-3, EC-4. Danach Verbuchung und Abschluss-Commit.
+- Vorschau: Liste Tag → Commit → Überschrift; nach Freigabe die 21 Tags pushen.
+- `--title` zurückbauen: Skript, die Testfälle dazu (die zwei Titel-Fälle fallen weg,
+  der Fall am echten CHANGELOG prüft den Abschnitt von 3.7.0, eine Option gilt weiter als
+  falscher Aufruf), CLAUDE.md (Schritt 4 des Ablaufs) und der Kommentar im justfile; in
+  2.1.0 die Beispiele als Code (EC-4).
+- Nach Freigabe die Releases in aufsteigender Reihenfolge anlegen, ohne Titel, alle mit
+  `--latest=false`, zuletzt 3.7.0 mit `--latest`; bei 1.0.0 bis 3.6.0 die
+  Nachtrags-Zeile vor den Text; ein vorhandenes Release überspringen.
+- Prüfen nach AC-1, AC-3, AC-4, AC-5, EC-3 (zweiter Lauf überspringt alles), EC-4.
+- Erfüllt AC-1 und AC-3 erneut, dazu AC-4, AC-5, EC-3, EC-4. Danach Verbuchung und
+  Abschluss-Commit.
 
 | Version | Commit | | Version | Commit | | Version | Commit |
 |---------|--------|-|---------|--------|-|---------|--------|
@@ -229,3 +253,24 @@ Stelle sind dazugekommen; das Zweite war ein Befund des unabhängigen Reviews (M
 „cannot read --title“ statt der Usage-Meldung).
 
 **Funde:** keine.
+
+### F-065b — fertig 2026-11-22
+
+**Umgesetzt:** 21 annotierte Tags `v1.0.0` bis `v3.7.0` auf den Commits der Tabelle, je
+mit dem Datum des getaggten Commits und der Noreply-Adresse als Tagger, einzeln benannt
+gepusht; der Push löste keinen Workflow aus. Danach 21 GitHub-Releases von alt nach neu,
+ohne eigenen Titel (GitHub zeigt den Tag-Namen); 1.0.0 bis 3.6.0 mit `--latest=false` und
+der Zeile „Erschienen am …, als GitHub-Release nachgetragen am 2026-11-22.“ vor dem
+Abschnitt, zuletzt 3.7.0 ohne die Zeile als Latest. Beides lief über einmalige Skripte
+außerhalb des Repos, die vorhandene Tags und Releases überspringen. `--title` ist aus
+`scripts/release-notes.sh`, seinen Tests, CLAUDE.md und justfile entfernt; in 2.1.0
+stehen die Beispiele als Code.
+
+**Entscheidungen:** keine neuen — Titel und Nachtrags-Zeile stehen unter Spezifikation
+(Entscheidung vom 2026-11-22).
+
+**Abweichung vom Plan:** Die README nannte ebenfalls „Titel und Text“ und ist mit
+angepasst.
+
+**Funde:** F-066 (Releases per GitHub-Workflow beim Tag-Push anlegen) als Folge-Feature
+aufgenommen.

@@ -1,10 +1,10 @@
 #!/bin/sh
-# Prints what a GitHub release of one version shows, taken from the plugin CHANGELOG:
-# the section below the version's heading, or with --title the heading text itself
-# (e.g. "3.7.0 — 2026-11-22"). The release flow that uses it is in CLAUDE.md
+# Prints the text of a GitHub release for one version, taken from the plugin CHANGELOG:
+# the section below the version's heading. The release itself has no title of its own,
+# GitHub shows the tag name. The release flow that uses it is in CLAUDE.md
 # (Konventionen).
 #
-#   sh scripts/release-notes.sh [--title] X.Y.Z [CHANGELOG]
+#   sh scripts/release-notes.sh X.Y.Z [CHANGELOG]
 #
 # A release is a heading "## X.Y.Z — YYYY-MM-DD" above the first "## Eingefroren"
 # heading: an undated version ("— unveröffentlicht") or one of the frozen series below
@@ -18,17 +18,12 @@
 set -u
 
 usage() {
-  printf 'usage: sh scripts/release-notes.sh [--title] X.Y.Z [CHANGELOG]\n' >&2
+  printf 'usage: sh scripts/release-notes.sh X.Y.Z [CHANGELOG]\n' >&2
   exit 2
 }
 
-mode=notes
-if [ "${1:-}" = --title ]; then
-  mode=title
-  shift
-fi
 [ $# -eq 1 ] || [ $# -eq 2 ] || usage
-# --title only comes first; an option anywhere else is a wrong call, not a version or file.
+# The script has no options; one is a wrong call, not a version or a file.
 case $1 in -*) usage ;; esac
 case ${2:-} in -*) usage ;; esac
 
@@ -38,7 +33,7 @@ if [ ! -r "$changelog" ]; then
   exit 1
 fi
 
-exec awk -v want="$1" -v mode="$mode" '
+exec awk -v want="$1" '
   function fail(code, message) {
     print "release-notes: " message | "cat 1>&2"
     status = code
@@ -62,7 +57,6 @@ exec awk -v want="$1" -v mode="$mode" '
     if (heading != want && index(heading, want " ") != 1) next
     if (substr(heading, length(want) + 1) !~ dated) fail(1, want " is not dated yet: " $0)
     found = 1
-    title = heading
     next
   }
 
@@ -71,10 +65,6 @@ exec awk -v want="$1" -v mode="$mode" '
   END {
     if (status) exit status
     if (!found) fail(1, want " is no release in " FILENAME)
-    if (mode == "title") {
-      print title
-      exit
-    }
     first = 1
     while (first <= count && lines[first] ~ /^[ \t]*$/) first++
     last = count

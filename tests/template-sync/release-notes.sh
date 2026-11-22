@@ -36,16 +36,13 @@ run_release_notes_cases() {
     '## Eingefroren: old series' '' \
     '## 0.5.0 — 2025-01-01' '' 'Frozen.' > "$rn_log"
   printf '%s\n' 'Body line one.' '' '### Template' '' '- item' > "$TMP/rn-3.2.0.expected"
-  printf '%s\n' '3.2.0 — 2026-01-15' > "$TMP/rn-title.expected"
   printf '%s\n' 'Last before frozen.' > "$TMP/rn-3.1.0.expected"
   printf '%s\n' 'Thirteen.' > "$TMP/rn-13.2.0.expected"
 
-  # A dated version: its section without heading and outer blank lines, or the title.
+  # A dated version: its section without heading and outer blank lines.
   check "release-notes: prints a dated section" rn_run rn-notes 3.2.0 "$rn_log"
   check "release-notes: section without heading and outer blank lines" \
     rn_prints rn-notes "$TMP/rn-3.2.0.expected"
-  check "release-notes: --title prints the heading text" rn_run rn-title --title 3.2.0 "$rn_log"
-  check "release-notes: title is the heading text" rn_prints rn-title "$TMP/rn-title.expected"
 
   # The last release before the frozen series ends there; similar numbers stay apart.
   check "release-notes: last section before the frozen series" rn_run rn-last 3.1.0 "$rn_log"
@@ -68,13 +65,14 @@ run_release_notes_cases() {
   check "release-notes: no argument is a usage error" rn_fails rn-none 2
   check "release-notes: three arguments are a usage error" \
     rn_fails rn-many 2 3.2.0 "$rn_log" extra
-  check "release-notes: --title after the version is a usage error" \
+  check "release-notes: an option is a usage error" rn_fails rn-option 2 --title 3.2.0
+  check "release-notes: an option after the version is a usage error" \
     rn_fails rn-late 2 3.2.0 --title
-  check "release-notes: --title twice is a usage error" rn_fails rn-twice 2 --title --title 3.2.0
 
-  # The plugin CHANGELOG by default.
-  printf '%s\n' '3.7.0 — 2026-11-22' > "$TMP/rn-real.expected"
-  check "release-notes: reads the plugin CHANGELOG by default" rn_run rn-real --title 3.7.0
-  check "release-notes: title of 3.7.0 from the plugin CHANGELOG" \
-    rn_prints rn-real "$TMP/rn-real.expected"
+  # The plugin CHANGELOG by default: the section of 3.7.0, a released version.
+  check "release-notes: reads the plugin CHANGELOG by default" rn_run rn-real 3.7.0
+  check "release-notes: section of 3.7.0 from the plugin CHANGELOG" \
+    contains rn-real.out "Die Startwerte im Template stehen wieder auf aktuellen Versionen"
+  refute "release-notes: section of 3.7.0 stops before 3.6.0" \
+    contains rn-real.out "## 3.6.0"
 }

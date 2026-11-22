@@ -35,8 +35,8 @@ test:
 test-changed:
     sh scripts/script-tests.sh
 
-# Release notes of a dated version from the CHANGELOG: its section, or its heading with
-# --title — for gh release create (the release flow is in CLAUDE.md)
+# Release notes of a dated version from the CHANGELOG, for gh release create (the
+# release flow is in CLAUDE.md)
 release-notes *args:
     @sh scripts/release-notes.sh {{args}}
 

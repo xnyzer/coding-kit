@@ -511,7 +511,7 @@ install.sh                        Neuer-Rechner-Bootstrap (idempotent)
 scripts/validate.py               Validator für Kit, Template und Vertrag (`just check` + CI)
 scripts/version-rule.py           Versionsregel (Pre-Commit + CI, `just version-rule`)
 scripts/script-tests.sh           Skript-Tests nur bei passenden Änderungen (`just check` + Pre-Commit)
-scripts/release-notes.sh          Titel und Text eines GitHub-Releases aus dem CHANGELOG (`just release-notes`)
+scripts/release-notes.sh          Text eines GitHub-Releases aus dem CHANGELOG (`just release-notes`)
 tests/template-sync/              Tests des Skripts, des Session-Hinweises, der Template-Skripte (Feature-Index, Lizenzprüfung) und der Release-Notizen unter dash und bash, dazu mawk/gawk (`just test`)
 features/                         Aufgaben (F-NNN): je Feature eine Datei, INDEX.md als Übersicht
 private/                          Gitignoriert — private Notizen/Quellen
@@ -530,7 +530,7 @@ private/                          Gitignoriert — private Notizen/Quellen
   und in der CI.
 - Releases: Jede Version ab 1.0.0 steht als Git-Tag `vX.Y.Z` und GitHub-Release mit
   ihrem CHANGELOG-Abschnitt auf der Repo-Seite; den Ablauf beschreibt die
-  [CLAUDE.md](CLAUDE.md) (Konventionen), Titel und Text liefert `just release-notes`.
+  [CLAUDE.md](CLAUDE.md) (Konventionen), den Text liefert `just release-notes`.
 - Skills und Template testen: `claude --plugin-dir plugins/coding-kit` — eine normale
   Session im Repo läuft mit dem installierten Plugin, nicht mit dem Arbeitsstand.
 - `just setup` installiert die Git-Hooks (gitleaks, Validator, Versionsregel, die

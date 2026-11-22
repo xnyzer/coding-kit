@@ -44,8 +44,8 @@ with its reasons.
 
 Stand 2026-11-22.
 
-1. **[F-065](F-065-releases-als-tag-und-github-release.md)** — Releases als Tag und GitHub-Release: klein, und 3.7.0 wartet schon auf
-   sein Release.
+1. **[F-066](F-066-releases-per-workflow-beim-tag-push.md)** — Releases per Workflow beim Tag-Push: klein, baut direkt auf den neuen
+   Release-Ablauf auf, solange er frisch ist.
 2. **[F-063](F-063-projekt-als-fork-eines-github-repos.md)** — Projekt als Fork anlegen: konkreter Bedarf, nur GitHub, auf der fertigen
    Grundlage „Git-Host je Projekt“; der Host-Strang kann den Fork-Modus danach mitnehmen.
 3. **[F-025](F-025-install-sh-fehlender-gh-login-und.md) → [F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: der Installer, GitLab, Forgejo — auf der
@@ -67,7 +67,7 @@ Stand 2026-11-22.
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
 | [F-063](F-063-projekt-als-fork-eines-github-repos.md) | Neues Projekt als Fork eines GitHub-Repos anlegen | BACKLOG |  |
-| [F-065](F-065-releases-als-tag-und-github-release.md) | Releases als Git-Tag und GitHub-Release veröffentlichen | IN-PROGRESS |  |
+| [F-066](F-066-releases-per-workflow-beim-tag-push.md) | Releases per GitHub-Workflow beim Tag-Push anlegen | BACKLOG |  |
 
 ### Closed
 
@@ -75,6 +75,7 @@ Stand 2026-11-22.
 |----|-------|--------|------|
 | [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md) | Startwerte der Module und Core-Workflows im Template auffrischen | DONE | 2026-11-22 |
 | [F-064](F-064-just-check-tests-nur-bei-aenderungen.md) | Skript-Tests in just check nur bei passenden Änderungen ausführen | DONE | 2026-11-22 |
+| [F-065](F-065-releases-als-tag-und-github-release.md) | Releases als Git-Tag und GitHub-Release veröffentlichen | DONE | 2026-11-22 |
 | [F-058](F-058-lizenzpruefung-fuer-python-und-ts-node.md) | Lizenzprüfung für die Module python und ts-node | DONE | 2026-11-20 |
 | [F-059](F-059-renovate-hebt-mise-tools-in-mise-lock-an.md) | Renovate hebt die mise-Tools in mise.lock an | DONE | 2026-11-20 |
 | [F-061](F-061-template-versionen-als-startwerte.md) | Template-Versionen als Startwerte statt Renovate-Pflege im Kit | DONE | 2026-11-20 |
@@ -133,4 +134,4 @@ Stand 2026-11-22.
 | [F-035](F-035-repo-uebergreifende-uebergabe-statt.md) | Repo-übergreifende Übergabe statt Parallelarbeit | SUPERSEDED → F-039 |  |
 <!-- /features-index -->
 
-next-feature: F-066
+next-feature: F-067

@@ -130,9 +130,9 @@ Details: `README.md`.
      `git config user.email`, also dieselbe Adresse wie beim Commit.
   3. Personendaten-Scan wie vor jedem Push, dann `git push origin main vX.Y.Z`.
   4. `just release-notes X.Y.Z` in eine temporäre Datei schreiben, dann
-     `gh release create vX.Y.Z --verify-tag --title "$(just release-notes --title X.Y.Z)"
-     --notes-file <datei>`. Das Skript bricht ab, wenn die Version fehlt oder nicht
-     datiert ist.
+     `gh release create vX.Y.Z --verify-tag --notes-file <datei>` — ohne eigenen Titel,
+     GitHub zeigt den Tag-Namen, und das Datum ist der Tag des Anlegens. Das Skript
+     bricht ab, wenn die Version fehlt oder nicht datiert ist.
 
 ## Workflow & Skills
 
