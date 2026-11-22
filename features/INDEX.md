@@ -44,13 +44,32 @@ with its reasons.
 
 Stand 2026-11-22.
 
-1. **[F-063](F-063-projekt-als-fork-eines-github-repos.md)** — Projekt als Fork anlegen: konkreter Bedarf, nur GitHub, auf der fertigen
+1. **[F-069](F-069-private-inhalte-im-abgleich-schuetzen.md)** — private Inhalte können heute still in ein öffentliches Repo geraten; zuerst,
+   solange Migrationen laufen.
+2. **[F-068](F-068-dokumentmodell-migration-verlustfrei.md)** — die Migration verliert still Inhalt; zuerst der Nachweis, der das Löschen
+   der Altdateien sperrt.
+3. **[F-070](F-070-merge-klassen-und-hunk-rueckstellung.md) → [F-071](F-071-erstabgleich-ohne-verlust.md)** — der Merge übernimmt ungesehen, der Erstabgleich verliert
+   Projektinhalte; beide schützen laufende Migrationen.
+4. **[F-072](F-072-workspaces-erkennen-lizenz-gate.md)** — klein: das Lizenz-Gate prüft in Workspaces nichts; Grundlage für [F-076](F-076-monorepos-unterstuetzen.md).
+5. **[F-073](F-073-vertrags-pruefung-im-abgleich.md)** — der Abgleich prüft den Vertrag, statt Lücken still durchzulassen.
+6. **[F-074](F-074-renovate-laufend-pruefen.md)** — Renovate muss bei jedem neuen Projekt nachweislich laufen.
+7. **[F-075](F-075-seed-zonen-bei-der-migration.md)** — Zonen bei der Migration; liefert die Lizenz-Zone für [F-077](F-077-eigene-lizenzpolitik-im-vertrag.md).
+8. **[F-076](F-076-monorepos-unterstuetzen.md)** — Monorepos: drei von fünf migrierten Projekten sind Workspaces.
+9. **[F-063](F-063-projekt-als-fork-eines-github-repos.md)** — Projekt als Fork anlegen: konkreter Bedarf, nur GitHub, auf der fertigen
    Grundlage „Git-Host je Projekt“; der Host-Strang kann den Fork-Modus danach mitnehmen.
-2. **[F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: GitLab, Forgejo — auf der fertigen Grundlage
-   „Git-Host je Projekt“; beide ergänzen auch die Host-Liste des Installers.
-3. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) + [F-067](F-067-installer-unter-windows-git-bash.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist.
-4. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
-   Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
+10. **[F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: GitLab, Forgejo — auf der fertigen Grundlage
+    „Git-Host je Projekt“; beide ergänzen die Host-Liste des Installers und docken an die
+    Renovate-Prüfung aus [F-074](F-074-renovate-laufend-pruefen.md) an.
+11. **[F-077](F-077-eigene-lizenzpolitik-im-vertrag.md)** — sobald der Prompt zum Lizenz-Gate eingearbeitet ist.
+12. **[F-078](F-078-template-defaults-korrigieren.md), [F-080](F-080-stop-hook-und-reine-erfassungen.md), [F-081](F-081-index-pruefung-genauer.md)** — kleine Korrekturen, gut zwischendurch.
+13. **[F-079](F-079-widersprueche-zu-globalen-regeln.md) → [F-082](F-082-bedienung-update-conventions.md) → [F-083](F-083-stabile-standards-nummern.md)** — Regel-Konsistenz und Bedienung des Abgleichs.
+14. **[F-084](F-084-tool-versionen-gegen-mise-abgleichen.md) → [F-085](F-085-gates-in-bestandscodebasen-einfuehren.md)** — Werkzeug-Stand von Bestandsprojekten: erst die Versionen, dann die
+    Gates.
+15. **[F-086](F-086-sprach-matrix-konsequent-anwenden.md)** — Sprach-Matrix; eine Umgehung gibt es.
+16. **[F-087](F-087-sicherheitsluecken-lokal-pruefen.md)** — lokale Sicherheitsprüfung, nach [F-074](F-074-renovate-laufend-pruefen.md).
+17. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) + [F-067](F-067-installer-unter-windows-git-bash.md)** — sobald ein Windows-Rechner zur Verifikation verfügbar ist.
+18. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+    Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
 ## All features
 
@@ -65,6 +84,26 @@ Stand 2026-11-22.
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
 | [F-063](F-063-projekt-als-fork-eines-github-repos.md) | Neues Projekt als Fork eines GitHub-Repos anlegen | BACKLOG |  |
 | [F-067](F-067-installer-unter-windows-git-bash.md) | Installer unter Windows in Git Bash lauffähig machen | BACKLOG |  |
+| [F-068](F-068-dokumentmodell-migration-verlustfrei.md) | Dokumentmodell-Migration verlustfrei und nachweisbar machen | BACKLOG |  |
+| [F-069](F-069-private-inhalte-im-abgleich-schuetzen.md) | Private Inhalte beim Abgleich und im Privacy-Lint schützen | BACKLOG |  |
+| [F-070](F-070-merge-klassen-und-hunk-rueckstellung.md) | Merge-Klassen korrigieren und einzelne Hunks zurückstellen | BACKLOG |  |
+| [F-071](F-071-erstabgleich-ohne-verlust.md) | Erstabgleich von Bestandsprojekten ohne Verlust führen | BACKLOG |  |
+| [F-072](F-072-workspaces-erkennen-lizenz-gate.md) | Workspaces erkennen und das Lizenz-Gate dort absichern | BACKLOG |  |
+| [F-073](F-073-vertrags-pruefung-im-abgleich.md) | Abgleich prüft Toolchain, Pflicht-Rezepte und Standards-Slot | BACKLOG |  |
+| [F-074](F-074-renovate-laufend-pruefen.md) | Renovate beim Anlegen und im Abgleich als laufend prüfen | BACKLOG |  |
+| [F-075](F-075-seed-zonen-bei-der-migration.md) | Seed-Zonen bei der Migration zurückstellen, platzieren und teilen | BACKLOG |  |
+| [F-076](F-076-monorepos-unterstuetzen.md) | Monorepos mit mehreren Paketen und Sprachen unterstützen | BACKLOG |  |
+| [F-077](F-077-eigene-lizenzpolitik-im-vertrag.md) | Eigene Lizenzpolitik eines Projekts im Vertrag vorsehen | BACKLOG |  |
+| [F-078](F-078-template-defaults-korrigieren.md) | Template-Defaults aus den Migrationsläufen korrigieren | BACKLOG |  |
+| [F-079](F-079-widersprueche-zu-globalen-regeln.md) | Widersprüche zu den globalen Kit-Regeln erkennen | BACKLOG |  |
+| [F-080](F-080-stop-hook-und-reine-erfassungen.md) | Stop-Hook und add-feature für reine Erfassungen abstimmen | BACKLOG |  |
+| [F-081](F-081-index-pruefung-genauer.md) | Index-Prüfung genauer machen und die H1 am Titel ausrichten | BACKLOG |  |
+| [F-082](F-082-bedienung-update-conventions.md) | Bedienung von update-conventions vereinfachen und klarstellen | BACKLOG |  |
+| [F-083](F-083-stabile-standards-nummern.md) | CODING-STANDARDS mit stabilen Nummern und Platz für Projektregeln | BACKLOG |  |
+| [F-084](F-084-tool-versionen-gegen-mise-abgleichen.md) | Tool-Versionen des Projekts gegen mise abgleichen | BACKLOG |  |
+| [F-085](F-085-gates-in-bestandscodebasen-einfuehren.md) | Format- und Lint-Gates in Bestandscodebasen einführen | BACKLOG |  |
+| [F-086](F-086-sprach-matrix-konsequent-anwenden.md) | Sprach-Matrix in Template-Texten und Doku-Struktur anwenden | BACKLOG |  |
+| [F-087](F-087-sicherheitsluecken-lokal-pruefen.md) | Sicherheitslücken ohne Git-Host lokal prüfen | BACKLOG |  |
 
 ### Closed
 
@@ -133,4 +172,4 @@ Stand 2026-11-22.
 | [F-035](F-035-repo-uebergreifende-uebergabe-statt.md) | Repo-übergreifende Übergabe statt Parallelarbeit | SUPERSEDED → F-039 |  |
 <!-- /features-index -->
 
-next-feature: F-068
+next-feature: F-088
