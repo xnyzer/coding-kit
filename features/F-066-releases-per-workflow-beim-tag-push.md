@@ -2,10 +2,10 @@
 id: F-066
 title: Releases per GitHub-Workflow beim Tag-Push anlegen
 type: feature
-status: IN-PROGRESS
+status: DONE
 size: M
 created: 2026-11-22
-done:
+done: 2026-11-22
 depends-on: F-065
 superseded-by:
 ---
@@ -73,10 +73,14 @@ CHANGELOG des getaggten Stands stammt.
   belegt: actionlint 1.7.12 mit shellcheck 0.11.0 ohne Befund für beide Workflows;
   Rechte (`permissions: {}`, `contents: write` nur im Job), Pin und Übergabe des Tags als
   Umgebungsvariable durchgesehen.
-- [ ] AC-6 — Gegeben das Release `v3.7.0` existiert, wenn der Workflow manuell für
+- [x] AC-6 — Gegeben das Release `v3.7.0` existiert, wenn der Workflow manuell für
   `v3.7.0` startet, dann überspringt er es; nach dem Löschen des Releases `v3.7.0` legt
   ein zweiter Start es neu an — Titel der Tag-Name, Text gleich der Skriptausgabe,
-  „Latest“.
+  „Latest“. — belegt: Lauf 45038876747 (manueller Start für v3.7.0) meldet „skipped, the
+  release exists already“; nach `gh release delete v3.7.0 --yes` legt Lauf 45039009105
+  das Release neu an („published (latest: true)“); `gh release view v3.7.0` zeigt keinen
+  eigenen Titel, den Text gleich `just release-notes 3.7.0` und `github-actions[bot]` als
+  Autor; `gh release list` zeigt 21 Releases, nur v3.7.0 als Latest.
 - [x] AC-7 — Gegeben ein anstehendes Release, wenn man in der Kit-CLAUDE.md nachliest,
   dann steht dort: Schritt 4 übernimmt der Workflow nach dem Push des Tags; scheitert er,
   startet man ihn manuell (`gh workflow run`) oder ruft `just publish-release vX.Y.Z` von
@@ -253,3 +257,20 @@ statt zwei.
 die Shell-Zeile — vorhandener Fehler, Befund des unabhängigen Reviews, behoben. Beim
 Bauen ließ die erste Namensprüfung zwei gültige Zeilen durch; der Testfall deckte das
 auf, behoben.
+
+### F-066b — fertig 2026-11-22
+
+**Umgesetzt:** Probe an v3.7.0 nach dem Push. Ein manueller Start
+(`gh workflow run release.yml -f tag=v3.7.0`) übersprang das vorhandene Release; das
+Token hatte nur `Contents: write` und `Metadata: read`. Danach wurde das Release v3.7.0
+gelöscht — der Tag blieb —, und ein zweiter Start legte es neu an: ohne eigenen Titel,
+mit dem Text aus dem CHANGELOG, als Latest, angelegt von `github-actions[bot]`. Der Commit
+von v3.7.0 enthält die Workflow-Datei nicht; der manuelle Start lief trotzdem, weil das
+Skript aus main kam und nur den CHANGELOG aus dem Tag las (EC-1).
+
+**Entscheidungen:** keine.
+
+**Abweichung vom Plan:** keine.
+
+**Funde:** ohne unabhängiges Review — der Schritt hat keinen Diff, er bestand nur aus den
+beiden Läufen auf GitHub.
