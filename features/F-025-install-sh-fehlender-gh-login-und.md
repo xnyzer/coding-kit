@@ -2,7 +2,7 @@
 id: F-025
 title: Installer läuft ohne GitHub und installiert die Toolchain über mise
 type: feature
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-08-12
 done:
@@ -45,37 +45,52 @@ dieselbe Antwort auf „welcher Git-Server, welche Fähigkeiten").
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben `gh` ist installiert und angemeldet und es gibt noch keine
-  Personal-Config, wenn der Installer läuft, dann befüllt er sie wie bisher über
-  `gh api user` (Login, Name, Noreply-Adresse unter `CODING_KIT_EMAIL_GITHUB`) und fragt
-  den Git-Host neuer Projekte mit dem Vorschlag `github`. Wählt man einen anderen Host,
-  fragt er zusätzlich dessen Commit-Adresse.
-- [ ] AC-2 — Gegeben `gh` ist installiert, aber nicht angemeldet, wenn der Installer
+- [x] AC-1 — Gegeben `gh` ist installiert und angemeldet und es gibt noch keine
+  Personal-Config, wenn der Installer läuft, dann befüllt er sie wie bisher über `gh api
+  user` (Login, Name, Noreply-Adresse unter `CODING_KIT_EMAIL_GITHUB`) und fragt den
+  Git-Host neuer Projekte mit dem Vorschlag `github`. Wählt man einen anderen Host, fragt
+  er zusätzlich dessen Commit-Adresse. — belegt: Fälle „gh ready“ und „host azure“ in
+  `tests/template-sync/install.sh` — Login, Name aus gh (quotiert), Noreply-Adresse, Host
+  `github` mit Vorschlag, bei `azure` dazu dessen Adresse.
+- [x] AC-2 — Gegeben `gh` ist installiert, aber nicht angemeldet, wenn der Installer
   läuft, dann bietet er `gh auth login` an (Standard: Ja). Gelingt der Login, geht es
   weiter wie in AC-1. Lehnt man ab oder scheitert der Login, fragt er, ob er ohne GitHub
   weitermachen soll (Standard: Nein). Bei Nein bricht er mit dem Hinweis „gh auth login,
-  dann erneut ausführen“ und einem Exit-Code ungleich 0 ab, bevor er etwas einrichtet.
-- [ ] AC-3 — Gegeben `gh` fehlt, wenn der Installer läuft, dann nennt er, wie man `gh`
-  bekommt (mit brew: `brew install gh`, sonst die Seite von GitHub CLI), und fragt, ob
-  er ohne GitHub weitermachen soll (Standard: Nein). Bei Nein bricht er wie in AC-2 ab.
-- [ ] AC-4 — Gegeben der Lauf ohne GitHub ist bestätigt, dann ruft der Installer `gh`
-  kein einziges Mal auf. Er richtet Marketplace und Plugin ein und fragt für die
+  dann erneut ausführen“ und einem Exit-Code ungleich 0 ab, bevor er etwas einrichtet. —
+  belegt: Fälle „login“ (Login läuft, danach mit GitHub), „declining both“ (Exit 1,
+  Hinweis auf `gh auth login`, keine Config, kein Aufruf `claude plugin`) und „a failed
+  login and no GitHub“.
+- [x] AC-3 — Gegeben `gh` fehlt, wenn der Installer läuft, dann nennt er, wie man `gh`
+  bekommt (mit brew: `brew install gh`, sonst die Seite von GitHub CLI), und fragt, ob er
+  ohne GitHub weitermachen soll (Standard: Nein). Bei Nein bricht er wie in AC-2 ab. —
+  belegt: Fälle „gh missing“ (Seite von GitHub CLI, Exit 1, keine Config) und „gh missing
+  with brew“ (`brew install gh`).
+- [x] AC-4 — Gegeben der Lauf ohne GitHub ist bestätigt, dann ruft der Installer `gh` kein
+  einziges Mal auf. Er richtet Marketplace und Plugin ein und fragt für die
   Personal-Config: Autorname (Vorschlag aus `git config --global user.name`), Git-Host
   neuer Projekte (Vorschlag `git`, auch `azure`, `github` wird nicht angeboten),
-  Commit-Adresse dieses Hosts (Vorschlag aus `git config --global user.email`; leer =
-  beim Commit fragen) und das Projekte-Verzeichnis. `CODING_KIT_GITHUB_LOGIN` und
-  `CODING_KIT_EMAIL_GITHUB` schreibt er nicht.
-- [ ] AC-5 — Gegeben eine Eingabe, die keine einfache Adresse ist, oder ein Host außerhalb
+  Commit-Adresse dieses Hosts (Vorschlag aus `git config --global user.email`; leer —
+  neben einem Vorschlag `-` — = beim Commit fragen) und das Projekte-Verzeichnis.
+  `CODING_KIT_GITHUB_LOGIN` und `CODING_KIT_EMAIL_GITHUB` schreibt er nicht. — belegt:
+  Fälle „gh missing and no GitHub“ (Vorschläge aus git config, `github` nicht angeboten,
+  kein Login-Schlüssel), „declined login and no GitHub“ (gh nur nach seinem Zustand
+  gefragt), „- as address“ (Adresse leer).
+- [x] AC-5 — Gegeben eine Eingabe, die keine einfache Adresse ist, oder ein Host außerhalb
   der Liste, dann lehnt der Installer sie mit Grund ab und fragt erneut. Gegeben ein Name
   oder Pfad mit `"`, `$`, `` ` `` oder `\`, dann steht der Wert nach dem Einlesen der
-  Personal-Config (`. coding-kit.env`) unverändert da.
-- [ ] AC-6 — Gegeben eine Personal-Config existiert schon, wenn der Installer läuft, dann
+  Personal-Config (`. coding-kit.env`) unverändert da. — belegt: Fälle „rejected answers“
+  (`github` und `gitlab` als Host, ungültige Adresse abgelehnt, dann übernommen) und
+  „special characters“ (Name und Pfad mit `"`, `$`, `` ` ``, `\` nach dem Einlesen gleich,
+  kein Befehl ausgeführt).
+- [x] AC-6 — Gegeben eine Personal-Config existiert schon, wenn der Installer läuft, dann
   fasst er sie nicht an und stellt keine Frage zu GitHub. Den Zustand von `gh` meldet er
-  nur (bereit, ohne Login, fehlt).
-- [ ] AC-7 — Gegeben der Vorschlag für das Projekte-Verzeichnis, dann ist er
+  nur (bereit, ohne Login, fehlt). — belegt: Fall „existing config“ — Datei unverändert
+  (cksum), „nicht angemeldet“ gemeldet, keine Frage zu GitHub.
+- [x] AC-7 — Gegeben der Vorschlag für das Projekte-Verzeichnis, dann ist er
   `~/Documents/Coding-Projects`, wenn `~/Documents` existiert; sonst der Ordner, den
   `xdg-user-dir DOCUMENTS` nennt (z. B. `~/Dokumente`), wenn es ihn gibt und er nicht das
-  Home selbst ist; sonst `~/Coding-Projects`.
+  Home selbst ist; sonst `~/Coding-Projects`. — belegt: Fälle „Documents“, „xdg“, „xdg =
+  home“, „xdg missing“ und „no documents folder“.
 - [ ] AC-8 — Gegeben `mise` ist da, aber `just`, `lefthook` oder `gitleaks` fehlen, wenn
   der Installer läuft, dann bietet er `mise use -g <fehlende Tools>` an (Standard: Nein).
   Danach meldet `tool-check` sie als vorhanden. brew wird für diese drei nicht mehr
@@ -96,8 +111,9 @@ dieselbe Antwort auf „welcher Git-Server, welche Fähigkeiten").
   ohne GitHub-Konto oder -Login. Der Satz „install.sh ist hier keine Option“ und der
   Kasten „läuft nur mit vollständig eingerichtetem GitHub“ sind weg. Die Toolchain kommt
   über mise (`mise use -g just lefthook gitleaks`), mit dem Hinweis zu Linux ohne brew.
-- [ ] AC-12 — Gegeben eine Änderung an `install.sh`, wenn `just check` läuft, dann laufen
-  die Installer-Tests mit (Pfadliste in `scripts/script-tests.sh`).
+- [x] AC-12 — Gegeben eine Änderung an `install.sh`, wenn `just check` läuft, dann laufen
+  die Installer-Tests mit (Pfadliste in `scripts/script-tests.sh`). — belegt: `just check`
+  meldet „script tests: install.sh changed — running them“.
 
 ### Randfälle
 
@@ -224,3 +240,43 @@ Keine neuen Endpunkte, Config-Schlüssel oder Dependencies.
 - README: Manuell Schritt 4 (Toolchain über mise statt brew für alle vier), Hinweis zu
   Linux ohne brew.
 - Erfüllt AC-8 bis AC-10, AC-11 (Toolchain-Teil); EC-3 bis EC-5.
+
+## Verlauf
+
+### F-025a — fertig 2026-11-22
+
+**Umgesetzt:** `install.sh` prüft zuerst `claude`, dann `gh` in drei Zuständen: bereit,
+nicht angemeldet (bietet `gh auth login` an) oder fehlt (nennt `brew install gh` bzw. die
+Seite von GitHub CLI). Ohne GitHub geht der Lauf nur nach „Ohne GitHub weitermachen?“
+(Standard: Nein) weiter; bei Nein bricht er ab, bevor er etwas einrichtet. Gibt es die
+Personal-Config schon, meldet er `gh` nur. Schritt 3 fragt mit GitHub den Host
+(`github | azure | git`), ohne GitHub Autorname, Host (`git | azure`) und Commit-Adresse
+mit Vorschlägen aus `git config --global`, dazu das Projekte-Verzeichnis
+(`~/Documents`, sonst `xdg-user-dir DOCUMENTS`, sonst Home; ein führendes `~` wird
+aufgelöst). Die Hilfsfunktion `ask_value` fragt bis zu einer gültigen Antwort und bricht
+am Eingabeende ab, statt endlos zu fragen. Login, Name und Projekte-Verzeichnis schreibt
+der Installer quotiert in eine Basisdatei; Host und Adressen setzt
+`template-sync.sh set-global`, die fertige Datei kommt mit `umask 077` und `chmod 600`
+an ihren Platz. `tests/template-sync/install.sh` startet `install.sh` mit bash in einer
+leeren Umgebung (`env -i`) und Attrappen für `claude`, `gh`, `brew` und `xdg-user-dir`
+(79 Checks je Durchlauf); `just check` lässt sie laufen, sobald sich `install.sh`
+ändert. README: Einrichtung und „Ohne GitHub“ beschreiben den Lauf mit und ohne GitHub.
+
+**Entscheidungen:** Neben einem Vorschlag heißt `-` „beim Commit fragen“, weil eine leere
+Antwort den Vorschlag übernimmt (AC-4 entsprechend präzisiert). Fragen stehen mit
+`printf` statt `read -p` auf der Standardausgabe — `read -p` zeigt sie nur am Terminal,
+die Tests sähen sie sonst nicht. `claude` wird vor `gh` geprüft, damit niemand sich
+anmeldet und dann am fehlenden `claude` scheitert.
+
+**Abweichung vom Plan:** Die Attrappe für `uname` braucht erst F-025b. Der Test-HOME heißt
+`test-home` und die Beispieladressen enden auf `example.com`/`example.org`, weil der
+Validator `/home/…` als lokalen Pfad und andere Domains als echte Adressen meldet.
+
+**Funde:** Vorhandene Fehler, behoben und getestet: Werte mit `"` oder `$` machten die
+Personal-Config kaputt (keine Quotierung), und ein `~/…` als Projekte-Verzeichnis blieb
+wörtlich stehen. Befunde des unabhängigen Reviews, behoben: Ein Tab oder `{{` in Name
+oder Pfad hätte eine Config ergeben, die `template-sync.sh` ganz ablehnt (jetzt
+abgelehnt und neu gefragt; ein solcher Name aus `gh api` weicht dem Login); der Hinweis
+„leer lassen“ stimmte neben einem Vorschlag nicht (jetzt `-`); der README-Kasten nannte
+mit GitHub nur die Host-Frage. Gegenprobe: sechs kaputte Kopien des Installers fielen
+durch die Tests.

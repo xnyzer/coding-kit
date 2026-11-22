@@ -23,27 +23,34 @@ GitHub](#ohne-github-nur-git) und die Spalte **GitHub** in der
 
 Zwei **alternative** Wege zum selben Ergebnis — der Installer führt automatisiert genau
 die Schritte aus, die unten manuell stehen. Eins von beiden genügt. Voraussetzung für
-beide: `gh` (authentifiziert) und `claude` sind installiert. Ohne GitHub-Konto führt nur
-der [dritte Weg](#ohne-github-nur-git).
+beide: `claude` ist installiert; mit GitHub zusätzlich `gh` (angemeldet). Ohne
+GitHub-Konto oder -Login gilt, was unter [Ohne GitHub](#ohne-github-nur-git) steht — der
+Installer kann auch das.
 
 ### Automatisiert (empfohlen)
 
 Repo klonen und den Installer ausführen — er prüft die Voraussetzungen, richtet
-Marketplace + Plugin ein, legt die Personal-Config an (via `gh api` vorbefüllt), meldet
-den Stand der [globalen Kit-Regeln](#globale-kit-regeln) und prüft die Toolchain
-(Installation auf Wunsch via brew). Die Kit-Regeln schreibt er nicht; die richtest du
-danach in einer Claude-Session mit `/coding-kit:update-conventions global` ein:
+Marketplace + Plugin ein, legt die Personal-Config an (via `gh api` vorbefüllt bzw. ohne
+GitHub abgefragt), meldet den Stand der [globalen Kit-Regeln](#globale-kit-regeln) und
+prüft die Toolchain (Installation auf Wunsch via brew). Die Kit-Regeln schreibt er
+nicht; die richtest du danach in einer Claude-Session mit
+`/coding-kit:update-conventions global` ein:
 
 ```bash
 git clone https://github.com/xnyzer/coding-kit.git && cd coding-kit && ./install.sh
 ```
 
-> **Der Installer läuft nur mit vollständig eingerichtetem GitHub.** Er prüft als erstes
-> `gh` **inklusive Login** und bricht sonst sofort ab (`gh auth status` muss grün sein,
-> [install.sh:45-46](install.sh#L45-L46)); die Personal-Config befüllt er über
-> `gh api user`. Ohne Konto oder ohne Login ist er kein gangbarer Weg — dann
-> [manuell](#manuell) bzw. [ohne GitHub](#ohne-github-nur-git) einrichten. Und ihn in
-> einer **Shell** starten, nicht per Doppelklick: bei einem Abbruch schließt sich das
+> **Mit oder ohne GitHub.** Ist `gh` angemeldet, befüllt der Installer die
+> Personal-Config über `gh api user` und fragt den Git-Host neuer Projekte (vorgeschlagen:
+> `github`; bei einem anderen Host auch dessen Commit-Adresse) und das
+> Projekte-Verzeichnis. Ist `gh` nicht angemeldet, bietet er `gh auth login` an; fehlt
+> `gh`, sagt er, wie man es bekommt. Danach fragt er, ob er **ohne GitHub** weitermachen
+> soll (Standard: Nein — dann bricht er ab, bevor er etwas einrichtet). Ohne GitHub ruft
+> er `gh` nicht mehr auf und fragt Autorname, Host (`git` oder `azure`), Commit-Adresse
+> und Projekte-Verzeichnis ab; Name und Adresse schlägt er aus `git config --global` vor
+> (`-` statt einer Adresse heißt: beim Commit fragen).
+> Gibt es die Personal-Config schon, fasst er sie nicht an und meldet `gh` nur. Und ihn
+> in einer **Shell** starten, nicht per Doppelklick: bei einem Abbruch schließt sich das
 > per Dateizuordnung geöffnete Fenster mitsamt der Fehlermeldung.
 
 Der Installer ist **idempotent**: jeder Schritt prüft erst den Zustand, mehrfaches
@@ -126,8 +133,11 @@ erreichbar ist; ein Login braucht keiner dieser Schritte. Ist auch das Lesen ges
 muss das Plugin (mit dem Template darin) über einen Firmen-Mirror oder Datenträger auf
 den Rechner — einen eingebauten Pfad dafür hat das Kit nicht.
 
+**Mit dem Installer:** Klon und `./install.sh` wie im [automatisierten
+Weg](#automatisiert-empfohlen); die Frage „Ohne GitHub weitermachen?“ mit Ja
+beantworten. Er erledigt dann die Schritte unten. Von Hand geht es so:
+
 1. **Marketplace + Plugin** wie im manuellen Weg — die zwei `/plugin`-Befehle lesen nur.
-   `install.sh` ist hier keine Option (er verlangt ein authentifiziertes `gh`).
 2. **Personal-Config von Hand**, ohne `gh api`-Vorbefüllung. `CODING_KIT_GITHUB_LOGIN`
    entfällt; die Commit-Adresse für Projekte ohne Host steht unter
    `CODING_KIT_EMAIL_GIT`:

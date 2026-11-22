@@ -2,9 +2,13 @@
 # coding-kit installer — new-machine bootstrap. Idempotent: safe to re-run anytime.
 #
 # What it does (each step checks state first, nothing runs twice):
-#   1. Preconditions: gh (authenticated) and claude must be installed.
+#   1. Preconditions: claude must be installed. gh decides whether the run uses GitHub:
+#      ready, logged out (offers gh auth login) or missing; without GitHub the run goes
+#      on only after a confirmation.
 #   2. Adds the xnyzer marketplace and installs the coding-kit plugin.
-#   3. Creates the personal config ~/.claude/coding-kit.env (prefilled via gh api).
+#   3. Creates the personal config ~/.claude/coding-kit.env — prefilled via gh api, or
+#      asked for without GitHub; host and commit addresses go through template-sync.sh
+#      set-global.
 #   4. Reports the kit's global rules; it never writes them or ~/.claude/CLAUDE.md —
 #      setting them up is /coding-kit:update-conventions global in a Claude session.
 #   5. Checks the base toolchain (mise, just, lefthook, gitleaks) outside any project
@@ -24,6 +28,8 @@ PLUGIN_NAME="coding-kit"
 CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 ENV_FILE="$CONFIG_DIR/coding-kit.env"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TEMPLATE_SYNC="$SCRIPT_DIR/plugins/coding-kit/scripts/template-sync.sh"
+KIT_RULES="$SCRIPT_DIR/plugins/coding-kit/global/coding-kit.md"
 LOCAL_MODE=false
 [ "${1:-}" = "--local" ] && LOCAL_MODE=true
 
@@ -32,22 +38,148 @@ ok()   { printf '    \033[32m✓\033[0m %s\n' "$*"; }
 warn() { printf '    \033[33m!\033[0m %s\n' "$*"; }
 fail() { printf '    \033[31m✗\033[0m %s\n' "$*"; exit 1; }
 
+# Questions go to stdout with printf, not `read -p`: read prints its prompt only when the
+# input is a terminal.
 ask_yes_no() { # $1 question, $2 default (j/n)
-  local answer default="${2:-n}"
-  read -r -p "    $1 [$([ "$default" = j ] && echo "J/n" || echo "j/N")] " answer || true
+  local answer="" default="${2:-n}"
+  printf '    %s [%s] ' "$1" "$([ "$default" = j ] && echo "J/n" || echo "j/N")"
+  read -r answer || true
   answer="${answer:-$default}"
   [[ "$answer" =~ ^[jJyY] ]]
+}
+
+# ask_value QUESTION DEFAULT CHECK — asks until the answer (empty = DEFAULT) passes the
+# function CHECK, then leaves it in ANSWER. CHECK prints its reason when it rejects. At
+# the end of the input the default counts once; a rejected answer then aborts instead of
+# asking forever.
+ANSWER=""
+ask_value() {
+  local question="$1" default="$2" check="$3" line at_end
+  while true; do
+    line="" at_end=false
+    if [ -n "$default" ]; then
+      printf '    %s [%s]: ' "$question" "$default"
+    else
+      printf '    %s: ' "$question"
+    fi
+    read -r line || at_end=true
+    ANSWER="${line:-$default}"
+    if "$check" "$ANSWER"; then
+      return 0
+    fi
+    [ "$at_end" = false ] || fail "Eingabe zu Ende, bevor eine gültige Antwort kam — erneut ausführen"
+  done
+}
+
+# A value the personal config can hold: template-sync.sh rejects a whole config that has a
+# tab or {{ in a value (load_env).
+config_value() {
+  case "$1" in
+    *$'\t'* | *"{{"*)
+      warn "ein Tab oder {{ geht in der Personal-Config nicht"
+      return 1
+      ;;
+  esac
+}
+
+# A plain address — the pattern commit-email in template-sync.sh accepts —, empty, or "-":
+# both mean "ask at commit time" ("-" for when a suggestion would fill an empty answer).
+EMAIL_PATTERN='^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$'
+email_value() {
+  [ -z "$1" ] || [ "$1" = - ] && return 0
+  [[ "$1" =~ $EMAIL_PATTERN ]] && return 0
+  warn "'$1' ist keine einfache Adresse (etwa name@example.org)"
+  return 1
+}
+
+# The hosts on offer, set before asking; template-sync.sh set-global checks the choice
+# again against its own list (HOSTS there).
+HOST_CHOICES=""
+host_value() {
+  case " $HOST_CHOICES " in
+    *" $1 "*) return 0 ;;
+  esac
+  warn "'$1' ist kein Host zur Auswahl — möglich: ${HOST_CHOICES// / | }"
+  return 1
+}
+
+# Value for a double-quoted line of the personal config: the shell expands $ and ` there
+# and reads \ and " as escapes (the same quoting as template-sync.sh set-global).
+env_quote() {
+  printf '%s' "$1" | sed 's/[\\"$`]/\\&/g'
+}
+
+# ~/Documents when it exists; else the documents folder of the desktop (xdg-user-dir, e.g.
+# ~/Dokumente) when it exists and is not the home folder itself; else the home folder.
+default_projects_dir() {
+  local docs=""
+  if [ -d "$HOME/Documents" ]; then
+    docs="$HOME/Documents"
+  elif command -v xdg-user-dir >/dev/null 2>&1; then
+    docs="$(xdg-user-dir DOCUMENTS 2>/dev/null || true)"
+    if [ "$docs" = "$HOME" ] || [ ! -d "$docs" ]; then docs=""; fi
+  fi
+  printf '%s/Coding-Projects' "${docs:-$HOME}"
 }
 
 # --- 1. Preconditions --------------------------------------------------------
 say "Voraussetzungen prüfen"
 
-command -v gh >/dev/null 2>&1 || fail "gh (GitHub CLI) fehlt — installieren: brew install gh"
-gh auth status >/dev/null 2>&1 || fail "gh ist nicht authentifiziert — ausführen: gh auth login"
-ok "gh installiert und authentifiziert"
-
 command -v claude >/dev/null 2>&1 || fail "claude (Claude Code) fehlt — siehe https://code.claude.com/docs"
 ok "claude installiert ($(claude --version 2>/dev/null | head -1))"
+
+if ! command -v gh >/dev/null 2>&1; then
+  GH_STATE=missing
+elif gh auth status >/dev/null 2>&1; then
+  GH_STATE=ready
+else
+  GH_STATE=logged-out
+fi
+if command -v brew >/dev/null 2>&1; then
+  GH_INSTALL_HINT="installieren: brew install gh"
+else
+  GH_INSTALL_HINT="installieren: siehe https://cli.github.com"
+fi
+
+# GitHub matters only for creating the personal config; an existing one is never touched,
+# so then gh is only reported.
+USE_GITHUB=false
+if [ -f "$ENV_FILE" ]; then
+  case "$GH_STATE" in
+    ready) ok "gh installiert und angemeldet" ;;
+    logged-out) warn "gh ist installiert, aber nicht angemeldet" ;;
+    missing) warn "gh (GitHub CLI) fehlt" ;;
+  esac
+else
+  case "$GH_STATE" in
+    ready)
+      ok "gh installiert und angemeldet"
+      USE_GITHUB=true
+      ;;
+    logged-out)
+      warn "gh ist installiert, aber nicht angemeldet"
+      if ask_yes_no "Jetzt bei GitHub anmelden (gh auth login)?" j \
+        && gh auth login && gh auth status >/dev/null 2>&1; then
+        ok "gh angemeldet"
+        USE_GITHUB=true
+      else
+        warn "nicht angemeldet"
+      fi
+      ;;
+    missing)
+      warn "gh (GitHub CLI) fehlt — $GH_INSTALL_HINT"
+      ;;
+  esac
+  if [ "$USE_GITHUB" = false ]; then
+    if ! ask_yes_no "Ohne GitHub weitermachen (Personal-Config ohne gh api, Host git oder azure)?" n; then
+      if [ "$GH_STATE" = missing ]; then
+        fail "abgebrochen — gh $GH_INSTALL_HINT, dann erneut ausführen"
+      fi
+      fail "abgebrochen — gh auth login, dann erneut ausführen"
+    fi
+    ok "weiter ohne GitHub"
+  fi
+fi
 
 # --- 2. Marketplace + plugin -------------------------------------------------
 say "Marketplace & Plugin"
@@ -80,29 +212,73 @@ if [ -f "$ENV_FILE" ]; then
 else
   # Prefill what is resolvable at runtime; skills still prefer live resolution,
   # this file is the offline fallback plus the non-resolvable personal choices.
-  GH_LOGIN="$(gh api user --jq '.login')"
-  GH_ID="$(gh api user --jq '.id')"
-  GH_NAME="$(gh api user --jq '.name // .login')"
-  NOREPLY="${GH_ID}+${GH_LOGIN}@users.noreply.github.com"
-  DEFAULT_PROJECTS_DIR="$HOME/Documents/Coding-Projects"
+  # The address arguments for set-global: the GitHub noreply address, then the address
+  # of a chosen host other than GitHub. Never empty in the end — bash 3.2 (macOS) treats
+  # an empty array under set -u as unbound.
+  EMAIL_ARGS=()
+  if [ "$USE_GITHUB" = true ]; then
+    GH_LOGIN="$(gh api user --jq '.login')"
+    GH_ID="$(gh api user --jq '.id')"
+    AUTHOR_NAME="$(gh api user --jq '.name // .login')"
+    if ! config_value "$AUTHOR_NAME"; then
+      warn "statt des Namens aus gh api gilt der Login"
+      AUTHOR_NAME="$GH_LOGIN"
+    fi
+    NOREPLY="${GH_ID}+${GH_LOGIN}@users.noreply.github.com"
+    echo "    Vorbefüllt via gh api: Login '$GH_LOGIN', Name '$AUTHOR_NAME', E-Mail '$NOREPLY'"
+    EMAIL_ARGS+=("CODING_KIT_EMAIL_GITHUB=$NOREPLY")
+    HOST_CHOICES="github azure git"
+    ask_value "Git-Host neuer Projekte (${HOST_CHOICES// / | })" github host_value
+  else
+    ask_value "Autorname für Commits" "$(git config --global user.name 2>/dev/null || true)" config_value
+    AUTHOR_NAME="$ANSWER"
+    [ -n "$AUTHOR_NAME" ] || warn "kein Autorname eingetragen — Commits nehmen den Namen aus git config"
+    # Without gh, GitHub projects cannot be created.
+    HOST_CHOICES="git azure"
+    ask_value "Git-Host neuer Projekte (${HOST_CHOICES// / | })" git host_value
+  fi
+  HOST="$ANSWER"
+  if [ "$HOST" != github ]; then
+    HOST_KEY="CODING_KIT_EMAIL_$(printf '%s' "$HOST" | tr 'a-z' 'A-Z')"
+    GIT_EMAIL="$(git config --global user.email 2>/dev/null || true)"
+    if [ -n "$GIT_EMAIL" ]; then
+      ask_value "Commit-Adresse für Projekte auf $HOST (- = beim Commit fragen)" "$GIT_EMAIL" email_value
+    else
+      ask_value "Commit-Adresse für Projekte auf $HOST (leer = beim Commit fragen)" "" email_value
+    fi
+    [ "$ANSWER" != - ] || ANSWER=""
+    EMAIL_ARGS+=("$HOST_KEY=$ANSWER")
+  fi
+  ask_value "Projekte-Verzeichnis" "$(default_projects_dir)" config_value
+  PROJECTS_DIR="$ANSWER"
+  # Inside quotes the shell never expands a leading ~.
+  case "$PROJECTS_DIR" in
+    "~") PROJECTS_DIR="$HOME" ;;
+    "~/"*) PROJECTS_DIR="$HOME/${PROJECTS_DIR#"~/"}" ;;
+  esac
 
-  echo "    Vorbefüllt via gh api: Login '$GH_LOGIN', E-Mail '$NOREPLY'"
-  read -r -p "    Projekte-Verzeichnis [$DEFAULT_PROJECTS_DIR]: " PROJECTS_DIR || true
-  PROJECTS_DIR="${PROJECTS_DIR:-$DEFAULT_PROJECTS_DIR}"
-
+  # The keys only the installer writes go into a base file; set-global adds host and
+  # addresses with the comments of the kit rules. The result moves into place with
+  # owner-only rights.
+  ENV_WORK="$(mktemp -d)"
+  trap 'rm -rf "$ENV_WORK"' EXIT
+  {
+    echo "# coding-kit personal config — created by install.sh, NEVER commit this file."
+    echo "# Skills resolve identity at runtime (git config / gh api) where possible;"
+    echo "# this file is the offline fallback and holds non-resolvable personal choices."
+    if [ "$USE_GITHUB" = true ]; then
+      echo "CODING_KIT_GITHUB_LOGIN=\"$(env_quote "$GH_LOGIN")\""
+    fi
+    echo "CODING_KIT_GIT_AUTHOR_NAME=\"$(env_quote "$AUTHOR_NAME")\""
+    echo "CODING_KIT_PROJECTS_DIR=\"$(env_quote "$PROJECTS_DIR")\""
+  } > "$ENV_WORK/base.env"
+  sh "$TEMPLATE_SYNC" set-global "$KIT_RULES" "$ENV_WORK/base.env" "$ENV_WORK/out" \
+    "CODING_KIT_DEFAULT_HOST=$HOST" "${EMAIL_ARGS[@]}" >/dev/null ||
+    fail "template-sync.sh set-global ist gescheitert"
   mkdir -p "$(dirname "$ENV_FILE")"
-  cat > "$ENV_FILE" <<EOF
-# coding-kit personal config — created by install.sh, NEVER commit this file.
-# Skills resolve identity at runtime (git config / gh api) where possible;
-# this file is the offline fallback and holds non-resolvable personal choices.
-CODING_KIT_GITHUB_LOGIN="$GH_LOGIN"
-CODING_KIT_GIT_AUTHOR_NAME="$GH_NAME"
-CODING_KIT_DEFAULT_HOST="github"
-CODING_KIT_EMAIL_GITHUB="$NOREPLY"
-CODING_KIT_PROJECTS_DIR="$PROJECTS_DIR"
-EOF
+  (umask 077 && cp "$ENV_WORK/out/coding-kit.env" "$ENV_FILE")
   chmod 600 "$ENV_FILE"
-  ok "angelegt (chmod 600)"
+  ok "angelegt (chmod 600) — Host neuer Projekte: $HOST"
 fi
 
 # --- 4. Global kit rules ------------------------------------------------------
@@ -127,7 +303,6 @@ fi
 # --- 5. Toolchain ------------------------------------------------------------
 say "Toolchain (mise, just, lefthook, gitleaks)"
 
-TEMPLATE_SYNC="$SCRIPT_DIR/plugins/coding-kit/scripts/template-sync.sh"
 # A tool counts only when it runs outside any project — a mise shim without a version
 # stops there with "No version is set"; tool-check decides.
 TOOL_CHECK="$(sh "$TEMPLATE_SYNC" tool-check mise just lefthook gitleaks)" ||
