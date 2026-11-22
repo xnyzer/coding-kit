@@ -66,7 +66,7 @@ Stand 2026-11-22.
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
-| [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md) | Startwerte der Module und Core-Workflows im Template auffrischen | PLANNED |  |
+| [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md) | Startwerte der Module und Core-Workflows im Template auffrischen | IN-PROGRESS |  |
 | [F-063](F-063-projekt-als-fork-eines-github-repos.md) | Neues Projekt als Fork eines GitHub-Repos anlegen | BACKLOG |  |
 
 ### Closed

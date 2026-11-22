@@ -13,6 +13,25 @@ Skills, Hooks, Skripten oder Template bumpt die Version und bekommt hier einen E
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.7.0 — unveröffentlicht
+
+Die Startwerte im Template stehen wieder auf aktuellen Versionen (F-062). Neue Projekte
+bekommen sie beim Anlegen; bestehende sehen die Werte in managed Dateien als Angebot von
+`/update-conventions` und entscheiden je Datei.
+
+- **Doku (`docs/renovate-preset.md`):** Mehrere Startwerte zusammen hebt das Kit
+  direkt auf main an, mit einem daraus gerenderten Projekt geprüft, Action-SHAs und
+  mise-Version von Hand; der Weg über einen Dashboard-PR bleibt für einzelne Werte.
+
+### Template
+
+- **Workflows `ci.yml` und `codeql.yml` (managed):** `actions/checkout` v7.0.1,
+  `jdx/mise-action` v5.3.0, `github/codeql-action` v4.39.4, jeweils als Commit-SHA.
+  mise-action v5 installiert ohne feste mise-Version nur Releases, die mindestens 24
+  Stunden alt sind.
+- **`azure-pipelines.yml` (managed):** mise v2026.11.12.
+- **Modul go — `mise.toml` (managed) und `go.mod` (nur neue Projekte):** go 1.27.
+
 ## 3.6.0 — 2026-11-20
 
 Die Lizenzprüfung hat eine gemeinsame Regel je Projekt (F-058): `license-policy.txt`

@@ -86,6 +86,17 @@ So hebt das Kit einen Startwert an:
    das Kit nicht ändert, löst dort nichts aus; Seed-Dateien wie `package.json` erreicht
    die Anhebung nur in neuen Projekten.
 
+Sollen mehrere Startwerte zusammen steigen (etwa Sprache, Paketmanager und Testwerkzeug
+eines Moduls oder die Actions der Workflows), hebt das Kit sie direkt auf main an, statt
+je Update einen PR zu öffnen: die Werte im Template ändern, ein Projekt aus dem
+Arbeitsstand rendern und darin `just check` laufen lassen, dann Version und CHANGELOG
+wie in Schritt 2. Was `just check` nicht sieht, wird von Hand geprüft: Eine Action steht
+mit dem Commit-SHA ihres Tags da (`gh api repos/<owner>/<repo>/commits/<tag>`), der
+Kommentar nennt genau diesen Tag; für `MISE_VERSION` gibt es die `install.sh` des
+Releases. Nach dem Push verschwinden die Einträge der angehobenen Werte aus dem
+Dashboard; ist inzwischen eine neuere Version erschienen, bleibt der Eintrag mit ihr
+stehen.
+
 ## Preset ändern
 
 Änderungen an `default.json` wirken auf **alle** angebundenen Projekte beim nächsten

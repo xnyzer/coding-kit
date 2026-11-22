@@ -2,7 +2,7 @@
 id: F-062
 title: Startwerte der Module und Core-Workflows im Template auffrischen
 type: change
-status: PLANNED
+status: IN-PROGRESS
 size: L
 created: 2026-11-20
 done:
@@ -46,14 +46,19 @@ Lizenzprüfung aus F-058.
   node 26, `engines >=26`, pnpm 12, TypeScript 7, vitest 5 und aktuellem Biome; die
   Lizenzprüfung liest die Ausgabe von pnpm 12 wie bisher, auch ohne
   Laufzeit-Abhängigkeiten.
-- [ ] AC-3 — Gegeben ein Projekt mit Modul go, aus dem Arbeitsstand gerendert, wenn
+- [x] AC-3 — Gegeben ein Projekt mit Modul go, aus dem Arbeitsstand gerendert, wenn
   `just check` läuft, dann ist es grün mit go 1.27 in `mise.toml` und `go.mod`, mit
-  golangci-lint und Lizenzprüfung.
-- [ ] AC-4 — Gegeben die Core-Workflows, dann stehen checkout, mise-action und
+  golangci-lint und Lizenzprüfung. — belegt: Projekt mit Modul go aus dem
+  Arbeitsstand, `just check` grün mit go 1.27.4 und golangci-lint 2.15.0 (gebaut mit
+  go 1.27, 0 issues), `go test -race`; Lizenzprüfung ohne und mit einer Abhängigkeit
+  (1 Paket, 0 nicht erlaubt).
+- [x] AC-4 — Gegeben die Core-Workflows, dann stehen checkout, mise-action und
   codeql-action auf der neuen Version, jeweils als Commit-SHA mit passendem
   Versionskommentar, und `azure-pipelines.yml` nennt die neue mise-Version, deren
   install.sh es gibt. Negativfall: Ein SHA, der nicht zum Tag im Kommentar gehört, gilt
-  als Fehler.
+  als Fehler. — belegt: je Action der SHA per `gh api` über Tag-Referenz und
+  Commits-API aufgelöst, beide gleich dem SHA in der Datei, Kommentar nennt den Tag;
+  `install.sh` von mise v2026.11.12 antwortet mit HTTP 200.
 - [ ] AC-5 — Gegeben der Abschluss jedes Substeps, wenn `just check` läuft, dann ist es
   grün (Skript-Tests eingeschlossen), und Version 3.7.0 hat einen CHANGELOG-Eintrag mit
   Abschnitt `### Template`, der die neuen Startwerte nennt.
@@ -172,3 +177,22 @@ TypeScript 7, vitest 5, Biome und `@types/node` auf den aktuellen Stand; nötige
 Anpassungen an tsconfig, vitest-Konfiguration oder Rezepten im selben Schritt (EC-1);
 Bestandsprojekt-Fall mit `pnpm@11` und `engines >=24`. Nach dem Push das Dashboard
 prüfen. Erfüllt AC-2, AC-5, AC-6 (ts-node), AC-7.
+
+## Verlauf
+
+### F-062a — fertig 2026-11-22
+
+**Umgesetzt:** Die Core-Workflows `ci.yml` und `codeql.yml` nutzen actions/checkout
+v7.0.1, jdx/mise-action v5.3.0 und github/codeql-action v4.39.4, jeweils als
+Commit-SHA mit dem Tag im Kommentar; `azure-pipelines.yml` installiert mise
+v2026.11.12. Das Modul go steht auf go 1.27 (`mise.part.toml`, `go.mod.tmpl`). Version
+3.7.0 mit CHANGELOG-Eintrag samt `### Template`; `docs/renovate-preset.md` beschreibt
+den Weg „direkt auf main“ mit den Prüfungen, die `just check` nicht abdeckt.
+
+**Entscheidungen:** mise-action v5 bringt als einzige Breaking Change eine Wartezeit
+von 24 Stunden für neue mise-Releases, wenn keine Version gesetzt ist; die Workflows
+brauchen dafür keine Anpassung, der CHANGELOG nennt es.
+
+**Abweichung vom Plan:** keine.
+
+**Funde:** keine.
