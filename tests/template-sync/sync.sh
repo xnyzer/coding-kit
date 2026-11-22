@@ -38,6 +38,16 @@ no_row() {  # NAME TARGET
   ! cut -f1 "$TMP/$1.tsv" | grep -qxF -- "$2"
 }
 
+# The TSV NAME has exactly this line, its fields given one by one — for a path that has
+# several lines.
+line_in() {  # NAME FIELD…
+  li_file=$TMP/$1.tsv
+  li_line=$2
+  shift 2
+  for li_f in "$@"; do li_line=$li_line$(printf '\t')$li_f; done
+  grep -qxF -- "$li_line" "$li_file"
+}
+
 # $TMP/PATH holds exactly what printf FORMAT produces.
 file_is() {  # PATH FORMAT
   printf "$2" > "$TMP/expected"
@@ -111,6 +121,117 @@ run_sync_cases() {
   check "slot: project fragments kept, template text merged" \
     file_is mo/STD.md "HEAD\n$S\nFRAG-A\n\nFRAG-B\n$E\ntail\nproj\n"
   refute "merge into a non-empty dir refused" ts merge "$TMP/mp" "$TMP/mp.soll" "$TMP/mo"
+
+  # --- merge: files git ignores (ignored, unignored) -------------------------------
+  # ig-p is a git repository that ignores all of private/, *.pem and skipme.txt; the
+  # template versions private/README.md and drops *.pem and skipme.txt.
+  put ig-p/.gitignore 'private/\n*.pem\nbuild/\nskipme.txt\n'
+  put ig-p.soll/.gitignore 'private/*\n!private/README.md\nbuild/\n'
+  fixture ig-p private/README.md - 'my notes\n' 'template readme\n'
+  fixture ig-p private/same.txt - 's\n' 's\n'
+  fixture ig-p build/tracked.txt - 'p\n' 't\n'
+  fixture ig-p skipme.txt - 'mine\n' 'theirs\n'
+  put ig-p/private/notes.md 'n\n'
+  put ig-p/keys/server.pem 'k\n'
+  put 'ig-p/my keys/schlüssel.pem' 'k\n'
+  put ig-p/sub/.gitignore 'local.cfg\n'
+  put ig-p/sub/local.cfg 'c\n'
+  put ig-p/build/out.o 'o\n'
+  put ig-p/notes.local 'x\n'
+  registry ig-p '| `skipme.txt` | skip | the project keeps its own | 2026-11-22 |'
+  tgit "$TMP/ig-p" init -q
+  mkdir -p "$TMP/ig-p/.git/info"
+  printf 'notes.local\n' >> "$TMP/ig-p/.git/info/exclude"
+  printf 'cache.tmp\n' > "$TMP/ig-excludes"
+  tgit "$TMP/ig-p" config core.excludesFile "$TMP/ig-excludes"
+  put ig-p/cache.tmp 'c\n'
+  tgit "$TMP/ig-p" add -A
+  tgit "$TMP/ig-p" add -f build/tracked.txt
+  tgit "$TMP/ig-p" commit -q -m base
+  check "merge in a git project runs" eval 'ts merge "$TMP/ig-p" "$TMP/ig-p.soll" "$TMP/ig-go" > "$TMP/ig-g.tsv"'
+  check "ignored copy that differs: ignored" line_in ig-g private/README.md ignored 0 none
+  refute "ignored: no result" test -e "$TMP/ig-go/private/README.md"
+  check "ignored copy equal to the template: identical" line_in ig-g private/same.txt identical 0 none
+  check "tracked copy under an ignore rule: two-way" line_in ig-g build/tracked.txt two-way 0 none
+  check "skip row wins over ignored" line_in ig-g skipme.txt skipped 0 skip
+  check "file the merged .gitignore exposes: unignored" line_in ig-g keys/server.pem unignored 0 none
+  check "unignored: name with a space and an umlaut" line_in ig-g 'my keys/schlüssel.pem' unignored 0 none
+  check "unignored: an ignored target too" line_in ig-g private/README.md unignored 0 none
+  check "unignored: registry kind of the path" line_in ig-g skipme.txt unignored 0 skip
+  check "still ignored by the result: not listed" no_row ig-g build/out.o
+  check "still ignored by private/*: not listed" no_row ig-g private/notes.md
+  check "ignored by a nested .gitignore: not listed" no_row ig-g sub/local.cfg
+  check "ignored by .git/info/exclude: not listed" no_row ig-g notes.local
+  check "ignored by core.excludesFile: not listed" no_row ig-g cache.tmp
+
+  # A project without a .gitignore: .git/info/exclude ignores today, and a negation in
+  # the new root .gitignore overrides it.
+  put ig-e.soll/.gitignore '*.log\n!secret.txt\n'
+  put ig-e/secret.txt 's\n'
+  put ig-e/other.txt 'o\n'
+  tgit "$TMP/ig-e" init -q
+  mkdir -p "$TMP/ig-e/.git/info"
+  printf 'secret.txt\nother.txt\n' >> "$TMP/ig-e/.git/info/exclude"
+  check "merge without a project .gitignore runs" eval 'ts merge "$TMP/ig-e" "$TMP/ig-e.soll" "$TMP/ig-eo" > "$TMP/ig-e.tsv"'
+  check "no project .gitignore: new" line_in ig-e .gitignore new 0 none
+  check "a negation in the new .gitignore exposes an excluded file" line_in ig-e secret.txt unignored 0 none
+  check "still excluded by .git/info/exclude: not listed" no_row ig-e other.txt
+
+  # The project deleted its .gitignore: restoring brings the template's version back.
+  fixture ig-m .gitignore '*.log\n' - '*.log\n!secret.txt\n'
+  put ig-m/secret.txt 's\n'
+  tgit "$TMP/ig-m" init -q
+  mkdir -p "$TMP/ig-m/.git/info"
+  printf 'secret.txt\n' >> "$TMP/ig-m/.git/info/exclude"
+  check "merge with a deleted .gitignore runs" eval 'ts merge "$TMP/ig-m" "$TMP/ig-m.soll" "$TMP/ig-mo" > "$TMP/ig-m.tsv"'
+  check "deleted .gitignore: missing" line_in ig-m .gitignore missing 0 none
+  check "deleted .gitignore: the restored version would expose a file" line_in ig-m secret.txt unignored 0 none
+
+  # The same layout outside git: no ignore rules apply.
+  put ig-n/.gitignore 'private/\n'
+  put ig-n.soll/.gitignore 'private/*\n!private/README.md\n'
+  fixture ig-n private/README.md - 'my notes\n' 'template readme\n'
+  check "merge outside git runs" eval 'ts merge "$TMP/ig-n" "$TMP/ig-n.soll" "$TMP/ig-no" > "$TMP/ig-n.tsv"'
+  check "outside git: never ignored" line_in ig-n private/README.md two-way 0 none
+  refute "outside git: no unignored lines" grep -q unignored "$TMP/ig-n.tsv"
+
+  # The merged .gitignore equals the project's: nothing changes for ignored files.
+  put ig-u/.gitignore '*.pem\n'
+  put ig-u.soll/.gitignore '*.pem\n'
+  put ig-u/k.pem 'k\n'
+  tgit "$TMP/ig-u" init -q
+  tgit "$TMP/ig-u" add -A
+  tgit "$TMP/ig-u" commit -q -m base
+  check "merge with an unchanged .gitignore runs" eval 'ts merge "$TMP/ig-u" "$TMP/ig-u.soll" "$TMP/ig-uo" > "$TMP/ig-u.tsv"'
+  refute "unchanged .gitignore: no unignored lines" grep -q unignored "$TMP/ig-u.tsv"
+
+  # An unresolved conflict in .gitignore counts with the template side winning.
+  fixture ig-c .gitignore 'build/\n' 'build/\n*.pem\n' 'build/\n*.log\n'
+  put ig-c/k.pem 'k\n'
+  tgit "$TMP/ig-c" init -q
+  tgit "$TMP/ig-c" add -A
+  tgit "$TMP/ig-c" commit -q -m base
+  check "merge with a .gitignore conflict runs" eval 'ts merge "$TMP/ig-c" "$TMP/ig-c.soll" "$TMP/ig-co" > "$TMP/ig-c.tsv"'
+  check ".gitignore conflict" line_in ig-c .gitignore conflict 1 none
+  check "conflict: the template side would expose the key" line_in ig-c k.pem unignored 0 none
+
+  # A project below the top level of its work tree: ignored works, unignored warns.
+  put ig-sr/proj/.gitignore 'private/\n'
+  put ig-sr/proj.soll/.gitignore 'private/*\n!private/README.md\n'
+  fixture ig-sr/proj private/README.md - 'my notes\n' 'template readme\n'
+  tgit "$TMP/ig-sr" init -q
+  tgit "$TMP/ig-sr" add -A
+  tgit "$TMP/ig-sr" commit -q -m base
+  check "merge below the top level runs" \
+    eval 'ts merge "$TMP/ig-sr/proj" "$TMP/ig-sr/proj.soll" "$TMP/ig-so" > "$TMP/ig-s.tsv" 2> "$TMP/ig-s.err"'
+  check "below the top level: ignored" line_in ig-s private/README.md ignored 0 none
+  refute "below the top level: no unignored lines" grep -q unignored "$TMP/ig-s.tsv"
+  check "below the top level: warning" grep -q 'below the top level' "$TMP/ig-s.err"
+
+  # A .git that git cannot read stops the merge instead of skipping the checks.
+  put ig-b/.git 'gitdir: nowhere\n'
+  fixture ig-b a.txt - 'a\n' 'b\n'
+  refute "unreadable .git: merge refused" ts merge "$TMP/ig-b" "$TMP/ig-b.soll" "$TMP/ig-bo"
 
   # --- status --------------------------------------------------------------------
   fixture sp same.txt 'a\nb\n' 'a\nb\n' -

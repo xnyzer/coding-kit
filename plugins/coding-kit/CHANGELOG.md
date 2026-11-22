@@ -15,6 +15,28 @@ hier.
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.8.0 — unveröffentlicht
+
+Private Inhalte gelangen beim Abgleich nicht mehr unbemerkt ins Repo (F-069).
+
+- **`template-sync.sh merge`:** Eine Template-Datei, deren Projektfassung Git ignoriert
+  und die vom Template abweicht, heißt jetzt `ignored` und bekommt kein Ergebnis — sie
+  enthält vermutlich private Inhalte, etwa Notizen in `private/README.md`. Weicht das
+  Ergebnis der `.gitignore` von der Projektfassung ab oder fehlt die Datei im Projekt,
+  meldet `merge` außerdem jede heute ignorierte Datei, die damit sichtbar würde
+  (`unignored`), etwa einen Schlüssel, den nur eine Projektzeile wie `*.pem`
+  ausschloss. Ohne Git entfallen beide Prüfungen, ein Projekt unterhalb der Wurzel
+  seines Repos bekommt statt `unignored` eine Warnung, und ein `.git`, das Git nicht
+  lesen kann, bricht den Merge ab.
+- **`/coding-kit:update-conventions`:** klärt `ignored` vor allen anderen Dateien
+  (umbenennen, etwa nach `private/notes.md`, oder `skip`) und zeigt die
+  `unignored`-Dateien, bevor er die `.gitignore` anbietet.
+
+### Template
+
+- **`HOW-TO-CODE-WITH-CLAUDE.md` (managed):** Die Übersicht von `/update-conventions`
+  nennt den Schutz für ignorierte Dateien.
+
 ## 3.7.0 — 2026-11-22
 
 Die Startwerte im Template stehen wieder auf aktuellen Versionen (F-062). Neue Projekte

@@ -53,7 +53,14 @@
 #       identical, template-only, project-only, merged, caught-up (the result equals
 #       the template although the project deviated — the template has caught up),
 #       conflict, kept (keep row: conflicts resolved to the project), two-way (no base),
-#       new, missing (project deleted it), removed (no longer rendered), skipped.
+#       new, missing (project deleted it), removed (no longer rendered), skipped,
+#       ignored (git ignores the project's copy and it differs from SOLL — likely
+#       private content; no result). In a git work tree, a merged .gitignore that
+#       differs from the project's adds one line per file git ignores today and the
+#       result would not: <path> unignored 0 <registry> (an unresolved conflict counts
+#       with the template side winning, a deleted .gitignore with the template's version).
+#       A project below the top level of its work tree gets a warning instead of these
+#       lines.
 #   snapshot [--seeds] [--snapshot DIR] PROJECT SOLL TARGET…
 #       Sets the base of each TARGET to its rendered version; a TARGET that SOLL no
 #       longer has loses its base. Line: <target> <set|removed>. A TARGET that is neither
@@ -1109,6 +1116,131 @@ finish() {  # FILE TARGET
   fi
 }
 
+# Git context of $P → GIT_STATE: none (not in a git work tree), root (its top level) or
+# sub (a folder below the top level).
+git_state() {
+  GIT_STATE=none
+  if [ "$(git -C "$P" rev-parse --is-inside-work-tree 2> /dev/null)" != true ]; then
+    # A .git that git cannot read is an error, never "no git": the checks would be skipped.
+    [ ! -e "$P/.git" ] || die "git cannot read the repository in $P"
+    return 0
+  fi
+  gs_prefix=$(git -C "$P" rev-parse --show-prefix) || die "git failed in $P"
+  if [ -z "$gs_prefix" ]; then GIT_STATE=root; else GIT_STATE=sub; fi
+}
+
+# Targets of $WORK/targets.lst whose project copy git ignores (untracked and matched by
+# an exclude rule) → $WORK/ignored.lst, empty outside a git work tree.
+ignored_targets() {
+  : > "$WORK/ignored.lst"
+  [ "$GIT_STATE" != none ] || return 0
+  while IFS= read -r it_t; do
+    if [ -f "$P/$it_t" ]; then printf '%s\n' "$it_t"; fi
+  done < "$WORK/targets.lst" > "$WORK/present.lst"
+  set +e
+  git -C "$P" -c core.quotePath=false check-ignore --stdin \
+    < "$WORK/present.lst" > "$WORK/ignored.lst"
+  it_rc=$?
+  set -e
+  # check-ignore: 0 some paths ignored, 1 none, 128 an error.
+  [ "$it_rc" -le 1 ] || die "git check-ignore failed in $P"
+}
+
+# Succeeds when git ignores the project's copy of TARGET and it differs from SOLL — the
+# copy likely holds private content (class ignored).
+ignored_deviation() {  # TARGET
+  grep -Fxq -e "$1" "$WORK/ignored.lst" || return 1
+  normalize "$P/$1" "$WORK/ig.ours" mask
+  normalize "$SOLL/$1" "$WORK/ig.theirs" mask
+  ! cmp -s "$WORK/ig.ours" "$WORK/ig.theirs"
+}
+
+# A scratch git repository DIR whose root .gitignore is GITIGNORE and whose other
+# exclude sources are those of $P: nested .gitignore files, .git/info/exclude and
+# core.excludesFile (global excludes apply there anyway). A nested .gitignore whose path
+# git has to quote is left out — what it ignores then counts as exposed, never as safe.
+exclude_repo() {  # DIR GITIGNORE
+  git init -q "$1" || die "cannot create a scratch repository"
+  cp "$2" "$1/.gitignore"
+  git -C "$P" -c core.quotePath=false ls-files --cached --others --exclude-standard \
+    -- ':(glob)**/.gitignore' > "$WORK/er.nested" || die "git ls-files failed in $P"
+  while IFS= read -r er_f; do
+    case $er_f in
+      .gitignore | '"'*) continue ;;
+    esac
+    [ -f "$P/$er_f" ] || continue
+    mkdir -p "$1/${er_f%/*}"
+    cp "$P/$er_f" "$1/$er_f"
+  done < "$WORK/er.nested"
+  er_ex=$(git -C "$P" rev-parse --git-path info/exclude) || die "git failed in $P"
+  case $er_ex in
+    /*) ;;
+    *) er_ex=$P/$er_ex ;;
+  esac
+  if [ -f "$er_ex" ]; then
+    mkdir -p "$1/.git/info"
+    cp "$er_ex" "$1/.git/info/exclude"
+  fi
+  set +e
+  er_xf=$(git -C "$P" config --get core.excludesFile)
+  er_rc=$?
+  set -e
+  # config --get: 1 means the key is not set.
+  [ "$er_rc" -le 1 ] || die "git config failed in $P"
+  if [ -n "$er_xf" ]; then git -C "$1" config core.excludesFile "$er_xf"; fi
+}
+
+# One line per file git ignores in $P today that the merged .gitignore would no longer
+# ignore (class unignored): `git add -A` would pick it up once the result is taken. Only
+# the change of the root .gitignore decides (exclude_repo). An unresolved conflict counts
+# with the template side winning, a deleted .gitignore with the template's version that
+# restoring it brings back ($GI_CLASS is the class of .gitignore in this run).
+report_unignored() {
+  [ "$GIT_STATE" != none ] || return 0
+  if [ "$GI_CLASS" = conflict ]; then
+    normalize "$P/.gitignore" "$WORK/ru.ours"
+    normalize "$(base_of .gitignore)" "$WORK/ru.base"
+    normalize "$SOLL/.gitignore" "$WORK/ru.theirs"
+    # $ALGORITHM is empty or one word, so it stays unquoted.
+    git merge-file -p --theirs $ALGORITHM "$WORK/ru.ours" "$WORK/ru.base" "$WORK/ru.theirs" \
+      > "$WORK/ru.new" || die "git merge-file --theirs failed for .gitignore"
+    ru_new=$WORK/ru.new
+  elif [ "$GI_CLASS" = missing ]; then
+    normalize "$SOLL/.gitignore" "$WORK/ru.new"
+    ru_new=$WORK/ru.new
+  elif [ -f "$OUT/.gitignore" ]; then
+    ru_new=$OUT/.gitignore
+    if [ -f "$P/.gitignore" ]; then
+      normalize "$P/.gitignore" "$WORK/ru.ours"
+      if cmp -s "$WORK/ru.ours" "$ru_new"; then return 0; fi
+    fi
+  else
+    return 0
+  fi
+  if [ "$GIT_STATE" = sub ]; then
+    printf 'template-sync: %s is below the top level of its git work tree — files the merged .gitignore would expose are not checked\n' \
+      "$P" >&2
+    return 0
+  fi
+
+  ru_repo=$WORK/ru.repo
+  exclude_repo "$ru_repo" "$ru_new"
+  git -C "$P" -c core.quotePath=false ls-files --others --ignored --exclude-standard \
+    > "$WORK/ru.now" || die "git ls-files failed in $P"
+  set +e
+  git -C "$ru_repo" -c core.quotePath=false check-ignore --stdin \
+    < "$WORK/ru.now" > "$WORK/ru.still"
+  ru_rc=$?
+  set -e
+  [ "$ru_rc" -le 1 ] || die "git check-ignore failed in the scratch repository"
+  LC_ALL=C sort -u "$WORK/ru.now" > "$WORK/ru.now.sorted"
+  LC_ALL=C sort -u "$WORK/ru.still" > "$WORK/ru.still.sorted"
+  LC_ALL=C comm -23 "$WORK/ru.now.sorted" "$WORK/ru.still.sorted" > "$WORK/ru.exposed"
+  while IFS= read -r ru_p; do
+    printf '%s\tunignored\t0\t%s\n' "$ru_p" "$(kind_of "$ru_p")"
+  done < "$WORK/ru.exposed"
+}
+
 merge_one() {  # TARGET
   mg_t=$1
   mg_kind=$(kind_of "$mg_t")
@@ -1129,6 +1261,8 @@ merge_one() {  # TARGET
       mkdir -p "${MG_RES%/*}"
       normalize "$mg_theirs" "$MG_RES"
     fi
+  elif ignored_deviation "$mg_t"; then
+    mg_class=ignored
   else
     mkdir -p "${MG_RES%/*}"
     MG_SLOT=0
@@ -1185,14 +1319,19 @@ merge() {
   setup_work
   load_registry
   ALGORITHM=$(merge_algorithm)
+  git_state
   {
     base_targets
     (cd "$SOLL" && find . -type f) | sed 's|^\./||'
   } | LC_ALL=C sort -u > "$WORK/targets.lst"
+  ignored_targets
   mkdir -p "$OUT"
+  GI_CLASS=
   while IFS= read -r mg_target; do
     merge_one "$mg_target"
+    if [ "$mg_target" = .gitignore ]; then GI_CLASS=$mg_class; fi
   done < "$WORK/targets.lst"
+  report_unignored
 }
 
 # --- snapshot, base-from-history ------------------------------------------------

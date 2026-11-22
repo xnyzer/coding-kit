@@ -2,7 +2,7 @@
 id: F-069
 title: Private Inhalte beim Abgleich und im Privacy-Lint schützen
 type: fix
-status: PLANNED
+status: IN-PROGRESS
 size: L
 created: 2026-11-22
 done:
@@ -117,14 +117,17 @@ Kit-Validator die Beispiele nicht, die Tests nutzen volle Werte.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben ein Projekt (Git-Repo), das `private/` ganz ignoriert und ein
+- [x] AC-1 — Gegeben ein Projekt (Git-Repo), das `private/` ganz ignoriert und ein
   abweichendes `private/README.md` hat, wenn `merge` läuft, dann meldet es die Datei als
   `ignored` und legt für sie kein Ergebnis an. `/update-conventions` übernimmt sie
   nicht, sondern klärt sie vor allen anderen Entscheidungen: umbenennen (Vorschlag
   `private/notes.md`) oder als `skip` registrieren, danach neu mergen. Negativ: Eine
   versionierte oder dem Template gleiche Datei behält ihre bisherige Klasse. Ein
   Projekt ohne Git bekommt nie `ignored`.
-- [ ] AC-2 — Gegeben ein Projekt mit heute ignorierten Dateien, wenn das
+  — belegt: Kit-Tests in `tests/template-sync/sync.sh` (abweichende ignorierte Datei
+  `ignored` ohne Ergebnis; Gegenproben gleich, versioniert, ohne Git, `skip`), Ablauf in
+  `/update-conventions` A2 Schritt 4; `just check` grün.
+- [x] AC-2 — Gegeben ein Projekt mit heute ignorierten Dateien, wenn das
   Merge-Ergebnis der `.gitignore` eine davon nicht mehr ignoriert, dann meldet `merge`
   sie je Zeile als `unignored`. `/update-conventions` zeigt die Liste, bevor es die
   `.gitignore` anbietet. Wahl je Datei: verschieben (etwa nach `private/`), bewusst
@@ -132,6 +135,11 @@ Kit-Validator die Beispiele nicht, die Tests nutzen volle Werte.
   die ignoriert bleibt, erscheint nicht. Das gilt, ob das Ergebnis selbst, eine
   verschachtelte `.gitignore`, `.git/info/exclude` oder die globale Ausschlussdatei sie
   ignoriert. Bei unveränderter `.gitignore` gibt es keine Zeile.
+  — belegt: Kit-Tests in `sync.sh` (Schlüssel, Name mit Leerzeichen und Umlaut,
+  `private/README.md`, Konflikt, fehlende und gelöschte `.gitignore`; nicht gemeldet bei
+  Ausschluss durch das Ergebnis, eine verschachtelte `.gitignore`, `.git/info/exclude`
+  oder `core.excludesFile`; unveränderte `.gitignore` ohne Zeile), Ablauf in
+  `/update-conventions` A2 Schritt 5; `just check` grün.
 - [ ] AC-3 — Gegeben eine Datei mit einer echten E-Mail-Adresse, wenn der Lint sie
   prüft, dann meldet er den Fund (R1). Das gilt auch unter `/private/tmp`, als
   gestagtes `private/README.md` und als `mise.lock`. Negativ: Die Template-Fassung von
@@ -346,3 +354,53 @@ Erfüllt AC-3, AC-4 und den Teil von AC-7 zu Lint-Kopf und `private/README.md`.
   Merge überstehen.
 
 Erfüllt AC-5, AC-6 und den Rest von AC-7.
+
+## Verlauf
+
+### F-069a — fertig 2026-11-22
+
+**Umgesetzt:**
+
+- `merge` in `plugins/coding-kit/scripts/template-sync.sh` fragt Git, bevor es eine
+  Inhaltsklasse vergibt. Eine Template-Datei, deren Projektfassung unversioniert und
+  ignoriert ist und vom Template abweicht, wird `ignored` und bekommt kein Ergebnis.
+- Ändert sich die `.gitignore` (auch bei `new`, `missing` und `conflict`), baut `merge`
+  ein Hilfs-Repo mit der neuen Fassung und den übrigen Ausschlussquellen des Projekts
+  (`exclude_repo`). Jede heute ignorierte Datei, die dort nicht mehr ignoriert ist,
+  meldet es als `unignored` (`report_unignored`).
+  - Ohne Git entfällt beides.
+  - Unterhalb der Repo-Wurzel kommt eine Warnung.
+  - Ein unlesbares `.git` bricht ab.
+- `/update-conventions`:
+  - klärt `ignored` in A2 Schritt 4 vor allem anderen;
+  - zeigt `unignored` in Schritt 5, bevor es die `.gitignore` anbietet;
+  - nimmt `ignored` in Schritt 9 vom Snapshot aus;
+  - nennt in A3 Schritt 2 (b) den zweiwegigen Erstabgleich.
+- 35 neue Prüfungen je Durchlauf in `tests/template-sync/sync.sh`. 30 006 ignorierte
+  Dateien prüft `merge` in etwa 0,4 Sekunden.
+
+**Entscheidungen:**
+
+- 2026-11-22 — Bei einem Konflikt in der `.gitignore` gilt die `unignored`-Liste für
+  die Auflösung zugunsten des Templates, bei einer gelöschten `.gitignore` für die
+  wiederhergestellte Template-Fassung. Grund: Diese Fassungen verlieren die meisten
+  Projektzeilen bzw. kommen beim Wiederherstellen ins Projekt.
+- 2026-11-22 — Nach `skip` für eine `ignored`-Datei wird nicht neu gemergt, nur nach dem
+  Umbenennen. Grund: Die Registry-Zeile entsteht erst in Schritt 10, ein neuer Merge
+  ergäbe dasselbe.
+
+**Abweichung vom Plan:**
+
+- Der Abschnitt `### Template` im CHANGELOG kommt schon mit F-069a statt erst mit
+  F-069b, weil `/add-skill` verlangt, die Skill-Übersicht in
+  `HOW-TO-CODE-WITH-CLAUDE.md` mitzuziehen.
+- Dazu kamen die README-Zeile von `/update-conventions` und Schritt 9 des Skills.
+
+**Funde:**
+
+- Die neuen Testordner kollidierten mit Namen aus anderen Test-Dateien, weil sich alle
+  Fälle eines Durchlaufs ein `$TMP` teilen. Im Gesamtlauf scheiterten dadurch 60
+  fremde Prüfungen. Behoben mit dem Präfix `ig-`.
+- Unabhängiges Review: Eine gelöschte `.gitignore` wurde nicht geprüft (behoben, Test
+  ergänzt). In Schritt 9 fehlte `ignored` bei den Ausnahmen (behoben). Der Hinweis,
+  nach `skip` neu zu mergen, ist verworfen (siehe Entscheidungen).

@@ -171,10 +171,26 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
 3. **Soll rendern:** `sh <skript> render <template> <projekt>/.claude/template-answers
    <tmp>/soll`.
 4. **Mergen:** `sh <skript> merge <projekt> <tmp>/soll <tmp>/out` — die Tabelle zeigen
-   (nur Zeilen, die nicht `identical` sind, dazu deren Anzahl).
+   (nur Zeilen, die nicht `identical` sind, dazu deren Anzahl), eine Warnung des Skripts
+   mit ihr (etwa: Projekt unterhalb der Wurzel seines Repos, dann fehlen die
+   `unignored`-Zeilen aus Schritt 5). **Zuerst `ignored`:** Git ignoriert die
+   Projektfassung, und sie weicht vom Template ab — sie enthält vermutlich private
+   Inhalte (etwa Notizen in `private/README.md`). Nie übernehmen oder überschreiben, vor
+   Schritt 5 je Datei klären: **umbenennen** auf einen Namen, den die `.gitignore` weiter
+   ignoriert (etwa `private/notes.md`; nach OK mit `mv`), dann diesen Schritt mit einem
+   frischen `<tmp>/out` wiederholen — **oder** als `skip` vormerken (Schritt 10), wenn
+   das Projekt die Datei bewusst ignoriert und das Template sie nicht anlegen soll.
 5. **Je Datei entscheiden.** Das Ergebnis liegt in `<tmp>/out/<Ziel>`; übernehmen heißt
    dorthin kopieren. Hält der Nutzer die Projektfassung für besser als das Template:
    `propose-to-template` mit dem Fund starten (managed Datei, Ziel, Diff).
+   - `unignored` (keine Datei des Templates): Git ignoriert die Datei heute, mit dem
+     Ergebnis der `.gitignore` nicht mehr — `git add -A` nähme sie mit. Die Liste zeigen,
+     **bevor** die `.gitignore` angeboten wird; bei einem `conflict` der `.gitignore` gilt
+     sie für die Auflösung zugunsten des Templates, bei `missing` für die
+     wiederhergestellte Template-Fassung. Je Datei: **verschieben** an einen
+     weiter ignorierten Ort (etwa nach `private/`; nach OK mit `mv`), **bewusst sichtbar
+     machen** (sie gehört ins Repo) oder die `.gitignore` **diesmal nicht** übernehmen.
+     Die `.gitignore` erst übernehmen, wenn jede dieser Dateien entschieden ist.
    - `template-only`, `merged`, `two-way` (keine Basis): Diff Projekt → Ergebnis zeigen;
      **übernehmen** / **diesmal nicht** (beim nächsten Lauf wieder angeboten) /
      **dauerhaft ablehnen** (Registry-Zeile mit Grund).
@@ -299,10 +315,11 @@ das Ergebnis ist dasselbe (Teil G: ab G1). Beim nächsten offenen Punkt weiterma
    `PROGRESS.md`, `PROGRESS-ARCHIVE.md` und `REQUIREMENTS.md`, die A4 nach der Migration
    löscht. Die Klasse `removed` aus Schritt 4 meint dasselbe aus Sicht des Snapshots.
 9. **Snapshot setzen:** `sh <skript> snapshot <projekt> <tmp>/soll <Ziele…>` für jedes
-   Ziel dieses Laufs **außer** „diesmal nicht", `skipped`, nicht angelegten `new`- und
-   nicht wiederhergestellten `missing`-Zielen. Damit ist die neue Template-Fassung die
-   Basis; „dauerhaft abgelehnt" zählt ab jetzt als Projektabweichung. `removed`-Ziele
-   verlieren ihre Basis über denselben Aufruf. **Seed-Basen:** `sh <skript> snapshot
+   Ziel dieses Laufs **außer** „diesmal nicht", `skipped`, `ignored`, nicht angelegten
+   `new`- und nicht wiederhergestellten `missing`-Zielen. Damit ist die neue
+   Template-Fassung die Basis; „dauerhaft abgelehnt" zählt ab jetzt als
+   Projektabweichung. `removed`-Ziele verlieren ihre Basis über denselben Aufruf.
+   **Seed-Basen:** `sh <skript> snapshot
    --seeds <projekt> <tmp>/seeds <Ziele…>` für jede seed-Datei mit `section`-Zeilen aus
    Schritt 7 außer `no-file`, nicht angelegten `new-file`-Dateien (mit Basis hielte der
    nächste Lauf sie für gelöscht) und `skipped` — immer, auch wenn Zonen abgelehnt
@@ -376,7 +393,9 @@ dann A2 ab Schritt 3.
      --stat` auf `git log -1 -- .claude/template-version`), die Fassung der
      Stempel-Version nehmen, für alle übrigen die ältere.
    - **(b) Zweiwegig:** ohne Historie (oder ohne Stempel) — der erste Merge vergleicht
-     Projekt und Soll direkt (`two-way`).
+     Projekt und Soll direkt (`two-way`). Die Template-`.gitignore` ersetzt dabei die des
+     Projekts ganz: Dateien, die nur Projektzeilen ignorierten, meldet `merge` als
+     `unignored` (A2 Schritt 5).
 
    Danach A2 Schritte 3–5, bei (a) mit `merge --base <tmp>/base`. In Schritt 9 erhalten
    „diesmal nicht"-Ziele bei (a) die gewählte Basis (`snapshot <projekt> <tmp>/base
