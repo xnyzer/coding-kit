@@ -53,15 +53,20 @@ scheitert dort jeder Commit an diesen Dateien im Pre-Commit-Hook — er geht nur
   Zusammenfassung nennt die Zahl der übersprungenen Checks und den Grund; gegeben ein
   Dateisystem mit echten Rechten, dann laufen sie wie bisher und nichts wird
   übersprungen.
-- [ ] AC-3 — Gegeben eine Personal-Config mit CRLF-Zeilenenden, wenn `set-global` unter
+- [x] AC-3 — Gegeben eine Personal-Config mit CRLF-Zeilenenden, wenn `set-global` unter
   Windows einen Wert setzt, dann endet jede Zeile der Datei weiter mit CRLF; auf macOS
-  und Linux ändert sich nichts.
-- [ ] AC-4 — Gegeben eine System-Git-Config mit `core.autocrlf=true`, wenn die Tests
+  und Linux ändert sich nichts. — belegt: unter Windows grün ab F-095a („set-global: CRLF
+  file gets CRLF lines“ unter dash und bash); CI unter Linux nach F-095a: 4191 Checks,
+  0 Fehler, unverändert.
+- [x] AC-4 — Gegeben eine System-Git-Config mit `core.autocrlf=true`, wenn die Tests
   laufen, dann erscheint keine Warnung „LF will be replaced by CRLF“, und kein Ergebnis
-  hängt von der System-Config ab.
-- [ ] AC-5 — Gegeben Windows mit Git Bash, wenn `just test` läuft, dann meldet die
+  hängt von der System-Config ab. — belegt: `just test` unter Windows ohne „LF will be
+  replaced“ (vorher 94 Warnungen).
+- [x] AC-5 — Gegeben Windows mit Git Bash, wenn `just test` läuft, dann meldet die
   Zusammenfassung 0 Fehler, und ein Commit an Skript-Pfaden geht dort ohne
-  `--no-verify` durch den Pre-Commit-Hook.
+  `--no-verify` durch den Pre-Commit-Hook. — belegt: `just test` unter Windows: 2786
+  Checks, 0 Fehler, 6 übersprungen; der Commit von F-095b lief ohne `--no-verify` durch
+  den Pre-Commit-Hook.
 
 ### Randfälle
 
@@ -172,3 +177,29 @@ mit CHANGELOG-Eintrag.
   „set-global: the file is private“ ist eine Rechte-Prüfung und gehört zu F-095b.
 - AC-3 ist unter Windows belegt („set-global: CRLF file gets CRLF lines“ unter dash und
   bash grün, vorher rot); der Teil „macOS und Linux unverändert“ steht bis zur CI aus.
+
+### F-095b — fertig 2026-11-23
+
+**Umgesetzt:** `tests/template-sync/run.sh` hat zwei neue Helfer: `wrap_tool` schreibt ein
+kleines Skript, das das echte Tool mit seinen Argumenten aufruft (Pfad in einfachen
+Anführungszeichen), statt eines Links — im Installer-Gerüst (`install.sh`) und im
+awk-Zusatzlauf. `check_owner_only` prüft Mode 600 nur, wenn eine einmalige Probe zeigt,
+dass `chmod 600` wirkt; sonst zählt er den Check als übersprungen, und die
+Zusammenfassung nennt „N skipped (no file modes)“ — die drei Rechte-Prüfungen in
+`install.sh` und `global.sh` laufen darüber. `GIT_CONFIG_NOSYSTEM=1` gilt für alle Fälle
+und wird in `in_run` auch durch `env -i` gereicht.
+
+**Entscheidungen:** Der Wrapper startet das echte Programm unter seinem Pfad; ein Link
+namens `sh` auf bash startete bash im POSIX-Modus. Die `sh`-Aufrufe des Installers laufen
+im bash-Durchgang damit wie alle anderen Fälle der Suite (`$SH "$SCRIPT"`).
+
+**Abweichung vom Plan:** `GIT_CONFIG_NOSYSTEM=1` steht zusätzlich in `in_run`, weil
+`env -i` die Variable sonst verwirft und die Installer-Fälle die System-Config weiter
+sähen.
+
+**Funde:**
+- Unter Windows: 2786 Checks, 0 Fehler, 6 übersprungen — zusammen die bisherigen 2792.
+- `docs/skill-authoring.md` und die übrige Doku beschreiben die Zusammenfassung nicht;
+  keine Doku-Änderung nötig.
+- Offen bis zur CI nach dem Push: AC-1 und AC-2 auf Linux (gleiche Zahl der Checks,
+  nichts übersprungen).

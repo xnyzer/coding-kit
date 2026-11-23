@@ -1,6 +1,6 @@
 # Installer cases for tests/template-sync/run.sh — sourced, uses its helpers. They run the
 # kit's install.sh with bash in an empty environment (env -i): a test HOME, the answers on
-# stdin, and a PATH of fake folders only — links to the system tools the installer and
+# stdin, and a PATH of fake folders only — wrappers for the system tools the installer and
 # template-sync.sh call (sh is the shell of the pass), fakes for claude and uname, and per
 # case fakes for gh, brew, pacman with sudo, mise or xdg-user-dir. A real gh, brew or mise
 # of the machine never takes part. The fakes log their calls to $IN_LOG.
@@ -8,7 +8,7 @@
 IN=$ROOT/install.sh
 IN_BASH=$(command -v bash || true)
 
-# Tools the installer and template-sync.sh call, linked from where this machine has them.
+# Tools the installer and template-sync.sh call, wrapped from where this machine has them.
 IN_TOOLS='awk basename cat chmod cksum cp cut date dirname env find git grep head id ls
 mkdir mktemp mv od rm sed sort tail tr wc xargs'
 
@@ -46,7 +46,8 @@ in_run() {
   : > "$TMP/in/$ir_name.log"
   ir_status=0
   (cd "$TMP/in/$ir_name" && env -i HOME="$TMP/in/$ir_name/test-home" PATH="$IN_BIN" \
-    IN_LOG="$TMP/in/$ir_name.log" IN_STATE="$TMP/in/$ir_name/state" "$@" \
+    GIT_CONFIG_NOSYSTEM=1 IN_LOG="$TMP/in/$ir_name.log" \
+    IN_STATE="$TMP/in/$ir_name/state" "$@" \
     "$IN_BASH" "$IN") < "$TMP/in/$ir_name.input" > "$TMP/in/$ir_name.out" 2>&1 || ir_status=$?
   printf '%s\n' "$ir_status" > "$TMP/in/$ir_name.status"
 }
@@ -66,10 +67,6 @@ in_value() {
     '. "$1" && eval "printf %s \"\${CODING_KIT_$2-(unset)}\""' sh "$(in_env "$1")" "$2") ||
     return 1
   [ "$iv_got" = "$3" ]
-}
-
-in_owner_only() {
-  [ "$(ls -l "$(in_env "$1")" | cut -c1-10)" = "-rw-------" ]
 }
 
 in_gitconfig() {  # a global git config with name and address in $IN_HOME
@@ -100,9 +97,9 @@ run_install_cases() {
   IN_XDG=$TMP/in/xdg-bin
   mkdir -p "$IN_BIN" "$IN_GH" "$IN_BREW" "$IN_PACMAN" "$IN_MISE" "$IN_TOOLS_BIN" "$IN_XDG"
   for it_tool in $IN_TOOLS; do
-    it_path=$(command -v "$it_tool") && ln -s "$it_path" "$IN_BIN/$it_tool"
+    it_path=$(command -v "$it_tool") && wrap_tool "$it_path" "$IN_BIN/$it_tool"
   done
-  ln -s "$(command -v "$SH")" "$IN_BIN/sh"
+  wrap_tool "$(command -v "$SH")" "$IN_BIN/sh"
 
   in_fake "$IN_BIN/claude" <<'EOF'
 #!/bin/sh
@@ -203,7 +200,7 @@ EOF
   check "install: gh ready asks no other address" in_value ready EMAIL_AZURE "(unset)"
   check "install: default projects folder below Documents" \
     in_value ready PROJECTS_DIR "$TMP/in/ready/test-home/Documents/Coding-Projects"
-  check "install: the personal config is owner-only" in_owner_only ready
+  check_owner_only "install: the personal config is owner-only" "$(in_env ready)"
   check "install: set-global adds the comment of the kit rules" \
     grep -q '^CODING_KIT_DEFAULT_HOST="github"  # ' "$(in_env ready)"
 
@@ -287,7 +284,8 @@ EOF
   check "install: gh missing, the address from git config" \
     in_value missing-on EMAIL_GIT ada@example.org
   check "install: gh missing, no login key" in_value missing-on GITHUB_LOGIN "(unset)"
-  check "install: gh missing, the personal config is owner-only" in_owner_only missing-on
+  check_owner_only "install: gh missing, the personal config is owner-only" \
+    "$(in_env missing-on)"
 
   # Rejected answers are asked again; a leading ~ becomes the home folder.
   in_new invalid

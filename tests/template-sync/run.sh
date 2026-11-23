@@ -10,7 +10,7 @@
 # of mawk and gawk that is installed but not the default awk: awk implementations differ
 # (mawk is the default on Debian and Ubuntu, gawk on Fedora and Arch, and the macOS awk
 # accepts more than either). Prints failures only, then a summary that names the shells
-# and awks tested.
+# and awks tested and the checks skipped where the file system has no file modes.
 #
 #   sh tests/template-sync/run.sh
 
@@ -20,6 +20,10 @@ set -u
 # index and directory of the kit repo, which would point their git calls there.
 unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE GIT_PREFIX GIT_OBJECT_DIRECTORY \
   GIT_ALTERNATE_OBJECT_DIRECTORIES
+# Nor does the system git config of the machine take part: Git for Windows sets
+# core.autocrlf=true there, which warns in every case repo and changes what git writes.
+GIT_CONFIG_NOSYSTEM=1
+export GIT_CONFIG_NOSYSTEM
 
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 SCRIPT=$ROOT/plugins/coding-kit/scripts/template-sync.sh
@@ -29,6 +33,7 @@ trap 'rm -rf "$BASE_TMP"' EXIT
 
 checks=0
 failures=0
+skipped=0
 SH=
 TMP=
 # Pass name in failure lines: the shell, plus the awk when it is not the default one.
@@ -55,6 +60,35 @@ refute() {
   shift
   checks=$((checks + 1))
   if "$@" > /dev/null 2>&1; then fail "$c_desc"; fi
+}
+
+# Whether chmod sets file modes here. Git Bash on Windows mounts with noacl: chmod has no
+# effect there, and every file shows the same mode.
+: > "$BASE_TMP/mode-probe"
+chmod 600 "$BASE_TMP/mode-probe"
+if [ "$(ls -l "$BASE_TMP/mode-probe" | cut -c1-10)" = '-rw-------' ]; then
+  FILE_MODES=yes
+else
+  FILE_MODES=no
+fi
+
+# check_owner_only DESCRIPTION FILE — passes when only the owner may read and write FILE
+# (mode 600). Without file modes the check is skipped and counted for the summary.
+check_owner_only() {
+  if [ "$FILE_MODES" = no ]; then
+    skipped=$((skipped + 1))
+    return
+  fi
+  check "$1" test "$(ls -l "$2" | cut -c1-10)" = '-rw-------'
+}
+
+# wrap_tool TOOL FILE — FILE becomes a script that runs TOOL (a path) with its arguments.
+# Not a link: Git Bash on Windows copies the tool for ln -s, and the copy does not find
+# its libraries.
+wrap_tool() {
+  wt_quoted=$(printf '%s' "$1" | sed "s/'/'\\\\''/g")
+  printf "#!/bin/sh\nexec '%s' \"\$@\"\n" "$wt_quoted" > "$2"
+  chmod +x "$2"
 }
 
 # Answers for a demo project. Extra arguments: KEY=value adds a line, -KEY drops the key
@@ -295,7 +329,7 @@ for SH in $shells; do
   run_cases "$BASE_TMP/$SH"
 done
 
-# One more pass under the first shell for each extra awk, found as `awk` through a link
+# One more pass under the first shell for each extra awk, found as `awk` through a wrapper
 # at the front of PATH, so the script and the test helpers both use it.
 default_awk=$(awk_kind awk)
 if [ "$default_awk" = other ]; then awks='system awk'; else awks=$default_awk; fi
@@ -309,7 +343,7 @@ for extra in mawk gawk; do
     continue
   fi
   mkdir -p "$BASE_TMP/bin-$extra"
-  ln -s "$(command -v "$extra")" "$BASE_TMP/bin-$extra/awk"
+  wrap_tool "$(command -v "$extra")" "$BASE_TMP/bin-$extra/awk"
   saved_path=$PATH
   PATH=$BASE_TMP/bin-$extra:$PATH
   export PATH
@@ -323,5 +357,6 @@ done
 
 summary="shells:$shells; awk: $awks"
 if [ -n "$not_installed" ]; then summary="$summary; not installed:$not_installed"; fi
+if [ "$skipped" -gt 0 ]; then summary="$summary; $skipped skipped (no file modes)"; fi
 printf 'template-sync tests: %d checks, %d failed (%s)\n' "$checks" "$failures" "$summary"
 [ "$failures" -eq 0 ]

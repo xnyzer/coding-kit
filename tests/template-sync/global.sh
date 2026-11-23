@@ -210,8 +210,7 @@ run_global_cases() {
     > "$TMP/gsa.expected"
   check "set-global: replaced in place, later duplicate dropped, rest unchanged, new keys appended" \
     cmp -s "$TMP/gsa/coding-kit.env" "$TMP/gsa.expected"
-  check "set-global: the file is private" \
-    test "$(ls -l "$TMP/gsa/coding-kit.env" | cut -c1-10)" = '-rw-------'
+  check_owner_only "set-global: the file is private" "$TMP/gsa/coding-kit.env"
   check "set-global: the shell reads the values literally" \
     test "$(sourced_values gsa)" = "Deutsch|junior|$NOTE"
   check "set-global: render-global reads the written file" \
