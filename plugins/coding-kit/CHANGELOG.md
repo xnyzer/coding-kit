@@ -15,9 +15,12 @@ hier.
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
-## 3.8.0 — unveröffentlicht
+## 3.8.0 — 2026-11-23
 
-Private Inhalte gelangen beim Abgleich nicht mehr unbemerkt ins Repo (F-069).
+Private Inhalte gelangen beim Abgleich und am Privacy-Lint vorbei nicht mehr unbemerkt
+ins Repo, und der Lint meldet weniger Fehlalarme (F-069). Bestehende Projekte bekommen
+Lint, Allowlist und Doku über `/update-conventions`; danach prüft der Lint auch
+`private/README.md` und die `mise.lock`, und Funde dort sind echt.
 
 - **`template-sync.sh merge`:** Eine Template-Datei, deren Projektfassung Git ignoriert
   und die vom Template abweicht, heißt jetzt `ignored` und bekommt kein Ergebnis — sie
