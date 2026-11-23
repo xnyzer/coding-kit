@@ -2029,7 +2029,9 @@ set_global() {
   # Replaces the first assignment of each given key in place and drops later ones (they
   # would win in the shell), appends the keys the file lacks behind a blank line; every
   # other line goes through unchanged. A file with CRLF line ends gets CRLF lines.
-  awk -F "$TAB" -v status="$WORK/status" -v drop="$sg_drop" '
+  # BINMODE=1 makes gawk on Windows (Git Bash) read the \r instead of dropping it, so it
+  # sees the CRLF and keeps it on the lines it passes through; other awks ignore it.
+  awk -F "$TAB" -v BINMODE=1 -v status="$WORK/status" -v drop="$sg_drop" '
     FILENAME == ARGV[1] { line[$1] = substr($0, length($1) + 2); order[++n] = $1; next }
     FNR == 1 { crlf = ($0 ~ /\r$/) }
     {

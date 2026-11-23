@@ -2,7 +2,7 @@
 id: F-095
 title: Skript-Tests unter Windows in Git Bash lauffähig machen
 type: fix
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-11-23
 done:
@@ -152,3 +152,23 @@ lässt die Installer-Tests auf Windows ungeprüft).
   `install.sh` und `global.sh` nutzen den Helfer.
 - `run.sh`: `GIT_CONFIG_NOSYSTEM=1` für alle Fälle.
 - Erfüllt AC-1, AC-2, AC-4, AC-5 — der Commit geht unter Windows regulär durch den Hook.
+
+## Verlauf
+
+### F-095a — fertig 2026-11-23
+
+**Umgesetzt:** `set-global` (`plugins/coding-kit/scripts/template-sync.sh`) startet sein
+awk mit `-v BINMODE=1`: gawk unter Windows liest das `\r` jetzt mit, erkennt die
+CRLF-Datei und reicht die übrigen Zeilen unverändert durch. Die Ausgabe schreibt gawk
+dort ohnehin binär, ein zweites `\r` kommt nicht dazu (vorab nachgestellt). Version 3.8.1
+mit CHANGELOG-Eintrag.
+
+**Entscheidungen:** keine über die Spezifikation hinaus.
+
+**Abweichung vom Plan:** keine.
+
+**Funde:**
+- `just test` unter Windows: 200 statt 202 Fehler, die übrige Liste ist identisch. Der Fall
+  „set-global: the file is private“ ist eine Rechte-Prüfung und gehört zu F-095b.
+- AC-3 ist unter Windows belegt („set-global: CRLF file gets CRLF lines“ unter dash und
+  bash grün, vorher rot); der Teil „macOS und Linux unverändert“ steht bis zur CI aus.

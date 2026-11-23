@@ -15,6 +15,13 @@ hier.
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.8.1 — unveröffentlicht
+
+- **`template-sync.sh set-global`:** Eine Personal-Config mit CRLF-Zeilenenden behält
+  sie jetzt auch unter Windows in jeder Zeile (F-095). Bisher entfernte das gawk der Git
+  Bash das `\r` beim Lesen; die gesetzten Zeilen bekamen kein CRLF, die übrigen verloren
+  es.
+
 ## 3.8.0 — 2026-11-23
 
 Private Inhalte gelangen beim Abgleich und am Privacy-Lint vorbei nicht mehr unbemerkt
