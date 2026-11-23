@@ -21,7 +21,9 @@
 # and anthropic.com (the Co-Authored-By trailer of commits).
 # A gitignored private/blocklist.txt (one term per line, `#` starts a comment) adds
 # project-private terms — when the file is absent (e.g. in CI), only the generic
-# patterns run. A file that cannot be scanned counts as a finding (fail closed).
+# patterns run. The versioned privacy-allowlist.txt frees exact values of this project,
+# one per line (`allow <value> <reason…>`, see the file); a line it cannot read is a
+# finding. A file that cannot be scanned counts as a finding too (fail closed).
 # Exit code: 0 clean, 1 findings. POSIX sh, grep and awk only, no other toolchain.
 # Windows: run hooks from Git Bash or WSL (both ship sh, grep and awk); a plain
 # cmd/PowerShell setup without Git's sh on PATH fails loudly, never silently.
@@ -29,6 +31,7 @@
 set -u
 
 BLOCKLIST='private/blocklist.txt'
+ALLOWLIST='privacy-allowlist.txt'
 
 # --all: re-invoke over every tracked file (NUL-safe for unusual file names). xargs may
 # split the list and reports a failed run in its own way (GNU xargs: 123), so any
@@ -46,6 +49,46 @@ if [ -f "$BLOCKLIST" ]; then
     "$BLOCKLIST" | grep -v '^$' || true)
 fi
 
+# privacy-allowlist.txt → "value <v>" for each allowed value (emails in lower case) and
+# "error <finding>" for each line it cannot read. A value must be exactly what the lint
+# reports — one IP address, email address or local path — so ranges, prefix lengths and
+# patterns are refused.
+read_allowlist() {
+  LC_ALL=C awk -v list="$ALLOWLIST" '
+    function bad(msg) {
+      printf "error %s:%d: invalid allow line — %s\n", list, FNR, msg
+    }
+    function is_ip(v,    n, part, i) {
+      if (v !~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) return 0
+      n = split(v, part, ".")
+      for (i = 1; i <= n; i++) {
+        if (length(part[i]) > 3 || part[i] + 0 > 255) return 0
+      }
+      return 1
+    }
+    { sub(/\r$/, "") }
+    /^[ \t]*(#|$)/ { next }
+    $1 != "allow" { bad("unknown keyword " $1 " (use: allow <value> <reason>)"); next }
+    NF < 3 { bad("allow needs a value and a reason"); next }
+    {
+      if (is_ip($2) || $2 ~ /^\/(Users|home)\/[A-Za-z0-9_.-]+$/) {
+        print "value " $2
+      } else if ($2 ~ /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z][A-Za-z]+$/) {
+        print "value " tolower($2)
+      } else {
+        bad($2 " is no single IP address, email address or local path")
+      }
+    }' "$ALLOWLIST"
+}
+
+allowed=''
+allow_errors=''
+if [ -f "$ALLOWLIST" ]; then
+  parsed=$(read_allowlist) || parsed="error $ALLOWLIST: could not be read"
+  allowed=$(printf '%s\n' "$parsed" | sed -n 's/^value //p')
+  allow_errors=$(printf '%s\n' "$parsed" | sed -n 's/^error //p')
+fi
+
 # Lock files and pin lists, by name: their four-part versions look like IP addresses,
 # so an IP counts there only as the host of a URL.
 is_lock_file() {  # FILE
@@ -58,17 +101,24 @@ is_lock_file() {  # FILE
   return 1
 }
 
-# Paths, IPs and emails in FILE (read from stdin) → one finding per line. The file name
-# comes through the environment: awk would treat an operand like a=b as an assignment.
+# Paths, IPs and emails in FILE (read from stdin) → one finding per line, except values
+# of the allowlist. The file name comes through the environment: awk would treat an
+# operand like a=b as an assignment.
 scan_patterns() {  # FILE LOCK (1 for a lock file or pin list, else 0)
-  PL_FILE=$1 LC_ALL=C awk -v lock="$2" -v sq="'" '
+  PL_FILE=$1 PL_ALLOWED=$allowed LC_ALL=C awk -v lock="$2" -v sq="'" '
     BEGIN {
       file = ENVIRON["PL_FILE"]
+      n = split(ENVIRON["PL_ALLOWED"], list, "\n")
+      for (i = 1; i <= n; i++) {
+        if (list[i] != "") allowed[list[i]] = 1
+      }
       # Characters that may stand before a product name such as Chrome/.
       openers = " \t([{\"`" sq
     }
 
-    function report(kind, value) {
+    function report(kind, value,    key) {
+      key = (kind == "email address") ? tolower(value) : value
+      if (key in allowed) return
       printf "%s:%d: %s leaked — %s\n", file, FNR, kind, value
     }
 
@@ -195,7 +245,10 @@ scan() {
   done
 }
 
-findings=$(scan "$@")
+findings=$(
+  if [ -n "$allow_errors" ]; then printf '%s\n' "$allow_errors"; fi
+  scan "$@"
+)
 if [ -n "$findings" ]; then
   printf '%s\n' "$findings"
   printf 'privacy-lint: %s finding(s) — fix or move to private/ before committing\n' \

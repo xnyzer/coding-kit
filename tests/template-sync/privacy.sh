@@ -1,6 +1,6 @@
 # Privacy lint cases for tests/template-sync/run.sh — sourced, uses its helpers. They
 # test the template script scripts/privacy-lint.sh along the rule table of F-069 (R1 to
-# R7). Values the kit's own validator would report as leaks (IP addresses, local paths,
+# R8). Values the kit's own validator would report as leaks (IP addresses, local paths,
 # email addresses) are put together at run time, so this file holds none of them.
 
 PL=$TEMPLATE/core/scripts/privacy-lint.sh
@@ -39,6 +39,15 @@ pl_finds() {
 pl_clean() {
   pl_scan "$@"
   [ "$PL_RC" = 0 ] && [ ! -s "$TMP/pl-out" ]
+}
+
+# pl_bad_line LINE — with LINE as line 2 of privacy-allowlist.txt, scanning a clean file
+# fails and names that line.
+pl_bad_line() {
+  pl_put privacy-allowlist.txt '# project allowlist' "$1"
+  pl_put clean.md 'nothing to report'
+  pl_scan clean.md
+  [ "$PL_RC" = 1 ] && grep -q '^privacy-allowlist.txt:2: invalid allow line' "$TMP/pl-out"
 }
 
 # pl_count FILE VALUE N — scanning FILE names VALUE exactly N times.
@@ -155,6 +164,28 @@ run_privacy_cases() {
       eval 'pl_scan locked.md; [ "$PL_RC" = 1 ] && grep -q "^locked.md: could not be scanned" "$TMP/pl-out"'
   fi
   chmod 644 "$TMP/pl-files/locked.md"
+
+  # R8 — exact values of privacy-allowlist.txt pass in every file; a broken line blocks.
+  pl_range=$(pl_ip 10 0 0 0)
+  pl_put privacy-allowlist.txt '# project allowlist' '' \
+    "allow $pl_range SSRF block list in the docs" \
+    "allow JANE.ROE${PL_AT}MAILBOX.ORG public contact" \
+    "allow $PL_HOME/user placeholder in the install guide"
+  pl_put r8.md "blocked: $pl_range/8" "mail $pl_mail" "path $PL_HOME/user/project"
+  check "privacy R8: allowed values pass, emails in any case" pl_clean r8.md privacy-allowlist.txt
+  pl_put r8-found.md "next $(pl_ip 10 0 0 1) and $PL_HOME/eve"
+  check "privacy R8: the next address of the range is still found" \
+    pl_finds r8-found.md "$(pl_ip 10 0 0 1)"
+  check "privacy R8: another path is still found" pl_finds r8-found.md "$PL_HOME/eve"
+  check "privacy R8: a line without a reason is an error" pl_bad_line "allow $pl_range"
+  check "privacy R8: a prefix length is an error" pl_bad_line "allow $pl_range/8 the whole range"
+  check "privacy R8: a pattern is an error" pl_bad_line 'allow 10.* every host'
+  check "privacy R8: an unknown keyword is an error" pl_bad_line 'permit something because'
+  rm "$TMP/pl-files/privacy-allowlist.txt"
+  check "privacy R8: without the file only the built-in values pass" pl_finds r8.md "$pl_range"
+  # The lint reads a line as an entry once its first field is allow, indented or not.
+  check "privacy R8: the template's allowlist frees nothing" \
+    eval '! grep -Eq "^[[:space:]]*allow[[:space:]]" "$TEMPLATE/core/privacy-allowlist.txt"'
 
   # --all scans the tracked files only.
   mkdir -p "$TMP/pl-git/private"

@@ -89,8 +89,10 @@ geprüft werden (Werkzeug fehlt, Kommando schlägt fehl), gilt es als **rot**.
    in `private/` existieren. `scripts/privacy-lint.sh` nutzen, falls vorhanden,
    plus gezielte Greps für die genannten Muster. Erlaubt sind dokumentierte
    Platzhalter (example.com, example.net und example.org samt Subdomains, die Endungen
-   .example, .test, .invalid und .localhost, RFC-5737-IPs, GitHub-noreply-Adressen).
-   **Auch Commit-Metadaten prüfen:** Autor-/Committer-E-Mails der gesamten Historie
+   .example, .test, .invalid und .localhost, RFC-5737-IPs, GitHub-noreply-Adressen)
+   und die Werte der `privacy-allowlist.txt` des Projekts — je Zeile ein Wert mit
+   Grund; den Grund beim Audit mitlesen. **Auch Commit-Metadaten prüfen:**
+   Autor-/Committer-E-Mails der gesamten Historie
    (`git log --all --format='%ae%n%ce' | sort -u`) müssen noreply- oder
    unkritische Adressen sein — private Adressen in der Historie sind ein Fund
    (Behebung nur via History-Rewrite, s. u.).

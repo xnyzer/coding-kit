@@ -25,7 +25,9 @@ Optional: `private/blocklist.txt` — one project-private term per line (`#` sta
 comment): real project names, codenames, customer identifiers. The pre-commit privacy lint
 (`scripts/privacy-lint.sh`) blocks any commit whose staged files contain a listed term
 (case-insensitive). Like everything here it is gitignored; where it is absent (e.g. in CI),
-only the lint's generic patterns run.
+only the lint's generic patterns run. The opposite case — a value the lint blocks that is
+legitimate in this project — belongs in the versioned `privacy-allowlist.txt` in the
+project root, one exact value with a reason.
 
 ## Rules
 

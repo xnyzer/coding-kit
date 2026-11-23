@@ -228,6 +228,23 @@ run_sync_cases() {
   refute "below the top level: no unignored lines" grep -q unignored "$TMP/ig-s.tsv"
   check "below the top level: warning" grep -q 'below the top level' "$TMP/ig-s.err"
 
+  # privacy-allowlist.txt: project lines survive a change of the template's head.
+  pal_tpl=$TEMPLATE/core/privacy-allowlist.txt
+  mkdir -p "$TMP/pal-p/.claude/template-base" "$TMP/pal-p.soll"
+  cp "$pal_tpl" "$TMP/pal-p/.claude/template-base/privacy-allowlist.txt.base"
+  { cat "$pal_tpl"; printf 'allow 192.0.2.99 documented example host\n'; } \
+    > "$TMP/pal-p/privacy-allowlist.txt"
+  { printf '# A changed first line of the head.\n'; sed 1d "$pal_tpl"; } \
+    > "$TMP/pal-p.soll/privacy-allowlist.txt"
+  check "merge of privacy-allowlist.txt runs" \
+    eval 'ts merge "$TMP/pal-p" "$TMP/pal-p.soll" "$TMP/pal-o" > "$TMP/pal-m.tsv"'
+  check "privacy-allowlist.txt: template head and project line merge" \
+    line_in pal-m privacy-allowlist.txt merged 0 none
+  check "privacy-allowlist.txt: the project line stays" \
+    grep -qx 'allow 192.0.2.99 documented example host' "$TMP/pal-o/privacy-allowlist.txt"
+  check "privacy-allowlist.txt: the new head arrives" \
+    grep -qx '# A changed first line of the head.' "$TMP/pal-o/privacy-allowlist.txt"
+
   # A .git that git cannot read stops the merge instead of skipping the checks.
   put ig-b/.git 'gitdir: nowhere\n'
   fixture ig-b a.txt - 'a\n' 'b\n'

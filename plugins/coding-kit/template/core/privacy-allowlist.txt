@@ -1,0 +1,16 @@
+# Privacy allowlist — exact values the privacy lint (scripts/privacy-lint.sh) lets pass.
+#
+# The lint blocks commits that contain absolute local paths, IP addresses or email
+# addresses; its header lists the rules and the documentation values it allows anyway.
+# When such a value is legitimate in this project — the network address of a private
+# range in a documented list of blocked ranges, a placeholder path in the docs, the
+# project's public contact address — add it below:
+#
+#   allow <value> <reason…>   <value> exactly as the lint reports it: an IP address,
+#                             an email address or a local path such as /home/<name>.
+#                             The reason is required — say why the value is fine.
+#
+# A value passes in every file. Ranges and patterns are not allowed (no *, no prefix
+# length such as /8): each value is a conscious, documented decision, and a line the lint
+# cannot read blocks every commit until it is fixed. Project-private terms do not belong
+# here; they go to the gitignored private/blocklist.txt.

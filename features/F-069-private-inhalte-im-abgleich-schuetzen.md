@@ -2,10 +2,10 @@
 id: F-069
 title: Private Inhalte beim Abgleich und im Privacy-Lint schützen
 type: fix
-status: IN-PROGRESS
+status: DONE
 size: L
 created: 2026-11-22
-done:
+done: 2026-11-23
 depends-on:
 superseded-by:
 ---
@@ -154,17 +154,29 @@ Kit-Validator die Beispiele nicht, die Tests nutzen volle Werte.
   — belegt: Kit-Tests in `privacy.sh` zu R2 bis R7 (beide Spalten, darunter URL-Host
   und lokaler Pfad in Lock-Dateien); das ganze Template und je ein frisch gerendertes
   Projekt für python, ts-node und go ohne Fund; `just check` grün.
-- [ ] AC-5 — Gegeben eine `privacy-allowlist.txt` mit
+- [x] AC-5 — Gegeben eine `privacy-allowlist.txt` mit
   `allow <Netzadresse> SSRF-Sperrliste in der Doku` für die Netzadresse eines privaten
   Bereichs, wenn eine Datei diese Adresse mit Präfixlänge enthält (etwa `/8`), dann gibt
   es keinen Fund, die nächste Adresse desselben Bereichs bleibt einer. Negativ: Eine
   Zeile ohne Grund, mit `*` oder mit einer Präfixlänge ist ein Fehler. Er macht den Lint
   rot und nennt die Zeile. Fehlt die Datei, gelten nur die eingebauten Ausnahmen.
-- [ ] AC-6 — Gegeben ein Projekt mit eigenen Zeilen in `privacy-allowlist.txt`, wenn
+  — belegt: Kit-Tests in `tests/template-sync/privacy.sh` zu R8:
+  - Die eingetragene Netzadresse ist mit Präfixlänge im Text frei, die nächste Adresse
+    bleibt ein Fund.
+  - Eine E-Mail in anderer Schreibweise und ein Pfad sind frei.
+  - Fehlender Grund, Präfixlänge, Muster und unbekanntes Schlüsselwort machen den Lint
+    rot und nennen die Zeile.
+  - Ohne Datei gelten nur die eingebauten Ausnahmen.
+
+  `just check` grün.
+- [x] AC-6 — Gegeben ein Projekt mit eigenen Zeilen in `privacy-allowlist.txt`, wenn
   `/update-conventions` eine geänderte Template-Fassung mergt, dann bleiben die
   Projektzeilen erhalten (`merged`). Negativ: Das Template selbst bringt keine
   `allow`-Zeile mit.
-- [ ] AC-7 — Gegeben das Kit, wenn `just check` läuft und man die Doku liest, dann gilt:
+  — belegt: Kit-Test in `sync.sh` (geänderter Kopf im Template, eigene `allow`-Zeile im
+  Projekt → `merged`, die Zeile bleibt, der neue Kopf kommt an) und Test, dass die
+  Template-Fassung keine `allow`-Zeile hat; `just check` grün.
+- [x] AC-7 — Gegeben das Kit, wenn `just check` läuft und man die Doku liest, dann gilt:
   - Das MANIFEST führt `privacy-allowlist.txt`.
   - Der Kopf des Lints, `private/README.md` und `CONTRIBUTING.md` beschreiben die
     Regeln und die Allowlist.
@@ -175,6 +187,13 @@ Kit-Validator die Beispiele nicht, die Tests nutzen volle Werte.
   - Der CHANGELOG-Eintrag hat `### Template`.
 
   Negativ: Im Text stehen keine Versionsstände.
+  — belegt:
+  - MANIFEST-Zeile und Render der neuen Datei.
+  - Lint-Kopf, `private/README.md` und `CONTRIBUTING.md` (F-069b, F-069c).
+  - Kopf von `template-sync.sh` und `/update-conventions` (F-069a).
+  - CHANGELOG 3.8.0 mit `### Template`, ohne Versionsstände.
+  - `just check` und `just version-rule` grün.
+  - Drei gerenderte Projekte ohne Fund bei `--all`.
 
 ### Randfälle
 
@@ -453,3 +472,41 @@ Erfüllt AC-5, AC-6 und den Rest von AC-7.
   - Der Kopf nannte `anthropic.com` nicht als erlaubte Domain.
 - Idee, nicht gebaut: SSH-Remotes von Git-Abhängigkeiten in Lock-Dateien (`git@` vor
   einem Host) gelten als E-Mail. Ein Vorschlag als eigenes Feature ist offen.
+
+### F-069c — fertig 2026-11-23
+
+**Umgesetzt:**
+
+- Neue managed Datei `plugins/coding-kit/template/core/privacy-allowlist.txt` mit
+  erklärendem Kopf und ohne Einträge. Die MANIFEST-Zeile folgt dem Muster von
+  `license-policy.txt`, und der Render bringt die Datei in jedes Projekt.
+- `scripts/privacy-lint.sh` liest die Allowlist einmal (`read_allowlist`):
+  - Ein Wert gilt nur, wenn er genau ein Wert ist, wie der Lint ihn meldet: eine IP,
+    eine E-Mail oder ein lokaler Pfad. So sind Bereiche, Präfixlängen und Muster
+    ungültig.
+  - Jede fehlerhafte Zeile ist ein Fund mit Zeilennummer, eine unlesbare Datei ebenso.
+  - Freigegebene Werte laufen in jeder Datei durch, E-Mails ohne Rücksicht auf Groß-
+    und Kleinschreibung.
+- `CONTRIBUTING.md` und `private/README.md` nennen die Allowlist, und `/go-public` nimmt
+  ihre Werte in den Privacy-Scan.
+- Tests: 9 neue Prüfungen je Durchlauf in `tests/template-sync/privacy.sh` und 4 in
+  `sync.sh` (Projektzeilen überstehen den Merge). Je ein frisch gerendertes Projekt für
+  python, ts-node und go ergibt mit `--all` keinen Fund.
+
+**Entscheidungen:**
+
+- 2026-11-23 — Eine Regel statt drei: Der Wert muss genau ein meldbarer Wert sein. Das
+  deckt Stern, Präfixlänge und Bereich ab und dazu Werte wie eine Zahl über 255.
+- 2026-11-23 — Eine fehlerhafte Allowlist blockiert jeden Commit, nicht nur einen, der
+  sie ändert (fail closed).
+
+**Abweichung vom Plan:** `/go-public` nennt die Allowlist. Das stand nicht im Plan zu
+F-069c, war aber mit F-069b angekündigt.
+
+**Funde:** Unabhängiges Review mit vier Befunden, alle behoben:
+
+- In `CONTRIBUTING.md` stand ein irreführendes Beispiel, ein Bereich statt einer
+  Netzadresse.
+- Der Kopf der Test-Suite war veraltet.
+- Im CHANGELOG gab es einen doppelten Eintrag.
+- Eine Gegenprobe übersah eingerückte `allow`-Zeilen.

@@ -71,7 +71,10 @@ Never commit secrets, tokens, passwords, private keys, private email addresses, 
 deployment internals (IPs, hostnames, key names). Operational internals belong in the
 gitignored `private/` directory. The pre-commit hook runs gitleaks (secrets) and a
 privacy lint (local paths, IPs, emails, plus terms from an optional gitignored
-`private/blocklist.txt` — see `private/README.md`) on staged changes.
+`private/blocklist.txt` — see `private/README.md`) on staged changes. A value it blocks
+that is legitimate in this project — say, the network address of a private range in a
+documented list of blocked ranges — goes into `privacy-allowlist.txt` as one exact value
+with a reason; ranges and prefix lengths are refused.
 
 ## Code style
 

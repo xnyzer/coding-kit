@@ -222,6 +222,7 @@ contains itself, is offered for removal.
 | `core/.gitignore` | `.gitignore` | managed (module appends below marker) |
 | `core/private/README.md` | `private/README.md` | managed |
 | `core/scripts/privacy-lint.sh` | `scripts/privacy-lint.sh` | managed |
+| `core/privacy-allowlist.txt` | `privacy-allowlist.txt` | managed (project lines `allow` survive the three-way merge) |
 | `core/scripts/features-index.sh` | same path | managed |
 | `core/scripts/license-check.sh` | same path | managed |
 | `core/license-policy.txt` | `license-policy.txt` | managed (project lines `allow`/`except` survive the three-way merge) |

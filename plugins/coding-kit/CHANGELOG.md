@@ -32,7 +32,8 @@ Private Inhalte gelangen beim Abgleich nicht mehr unbemerkt ins Repo (F-069).
   (umbenennen, etwa nach `private/notes.md`, oder `skip`) und zeigt die
   `unignored`-Dateien, bevor er die `.gitignore` anbietet.
 - **`/coding-kit:go-public`:** Die Liste erlaubter Platzhalter im Privacy-Scan nennt
-  dieselben Beispiel-Domains wie der Privacy-Lint.
+  dieselben Beispiel-Domains wie der Privacy-Lint, dazu die Werte der
+  `privacy-allowlist.txt` des Projekts.
 
 ### Template
 
@@ -56,10 +57,20 @@ Private Inhalte gelangen beim Abgleich nicht mehr unbemerkt ins Repo (F-069).
 
   Eine Datei, die er nicht prüfen kann, zählt jetzt als Fund, statt still
   durchzugehen; Dateinamen und Blocklist-Begriffe, die mit `-` beginnen, prüft er
-  jetzt auch, und `--all` endet bei Funden überall mit 1 (GNU-xargs lieferte 123). Der
-  Lint braucht dafür awk neben grep; beides ist in Git Bash und WSL enthalten.
+  jetzt auch, und `--all` endet bei Funden überall mit 1 (GNU-xargs lieferte 123). Werte
+  aus der neuen `privacy-allowlist.txt` (unten) lässt er durch. Der Lint braucht dafür
+  awk neben grep; beides ist in Git Bash und WSL enthalten.
+- **`privacy-allowlist.txt` (managed, neu):** gibt einzelne Werte frei, die der
+  Privacy-Lint blockiert, im Projekt aber legitim sind — etwa die Netzadresse eines
+  privaten Bereichs in einer dokumentierten Sperrliste. Je Zeile `allow <Wert> <Grund>`,
+  der Wert genau so, wie der Lint ihn meldet, und er gilt in jeder Datei. Bereiche,
+  Präfixlängen und Muster sind nicht erlaubt; eine Zeile, die der Lint nicht lesen kann,
+  blockiert jeden Commit. Das Template bringt nur den erklärenden Kopf mit; eigene
+  Zeilen bleiben beim Drei-Wege-Merge erhalten wie in `license-policy.txt`.
+- **`CONTRIBUTING.md` (managed):** nennt die Allowlist im Abschnitt Secrets policy.
 - **`private/README.md` (managed):** sagt, dass die Datei versioniert ist und keine
-  Notizen aufnimmt — die gehören in eine andere Datei, etwa `private/notes.md`.
+  Notizen aufnimmt — die gehören in eine andere Datei, etwa `private/notes.md`. Der
+  Abschnitt zur Blocklist verweist für den umgekehrten Fall auf die Allowlist.
 
 ## 3.7.0 — 2026-11-22
 
