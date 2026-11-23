@@ -24,7 +24,7 @@ features-index:
 
 # Repo validation: syntax, plugin and template contracts, privacy lint and blocklist
 validate:
-    uv run --with pyyaml python3 scripts/validate.py
+    uv run --with pyyaml python scripts/validate.py
 
 # Tests of the plugin scripts under dash and bash, plus mawk and gawk when installed
 test:
@@ -50,4 +50,4 @@ publish-release tag:
 # Version rule for plugin content: --staged (pre-commit) or --since <rev> (CI)
 [positional-arguments]
 version-rule *args:
-    uv run python3 scripts/version-rule.py "$@"
+    uv run python scripts/version-rule.py "$@"
