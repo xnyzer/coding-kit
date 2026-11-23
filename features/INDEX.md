@@ -116,7 +116,7 @@ Stand 2026-11-23.
 | [F-091](F-091-migrationsprotokoll-nach-jedem-abgleich.md) | Migrationsprotokoll und Kit-Vorschläge nach jedem Abgleich schreiben | BACKLOG |  |
 | [F-092](F-092-projekt-mit-template-vergleichen.md) | Projekt jederzeit vollständig mit dem aktuellen Template vergleichen | BACKLOG |  |
 | [F-093](F-093-ssh-remotes-im-privacy-lint-erlauben.md) | Privacy-Lint erlaubt SSH-Remotes öffentlicher Git-Hosts | BACKLOG |  |
-| [F-095](F-095-skript-tests-unter-windows-git-bash.md) | Skript-Tests unter Windows in Git Bash lauffähig machen | BACKLOG |  |
+| [F-095](F-095-skript-tests-unter-windows-git-bash.md) | Skript-Tests unter Windows in Git Bash lauffähig machen | PLANNED |  |
 | [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md) | Projekte-Ordner außerhalb synchronisierter Ordner vorschlagen | BACKLOG |  |
 | [F-097](F-097-mise-aktivierung-unter-windows.md) | mise-Aktivierung unter Windows erkennen und anbieten | BACKLOG |  |
 
