@@ -233,19 +233,31 @@
 #       ends rc, yet something is shadowed: restart, and if it stays, something switches
 #       versions on cd), offer (offer to append the line). Writes nothing; PATH changes
 #       only after the terminal or editor restarts.
+#       On Windows (uname -s MINGW*, MSYS* or CYGWIN*) programs take PATH from the Windows
+#       environment, not from a shell, so the shims belong at the front of the user PATH.
+#       There the shell is named without .exe, the shims lie below %LOCALAPPDATA%\mise
+#       unless MISE_DATA_DIR or XDG_DATA_HOME say otherwise (any form, given as a POSIX
+#       path via cygpath, spelled as PATH has it — Windows ignores case), rc, line and add
+#       are always -, and a line userpath <present|absent|unknown> follows shims — the user
+#       PATH read through PowerShell, unknown when that fails. The verdict there, after
+#       ok: offer-path (not in the user PATH, or a folder of the user PATH before the shims
+#       shadows one: offer to put them first), manual (user PATH unknown, or shadowed only
+#       from outside it — the system PATH and Git Bash come first), restart (in the user
+#       PATH, not yet active).
 #   set-mise RC OUT
 #       Writes the startup file RC (a missing file counts as empty) with the activation
 #       line for the shell of SHELL appended — after a blank line and a comment — into
 #       OUT/<name of RC> (OUT missing or empty). Every line of RC stays; the caller copies
 #       the file after approval. Line: written <name>. Refused: a shell without a known
-#       activation line (see mise-check).
+#       activation line (see mise-check), and Windows.
 #   tool-check TOOL...
 #       Whether each TOOL runs outside any project: from a directory on PATH other than
 #       those of mise — its shims stop there without a version, its install directories
 #       (an activation without shims puts those of the current project first) hold
 #       project versions — or with a global version in mise (`mise which` from HOME).
-#       Reads PATH, HOME, MISE_DATA_DIR and XDG_DATA_HOME. Line per TOOL: tool <name>
-#       <present|missing>. Refused: a TOOL that is empty or holds a slash.
+#       Reads PATH, HOME, MISE_DATA_DIR and XDG_DATA_HOME (on Windows LOCALAPPDATA, see
+#       mise-check). Line per TOOL: tool <name> <present|missing>. Refused: a TOOL that is
+#       empty or holds a slash.
 #
 # Options name a stand-in for a file of PROJECT, so a skill can go on with files it
 # prepared in a temp folder while a write below .claude/ waits for approval:
@@ -3799,15 +3811,79 @@ commit_email() {
 
 # --- mise-check: do the mise shims reach this shell? --------------------------------
 
-# Where mise keeps its shims: MISE_DATA_DIR, else the XDG data folder, else the default.
-mise_shims_dir() {
+# Whether this runs on Windows: Git Bash, MSYS2 or Cygwin.
+on_windows() {
+  case $(uname -s 2> /dev/null) in
+    MINGW* | MSYS* | CYGWIN*) return 0 ;;
+  esac
+  return 1
+}
+
+# Where mise keeps its data: MISE_DATA_DIR, else the XDG data folder, else the default —
+# on Windows %LOCALAPPDATA%\mise. On Windows the result is a POSIX path like those on
+# PATH (cygpath), whichever form the variable had.
+mise_data_dir() {
   if [ -n "${MISE_DATA_DIR:-}" ]; then
-    printf '%s/shims\n' "$MISE_DATA_DIR"
+    md_dir=$MISE_DATA_DIR
   elif [ -n "${XDG_DATA_HOME:-}" ]; then
-    printf '%s/mise/shims\n' "$XDG_DATA_HOME"
+    md_dir=$XDG_DATA_HOME/mise
+  elif on_windows; then
+    md_dir=${LOCALAPPDATA:-$HOME/AppData/Local}/mise
   else
-    printf '%s/.local/share/mise/shims\n' "$HOME"
+    md_dir=$HOME/.local/share/mise
   fi
+  if on_windows; then
+    md_dir=$(cygpath -u "$md_dir")
+  fi
+  printf '%s\n' "$md_dir"
+}
+
+# The position of DIR in the colon-separated LIST (1 for the first entry), or 0. Compared
+# as Windows does: without case and without a slash at the end.
+win_path_index() {  # LIST DIR
+  WPI_LIST=$1 WPI_DIR=$2 awk 'BEGIN {
+    want = tolower(ENVIRON["WPI_DIR"])
+    sub(/\/+$/, "", want)
+    n = split(ENVIRON["WPI_LIST"], dirs, ":")
+    for (i = 1; i <= n; i++) {
+      d = tolower(dirs[i])
+      sub(/\/+$/, "", d)
+      if (d != "" && d == want) {
+        print i
+        exit
+      }
+    }
+    print 0
+  }'
+}
+
+# Where mise keeps its shims. On Windows spelled as PATH has them, when PATH holds them in
+# another case or with a slash at the end — Windows does not tell those apart.
+mise_shims_dir() {
+  msd_dir=$(mise_data_dir)/shims
+  if on_windows; then
+    msd_at=$(win_path_index "$PATH" "$msd_dir")
+    if [ "$msd_at" -gt 0 ]; then
+      msd_dir=$(printf '%s\n' "$PATH" | cut -d : -f "$msd_at")
+    fi
+  fi
+  printf '%s\n' "$msd_dir"
+}
+
+# The user PATH of Windows — from the registry, variables expanded — as a colon-separated
+# list of POSIX paths into MU_PATH (empty when there is none). Fails when PowerShell is
+# missing or cannot read it. PowerShell writes to a pipe in the OEM code page unless told
+# otherwise; UTF-8 keeps folders with letters such as ü comparable.
+mise_user_path() {
+  mu_raw=$(powershell.exe -NoProfile -NonInteractive -Command \
+    "[Console]::OutputEncoding = [Text.Encoding]::UTF8;
+    [Environment]::GetEnvironmentVariable('Path', 'User')" 2> /dev/null) || return 1
+  mu_raw=$(printf '%s' "$mu_raw" | tr -d '\r')
+  if [ -z "$mu_raw" ]; then
+    MU_PATH=
+    return 0
+  fi
+  MU_PATH=$(cygpath -u -p "$mu_raw") || return 1
 }
 
 # The activation line in startup file FILE: last (no command follows the last active
@@ -3874,6 +3950,14 @@ mise_shadowed() {  # SHIMS
 mise_shell_setup() {
   MS_SHELL=${SHELL:-}
   MS_SHELL=${MS_SHELL##*/}
+  MS_SHELL=${MS_SHELL%.exe}
+  if on_windows; then
+    # Programs on Windows take PATH from the Windows environment, not from a shell; the
+    # shims go into the user PATH instead (see mise-check).
+    MS_RC=
+    MS_ADD=
+    return 0
+  fi
   case $MS_SHELL in
     zsh)
       MS_RC=${ZDOTDIR:-$HOME}/.zshrc
@@ -3895,6 +3979,44 @@ mise_shell_setup() {
       MS_ADD=
       ;;
   esac
+}
+
+# The verdict on Windows, where the shims belong at the front of the user PATH; the
+# system PATH comes before it, and Git Bash puts its own folders first. USER is the
+# userpath state, AT the position of the shims in the user PATH (MU_PATH), SHADOWED the
+# shadowed lines.
+mise_windows_verdict() {  # USER AT ACTIVE SHADOWED
+  case $1 in
+    absent)
+      echo offer-path
+      return 0
+      ;;
+    unknown)
+      echo manual
+      return 0
+      ;;
+  esac
+  if [ "$3" = no ]; then
+    echo restart
+    return 0
+  fi
+  # Moving the shims to the front helps only against a folder of the user PATH itself;
+  # the folder is the last field of a shadowed line.
+  mwv_verdict=manual
+  mwv_ifs=$IFS
+  IFS='
+'
+  set -f
+  for mwv_line in $4; do
+    mwv_at=$(win_path_index "$MU_PATH" "${mwv_line##*"$TAB"}")
+    if [ "$mwv_at" -gt 0 ] && [ "$mwv_at" -lt "$2" ]; then
+      mwv_verdict=offer-path
+      break
+    fi
+  done
+  set +f
+  IFS=$mwv_ifs
+  echo "$mwv_verdict"
 }
 
 # The comment set-mise writes above the activation line.
@@ -3927,6 +4049,22 @@ mise_check() {
     *) mc_on=off-path ;;
   esac
   printf 'shims\t%s\t%s\n' "$mc_shims" "$mc_on"
+  mc_windows=no
+  if on_windows; then
+    mc_windows=yes
+    mc_user_at=0
+    if mise_user_path; then
+      mc_user_at=$(win_path_index "$MU_PATH" "$mc_shims")
+      if [ "$mc_user_at" -gt 0 ]; then
+        mc_user=present
+      else
+        mc_user=absent
+      fi
+    else
+      mc_user=unknown
+    fi
+    printf 'userpath\t%s\n' "$mc_user"
+  fi
   if [ "$mc_on" = on-path ] || [ -n "${MISE_SHELL:-}" ]; then
     mc_active=yes
   else
@@ -3944,6 +4082,8 @@ mise_check() {
   # The one place that decides what a caller does; installer and skill only word it.
   if [ "$mc_active" = yes ] && [ -z "$mc_shadowed" ]; then
     mc_verdict=ok
+  elif [ "$mc_windows" = yes ]; then
+    mc_verdict=$(mise_windows_verdict "$mc_user" "$mc_user_at" "$mc_active" "$mc_shadowed")
   elif [ "$mc_line" = commented ]; then
     mc_verdict=commented
   elif [ -z "$mc_rc" ]; then
@@ -3961,6 +4101,9 @@ mise_check() {
 set_mise() {
   [ $# -eq 2 ] || usage
   SM_RC=$1 SM_OUT=$2
+  if on_windows; then
+    die "on Windows the mise shims go into the user PATH, not into a startup file"
+  fi
   mise_shell_setup
   [ -n "$MS_ADD" ] || die "no activation line known for the shell '${MS_SHELL:-}'"
   check_out_dir "$SM_OUT"

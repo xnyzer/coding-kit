@@ -2,7 +2,7 @@
 id: F-097
 title: mise-Aktivierung unter Windows erkennen und anbieten
 type: fix
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-11-23
 done:
@@ -46,19 +46,24 @@ Windows-Umgebung. Betroffen sind `install.sh` (Schritt 6) und
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben Windows (`uname -s` beginnt mit MINGW, MSYS oder CYGWIN), wenn
+- [x] AC-1 — Gegeben Windows (`uname -s` beginnt mit MINGW, MSYS oder CYGWIN), wenn
   `mise-check` läuft, dann meldet er den Shell-Namen ohne `.exe`, den Shims-Ordner nach
   der Regel von mise — `MISE_DATA_DIR`, sonst `XDG_DATA_HOME/mise`, sonst
   `%LOCALAPPDATA%\mise`, auch aus Werten in Windows-Schreibweise — in POSIX-Form, eine
   Zeile `userpath` mit `present`, `absent` oder `unknown` und nie eine Zeile für eine
-  Startdatei (`rc - -`, `line -`, `add -`).
-- [ ] AC-2 — Gegeben Windows, wenn `mise-check` urteilt, dann: Shims im aktuellen PATH
+  Startdatei (`rc - -`, `line -`, `add -`). — belegt: Fälle win-none, win-xdg, win-mdd
+  in `tests/template-sync/mise.sh`; auf dem Windows-Rechner `mise-check` mit
+  `shell bash`, `userpath present`, `verdict ok`
+- [x] AC-2 — Gegeben Windows, wenn `mise-check` urteilt, dann: Shims im aktuellen PATH
   und nichts überdeckt → `ok`; Shims nicht im Benutzer-PATH → `offer-path`; im
   Benutzer-PATH, aber nicht im aktuellen PATH → `restart`; überdeckt von einem Ordner,
   der im Benutzer-PATH vor den Shims steht → `offer-path`; überdeckt nur von Ordnern
-  außerhalb des Benutzer-PATH (System-PATH, Git Bash) → `manual`.
-- [ ] AC-3 — Gegeben Windows, wenn `tool-check` läuft, dann zählt ein Shim im
-  Shims-Ordner aus AC-1 nicht als vorhanden.
+  außerhalb des Benutzer-PATH (System-PATH, Git Bash) → `manual`. — belegt: Fälle
+  win-ok, win-restart, win-user, win-space, win-sys, win-after, win-unknown,
+  win-unknown-ok in `tests/template-sync/mise.sh`
+- [x] AC-3 — Gegeben Windows, wenn `tool-check` läuft, dann zählt ein Shim im
+  Shims-Ordner aus AC-1 nicht als vorhanden. — belegt: Fall „tool-check: Windows, a
+  shim in the shims folder is missing“
 - [ ] AC-4 — Gegeben Windows, wenn `set-mise-path` läuft, dann steht der Shims-Ordner
   danach genau einmal und vorn im Benutzer-PATH, alle anderen Einträge bleiben in
   Reihenfolge und Schreibweise, der Werttyp bleibt (REG_EXPAND_SZ bzw. REG_SZ), und
@@ -69,8 +74,10 @@ Windows-Umgebung. Betroffen sind `install.sh` (Schritt 6) und
   Eintragen an und rufen `set-mise-path` erst nach Zustimmung auf; bei `manual` nennen
   sie die überdeckten Werkzeuge mit Ordner und dass der System-PATH vor dem
   Benutzer-PATH steht — nie eine Zeile für eine Startdatei.
-- [ ] AC-6 — Gegeben macOS oder Linux, wenn `mise-check`, `set-mise` und `tool-check`
-  laufen, dann ist ihre Ausgabe dieselbe wie vorher (keine Zeile `userpath`).
+- [x] AC-6 — Gegeben macOS oder Linux, wenn `mise-check`, `set-mise` und `tool-check`
+  laufen, dann ist ihre Ausgabe dieselbe wie vorher (keine Zeile `userpath`). — belegt:
+  die bestehenden Fälle in `tests/template-sync/mise.sh` unverändert grün, dazu „no
+  userpath line off Windows“; `just check` (2884 Checks, 0 Fehler)
 
 ### Randfälle
 
@@ -203,3 +210,44 @@ Endpunkte.
   Rückfrage.
 - CHANGELOG 3.8.1 ergänzen.
 - Erfüllt AC-4, AC-5.
+
+## Verlauf
+
+### F-097a — fertig 2026-11-23
+
+**Umgesetzt:** `template-sync.sh` erkennt Windows an `uname -s` (`on_windows`).
+`mise_data_dir` nimmt dort `%LOCALAPPDATA%\mise` als Rückfall und wandelt jeden Wert
+mit `cygpath -u`; `mise_shims_dir` übernimmt die Schreibweise aus dem PATH, wenn sie
+sich nur in Groß- und Kleinschreibung oder einem Schrägstrich am Ende unterscheidet
+(`win_path_index`). `mise_user_path` liest den Benutzer-PATH per PowerShell, mit
+UTF-8-Ausgabe; `mise-check` meldet daraus die Zeile `userpath`, und
+`mise_windows_verdict` urteilt `offer-path`, `restart` oder `manual`. `set-mise` lehnt
+Windows ab. Installer Schritt 6 und `update-conventions` G8 formulieren die
+Windows-Urteile; `offer-path` nennt vorerst den Weg von Hand. Tests mit Stellvertretern
+für `uname`, `cygpath` und `powershell.exe` (`mt_os_fakes` in
+`tests/template-sync/mise.sh`, auch von den Installer-Fällen genutzt).
+
+**Entscheidungen:**
+- Den Shims-Ordner so schreiben, wie er im aktuellen PATH steht (EC-2 auf den aktuellen
+  PATH übertragen); sonst gälten der Vergleich und die Prüfung auf Überdeckung nicht.
+- `set-mise` lehnt Windows ausdrücklich ab; die bisherige Meldung „keine Zeile für die
+  Shell bash“ hätte in die Irre geführt.
+- PowerShell gibt den Benutzer-PATH als UTF-8 aus (`[Console]::OutputEncoding`); ohne
+  das schreibt sie in die Pipe in der OEM-Codepage (hier 850), und ein Ordner wie
+  `Jürgen` passte nicht mehr zum Shims-Ordner — aus dem unabhängigen Review.
+- Bei `userpath unknown` behaupten Installer und Skill nicht, das Überdeckende komme aus
+  dem System-PATH, und nennen den Weg von Hand samt Windows-Einstellungen — aus dem
+  unabhängigen Review.
+
+**Abweichung vom Plan:** Der bestehende Windows-Fall der Installer-Tests braucht jetzt
+einen Stellvertreter für `cygpath`, weil `tool-check` in Schritt 5 den Shims-Ordner
+damit umwandelt. AC-5 ist nur für `manual` erfüllt, der Rest kommt wie geplant mit
+F-097b.
+
+**Funde:**
+- gawk dieser Git Bash verdoppelt in `gsub` einen Backslash aus der Ersetzung `"\\\\"`;
+  betroffen war nur der Stellvertreter für `cygpath`, gelöst mit `tr`.
+- Vier Zeilen „fatal: cannot change to …“ in der Testausgabe unter Windows gab es schon
+  vor diesem Schritt (Lauf von F-095); sie stammen aus bestehenden Fällen.
+- mawk ist auf dem Windows-Rechner nicht installiert; den Lauf damit macht die CI nach
+  dem Push.

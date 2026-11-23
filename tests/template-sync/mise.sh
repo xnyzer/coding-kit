@@ -7,14 +7,60 @@ mt_exe() {  # PATH
   chmod +x "$1"
 }
 
+# Stand-ins for what the check asks the system, written into DIR: uname names the system
+# from MT_UNAME_S (macOS unless set); cygpath turns Windows paths into POSIX ones (-u, -p
+# for a list) and back (-w), with the drive X: as the folder MT_DRIVE; powershell.exe
+# prints the user PATH from MT_USERPATH, or fails with MT_PS=fail.
+mt_os_fakes() {  # DIR
+  printf '%s\n' '#!/bin/sh' 'printf "%s\n" "${MT_UNAME_S:-Darwin}"' > "$1/uname"
+  cat > "$1/cygpath" <<'EOF'
+#!/bin/sh
+mode=$1
+shift
+if [ "$mode" = -w ]; then
+  s=$1
+  if [ -n "${MT_DRIVE:-}" ]; then
+    case $s in
+      "$MT_DRIVE"/*) s="X:${s#"$MT_DRIVE"}" ;;
+    esac
+  fi
+  printf '%s\n' "$s" | tr / '\\'
+  exit
+fi
+list=no
+if [ "$1" = -p ]; then
+  list=yes
+  shift
+fi
+CP_IN=$1 CP_LIST=$list awk 'BEGIN {
+  drive = ENVIRON["MT_DRIVE"]
+  s = ENVIRON["CP_IN"]
+  n = ENVIRON["CP_LIST"] == "yes" ? split(s, parts, ";") : split(s, parts, "\001")
+  out = ""
+  for (i = 1; i <= n; i++) {
+    p = parts[i]
+    gsub(/\\/, "/", p)
+    if (p ~ /^[Xx]:/) p = drive substr(p, 3)
+    out = out (i > 1 ? ":" : "") p
+  }
+  print out
+}'
+EOF
+  printf '%s\n' '#!/bin/sh' '[ "${MT_PS:-}" != fail ] || exit 1' \
+    'printf "%s\r\n" "${MT_USERPATH:-}"' > "$1/powershell.exe"
+  chmod +x "$1/uname" "$1/cygpath" "$1/powershell.exe"
+}
+
 # mise-check with the home and data folder below $TMP/mise and extra environment
 # (VAR=value…), its output in $TMP/mise/NAME.out. Every variable the check reads starts
-# empty or fixed, so the environment of the test run does not leak in.
+# empty or fixed, so the environment of the test run does not leak in; the stand-ins of
+# mt_os_fakes come with $mt_bin, which every case puts on PATH.
 mt_run() {  # NAME VAR=value…
   mt_name=$1
   shift
   env HOME="$TMP/mise/home" ZDOTDIR= MISE_DATA_DIR="$TMP/mise/data" XDG_DATA_HOME= \
-    MISE_SHELL= SHELL=/bin/zsh "$@" $SH "$SCRIPT" mise-check > "$TMP/mise/$mt_name.out"
+    MISE_SHELL= SHELL=/bin/zsh LOCALAPPDATA= MT_UNAME_S= MT_USERPATH= MT_PS= \
+    MT_DRIVE="$TMP/mise/drive" "$@" $SH "$SCRIPT" mise-check > "$TMP/mise/$mt_name.out"
 }
 
 # NAME's output has the line made of FIELD… joined by tabs.
@@ -37,11 +83,14 @@ run_mise_cases() {
   mt_shims=$TMP/mise/data/shims
   mt_nvm=$TMP/mise/nvm
   mt_bin=$TMP/mise/bin
-  mkdir -p "$mt_home" "$mt_shims" "$mt_nvm" "$mt_bin"
+  mt_os=$TMP/mise/os
+  mkdir -p "$mt_home" "$mt_shims" "$mt_nvm" "$mt_bin" "$mt_os"
   mt_exe "$mt_shims/node"
   mt_exe "$mt_shims/go"
   mt_exe "$mt_nvm/node"
   mt_exe "$mt_bin/mise"
+  mt_os_fakes "$mt_bin"
+  mt_os_fakes "$mt_os"
   mt_zsh_line='eval "$(mise activate zsh --shims)"'
 
   # Nothing set up yet: no startup file, shims off PATH.
@@ -136,8 +185,91 @@ run_mise_cases() {
   check "mise-check: the fish line to add" mt_has fish add 'mise activate fish --shims | source'
   check "mise-check: runs under another shell" mt_run nu SHELL=/usr/local/bin/nu PATH="$mt_bin:$PATH"
   check "mise-check: other shells get no line" mt_has nu add -
+  refute "mise-check: no userpath line off Windows" mt_kind nu userpath
 
   refute "mise-check: refuses an operand" ts mise-check extra
+
+  # Windows: the shims below %LOCALAPPDATA%\mise, the user PATH from PowerShell; the drive
+  # X: is $mt_drive. A shim is shadowed by a folder of the user PATH (tools, also one with
+  # a space in its name) or by one outside it (sys, as from the system PATH).
+  mt_win=MT_UNAME_S=MINGW64_NT-10.0-26200
+  mt_drive=$TMP/mise/drive
+  mt_wshims=$mt_drive/Profile/AppData/Local/mise/shims
+  mt_wuser='X:\Profile\AppData\Local\mise\shims'
+  mkdir -p "$mt_wshims" "$mt_drive/tools" "$mt_drive/Program Files/tool" "$TMP/mise/winsys"
+  mt_exe "$mt_wshims/node"
+  mt_exe "$mt_drive/tools/node"
+  mt_exe "$mt_drive/Program Files/tool/node"
+  mt_exe "$TMP/mise/winsys/node"
+  # The Windows environment every case below starts from.
+  set -- "$mt_win" SHELL=/usr/bin/bash.exe MISE_DATA_DIR= \
+    LOCALAPPDATA='X:\Profile\AppData\Local'
+  check "mise-check: runs on Windows" mt_run win-none "$@" PATH="$mt_bin:$PATH"
+  check "mise-check: Windows names the shell without .exe" mt_has win-none shell bash
+  check "mise-check: Windows names no startup file" mt_has win-none rc - -
+  check "mise-check: Windows has no line state" mt_has win-none line -
+  check "mise-check: Windows has no line to add" mt_has win-none add -
+  check "mise-check: Windows finds the shims below LOCALAPPDATA" \
+    mt_has win-none shims "$mt_wshims" off-path
+  check "mise-check: Windows without user PATH" mt_has win-none userpath absent
+  check "mise-check: shims not in the user PATH — verdict offer-path" \
+    mt_has win-none verdict offer-path
+  check "mise-check: runs on Windows with XDG_DATA_HOME" \
+    mt_run win-xdg "$@" XDG_DATA_HOME='X:\xdg' PATH="$mt_bin:$PATH"
+  check "mise-check: Windows, shims below XDG_DATA_HOME in Windows form" \
+    mt_has win-xdg shims "$mt_drive/xdg/mise/shims" off-path
+  check "mise-check: runs on Windows with MISE_DATA_DIR" \
+    mt_run win-mdd "$@" MISE_DATA_DIR='X:\mdd' PATH="$mt_bin:$PATH"
+  check "mise-check: Windows, shims below MISE_DATA_DIR in Windows form" \
+    mt_has win-mdd shims "$mt_drive/mdd/shims" off-path
+  check "mise-check: runs on Windows with the shims in the user PATH only" \
+    mt_run win-restart "$@" MT_USERPATH="X:\\tools;$mt_wuser" PATH="$mt_bin:$PATH"
+  check "mise-check: Windows, shims in the user PATH" mt_has win-restart userpath present
+  check "mise-check: in the user PATH, not yet on PATH — verdict restart" \
+    mt_has win-restart verdict restart
+  # Another case and a backslash at the end in the user PATH, another case on PATH.
+  mt_wupper=$mt_drive/PROFILE/AppData/Local/mise/shims
+  check "mise-check: runs on Windows with the shims spelled otherwise" \
+    mt_run win-ok "$@" MT_USERPATH='X:\profile\appdata\local\MISE\shims\' \
+    PATH="$mt_wupper:$mt_bin:$PATH"
+  check "mise-check: Windows, another spelling in the user PATH counts" \
+    mt_has win-ok userpath present
+  check "mise-check: Windows, the shims spelled as on PATH" \
+    mt_has win-ok shims "$mt_wupper" on-path
+  check "mise-check: Windows, active and nothing shadowed — verdict ok" mt_has win-ok verdict ok
+  check "mise-check: runs on Windows, shadowed from the user PATH" \
+    mt_run win-user "$@" MT_USERPATH="X:\\tools;$mt_wuser" \
+    PATH="$mt_drive/tools:$mt_wshims:$mt_bin:$PATH"
+  check "mise-check: Windows names the shadowing" mt_has win-user shadowed node "$mt_drive/tools"
+  check "mise-check: shadowed from before the shims in the user PATH — verdict offer-path" \
+    mt_has win-user verdict offer-path
+  check "mise-check: runs on Windows, shadowed from a folder with a space" \
+    mt_run win-space "$@" MT_USERPATH="X:\\Program Files\\tool;$mt_wuser" \
+    PATH="$mt_drive/Program Files/tool:$mt_wshims:$mt_bin:$PATH"
+  check "mise-check: Windows names a shadowing folder with a space" \
+    mt_has win-space shadowed node "$mt_drive/Program Files/tool"
+  check "mise-check: a folder with a space in the user PATH — verdict offer-path" \
+    mt_has win-space verdict offer-path
+  check "mise-check: runs on Windows, shadowed from outside the user PATH" \
+    mt_run win-sys "$@" MT_USERPATH="$mt_wuser;X:\\tools" \
+    PATH="$TMP/mise/winsys:$mt_wshims:$mt_bin:$PATH"
+  check "mise-check: shadowed from outside the user PATH — verdict manual" \
+    mt_has win-sys verdict manual
+  check "mise-check: runs on Windows, shims first in the user PATH, shadowed after it" \
+    mt_run win-after "$@" MT_USERPATH="$mt_wuser;X:\\tools" \
+    PATH="$mt_drive/tools:$mt_wshims:$mt_bin:$PATH"
+  check "mise-check: a folder after the shims in the user PATH — verdict manual" \
+    mt_has win-after verdict manual
+  check "mise-check: runs on Windows without a readable user PATH" \
+    mt_run win-unknown "$@" MT_PS=fail PATH="$mt_bin:$PATH"
+  check "mise-check: Windows, user PATH unknown" mt_has win-unknown userpath unknown
+  check "mise-check: user PATH unknown, not active — verdict manual" \
+    mt_has win-unknown verdict manual
+  check "mise-check: runs on Windows, user PATH unknown, shims on PATH" \
+    mt_run win-unknown-ok "$@" MT_PS=fail PATH="$mt_wshims:$mt_bin:$PATH"
+  check "mise-check: user PATH unknown, active and nothing shadowed — verdict ok" \
+    mt_has win-unknown-ok verdict ok
+  set --
 
   # set-mise: the startup file with the line appended, written into OUT only.
   mt_comment='# mise: project-pinned tools via shims, last so they come before other tool managers.'
@@ -167,6 +299,8 @@ run_mise_cases() {
   : > "$TMP/mise/sm6/other"
   refute "set-mise: refuses a non-empty OUT" mt_set full "$TMP/mise/rc1" sm6
   refute "set-mise: needs RC and OUT" ts set-mise "$TMP/mise/rc1"
+  refute "set-mise: refuses on Windows" mt_set win1 "$TMP/mise/rc1" sm7 "$mt_win"
+  refute "set-mise: writes nothing on Windows" test -e "$TMP/mise/sm7"
 
   # tool-check: a tool counts only when it runs outside any project. The stand-in mise
   # knows kt-global as a global version, and only when asked from the home folder
@@ -183,7 +317,7 @@ run_mise_cases() {
   mt_exe "$mt_shims/kt-global"
   mt_exe "$mt_sys/kt-sys"
   mt_exe "$mt_inst/kt-inst"
-  check "tool-check: runs" mt_tool tools "$mt_fake:$mt_inst:$mt_shims:$mt_sys:$PATH" \
+  check "tool-check: runs" mt_tool tools "$mt_os:$mt_fake:$mt_inst:$mt_shims:$mt_sys:$PATH" \
     kt-sys kt-shim kt-inst kt-global kt-none
   check "tool-check: a tool in a directory on PATH is present" \
     mt_has tools tool kt-sys present
@@ -198,14 +332,24 @@ run_mise_cases() {
   refute "tool-check: needs a TOOL" ts tool-check
   refute "tool-check: refuses a TOOL with a slash" ts tool-check ../kt-sys
   refute "tool-check: refuses an empty TOOL" ts tool-check ''
+
+  # tool-check on Windows: a shim in the shims folder below %LOCALAPPDATA%\mise does not
+  # count, while a tool in another folder does.
+  mt_exe "$mt_wshims/kt-wshim"
+  check "tool-check: runs on Windows" mt_wtool wtools "$mt_os:$mt_wshims:$mt_sys:$PATH" \
+    kt-wshim kt-sys
+  check "tool-check: Windows, a shim in the shims folder is missing" \
+    mt_has wtools tool kt-wshim missing
+  check "tool-check: Windows, a tool in another folder is present" \
+    mt_has wtools tool kt-sys present
 }
 
-# set-mise RC $TMP/mise/OUT with SHELL zsh unless given (VAR=value…), its output in
-# $TMP/mise/OUT.out.
+# set-mise RC $TMP/mise/OUT with SHELL zsh unless given (VAR=value…) and the stand-ins of
+# mt_os_fakes first on PATH, its output in $TMP/mise/OUT.out.
 mt_set() {  # NAME RC OUT VAR=value…
   ms_rc=$2 ms_out=$3
   shift 3
-  env HOME="$TMP/mise/home" ZDOTDIR= SHELL=/bin/zsh "$@" \
+  env HOME="$TMP/mise/home" ZDOTDIR= SHELL=/bin/zsh MT_UNAME_S= PATH="$mt_os:$PATH" "$@" \
     $SH "$SCRIPT" set-mise "$ms_rc" "$TMP/mise/$ms_out" > "$TMP/mise/$ms_out.out"
 }
 
@@ -214,6 +358,15 @@ mt_set() {  # NAME RC OUT VAR=value…
 mt_tool() {  # NAME PATH TOOL…
   mt_name=$1 mt_path=$2
   shift 2
-  env HOME="$TMP/mise/home" MISE_DATA_DIR="$TMP/mise/data" XDG_DATA_HOME= \
+  env HOME="$TMP/mise/home" MISE_DATA_DIR="$TMP/mise/data" XDG_DATA_HOME= MT_UNAME_S= \
     PATH="$mt_path" $SH "$SCRIPT" tool-check "$@" > "$TMP/mise/$mt_name.out"
+}
+
+# mt_tool on Windows: the shims below %LOCALAPPDATA%\mise, the drive X: is $mt_drive.
+mt_wtool() {  # NAME PATH TOOL…
+  mt_name=$1 mt_path=$2
+  shift 2
+  env HOME="$TMP/mise/home" MISE_DATA_DIR= XDG_DATA_HOME= "$mt_win" \
+    LOCALAPPDATA='X:\Profile\AppData\Local' MT_DRIVE="$mt_drive" PATH="$mt_path" \
+    $SH "$SCRIPT" tool-check "$@" > "$TMP/mise/$mt_name.out"
 }

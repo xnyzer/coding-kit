@@ -16,7 +16,8 @@
 #      way by hand (Windows and unknown systems: by hand only); then offers just,
 #      lefthook and gitleaks through mise use -g. A closing line names what is open.
 #   6. Checks that the mise shims reach every shell (template-sync.sh mise-check); offers
-#      the activation line for the end of the shell's startup file.
+#      the activation line for the end of the shell's startup file (Windows: names the
+#      way by hand into the user PATH).
 #
 # Usage:
 #   ./install.sh            # normal run (marketplace from GitHub)
@@ -403,8 +404,10 @@ fi
 # --- 6. mise in every shell --------------------------------------------------
 # Terminals, VS Code and Claude Code take their PATH from an interactive shell; the tools
 # a project pins with mise reach them only when the activation line ends its startup
-# file, after other tool managers such as nvm. mise-check decides (its verdict line);
-# this step only words the result and appends the line on approval.
+# file, after other tool managers such as nvm. On Windows they take it from the Windows
+# environment instead, so the shims belong at the front of the user PATH. mise-check
+# decides (its verdict line); this step only words the result and appends the line on
+# approval.
 if command -v mise >/dev/null 2>&1; then
   say "mise in jeder Shell"
   MISE_CHECK="$(sh "$TEMPLATE_SYNC" mise-check)"
@@ -415,6 +418,12 @@ if command -v mise >/dev/null 2>&1; then
   LINE="$(mise_field line 2)"
   ADD_LINE="$(mise_field add 2)"
   VERDICT="$(mise_field verdict 2)"
+  # Only on Windows: whether the user PATH holds the shims, and their folder as Windows
+  # writes it.
+  USER_PATH="$(mise_field userpath 2)"
+  if [ -n "$USER_PATH" ]; then
+    WIN_SHIMS="$(cygpath -w "$(mise_field shims 2)")" || WIN_SHIMS="$(mise_field shims 2)"
+  fi
   # Shadowed tools grouped by the directory that holds them: "node, npm aus ~/<dir>".
   SHADOWED="$(printf '%s\n' "$MISE_CHECK" | awk -F '\t' -v home="$HOME" '
     $1 == "shadowed" {
@@ -437,15 +446,42 @@ if command -v mise >/dev/null 2>&1; then
       warn "In $RC steht die Aktivierung nur auskommentiert — prüfen: $ADD_LINE"
       ;;
     manual)
-      [ -z "$SHADOWED" ] || warn "Vor den Shims von mise: $SHADOWED"
-      if [ "$ADD_LINE" = - ]; then
-        warn "Für diese Shell trägt der Installer nichts ein — siehe: mise activate --help"
+      if [ "$USER_PATH" = unknown ]; then
+        # Windows, user PATH unreadable: where a shadowing folder sits is not known.
+        [ -z "$SHADOWED" ] || warn "Vor den Shims von mise: $SHADOWED"
+        warn "Den Benutzer-PATH kann der Installer nicht lesen — von Hand: $WIN_SHIMS" \
+          "ganz vorn in den Benutzer-PATH (Windows-Einstellungen, „Umgebungsvariablen für" \
+          "dieses Konto bearbeiten“), danach Terminal bzw. VS Code neu starten"
+      elif [ -n "$USER_PATH" ]; then
+        # Windows: what shadows the shims comes before the user PATH.
+        warn "Vor den Shims von mise: $SHADOWED — das kommt aus dem System-PATH oder" \
+          "der Git Bash, die vor dem Benutzer-PATH stehen; ändern nur mit Admin-Rechten" \
+          "oder das Werkzeug dort entfernen"
       else
-        warn "Für diese Shell trägt der Installer nichts ein — ans Ende ihrer Startdatei: $ADD_LINE"
+        [ -z "$SHADOWED" ] || warn "Vor den Shims von mise: $SHADOWED"
+        if [ "$ADD_LINE" = - ]; then
+          warn "Für diese Shell trägt der Installer nichts ein — siehe: mise activate --help"
+        else
+          warn "Für diese Shell trägt der Installer nichts ein — ans Ende ihrer Startdatei: $ADD_LINE"
+        fi
       fi
       ;;
     restart)
-      warn "Die Aktivierung steht in $RC — sie wirkt nach einem Neustart von Terminal bzw. VS Code"
+      if [ -n "$USER_PATH" ]; then
+        warn "Der Shim-Ordner von mise steht im Benutzer-PATH — er wirkt nach einem Neustart" \
+          "von Terminal bzw. VS Code"
+      else
+        warn "Die Aktivierung steht in $RC — sie wirkt nach einem Neustart von Terminal bzw. VS Code"
+      fi
+      ;;
+    offer-path)
+      if [ -n "$SHADOWED" ]; then
+        warn "Vor den Shims von mise: $SHADOWED — der Shim-Ordner muss im Benutzer-PATH davor stehen"
+      else
+        warn "mise ist nicht aktiv — Werkzeuge aus mise fehlen oder laufen in anderen Versionen"
+      fi
+      warn "von Hand: $WIN_SHIMS ganz vorn in den Benutzer-PATH (Windows-Einstellungen," \
+        "„Umgebungsvariablen für dieses Konto bearbeiten“), danach Terminal bzw. VS Code neu starten"
       ;;
     hook)
       warn "Die Aktivierung steht am Ende von $RC, trotzdem vor den Shims: $SHADOWED —" \

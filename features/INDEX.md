@@ -117,7 +117,7 @@ Stand 2026-11-23.
 | [F-092](F-092-projekt-mit-template-vergleichen.md) | Projekt jederzeit vollständig mit dem aktuellen Template vergleichen | BACKLOG |  |
 | [F-093](F-093-ssh-remotes-im-privacy-lint-erlauben.md) | Privacy-Lint erlaubt SSH-Remotes öffentlicher Git-Hosts | BACKLOG |  |
 | [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md) | Projekte-Ordner außerhalb synchronisierter Ordner vorschlagen | BACKLOG |  |
-| [F-097](F-097-mise-aktivierung-unter-windows.md) | mise-Aktivierung unter Windows erkennen und anbieten | PLANNED |  |
+| [F-097](F-097-mise-aktivierung-unter-windows.md) | mise-Aktivierung unter Windows erkennen und anbieten | IN-PROGRESS |  |
 
 ### Closed
 

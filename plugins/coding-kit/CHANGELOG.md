@@ -15,6 +15,19 @@ hier.
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.8.2 — unveröffentlicht
+
+- **`template-sync.sh mise-check` unter Windows** (F-097): Er findet die Shims von mise
+  jetzt unter `%LOCALAPPDATA%\mise` (bzw. `MISE_DATA_DIR`, `XDG_DATA_HOME`, auch in
+  Windows-Schreibweise), erkennt die Shell auch als `bash.exe` und prüft per PowerShell,
+  ob der Ordner im Benutzer-PATH steht (neue Zeile `userpath`). Statt einer Zeile für eine
+  Startdatei urteilt er `offer-path` (Ordner vorn in den Benutzer-PATH), `restart` oder
+  `manual` (überdeckt aus dem System-PATH). Bisher meldete er die Shims als fehlend, auch
+  wenn sie im PATH standen. `tool-check` nutzt denselben Ordner und zählt einen Shim ohne
+  Version unter Windows nicht mehr als vorhanden; `set-mise` lehnt Windows ab.
+- **Installer (Schritt 6) und `/coding-kit:update-conventions global` (G8)** nennen unter
+  Windows den Weg in den Benutzer-PATH statt einer Zeile für eine Startdatei.
+
 ## 3.8.1 — unveröffentlicht
 
 - **`template-sync.sh set-global`:** Eine Personal-Config mit CRLF-Zeilenenden behält

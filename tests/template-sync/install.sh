@@ -489,16 +489,61 @@ EOF
   check "install: without mise everything is open" \
     in_says linux-bare "Offen: mise just lefthook gitleaks"
 
+  # Windows: cygpath and the user PATH from the stand-ins of mise.sh (mt_os_fakes; uname
+  # stays the one of $IN_BIN).
+  IN_WIN=$TMP/in/win-bin
+  mkdir -p "$IN_WIN"
+  mt_os_fakes "$IN_WIN"
+  rm -f "$IN_WIN/uname"
+
   # Windows (Git Bash) with brew on PATH: no package manager, the way by hand, F-067.
   in_new windows
   in_config
-  in_run windows PATH="$IN_PKG:$IN_BREW:$IN_BIN" IN_UNAME_S=MINGW64_NT-10.0-19045
+  in_run windows PATH="$IN_PKG:$IN_BREW:$IN_BIN:$IN_WIN" IN_UNAME_S=MINGW64_NT-10.0-19045
   check "install: Windows runs through" in_status windows 0
   check "install: Windows names winget" in_says windows "winget install jdx.mise"
   check "install: Windows names scoop" in_says windows "scoop install mise"
   check "install: Windows points to F-067" in_says windows "F-067"
   refute "install: Windows offers no brew" in_calls_like windows '^brew'
   refute "install: Windows asks nothing about brew" in_says windows "brew install mise"
+
+  # Windows with mise (step 6): the shims below %LOCALAPPDATA%\mise.
+  in_new win-offer
+  in_config
+  in_run win-offer PATH="$IN_MISE:$IN_TOOLS_BIN:$IN_BIN:$IN_WIN" \
+    IN_UNAME_S=MINGW64_NT-10.0-19045 LOCALAPPDATA="$TMP/in/win-offer/local"
+  check "install: Windows with mise runs through" in_status win-offer 0
+  # The folder as Windows writes it: the stand-in cygpath -w turns the slashes round.
+  in_win_dir=$(printf '%s' "$TMP/in/win-offer/local/mise/shims" | tr / '\\')
+  check "install: Windows, shims not in the user PATH — the way by hand" \
+    in_says win-offer "$in_win_dir ganz vorn in den Benutzer-PATH"
+  refute "install: Windows offers no startup file" in_says win-offer "Startdatei"
+  in_new win-manual
+  in_config
+  in_win_shims=$TMP/in/win-manual/local/mise/shims
+  mkdir -p "$in_win_shims"
+  printf '%s\n' '#!/bin/sh' | in_fake "$in_win_shims/just"
+  in_run win-manual PATH="$IN_MISE:$IN_TOOLS_BIN:$in_win_shims:$IN_BIN:$IN_WIN" \
+    IN_UNAME_S=MINGW64_NT-10.0-19045 LOCALAPPDATA="$TMP/in/win-manual/local" \
+    MT_USERPATH="$in_win_shims"
+  check "install: Windows, shadowed from outside the user PATH runs through" \
+    in_status win-manual 0
+  check "install: Windows names the shadowing and the system PATH" \
+    in_says win-manual "das kommt aus dem System-PATH oder der Git Bash"
+  refute "install: Windows, shadowed, no startup file" in_says win-manual "Startdatei"
+  # The user PATH unreadable: where the shadowing folder sits is not known.
+  in_new win-unknown
+  in_config
+  in_win_shims=$TMP/in/win-unknown/local/mise/shims
+  mkdir -p "$in_win_shims"
+  printf '%s\n' '#!/bin/sh' | in_fake "$in_win_shims/just"
+  in_run win-unknown PATH="$IN_MISE:$IN_TOOLS_BIN:$in_win_shims:$IN_BIN:$IN_WIN" \
+    IN_UNAME_S=MINGW64_NT-10.0-19045 LOCALAPPDATA="$TMP/in/win-unknown/local" MT_PS=fail
+  check "install: Windows, user PATH unreadable runs through" in_status win-unknown 0
+  check "install: Windows, user PATH unreadable — the way by hand with the settings" \
+    in_says win-unknown "Umgebungsvariablen für dieses Konto bearbeiten"
+  refute "install: Windows, user PATH unreadable — no claim about the system PATH" \
+    in_says win-unknown "System-PATH"
 
   # An unknown system: nothing installed, the install page named.
   in_new unknown-os

@@ -805,22 +805,36 @@ und Claude Code nur, wenn die Aktivierung von mise am Ende der Startdatei der
 interaktiven Shell steht — nach anderen Tool-Managern wie nvm. Sonst fehlen Tools, die es
 nur über mise gibt, oder es laufen andere Versionen als die festgelegten. Claude Code
 übernimmt den `PATH` vom Programm, das es startet; die Shell dieser Session zeigt also,
-was zählt. Mit `global <ordner>` (Test) nur berichten: Die Startdatei liegt außerhalb
-des Stellvertreter-Ordners.
+was zählt. Unter Windows übernehmen die Programme den `PATH` aus der Windows-Umgebung,
+nicht aus einer Shell: Dort gehört der Shims-Ordner von mise vorn in den Benutzer-PATH,
+keine Zeile in eine Startdatei. Mit `global <ordner>` (Test) nur berichten: Die
+Startdatei liegt außerhalb des Stellvertreter-Ordners.
 
 1. `sh <skript> mise-check` (aufgelöster Pfad wie § 0). Er liest nur die Umgebung und
-   meldet `rc` (Startdatei), `line` (Stand der Zeile darin), `activated`, je überdecktem
-   Werkzeug `shadowed` mit dem Ordner davor, `add` (die Zeile für diese Shell) und als
-   letzte Zeile `verdict` — die Entscheidung trifft das Skript, der Skill formuliert nur.
+   meldet `rc` (Startdatei), `line` (Stand der Zeile darin), `shims` (Ordner), nur unter
+   Windows `userpath` (steht der Ordner im Benutzer-PATH: `present`, `absent`, `unknown`),
+   `activated`, je überdecktem Werkzeug `shadowed` mit dem Ordner davor, `add` (die Zeile
+   für diese Shell) und als letzte Zeile `verdict` — die Entscheidung trifft das Skript,
+   der Skill formuliert nur.
 2. Je `verdict`:
    - `ok` → nichts melden (im Modus `status`: mise aktiv).
    - `commented` → melden, dass die Aktivierung in der Startdatei nur auskommentiert
      ist, mit der Zeile aus `add`; nichts schreiben.
    - `manual` (bash, fish oder eine andere Shell) → die Zeile aus `add` zum Eintragen am
      Ende der Startdatei nennen, bei `add -` auf `mise activate --help` verweisen; dazu
-     überdeckte Werkzeuge mit ihrem Ordner. Nichts schreiben.
-   - `restart` → die Zeile steht schon; sie wirkt nach einem Neustart von Terminal bzw.
-     VS Code.
+     überdeckte Werkzeuge mit ihrem Ordner. Nichts schreiben. Unter Windows (Zeile
+     `userpath` da) statt der Zeile: bei `userpath unknown` die überdeckten Werkzeuge mit
+     Ordner und den Weg von Hand wie bei `offer-path` nennen — wo der Ordner steht, ist
+     dann nicht bekannt; sonst kommen die überdeckten Werkzeuge aus dem System-PATH oder
+     der Git Bash, die vor dem Benutzer-PATH stehen — ändern nur mit Admin-Rechten oder
+     das Werkzeug dort entfernen.
+   - `restart` → die Zeile steht schon (Windows: der Ordner steht im Benutzer-PATH); sie
+     wirkt nach einem Neustart von Terminal bzw. VS Code.
+   - `offer-path` (Windows) → mise nicht aktiv, bzw. welche Werkzeuge aus welchem Ordner
+     des Benutzer-PATH davor kommen; den Weg von Hand nennen: den Ordner aus `shims` in
+     Windows-Schreibweise (`cygpath -w`) ganz vorn in den Benutzer-PATH (Windows-
+     Einstellungen, „Umgebungsvariablen für dieses Konto bearbeiten“), danach Terminal
+     bzw. VS Code neu starten. Nichts schreiben.
    - `hook` → die überdeckten Werkzeuge und den Ordner nennen: nach einem Neustart
      erneut prüfen; bleibt es, wechselt etwas die Version beim Ordnerwechsel (etwa ein
      Hook von nvm). Nur melden.
