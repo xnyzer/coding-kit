@@ -44,39 +44,37 @@ with its reasons.
 
 Stand 2026-11-23.
 
-1. **[F-094](F-094-python-aufrufe-im-justfile-unter-windows.md)** — unter Windows blockiert es jeden Commit im Kit-Repo; klein und vor
-   [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md), damit dessen Planung regulär committet werden kann.
-2. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) → [F-067](F-067-installer-unter-windows-git-bash.md)** — der Windows-Rechner steht bereit; [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) ist klein und liefert die
+1. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) → [F-067](F-067-installer-unter-windows-git-bash.md)** — der Windows-Rechner steht bereit; [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) ist klein und liefert die
    Git-Bash-Prüfung für [F-067](F-067-installer-unter-windows-git-bash.md).
-3. **[F-068](F-068-dokumentmodell-migration-verlustfrei.md)** — die Migration verliert still Inhalt; zuerst der Nachweis, der das Löschen
+2. **[F-068](F-068-dokumentmodell-migration-verlustfrei.md)** — die Migration verliert still Inhalt; zuerst der Nachweis, der das Löschen
    der Altdateien sperrt.
-4. **[F-070](F-070-merge-klassen-und-hunk-rueckstellung.md) → [F-071](F-071-erstabgleich-ohne-verlust.md)** — der Merge übernimmt ungesehen, der Erstabgleich verliert
+3. **[F-070](F-070-merge-klassen-und-hunk-rueckstellung.md) → [F-071](F-071-erstabgleich-ohne-verlust.md)** — der Merge übernimmt ungesehen, der Erstabgleich verliert
    Projektinhalte; beide schützen laufende Migrationen.
-5. **[F-091](F-091-migrationsprotokoll-nach-jedem-abgleich.md) → [F-092](F-092-projekt-mit-template-vergleichen.md)** — erst Protokoll und Kit-Vorschläge je Abgleich, dann der
+4. **[F-091](F-091-migrationsprotokoll-nach-jedem-abgleich.md) → [F-092](F-092-projekt-mit-template-vergleichen.md)** — erst Protokoll und Kit-Vorschläge je Abgleich, dann der
    vollständige Vergleich mit dem Template; ersetzt die Bitte von Hand, solange
    Migrationen laufen, und ist die Grundlage für den Angleich.
-6. **[F-072](F-072-workspaces-erkennen-lizenz-gate.md)** — klein: das Lizenz-Gate prüft in Workspaces nichts; Grundlage für [F-076](F-076-monorepos-unterstuetzen.md).
-7. **[F-073](F-073-vertrags-pruefung-im-abgleich.md)** — der Abgleich prüft den Vertrag, statt Lücken still durchzulassen.
-8. **[F-074](F-074-renovate-laufend-pruefen.md)** — Renovate muss bei jedem neuen Projekt nachweislich laufen.
-9. **[F-075](F-075-seed-zonen-bei-der-migration.md)** — Zonen bei der Migration; liefert die Lizenz-Zone für [F-077](F-077-eigene-lizenzpolitik-im-vertrag.md).
-10. **[F-076](F-076-monorepos-unterstuetzen.md)** — Monorepos: drei von fünf migrierten Projekten sind Workspaces.
-11. **[F-063](F-063-projekt-als-fork-eines-github-repos.md)** — Projekt als Fork anlegen: konkreter Bedarf, nur GitHub, auf der fertigen
+5. **[F-072](F-072-workspaces-erkennen-lizenz-gate.md)** — klein: das Lizenz-Gate prüft in Workspaces nichts; Grundlage für [F-076](F-076-monorepos-unterstuetzen.md).
+6. **[F-073](F-073-vertrags-pruefung-im-abgleich.md)** — der Abgleich prüft den Vertrag, statt Lücken still durchzulassen.
+7. **[F-074](F-074-renovate-laufend-pruefen.md)** — Renovate muss bei jedem neuen Projekt nachweislich laufen.
+8. **[F-075](F-075-seed-zonen-bei-der-migration.md)** — Zonen bei der Migration; liefert die Lizenz-Zone für [F-077](F-077-eigene-lizenzpolitik-im-vertrag.md).
+9. **[F-076](F-076-monorepos-unterstuetzen.md)** — Monorepos: drei von fünf migrierten Projekten sind Workspaces.
+10. **[F-063](F-063-projekt-als-fork-eines-github-repos.md)** — Projekt als Fork anlegen: konkreter Bedarf, nur GitHub, auf der fertigen
     Grundlage „Git-Host je Projekt“; der Host-Strang kann den Fork-Modus danach mitnehmen.
-12. **[F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: GitLab, Forgejo — auf der fertigen Grundlage
+11. **[F-053](F-053-gitlab-als-git-host.md) → [F-054](F-054-forgejo-als-git-host.md)** — Host-Strang: GitLab, Forgejo — auf der fertigen Grundlage
     „Git-Host je Projekt“; beide ergänzen die Host-Liste des Installers und docken an die
     Renovate-Prüfung aus [F-074](F-074-renovate-laufend-pruefen.md) an.
-13. **[F-077](F-077-eigene-lizenzpolitik-im-vertrag.md)** — eigene Lizenzpolitik je Projekt; nach [F-075](F-075-seed-zonen-bei-der-migration.md), das die Lizenz-Zone liefert.
-14. **[F-078](F-078-template-defaults-korrigieren.md), [F-080](F-080-stop-hook-und-reine-erfassungen.md), [F-081](F-081-index-pruefung-genauer.md)** — kleine Korrekturen, gut zwischendurch.
+12. **[F-077](F-077-eigene-lizenzpolitik-im-vertrag.md)** — eigene Lizenzpolitik je Projekt; nach [F-075](F-075-seed-zonen-bei-der-migration.md), das die Lizenz-Zone liefert.
+13. **[F-078](F-078-template-defaults-korrigieren.md), [F-080](F-080-stop-hook-und-reine-erfassungen.md), [F-081](F-081-index-pruefung-genauer.md)** — kleine Korrekturen, gut zwischendurch.
     Ebenso **[F-090](F-090-ci-lauf-nach-dem-push-melden.md)**, damit ein roter CI-Lauf nicht tagelang unbemerkt bleibt.
     Ebenso **[F-093](F-093-ssh-remotes-im-privacy-lint-erlauben.md)**, damit Git-Abhängigkeiten über SSH den Commit nicht blockieren.
-15. **[F-079](F-079-widersprueche-zu-globalen-regeln.md) → [F-082](F-082-bedienung-update-conventions.md) → [F-083](F-083-stabile-standards-nummern.md)** — Regel-Konsistenz und Bedienung des Abgleichs.
-16. **[F-084](F-084-tool-versionen-gegen-mise-abgleichen.md) → [F-085](F-085-gates-in-bestandscodebasen-einfuehren.md)** — Werkzeug-Stand von Bestandsprojekten: erst die Versionen, dann die
+14. **[F-079](F-079-widersprueche-zu-globalen-regeln.md) → [F-082](F-082-bedienung-update-conventions.md) → [F-083](F-083-stabile-standards-nummern.md)** — Regel-Konsistenz und Bedienung des Abgleichs.
+15. **[F-084](F-084-tool-versionen-gegen-mise-abgleichen.md) → [F-085](F-085-gates-in-bestandscodebasen-einfuehren.md)** — Werkzeug-Stand von Bestandsprojekten: erst die Versionen, dann die
     Gates.
-17. **[F-086](F-086-sprach-matrix-konsequent-anwenden.md)** — Sprach-Matrix; eine Umgehung gibt es.
-18. **[F-087](F-087-sicherheitsluecken-lokal-pruefen.md)** — lokale Sicherheitsprüfung, nach [F-074](F-074-renovate-laufend-pruefen.md).
-19. **[F-088](F-088-regeln-typescript-react-api-docker.md) → [F-089](F-089-regeln-fuer-unit-und-integrationstests.md)** — Regeln aus der Projektpraxis für den Standards-Katalog: erst die
+16. **[F-086](F-086-sprach-matrix-konsequent-anwenden.md)** — Sprach-Matrix; eine Umgehung gibt es.
+17. **[F-087](F-087-sicherheitsluecken-lokal-pruefen.md)** — lokale Sicherheitsprüfung, nach [F-074](F-074-renovate-laufend-pruefen.md).
+18. **[F-088](F-088-regeln-typescript-react-api-docker.md) → [F-089](F-089-regeln-fuer-unit-und-integrationstests.md)** — Regeln aus der Projektpraxis für den Standards-Katalog: erst die
     kleinen Ergänzungen, dann die Test-Regeln.
-20. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
+19. **[F-046](F-046-verbrauchsanalyse-des-kits-und.md)** — ganz am Ende, nach allen Features: misst den Endstand über verschiedene
     Projekte; erst dann kommt die Empfehlung zu Modell, Effort und Kosten in die README.
 
 ## All features
@@ -117,13 +115,13 @@ Stand 2026-11-23.
 | [F-091](F-091-migrationsprotokoll-nach-jedem-abgleich.md) | Migrationsprotokoll und Kit-Vorschläge nach jedem Abgleich schreiben | BACKLOG |  |
 | [F-092](F-092-projekt-mit-template-vergleichen.md) | Projekt jederzeit vollständig mit dem aktuellen Template vergleichen | BACKLOG |  |
 | [F-093](F-093-ssh-remotes-im-privacy-lint-erlauben.md) | Privacy-Lint erlaubt SSH-Remotes öffentlicher Git-Hosts | BACKLOG |  |
-| [F-094](F-094-python-aufrufe-im-justfile-unter-windows.md) | Python-Aufrufe im justfile unter Windows lauffähig machen | PLANNED |  |
 
 ### Closed
 
 | ID | Title | Status | Done |
 |----|-------|--------|------|
 | [F-069](F-069-private-inhalte-im-abgleich-schuetzen.md) | Private Inhalte beim Abgleich und im Privacy-Lint schützen | DONE | 2026-11-23 |
+| [F-094](F-094-python-aufrufe-im-justfile-unter-windows.md) | Python-Aufrufe im justfile unter Windows lauffähig machen | DONE | 2026-11-23 |
 | [F-025](F-025-install-sh-fehlender-gh-login-und.md) | Installer läuft ohne GitHub und installiert die Toolchain über mise | DONE | 2026-11-22 |
 | [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md) | Startwerte der Module und Core-Workflows im Template auffrischen | DONE | 2026-11-22 |
 | [F-064](F-064-just-check-tests-nur-bei-aenderungen.md) | Skript-Tests in just check nur bei passenden Änderungen ausführen | DONE | 2026-11-22 |

@@ -2,10 +2,10 @@
 id: F-094
 title: Python-Aufrufe im justfile unter Windows lauffähig machen
 type: fix
-status: PLANNED
+status: DONE
 size: S
 created: 2026-11-23
-done:
+done: 2026-11-23
 depends-on:
 superseded-by:
 ---
@@ -44,14 +44,17 @@ Windows kein Commit ohne `--no-verify` möglich.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben Windows mit Git for Windows und den Tools aus mise, wenn
+- [x] AC-1 — Gegeben Windows mit Git for Windows und den Tools aus mise, wenn
   `just validate` und `just version-rule --staged` laufen, dann nutzen sie den
-  Interpreter von uv und melden OK statt Exit 49.
-- [ ] AC-2 — Gegeben eine bereitgestellte Änderung mit grünen Prüfungen unter Windows,
+  Interpreter von uv und melden OK statt Exit 49. — belegt: unter Windows melden
+  `just validate` „validate: OK“ und `just version-rule --staged` „version-rule: OK“.
+- [x] AC-2 — Gegeben eine bereitgestellte Änderung mit grünen Prüfungen unter Windows,
   wenn `git commit` läuft, dann lässt der Pre-Commit-Hook den Commit ohne `--no-verify`
-  durch.
-- [ ] AC-3 — Gegeben die CI unter Linux, wenn `just check-all` läuft, dann bleibt sie
-  grün.
+  durch. — belegt: Commit 8b6c5ca lief unter Windows regulär durch den Hook, alle fünf
+  Jobs grün, validate und version-rule aus dem korrigierten justfile.
+- [x] AC-3 — Gegeben die CI unter Linux, wenn `just check-all` läuft, dann bleibt sie
+  grün. — belegt: CI-Lauf zu e4cb890 — validate und version-rule über `uv run python`
+  OK, Skript-Tests 4191 Checks, 0 failed.
 
 ### Randfälle
 
@@ -88,3 +91,24 @@ Windows kein Commit ohne `--no-verify` möglich.
 - `just validate`, `just version-rule --staged` und `just check` auf Windows laufen
   lassen.
 - Commit über den Hook (AC-2), danach die CI prüfen (AC-3).
+
+## Verlauf
+
+### F-094 — fertig 2026-11-23
+
+**Umgesetzt:** Die Rezepte `validate` und `version-rule` im `justfile` rufen
+`uv run … python` statt `python3` auf. uv startet für das Ziel `python` den eigenen
+Interpreter ohne Suche im PATH — damit laufen beide Rezepte und der Pre-Commit-Hook
+unter Windows, macOS und Linux gleich.
+
+**Entscheidungen:** Der Fix wurde unter Windows mit `--no-verify` committet (Wahl des
+Nutzers): Das `justfile` steht in der Pfadliste der Skript-Tests, und die scheitern unter
+Windows an den Test-Attrappen — 202 Fehler in `install` und `set-global`, vor und nach
+der Änderung identisch. gitleaks, validate, version-rule und features liefen vorher von
+Hand grün.
+
+**Abweichung vom Plan:** keine.
+
+**Funde:** Unter Windows scheitert jeder Commit am `justfile` (und an den übrigen
+Pfaden der Skript-Tests) an den Test-Attrappen — die spätere Nummer aus „Noch zu
+analysieren“ wird damit dringlicher, sobald unter Windows an Skripten gearbeitet wird.
