@@ -808,7 +808,7 @@ nur über mise gibt, oder es laufen andere Versionen als die festgelegten. Claud
 was zählt. Unter Windows übernehmen die Programme den `PATH` aus der Windows-Umgebung,
 nicht aus einer Shell: Dort gehört der Shims-Ordner von mise vorn in den Benutzer-PATH,
 keine Zeile in eine Startdatei. Mit `global <ordner>` (Test) nur berichten: Die
-Startdatei liegt außerhalb des Stellvertreter-Ordners.
+Startdatei und der Benutzer-PATH liegen außerhalb des Stellvertreter-Ordners.
 
 1. `sh <skript> mise-check` (aufgelöster Pfad wie § 0). Er liest nur die Umgebung und
    meldet `rc` (Startdatei), `line` (Stand der Zeile darin), `shims` (Ordner), nur unter
@@ -830,11 +830,13 @@ Startdatei liegt außerhalb des Stellvertreter-Ordners.
      das Werkzeug dort entfernen.
    - `restart` → die Zeile steht schon (Windows: der Ordner steht im Benutzer-PATH); sie
      wirkt nach einem Neustart von Terminal bzw. VS Code.
-   - `offer-path` (Windows) → mise nicht aktiv, bzw. welche Werkzeuge aus welchem Ordner
-     des Benutzer-PATH davor kommen; den Weg von Hand nennen: den Ordner aus `shims` in
-     Windows-Schreibweise (`cygpath -w`) ganz vorn in den Benutzer-PATH (Windows-
-     Einstellungen, „Umgebungsvariablen für dieses Konto bearbeiten“), danach Terminal
-     bzw. VS Code neu starten. Nichts schreiben.
+   - `offer-path` (Windows) → das Eintragen anbieten, mit dem Grund — mise nicht aktiv,
+     bzw. welche Werkzeuge aus welchem Ordner des Benutzer-PATH davor kommen — und dem
+     Ordner aus `shims` in Windows-Schreibweise (`cygpath -w`), der vorn in den
+     Benutzer-PATH kommt: **eintragen** / **nicht eintragen** (der nächste `global`-Lauf
+     fragt wieder). Abgelehnt: den Weg von Hand nennen — den Ordner ganz vorn in den
+     Benutzer-PATH (Windows-Einstellungen, „Umgebungsvariablen für dieses Konto
+     bearbeiten“).
    - `hook` → die überdeckten Werkzeuge und den Ordner nennen: nach einem Neustart
      erneut prüfen; bleibt es, wechselt etwas die Version beim Ordnerwechsel (etwa ein
      Hook von nvm). Nur melden.
@@ -846,3 +848,8 @@ Startdatei liegt außerhalb des Stellvertreter-Ordners.
    kopieren. Stand die Zeile schon weiter oben (`present`), sagen, dass die ältere raus
    kann — das entscheidet der Nutzer. Danach: Terminal bzw. VS Code neu starten; eine
    neue Claude-Session allein übernimmt den alten `PATH`.
+   Windows (`offer-path`) angenommen: `sh <skript> set-mise-path` schreibt den
+   Benutzer-PATH selbst — die Zustimmung oben ist die Freigabe dafür; die übrigen
+   Einträge bleiben, wie sie sind. Es meldet `written user-path <ordner>`; scheitert
+   es, den Weg von Hand nennen. Danach Terminal bzw. VS Code ganz schließen und neu
+   starten.

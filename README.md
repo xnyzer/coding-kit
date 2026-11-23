@@ -127,6 +127,15 @@ meldet `mise doctor` `shims_on_path: yes`. Der Installer (Schritt 6) und
 eines Projekts führt ein Shim nur aus, was im System oder global in mise installiert
 ist; deshalb kommen `just`, `lefthook` und `gitleaks` mit `mise use -g`.
 
+Unter **Windows** übernehmen Terminal, VS Code und Claude Code den `PATH` aus der
+Windows-Umgebung, nicht aus einer Shell — dort gehört der Shim-Ordner von mise
+(`%LOCALAPPDATA%\mise\shims`) **vorn in den Benutzer-PATH**, keine Zeile in eine
+Startdatei. Installer und `/coding-kit:update-conventions global` bieten das an und tragen
+ihn nach Zustimmung ein; die übrigen Einträge bleiben, wie sie sind. Danach Terminal und
+VS Code ganz schließen und neu starten. Der System-PATH steht unter Windows immer vor dem
+Benutzer-PATH: Ein Werkzeug, das dort systemweit installiert ist, überdeckt den Shim —
+das melden beide nur, ändern lässt es sich nur mit Admin-Rechten.
+
 Frisch installierte Skills sind ggf. erst nach einem Session-Neustart sichtbar.
 
 > **Windows:** Beide Wege brauchen eine Bash (Git for Windows) — `install.sh` und die

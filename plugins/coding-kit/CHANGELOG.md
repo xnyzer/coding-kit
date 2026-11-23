@@ -15,6 +15,16 @@ hier.
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.8.3 — unveröffentlicht
+
+- **`template-sync.sh set-mise-path`** (neu, F-097): trägt unter Windows den Shim-Ordner
+  von mise vorn in den Benutzer-PATH ein. Die übrigen Einträge bleiben in Reihenfolge und
+  Schreibweise (`%USERPROFILE%`-Einträge bleiben variabel); steht der Ordner schon in
+  anderer Schreibweise drin (etwa `%LOCALAPPDATA%\mise\shims`), rückt dieser Eintrag so
+  nach vorn. Der Wert behält seinen Typ, und Windows bekommt die Änderung mitgeteilt. Installer (Schritt 6) und `/coding-kit:update-conventions global` (G8)
+  bieten das bei `offer-path` an und rufen den Befehl erst nach Zustimmung auf; die
+  README beschreibt den Windows-Weg.
+
 ## 3.8.2 — unveröffentlicht
 
 - **`template-sync.sh mise-check` unter Windows** (F-097): Er findet die Shims von mise

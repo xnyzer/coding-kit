@@ -507,17 +507,34 @@ EOF
   refute "install: Windows offers no brew" in_calls_like windows '^brew'
   refute "install: Windows asks nothing about brew" in_says windows "brew install mise"
 
-  # Windows with mise (step 6): the shims below %LOCALAPPDATA%\mise.
+  # Windows with mise (step 6): the shims below %LOCALAPPDATA%\mise; the stand-in
+  # PowerShell logs what set-mise-path hands it to the case's pslog. Declined at the end
+  # of input, then accepted.
   in_new win-offer
   in_config
   in_run win-offer PATH="$IN_MISE:$IN_TOOLS_BIN:$IN_BIN:$IN_WIN" \
-    IN_UNAME_S=MINGW64_NT-10.0-19045 LOCALAPPDATA="$TMP/in/win-offer/local"
+    IN_UNAME_S=MINGW64_NT-10.0-19045 LOCALAPPDATA="$TMP/in/win-offer/local" \
+    MT_PSLOG="$TMP/in/win-offer.pslog"
   check "install: Windows with mise runs through" in_status win-offer 0
   # The folder as Windows writes it: the stand-in cygpath -w turns the slashes round.
   in_win_dir=$(printf '%s' "$TMP/in/win-offer/local/mise/shims" | tr / '\\')
-  check "install: Windows, shims not in the user PATH — the way by hand" \
-    in_says win-offer "$in_win_dir ganz vorn in den Benutzer-PATH"
+  check "install: Windows, shims not in the user PATH — offers to put them first" \
+    in_says win-offer "Shim-Ordner $in_win_dir vorn in den Benutzer-PATH eintragen?"
+  check "install: Windows, declined — the way by hand" \
+    in_says win-offer "übersprungen — von Hand: $in_win_dir ganz vorn in den Benutzer-PATH"
+  refute "install: Windows, declined — the user PATH stays" test -e "$TMP/in/win-offer.pslog"
   refute "install: Windows offers no startup file" in_says win-offer "Startdatei"
+  in_new win-yes
+  in_config
+  in_input win-yes j
+  in_run win-yes PATH="$IN_MISE:$IN_TOOLS_BIN:$IN_BIN:$IN_WIN" \
+    IN_UNAME_S=MINGW64_NT-10.0-19045 LOCALAPPDATA="$TMP/in/win-yes/local" \
+    MT_PSLOG="$TMP/in/win-yes.pslog"
+  check "install: Windows, accepted runs through" in_status win-yes 0
+  in_win_dir=$(printf '%s' "$TMP/in/win-yes/local/mise/shims" | tr / '\\')
+  check "install: Windows, accepted — set-mise-path gets the shims folder" \
+    grep -qxF -- "$in_win_dir" "$TMP/in/win-yes.pslog"
+  check "install: Windows, accepted — says to restart" in_says win-yes "eingetragen —"
   in_new win-manual
   in_config
   in_win_shims=$TMP/in/win-manual/local/mise/shims

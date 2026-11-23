@@ -10,7 +10,9 @@ mt_exe() {  # PATH
 # Stand-ins for what the check asks the system, written into DIR: uname names the system
 # from MT_UNAME_S (macOS unless set); cygpath turns Windows paths into POSIX ones (-u, -p
 # for a list) and back (-w), with the drive X: as the folder MT_DRIVE; powershell.exe
-# prints the user PATH from MT_USERPATH, or fails with MT_PS=fail.
+# prints the user PATH from MT_USERPATH, or fails with MT_PS=fail — asked to write it
+# (set-mise-path), it appends the folder it got in CODING_KIT_SHIMS to the file
+# MT_PSLOG instead.
 mt_os_fakes() {  # DIR
   printf '%s\n' '#!/bin/sh' 'printf "%s\n" "${MT_UNAME_S:-Darwin}"' > "$1/uname"
   cat > "$1/cygpath" <<'EOF'
@@ -46,8 +48,14 @@ CP_IN=$1 CP_LIST=$list awk 'BEGIN {
   print out
 }'
 EOF
-  printf '%s\n' '#!/bin/sh' '[ "${MT_PS:-}" != fail ] || exit 1' \
-    'printf "%s\r\n" "${MT_USERPATH:-}"' > "$1/powershell.exe"
+  cat > "$1/powershell.exe" <<'EOF'
+#!/bin/sh
+[ "${MT_PS:-}" != fail ] || exit 1
+case $* in
+  *SetValue*) printf '%s\n' "$CODING_KIT_SHIMS" >> "$MT_PSLOG" ;;
+  *) printf '%s\r\n' "${MT_USERPATH:-}" ;;
+esac
+EOF
   chmod +x "$1/uname" "$1/cygpath" "$1/powershell.exe"
 }
 
@@ -302,6 +310,25 @@ run_mise_cases() {
   refute "set-mise: refuses on Windows" mt_set win1 "$TMP/mise/rc1" sm7 "$mt_win"
   refute "set-mise: writes nothing on Windows" test -e "$TMP/mise/sm7"
 
+  # set-mise-path: hands the shims folder, as Windows writes it, to PowerShell; the
+  # stand-in logs it instead of writing the user PATH.
+  mt_wdir='X:\Profile\AppData\Local\mise\shims'
+  check "set-mise-path: runs on Windows" mt_path smp1 "$mt_win"
+  check "set-mise-path: names the folder it put first" \
+    mt_has smp1 written user-path "$mt_wdir"
+  check "set-mise-path: hands the folder to PowerShell" \
+    grep -qxF -- "$mt_wdir" "$TMP/mise/smp1.pslog"
+  refute "set-mise-path: refuses off Windows" mt_path smp2
+  refute "set-mise-path: off Windows PowerShell is not called" test -e "$TMP/mise/smp2.pslog"
+  refute "set-mise-path: fails when PowerShell fails" mt_path smp3 "$mt_win" MT_PS=fail
+  mt_nops=$TMP/mise/nops
+  mkdir -p "$mt_nops"
+  mt_os_fakes "$mt_nops"
+  rm -f "$mt_nops/powershell.exe"
+  refute "set-mise-path: refuses without PowerShell" \
+    mt_path smp4 "$mt_win" PATH="$mt_nops:/usr/bin:/bin"
+  refute "set-mise-path: refuses an operand" ts set-mise-path extra
+
   # tool-check: a tool counts only when it runs outside any project. The stand-in mise
   # knows kt-global as a global version, and only when asked from the home folder
   # (compared resolved: TMPDIR may end in a slash, so HOME can hold a //).
@@ -351,6 +378,18 @@ mt_set() {  # NAME RC OUT VAR=value…
   shift 3
   env HOME="$TMP/mise/home" ZDOTDIR= SHELL=/bin/zsh MT_UNAME_S= PATH="$mt_os:$PATH" "$@" \
     $SH "$SCRIPT" set-mise "$ms_rc" "$TMP/mise/$ms_out" > "$TMP/mise/$ms_out.out"
+}
+
+# set-mise-path with the shims below %LOCALAPPDATA%\mise (drive X: is $mt_drive), the
+# stand-ins of mt_os_fakes first on PATH and extra environment (VAR=value…); its output
+# in $TMP/mise/NAME.out, what the stand-in PowerShell got in $TMP/mise/NAME.pslog.
+mt_path() {  # NAME VAR=value…
+  mp_name=$1
+  shift
+  env HOME="$TMP/mise/home" MISE_DATA_DIR= XDG_DATA_HOME= MT_UNAME_S= MT_PS= \
+    LOCALAPPDATA='X:\Profile\AppData\Local' MT_DRIVE="$mt_drive" \
+    MT_PSLOG="$TMP/mise/$mp_name.pslog" PATH="$mt_os:$PATH" "$@" \
+    $SH "$SCRIPT" set-mise-path > "$TMP/mise/$mp_name.out"
 }
 
 # tool-check TOOL… with the home and data folder below $TMP/mise and PATH as given, its

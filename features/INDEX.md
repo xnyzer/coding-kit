@@ -42,12 +42,11 @@ with its reasons.
 
 ## Recommended order
 
-Stand 2026-11-23.
+Stand 2026-11-24.
 
-1. **[F-097](F-097-mise-aktivierung-unter-windows.md) → [F-067](F-067-installer-unter-windows-git-bash.md) → [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md)** — Windows-Strang, solange der Windows-Rechner
-   bereitsteht: erst die mise-Aktivierung, dann der Installer, dessen Commits jetzt
-   ohne `--no-verify` durch den Hook gehen; zuletzt der Projekte-Ordner, der dieselbe
-   Stelle im Installer berührt.
+1. **[F-067](F-067-installer-unter-windows-git-bash.md) → [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md)** — Windows-Strang, solange der Windows-Rechner bereitsteht: erst der
+   Installer, dessen Commits jetzt ohne `--no-verify` durch den Hook gehen; zuletzt der
+   Projekte-Ordner, der dieselbe Stelle im Installer berührt.
 2. **[F-068](F-068-dokumentmodell-migration-verlustfrei.md)** — die Migration verliert still Inhalt; zuerst der Nachweis, der das Löschen
    der Altdateien sperrt.
 3. **[F-070](F-070-merge-klassen-und-hunk-rueckstellung.md) → [F-071](F-071-erstabgleich-ohne-verlust.md)** — der Merge übernimmt ungesehen, der Erstabgleich verliert
@@ -117,12 +116,12 @@ Stand 2026-11-23.
 | [F-092](F-092-projekt-mit-template-vergleichen.md) | Projekt jederzeit vollständig mit dem aktuellen Template vergleichen | BACKLOG |  |
 | [F-093](F-093-ssh-remotes-im-privacy-lint-erlauben.md) | Privacy-Lint erlaubt SSH-Remotes öffentlicher Git-Hosts | BACKLOG |  |
 | [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md) | Projekte-Ordner außerhalb synchronisierter Ordner vorschlagen | BACKLOG |  |
-| [F-097](F-097-mise-aktivierung-unter-windows.md) | mise-Aktivierung unter Windows erkennen und anbieten | IN-PROGRESS |  |
 
 ### Closed
 
 | ID | Title | Status | Done |
 |----|-------|--------|------|
+| [F-097](F-097-mise-aktivierung-unter-windows.md) | mise-Aktivierung unter Windows erkennen und anbieten | DONE | 2026-11-24 |
 | [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) | Hooks unter Windows verifizieren und Git-Bash-Pflicht dokumentieren | DONE | 2026-11-23 |
 | [F-069](F-069-private-inhalte-im-abgleich-schuetzen.md) | Private Inhalte beim Abgleich und im Privacy-Lint schützen | DONE | 2026-11-23 |
 | [F-094](F-094-python-aufrufe-im-justfile-unter-windows.md) | Python-Aufrufe im justfile unter Windows lauffähig machen | DONE | 2026-11-23 |

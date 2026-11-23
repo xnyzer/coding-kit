@@ -16,8 +16,8 @@
 #      way by hand (Windows and unknown systems: by hand only); then offers just,
 #      lefthook and gitleaks through mise use -g. A closing line names what is open.
 #   6. Checks that the mise shims reach every shell (template-sync.sh mise-check); offers
-#      the activation line for the end of the shell's startup file (Windows: names the
-#      way by hand into the user PATH).
+#      the activation line for the end of the shell's startup file (Windows: offers to
+#      put the shims first in the user PATH, template-sync.sh set-mise-path).
 #
 # Usage:
 #   ./install.sh            # normal run (marketplace from GitHub)
@@ -480,8 +480,18 @@ if command -v mise >/dev/null 2>&1; then
       else
         warn "mise ist nicht aktiv — Werkzeuge aus mise fehlen oder laufen in anderen Versionen"
       fi
-      warn "von Hand: $WIN_SHIMS ganz vorn in den Benutzer-PATH (Windows-Einstellungen," \
-        "„Umgebungsvariablen für dieses Konto bearbeiten“), danach Terminal bzw. VS Code neu starten"
+      MISE_BY_HAND="von Hand: $WIN_SHIMS ganz vorn in den Benutzer-PATH"
+      MISE_BY_HAND+=" (Windows-Einstellungen, „Umgebungsvariablen für dieses Konto bearbeiten“),"
+      MISE_BY_HAND+=" danach Terminal bzw. VS Code neu starten"
+      if ask_yes_no "Shim-Ordner $WIN_SHIMS vorn in den Benutzer-PATH eintragen?" n; then
+        if sh "$TEMPLATE_SYNC" set-mise-path >/dev/null; then
+          ok "eingetragen — Terminal bzw. VS Code ganz schließen und neu starten, dann gilt es"
+        else
+          warn "Eintragen gescheitert — $MISE_BY_HAND"
+        fi
+      else
+        warn "übersprungen — $MISE_BY_HAND"
+      fi
       ;;
     hook)
       warn "Die Aktivierung steht am Ende von $RC, trotzdem vor den Shims: $SHADOWED —" \

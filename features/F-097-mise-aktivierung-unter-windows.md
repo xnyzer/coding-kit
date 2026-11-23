@@ -2,10 +2,10 @@
 id: F-097
 title: mise-Aktivierung unter Windows erkennen und anbieten
 type: fix
-status: IN-PROGRESS
+status: DONE
 size: M
 created: 2026-11-23
-done:
+done: 2026-11-24
 depends-on:
 superseded-by:
 ---
@@ -64,16 +64,24 @@ Windows-Umgebung. Betroffen sind `install.sh` (Schritt 6) und
 - [x] AC-3 — Gegeben Windows, wenn `tool-check` läuft, dann zählt ein Shim im
   Shims-Ordner aus AC-1 nicht als vorhanden. — belegt: Fall „tool-check: Windows, a
   shim in the shims folder is missing“
-- [ ] AC-4 — Gegeben Windows, wenn `set-mise-path` läuft, dann steht der Shims-Ordner
+- [x] AC-4 — Gegeben Windows, wenn `set-mise-path` läuft, dann steht der Shims-Ordner
   danach genau einmal und vorn im Benutzer-PATH, alle anderen Einträge bleiben in
   Reihenfolge und Schreibweise, der Werttyp bleibt (REG_EXPAND_SZ bzw. REG_SZ), und
   Windows wird über die Änderung benachrichtigt. Nicht unter Windows oder ohne
-  PowerShell lehnt er ab und schreibt nichts.
-- [ ] AC-5 — Gegeben Windows, wenn der Installer (Schritt 6) bzw.
+  PowerShell lehnt er ab und schreibt nichts. — belegt: Fälle „set-mise-path“ in
+  `tests/template-sync/mise.sh` (Aufruf, übergebener Ordner, Ablehnung off Windows,
+  ohne PowerShell, bei Fehlschlag); Test-Schlüssel in der Registry: variable
+  Schreibweise rückt nach vorn, zweite Schreibweise fällt weg, leere Einträge und
+  REG_EXPAND_SZ bzw. REG_SZ bleiben, ohne Wert entsteht REG_EXPAND_SZ; echter
+  Benutzer-PATH des Windows-Rechners: REG_SZ geblieben, Ordner einmal vorn, übrige 11
+  Einträge gleich, zweiter Lauf ändert nichts; die Benachrichtigung läuft ohne Fehler
+- [x] AC-5 — Gegeben Windows, wenn der Installer (Schritt 6) bzw.
   `/coding-kit:update-conventions global` (G8) `offer-path` bekommt, dann bieten sie das
   Eintragen an und rufen `set-mise-path` erst nach Zustimmung auf; bei `manual` nennen
   sie die überdeckten Werkzeuge mit Ordner und dass der System-PATH vor dem
-  Benutzer-PATH steht — nie eine Zeile für eine Startdatei.
+  Benutzer-PATH steht — nie eine Zeile für eine Startdatei. — belegt: Installer-Fälle
+  win-offer (Frage, abgelehnt, nichts geschrieben), win-yes (set-mise-path bekommt den
+  Ordner), win-manual und win-unknown; G8 in `update-conventions` angepasst
 - [x] AC-6 — Gegeben macOS oder Linux, wenn `mise-check`, `set-mise` und `tool-check`
   laufen, dann ist ihre Ausgabe dieselbe wie vorher (keine Zeile `userpath`). — belegt:
   die bestehenden Fälle in `tests/template-sync/mise.sh` unverändert grün, dazu „no
@@ -251,3 +259,34 @@ F-097b.
   vor diesem Schritt (Lauf von F-095); sie stammen aus bestehenden Fällen.
 - mawk ist auf dem Windows-Rechner nicht installiert; den Lauf damit macht die CI nach
   dem Push.
+
+### F-097b — fertig 2026-11-24
+
+**Umgesetzt:** `template-sync.sh set-mise-path` gibt den Shims-Ordner in
+Windows-Schreibweise über `CODING_KIT_SHIMS` an PowerShell; der Code steht in
+`mise_path_ps`. Er liest den Benutzer-PATH roh aus der Registry, rückt einen
+vorhandenen Eintrag für den Ordner so, wie er geschrieben ist, nach vorn (sonst kommt
+der Ordner dazu), lässt alle übrigen Einträge stehen und schreibt mit dem bisherigen
+Werttyp zurück; danach `WM_SETTINGCHANGE`. Installer Schritt 6 und `update-conventions`
+G8 fragen bei `offer-path` und rufen den Befehl erst nach Zustimmung auf; die README
+beschreibt den Windows-Weg. Der PowerShell-Stellvertreter der Tests hält fest, welchen
+Ordner er bekommt.
+
+**Entscheidungen:**
+- Leere Einträge (`;;`) im Benutzer-PATH bleiben stehen; aufgefallen am echten PATH des
+  Windows-Rechners vor dem Schreiben.
+- Ein vorhandener Eintrag in anderer Schreibweise rückt so, wie er geschrieben ist, nach
+  vorn, statt durch den festen Pfad ersetzt zu werden; aus dem unabhängigen Review (EC-2).
+- Der Echttest bleibt stehen (Nutzer): Die Shims stehen jetzt vorn im Benutzer-PATH;
+  die Sicherung liegt außerhalb des Repos.
+- Der PowerShell-Text steht in einer Funktion, nicht als Variable oben im Skript; sonst
+  startete jeder Aufruf des Skripts einen Prozess mehr.
+- Version 3.8.3, weil 3.8.2 mit F-097a schon gepusht war.
+
+**Abweichung vom Plan:** keine.
+
+**Funde:**
+- Ob neu gestartete Programme den neuen PATH sehen, ließ sich nicht automatisch prüfen;
+  das zeigt der nächste Neustart von VS Code.
+- Die PowerShell-Logik prüfen die automatischen Tests nicht (Stellvertreter); sie ist
+  am Test-Schlüssel und am echten PATH belegt.

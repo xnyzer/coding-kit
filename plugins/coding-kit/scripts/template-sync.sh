@@ -250,6 +250,14 @@
 #       OUT/<name of RC> (OUT missing or empty). Every line of RC stays; the caller copies
 #       the file after approval. Line: written <name>. Refused: a shell without a known
 #       activation line (see mise-check), and Windows.
+#   set-mise-path
+#       Windows only: puts the mise shims folder (see mise-check) first in the user PATH
+#       — every other entry stays, in order and as written; an entry for the folder in
+#       another spelling (%LOCALAPPDATA%\mise\shims, other case) moves to the front as
+#       written; the value keeps its type (REG_EXPAND_SZ when new) — and tells
+#       Windows, so programs started afterwards see it. Writes the registry itself, so
+#       the caller asks first. Line: written user-path <folder as Windows writes it>.
+#       Refused: not Windows, no PowerShell, the write fails.
 #   tool-check TOOL...
 #       Whether each TOOL runs outside any project: from a directory on PATH other than
 #       those of mise — its shims stop there without a version, its install directories
@@ -329,6 +337,7 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh default-host ENV
        sh template-sync.sh mise-check
        sh template-sync.sh set-mise RC OUT
+       sh template-sync.sh set-mise-path
        sh template-sync.sh tool-check TOOL...
 EOF
   exit 2
@@ -4122,6 +4131,64 @@ set_mise() {
   printf 'written\t%s\n' "${SM_RC##*/}"
 }
 
+# What set-mise-path runs in PowerShell. It reads the user PATH raw (variables such as
+# %USERPROFILE% stay as they are) and moves the shims folder to the front: an entry for
+# it that is already there — compared expanded and without case — moves as written,
+# further ones go; without one the folder is added. The value is written back with its
+# type (REG_EXPAND_SZ for a new one). Then it tells Windows: programs started afterwards
+# get the new PATH. The folder comes in CODING_KIT_SHIMS, never inside the code.
+mise_path_ps() {
+  cat << 'EOF'
+$ErrorActionPreference = 'Stop'
+$shims = $env:CODING_KIT_SHIMS
+$key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Environment', $true)
+$kind = [Microsoft.Win32.RegistryValueKind]::ExpandString
+$raw = ''
+if ($key.GetValueNames() -contains 'Path') {
+  $kind = $key.GetValueKind('Path')
+  $raw = $key.GetValue('Path', '',
+    [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
+}
+$want = $shims.TrimEnd('\')
+$first = $shims
+$found = $false
+$rest = @()
+if ($raw -ne '') {
+  foreach ($entry in $raw -split ';') {
+    if ([Environment]::ExpandEnvironmentVariables($entry).TrimEnd('\') -ne $want) {
+      $rest += $entry
+    } elseif (-not $found) {
+      # The first spelling already there moves to the front as written.
+      $first = $entry
+      $found = $true
+    }
+  }
+}
+$key.SetValue('Path', ((@($first) + $rest) -join ';'), $kind)
+$key.Close()
+Add-Type -Namespace CodingKit -Name Win32 -MemberDefinition @'
+[DllImport("user32.dll", CharSet = CharSet.Unicode)]
+public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint msg, UIntPtr wParam,
+  string lParam, uint flags, uint timeout, out UIntPtr result);
+'@
+$result = [UIntPtr]::Zero
+[void][CodingKit.Win32]::SendMessageTimeout([IntPtr]0xffff, 0x1A, [UIntPtr]::Zero,
+  'Environment', 2, 5000, [ref]$result)
+EOF
+}
+
+set_mise_path() {
+  [ $# -eq 0 ] || usage
+  on_windows || die "set-mise-path writes the user PATH of Windows; elsewhere see set-mise"
+  command -v powershell.exe > /dev/null 2>&1 || die "PowerShell not found"
+  smp_dir=$(cygpath -w "$(mise_data_dir)/shims") || die "cannot name the shims folder"
+  # Git Bash turns arguments that look like paths into Windows paths; the code is none.
+  CODING_KIT_SHIMS=$smp_dir MSYS_NO_PATHCONV=1 MSYS2_ARG_CONVERSION_EXCLUDE='*' \
+    powershell.exe -NoProfile -NonInteractive -Command "$(mise_path_ps)" > /dev/null ||
+    die "could not write the user PATH"
+  printf 'written\tuser-path\t%s\n' "$smp_dir"
+}
+
 # --- tool-check: does a tool run outside any project? -------------------------------
 
 # Whether TOOL lies in a directory on PATH that is none of those of mise next to SHIMS.
@@ -4190,6 +4257,7 @@ case $cmd in
   commit-email) commit_email "$@" ;;
   default-host) default_host "$@" ;;
   mise-check) mise_check "$@" ;;
+  set-mise-path) set_mise_path "$@" ;;
   set-mise) set_mise "$@" ;;
   tool-check) tool_check "$@" ;;
   *) usage ;;
