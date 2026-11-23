@@ -1,16 +1,16 @@
 ---
 id: F-027
-title: Stop-Hook plattformfähig machen (Windows greift ins WSL)
+title: Hooks unter Windows verifizieren und Git-Bash-Pflicht dokumentieren
 type: feature
-status: BACKLOG
-size:
+status: PLANNED
+size: S
 created: 2026-08-12
 done:
 depends-on:
 superseded-by:
 ---
 
-# F-027 — Stop-Hook plattformfähig machen (Windows greift ins WSL)
+# F-027 — Hooks unter Windows verifizieren und Git-Bash-Pflicht dokumentieren
 
 ## Erfassung
 
@@ -28,17 +28,13 @@ den Hook ohnehin Voraussetzung. Schlägt die Auflösung fehl, bleibt der Hook st
 zu scheitern.
 
 **Lösungsskizze:**
-- Ursache auf einem Windows-Rechner bestätigen, bevor gebaut wird (WSL-Treffer oder
-  anderer Grund).
-- Prüfen, welche Plattformweichen `hooks.json` erlaubt (Doku zur Laufzeit lesen); sonst
-  muss der Einstiegspunkt selbst die Shell bestimmen.
-- Auf Windows die Git-Bash auflösen statt `System32\bash.exe` zu treffen.
-- Das Skript bleibt inhaltlich unverändert — es ist bereits POSIX-kompatibel, das Problem
-  ist der Interpreter.
-- Stillschweigen im Fehlerfall wahren: keine Ausgabe, wenn keine passende Shell gefunden
-  wird.
-- Verifikation gehört auf einen echten Windows-Rechner; auf macOS und Linux ist nur
-  Nicht-Regression prüfbar.
+- Claude Code startet Hooks unter Windows selbst über die Git Bash, ohne sie über
+  PowerShell (Doku: Hooks-Referenz, Setup). Ein eigener Interpreter-Wechsel im Einstieg
+  entfällt; `hooks.json` und die Skripte bleiben, wie sie sind.
+- Beide Hooks auf einem Windows-Rechner verifizieren.
+- Die Windows-Notiz der README sagt, warum die Hooks scheitern können (keine Git Bash
+  gefunden → PowerShell → `bash` unbekannt oder das `bash.exe` von WSL) und was hilft.
+- Die Prüfung, ob Claude Code die Git Bash findet, gehört in den Installer (F-067).
 
 **Noch zu analysieren:**
 - Seit F-040d startet auch der Session-Hinweis (`hooks/session-start.sh`) über `bash`; die
@@ -48,3 +44,84 @@ zu scheitern.
 
 **Abhängigkeiten:** keine. Thematische Nähe zu F-025 (Plattform-Abdeckung), aber anderer
 Gegenstand: Plugin-Inhalt statt Installer.
+
+## Spezifikation
+
+### Abnahmekriterien
+
+- [ ] AC-1 — Gegeben Windows mit Git for Windows und ein Kit-Projekt mit nicht
+  committeter Änderung, wenn eine Antwort von Claude endet, dann blockiert der
+  Stop-Hook einmal mit der `[coding-kit]`-Meldung; bei sauberem Arbeitsbaum bleibt er
+  still.
+- [ ] AC-2 — Gegeben Windows mit Git for Windows, wenn Claude Code frisch startet
+  (Matcher `startup`), dann läuft der SessionStart-Hook mit Exit 0 und ohne
+  Hook-Fehler.
+- [ ] AC-3 — Gegeben die README, wenn ein Windows-Nutzer die Windows-Notiz liest, dann
+  erfährt er: Claude Code startet die Hooks über die Git Bash; findet es keine, laufen
+  sie in PowerShell und scheitern; Abhilfe ist Git for Windows bzw.
+  `CLAUDE_CODE_GIT_BASH_PATH` im `env` der `settings.json`. Sie behauptet nicht mehr,
+  das Kit wähle die Shell selbst.
+
+### Randfälle
+
+- EC-1 — Windows ohne Git for Windows → der Hook läuft in PowerShell und scheitert laut
+  („bash“ unbekannt, nachgestellt am 2026-11-23); das Kit läuft dort ohnehin nicht
+  (Skills, Skripte, Installer brauchen Bash) → nur die README-Abhilfe, Erkennung in
+  F-067.
+- EC-2 — Windows mit WSL und ohne gefundene Git Bash → PowerShell trifft
+  `System32\bash.exe`, WSL kann den Pfad `C:/…` nicht auflösen → wie EC-1; hier nicht
+  nachstellbar (kein WSL auf dem Prüfrechner), nur dokumentiert.
+
+### Nicht-Ziele
+
+- Kein PowerShell-Einstieg und keine zweite Fassung der Hooks — ein still endender Hook
+  verdeckte nur, dass das ganze Kit ohne Bash nicht läuft.
+- Kein Feld `shell` in `hooks.json` — mit Git Bash ändert es nichts, ohne sie macht es
+  den Hook nicht still.
+- Die Erkennung, ob Claude Code die Git Bash findet → F-067.
+- Kit-Entwicklung unter Windows (`python3` im justfile, Test-Attrappen mit `ln -s` und
+  `chmod`) → eigene Nummer.
+
+### Tests
+
+- AC-1 → manuell auf Windows: unversionierte Datei anlegen, Antwort beenden → Meldung;
+  sauberer Baum → still.
+- AC-2 → manuell auf Windows: frischer Start mit `claude --debug`, im Debug-Log der
+  SessionStart-Hook mit Exit 0.
+- AC-3 → Durchsicht der README; `just check` (Privacy-Lint) grün.
+- Nicht-Regression: `just check` auf macOS; die Hook-Tests (`tests/template-sync/hook.sh`)
+  liefen auf Windows unter dash und bash schon grün.
+
+### Einbettung
+
+- Nur `README.md` (Windows-Notiz) ändert sich — kein Plugin-Inhalt, also keine neue
+  Version und kein CHANGELOG-Eintrag.
+- F-067 bekommt in der Lösungsskizze einen Punkt für die Git-Bash-Erkennung.
+- Graph: der alte Fakt „Stop-Hook geht unter Windows ins WSL“ wird mit dem Wegweiser bei
+  step-done eingeordnet.
+- Folge-Nummer für die Kit-Entwicklung unter Windows (per `/coding-kit:add-feature`).
+
+### Offene Fragen
+
+- keine
+
+### Entscheidungen
+
+- 2026-11-23 — Kein eigener Interpreter-Wechsel im Hook-Einstieg statt der
+  ursprünglichen Skizze, weil Claude Code die Git Bash laut Doku selbst nutzt und der
+  Stop-Hook auf Windows unverändert lief. Das Ziel „im Fehlerfall still bleiben“ entfällt
+  bewusst: Ohne Bash läuft das Kit insgesamt nicht, ein lauter Hook-Fehler ist dort der
+  ehrliche Hinweis.
+
+## Plan
+
+**Größe:** S — eine Doku-Stelle und eine Verifikation, die Lösung liegt nach der
+Doku-Klärung auf der Hand.
+
+**Ansatz:**
+- AC-1 belegen: Stop-Hook-Test vom 2026-11-23 (blockierte einmal, Meldung wie erwartet)
+  plus ein stiller Stopp bei sauberem Baum.
+- AC-2: frischer Start im Kit-Repo mit `claude --debug`, Debug-Log prüfen.
+- AC-3: Windows-Notiz der README umschreiben.
+- `just check` (der Teil `validate` auf Windows per `python` statt `python3`, bis die
+  Folge-Nummer das behebt).

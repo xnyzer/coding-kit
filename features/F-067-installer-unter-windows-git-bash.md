@@ -33,6 +33,9 @@ nachziehen muss.
 - Abbruchmeldungen sichtbar halten, wenn der Installer per Doppelklick startet (etwa vor
   dem Ende auf Enter warten).
 - Einen Start aus PowerShell oder cmd erkennen und auf Git Bash verweisen.
+- Prüfen, ob Claude Code die Git Bash findet, und sonst `CLAUDE_CODE_GIT_BASH_PATH` im
+  `env` der `settings.json` anbieten — ohne sie laufen die Hooks in PowerShell und
+  scheitern (aus F-027).
 - Verifikation auf einem echten Windows-Rechner; auf macOS und Linux nur die Tests mit
   Attrappen aus F-025.
 
