@@ -44,10 +44,10 @@ with its reasons.
 
 Stand 2026-11-23.
 
-1. **[F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) → [F-095](F-095-skript-tests-unter-windows-git-bash.md) → [F-097](F-097-mise-aktivierung-unter-windows.md) → [F-067](F-067-installer-unter-windows-git-bash.md) → [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md)** — Windows-Strang, solange der
-   Windows-Rechner bereitsteht: erst die Hooks, dann die Tests (sonst braucht jeder
-   Installer-Commit `--no-verify`), dann die mise-Aktivierung und der Installer; zuletzt
-   der Projekte-Ordner, der dieselbe Stelle im Installer berührt.
+1. **[F-095](F-095-skript-tests-unter-windows-git-bash.md) → [F-097](F-097-mise-aktivierung-unter-windows.md) → [F-067](F-067-installer-unter-windows-git-bash.md) → [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md)** — Windows-Strang, solange der Windows-Rechner
+   bereitsteht: erst die Tests (sonst braucht jeder Installer-Commit `--no-verify`), dann
+   die mise-Aktivierung und der Installer; zuletzt der Projekte-Ordner, der dieselbe
+   Stelle im Installer berührt.
 2. **[F-068](F-068-dokumentmodell-migration-verlustfrei.md)** — die Migration verliert still Inhalt; zuerst der Nachweis, der das Löschen
    der Altdateien sperrt.
 3. **[F-070](F-070-merge-klassen-und-hunk-rueckstellung.md) → [F-071](F-071-erstabgleich-ohne-verlust.md)** — der Merge übernimmt ungesehen, der Erstabgleich verliert
@@ -86,7 +86,6 @@ Stand 2026-11-23.
 
 | ID | Title | Status | Done |
 |----|-------|--------|------|
-| [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) | Hooks unter Windows verifizieren und Git-Bash-Pflicht dokumentieren | PLANNED |  |
 | [F-046](F-046-verbrauchsanalyse-des-kits-und.md) | Verbrauchsanalyse des Kits und Empfehlungen zu Modell und Effort | BACKLOG |  |
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
@@ -125,6 +124,7 @@ Stand 2026-11-23.
 
 | ID | Title | Status | Done |
 |----|-------|--------|------|
+| [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) | Hooks unter Windows verifizieren und Git-Bash-Pflicht dokumentieren | DONE | 2026-11-23 |
 | [F-069](F-069-private-inhalte-im-abgleich-schuetzen.md) | Private Inhalte beim Abgleich und im Privacy-Lint schützen | DONE | 2026-11-23 |
 | [F-094](F-094-python-aufrufe-im-justfile-unter-windows.md) | Python-Aufrufe im justfile unter Windows lauffähig machen | DONE | 2026-11-23 |
 | [F-025](F-025-install-sh-fehlender-gh-login-und.md) | Installer läuft ohne GitHub und installiert die Toolchain über mise | DONE | 2026-11-22 |

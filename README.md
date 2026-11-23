@@ -130,12 +130,17 @@ ist; deshalb kommen `just`, `lefthook` und `gitleaks` mit `mise use -g`.
 Frisch installierte Skills sind ggf. erst nach einem Session-Neustart sichtbar.
 
 > **Windows:** Beide Wege brauchen eine Bash (Git for Windows) — `install.sh` und die
-> Snippets sind Bash, und die Hooks des Plugins rufen `bash` auf. Ausführen in
-> derselben Umgebung, in der `claude` läuft: in Git Bash ist `$HOME` das
-> Windows-Benutzerverzeichnis, ein Lauf unter WSL schreibt dagegen ins WSL-Home und
-> bleibt für eine native Windows-Installation unsichtbar. mise kommt dort von Hand über
-> `winget install jdx.mise` oder `scoop install mise` — der Installer installiert auf
-> Windows nichts selbst.
+> Snippets sind Bash, und die Hooks des Plugins rufen `bash` auf. Claude Code startet
+> Hooks unter Windows selbst über die Git Bash; findet es keine, laufen sie in
+> PowerShell und scheitern dort (`bash` ist unbekannt, oder das `bash.exe` von WSL
+> startet und kann den Windows-Pfad nicht auflösen). Abhilfe: Git for Windows
+> installieren oder, wenn es an einem anderen Ort liegt, den Pfad zu seiner `bash.exe`
+> als `CLAUDE_CODE_GIT_BASH_PATH` im `env` der `~/.claude/settings.json` eintragen.
+> `install.sh` und die Snippets in derselben Umgebung ausführen, in der `claude` läuft:
+> in Git Bash ist `$HOME` das Windows-Benutzerverzeichnis, ein Lauf unter WSL schreibt
+> dagegen ins WSL-Home und bleibt für eine native Windows-Installation unsichtbar. mise
+> kommt dort von Hand über `winget install jdx.mise` oder `scoop install mise` — der
+> Installer installiert auf Windows nichts selbst.
 
 ### Ohne GitHub (nur Git)
 

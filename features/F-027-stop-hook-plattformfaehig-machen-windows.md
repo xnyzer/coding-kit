@@ -2,10 +2,10 @@
 id: F-027
 title: Hooks unter Windows verifizieren und Git-Bash-Pflicht dokumentieren
 type: feature
-status: PLANNED
+status: DONE
 size: S
 created: 2026-08-12
-done:
+done: 2026-11-23
 depends-on:
 superseded-by:
 ---
@@ -49,18 +49,22 @@ Gegenstand: Plugin-Inhalt statt Installer.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben Windows mit Git for Windows und ein Kit-Projekt mit nicht
+- [x] AC-1 — Gegeben Windows mit Git for Windows und ein Kit-Projekt mit nicht
   committeter Änderung, wenn eine Antwort von Claude endet, dann blockiert der
   Stop-Hook einmal mit der `[coding-kit]`-Meldung; bei sauberem Arbeitsbaum bleibt er
-  still.
-- [ ] AC-2 — Gegeben Windows mit Git for Windows, wenn Claude Code frisch startet
+  still. — belegt: unter Windows blockierte der Hook bei einer unversionierten
+  Testdatei und bei offenen Änderungen einmal mit der `[coding-kit]`-Meldung; bei
+  sauberem Baum still (Debug-Log: `Stop … finished with status 0`, kein Hinweis).
+- [x] AC-2 — Gegeben Windows mit Git for Windows, wenn Claude Code frisch startet
   (Matcher `startup`), dann läuft der SessionStart-Hook mit Exit 0 und ohne
-  Hook-Fehler.
-- [ ] AC-3 — Gegeben die README, wenn ein Windows-Nutzer die Windows-Notiz liest, dann
+  Hook-Fehler. — belegt: frischer Start mit `claude -p --debug=hooks` —
+  `SessionStart:startup [bash "…/session-start.sh"] … finished with status 0`.
+- [x] AC-3 — Gegeben die README, wenn ein Windows-Nutzer die Windows-Notiz liest, dann
   erfährt er: Claude Code startet die Hooks über die Git Bash; findet es keine, laufen
   sie in PowerShell und scheitern; Abhilfe ist Git for Windows bzw.
   `CLAUDE_CODE_GIT_BASH_PATH` im `env` der `settings.json`. Sie behauptet nicht mehr,
-  das Kit wähle die Shell selbst.
+  das Kit wähle die Shell selbst. — belegt: Windows-Notiz der README neu gefasst;
+  `just check` grün.
 
 ### Randfälle
 
@@ -125,3 +129,26 @@ Doku-Klärung auf der Hand.
 - AC-3: Windows-Notiz der README umschreiben.
 - `just check` (der Teil `validate` auf Windows per `python` statt `python3`, bis die
   Folge-Nummer das behebt).
+
+## Verlauf
+
+### F-027 — fertig 2026-11-23
+
+**Umgesetzt:** Die Windows-Notiz der README sagt, dass Claude Code die Hooks über die
+Git Bash startet, dass sie ohne Git Bash in PowerShell scheitern (`bash` unbekannt bzw.
+das `bash.exe` von WSL) und hilft mit Git for Windows oder `CLAUDE_CODE_GIT_BASH_PATH`.
+`hooks.json` und die Hook-Skripte bleiben unverändert; beide Hooks liefen auf Windows
+mit Git Bash ohne Änderung.
+
+**Entscheidungen:** Das Skill-Feld `shell` bleibt ungenutzt: Es gilt nur für
+`!`-Befehle im Skill-Text, und die hat kein Skill des Kits (`docs/skill-authoring.md`
+entsprechend nachgezogen, Befund des unabhängigen Reviews).
+
+**Abweichung vom Plan:** keine.
+
+**Funde:**
+- `${CLAUDE_PLUGIN_ROOT}` steht im Hook-Befehl unter Windows mit Backslashes
+  (`C:\…\hooks/…`), anders als die Doku es für die Shell-Form beschreibt; in Git Bash
+  läuft es trotzdem.
+- Geprüft ist der stille Weg des SessionStart-Hooks; die Hinweiszeile mit eingerichteten
+  Kit-Regeln prüfen die Hook-Tests auf macOS und Linux.

@@ -56,7 +56,7 @@ Meldung, auch einen Tippfehler. Der Validator lässt deshalb nur diese zu (`SKIL
 | `disallowed-tools` | Wenn ein Skill bestimmte Tools nie nutzen darf (teach-step, handoff). |
 | `model`, `effort` | Noch nicht — die Entscheidung hängt an der Verbrauchsmessung (F-046). |
 | `context`, `agent`, `background` | Nicht genutzt — das unabhängige Review (F-037) läuft als Plugin-Agent (§ Plugin-Agents), weil die Doku offen lässt, ob ein Skill mit `context: fork` aus einem laufenden Skill heraus startet. |
-| `shell` | Noch nicht — prüft der Windows-Betrieb (F-027). |
+| `shell` | Nicht genutzt — das Feld gilt nur für `!`-Befehle im Skill-Text, und die hat kein Skill des Kits; unter Windows läuft Claude Code mit Git Bash ohnehin in Bash (F-027). |
 | `when_to_use`, `allowed-tools`, `hooks`, `paths`, `arguments`, `metadata`, `license`, `compatibility` | Nicht genutzt. |
 
 `default-enabled` ist kein Skill-Feld; es gibt nur `defaultEnabled` im Plugin-Manifest.
