@@ -6,7 +6,7 @@ status: BACKLOG
 size:
 created: 2026-11-22
 done:
-depends-on: F-025
+depends-on: F-025, F-097
 superseded-by:
 ---
 
@@ -38,6 +38,16 @@ nachziehen muss.
   scheitern (aus F-027).
 - Verifikation auf einem echten Windows-Rechner; auf macOS und Linux nur die Tests mit
   Attrappen aus F-025.
+- Die Meldung „angelegt (chmod 600)“ stimmt auf Windows nicht — `chmod` wirkt auf NTFS
+  nicht; prüfen, ob die geerbten Rechte genügen, und die Meldung ehrlich fassen.
+- Pfade landen in MSYS-Form (`/c/Users/…`) in der Personal-Config — prüfen, ob alle
+  Leser damit umgehen.
+- winget legt den Paketordner von mise auf den PATH, nicht die Shims, und das erst nach
+  einem Neustart der Shell — der Installer muss mise im selben Lauf finden oder zum
+  Neustart auffordern; die Aktivierung der Shims regelt F-097.
+- Ohne Terminal (Eingaben per Pipe) stehen die Fragen ohne Zeilenumbruch hintereinander
+  (alle Plattformen).
 
-**Abhängigkeiten:** F-025. Thematisch nah an F-027 (derselbe Windows-Rechner zur
-Verifikation), aber anderer Gegenstand: Installer statt Plugin-Hooks.
+**Abhängigkeiten:** F-025; F-097 für Schritt 6. Thematisch nah an F-027 (derselbe
+Windows-Rechner zur Verifikation), aber anderer Gegenstand: Installer statt
+Plugin-Hooks. Den Vorschlag des Projekte-Ordners behandelt F-096.

@@ -37,3 +37,9 @@ von fünf Migrationen musste Claude den Hinweis zurückstellen.
 
 **Abhängigkeiten:** keine. F-027 betrifft denselben Hook, aber den Interpreter unter
 Windows, nicht diese Logik.
+
+**Noch zu analysieren:**
+- Auch unter Windows bestätigt (2026-11-23): Der Hook blockierte nach jeder Antwort,
+  während prep-step und add-feature auf Freigaben warteten und während step-done auf
+  Prüfungen im Hintergrund wartete — dort mit offenem Code eines laufenden Abschlusses,
+  ein Fall, den die Lösungsskizze noch nicht abdeckt.
