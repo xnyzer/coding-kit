@@ -44,9 +44,9 @@ with its reasons.
 
 Stand 2026-11-23.
 
-1. **[F-095](F-095-skript-tests-unter-windows-git-bash.md) → [F-097](F-097-mise-aktivierung-unter-windows.md) → [F-067](F-067-installer-unter-windows-git-bash.md) → [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md)** — Windows-Strang, solange der Windows-Rechner
-   bereitsteht: erst die Tests (sonst braucht jeder Installer-Commit `--no-verify`), dann
-   die mise-Aktivierung und der Installer; zuletzt der Projekte-Ordner, der dieselbe
+1. **[F-097](F-097-mise-aktivierung-unter-windows.md) → [F-067](F-067-installer-unter-windows-git-bash.md) → [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md)** — Windows-Strang, solange der Windows-Rechner
+   bereitsteht: erst die mise-Aktivierung, dann der Installer, dessen Commits jetzt
+   ohne `--no-verify` durch den Hook gehen; zuletzt der Projekte-Ordner, der dieselbe
    Stelle im Installer berührt.
 2. **[F-068](F-068-dokumentmodell-migration-verlustfrei.md)** — die Migration verliert still Inhalt; zuerst der Nachweis, der das Löschen
    der Altdateien sperrt.
@@ -116,7 +116,6 @@ Stand 2026-11-23.
 | [F-091](F-091-migrationsprotokoll-nach-jedem-abgleich.md) | Migrationsprotokoll und Kit-Vorschläge nach jedem Abgleich schreiben | BACKLOG |  |
 | [F-092](F-092-projekt-mit-template-vergleichen.md) | Projekt jederzeit vollständig mit dem aktuellen Template vergleichen | BACKLOG |  |
 | [F-093](F-093-ssh-remotes-im-privacy-lint-erlauben.md) | Privacy-Lint erlaubt SSH-Remotes öffentlicher Git-Hosts | BACKLOG |  |
-| [F-095](F-095-skript-tests-unter-windows-git-bash.md) | Skript-Tests unter Windows in Git Bash lauffähig machen | IN-PROGRESS |  |
 | [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md) | Projekte-Ordner außerhalb synchronisierter Ordner vorschlagen | BACKLOG |  |
 | [F-097](F-097-mise-aktivierung-unter-windows.md) | mise-Aktivierung unter Windows erkennen und anbieten | BACKLOG |  |
 
@@ -127,6 +126,7 @@ Stand 2026-11-23.
 | [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) | Hooks unter Windows verifizieren und Git-Bash-Pflicht dokumentieren | DONE | 2026-11-23 |
 | [F-069](F-069-private-inhalte-im-abgleich-schuetzen.md) | Private Inhalte beim Abgleich und im Privacy-Lint schützen | DONE | 2026-11-23 |
 | [F-094](F-094-python-aufrufe-im-justfile-unter-windows.md) | Python-Aufrufe im justfile unter Windows lauffähig machen | DONE | 2026-11-23 |
+| [F-095](F-095-skript-tests-unter-windows-git-bash.md) | Skript-Tests unter Windows in Git Bash lauffähig machen | DONE | 2026-11-23 |
 | [F-025](F-025-install-sh-fehlender-gh-login-und.md) | Installer läuft ohne GitHub und installiert die Toolchain über mise | DONE | 2026-11-22 |
 | [F-062](F-062-startwerte-python-und-ts-node-auffrischen.md) | Startwerte der Module und Core-Workflows im Template auffrischen | DONE | 2026-11-22 |
 | [F-064](F-064-just-check-tests-nur-bei-aenderungen.md) | Skript-Tests in just check nur bei passenden Änderungen ausführen | DONE | 2026-11-22 |

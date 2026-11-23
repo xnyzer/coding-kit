@@ -2,10 +2,10 @@
 id: F-095
 title: Skript-Tests unter Windows in Git Bash lauffähig machen
 type: fix
-status: IN-PROGRESS
+status: DONE
 size: M
 created: 2026-11-23
-done:
+done: 2026-11-23
 depends-on:
 superseded-by:
 ---
@@ -45,14 +45,17 @@ scheitert dort jeder Commit an diesen Dateien im Pre-Commit-Hook — er geht nur
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben Windows mit Git Bash, wenn `just test` läuft, dann laufen die
+- [x] AC-1 — Gegeben Windows mit Git Bash, wenn `just test` läuft, dann laufen die
   Installer-Fälle unter dash und bash durch wie unter Linux; gegeben Linux oder macOS,
-  dann bleiben sie grün und die Zahl der Checks ändert sich nicht.
-- [ ] AC-2 — Gegeben ein Dateisystem, auf dem `chmod 600` nicht wirkt, wenn die Tests
+  dann bleiben sie grün und die Zahl der Checks ändert sich nicht. — belegt: `just test`
+  unter Windows: Installer-Fälle unter dash und bash ohne Fehler (vorher 99 je Shell);
+  CI unter Linux nach F-095b: 4191 Checks, 0 Fehler, gleiche Zahl wie vorher.
+- [x] AC-2 — Gegeben ein Dateisystem, auf dem `chmod 600` nicht wirkt, wenn die Tests
   laufen, dann werden die Prüfungen auf Eigentümer-Rechte übersprungen, und die
   Zusammenfassung nennt die Zahl der übersprungenen Checks und den Grund; gegeben ein
   Dateisystem mit echten Rechten, dann laufen sie wie bisher und nichts wird
-  übersprungen.
+  übersprungen. — belegt: unter Windows „6 skipped (no file modes)“ in der
+  Zusammenfassung; CI unter Linux nach F-095b: nichts übersprungen.
 - [x] AC-3 — Gegeben eine Personal-Config mit CRLF-Zeilenenden, wenn `set-global` unter
   Windows einen Wert setzt, dann endet jede Zeile der Datei weiter mit CRLF; auf macOS
   und Linux ändert sich nichts. — belegt: unter Windows grün ab F-095a („set-global: CRLF
@@ -201,5 +204,5 @@ sähen.
 - Unter Windows: 2786 Checks, 0 Fehler, 6 übersprungen — zusammen die bisherigen 2792.
 - `docs/skill-authoring.md` und die übrige Doku beschreiben die Zusammenfassung nicht;
   keine Doku-Änderung nötig.
-- Offen bis zur CI nach dem Push: AC-1 und AC-2 auf Linux (gleiche Zahl der Checks,
-  nichts übersprungen).
+- AC-1 und AC-2 auf Linux nach dem Push belegt (CI: 4191 Checks, 0 Fehler, nichts
+  übersprungen).
