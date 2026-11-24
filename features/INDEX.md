@@ -89,7 +89,7 @@ Stand 2026-11-24.
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
 | [F-063](F-063-projekt-als-fork-eines-github-repos.md) | Neues Projekt als Fork eines GitHub-Repos anlegen | BACKLOG |  |
-| [F-067](F-067-installer-unter-windows-git-bash.md) | Installer unter Windows in Git Bash lauffähig machen | BACKLOG |  |
+| [F-067](F-067-installer-unter-windows-git-bash.md) | Installer unter Windows in Git Bash lauffähig machen | PLANNED |  |
 | [F-068](F-068-dokumentmodell-migration-verlustfrei.md) | Dokumentmodell-Migration verlustfrei und nachweisbar machen | BACKLOG |  |
 | [F-070](F-070-merge-klassen-und-hunk-rueckstellung.md) | Merge-Klassen korrigieren und einzelne Hunks zurückstellen | BACKLOG |  |
 | [F-071](F-071-erstabgleich-ohne-verlust.md) | Erstabgleich von Bestandsprojekten ohne Verlust führen | BACKLOG |  |
