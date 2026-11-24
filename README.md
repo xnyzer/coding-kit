@@ -52,7 +52,9 @@ git clone https://github.com/xnyzer/coding-kit.git && cd coding-kit && ./install
 > (`-` statt einer Adresse heißt: beim Commit fragen).
 > Gibt es die Personal-Config schon, fasst er sie nicht an und meldet `gh` nur. Und ihn
 > in einer **Shell** starten, nicht per Doppelklick: bei einem Abbruch schließt sich das
-> per Dateizuordnung geöffnete Fenster mitsamt der Fehlermeldung.
+> per Dateizuordnung geöffnete Fenster mitsamt der Fehlermeldung. Ausnahme Windows: per
+> Doppelklick in der Git Bash gestartet, wartet er am Ende — fertig oder abgebrochen —
+> auf Enter, das Fenster bleibt also offen.
 
 Der Installer ist **idempotent**: jeder Schritt prüft erst den Zustand, mehrfaches
 Ausführen ist gefahrlos und überspringt, was schon da ist — auch geeignet, um nach den

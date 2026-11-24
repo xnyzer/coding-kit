@@ -44,9 +44,9 @@ with its reasons.
 
 Stand 2026-11-24.
 
-1. **[F-067](F-067-installer-unter-windows-git-bash.md) → [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md)** — Windows-Strang, solange der Windows-Rechner bereitsteht: erst der
-   Installer, dessen Commits jetzt ohne `--no-verify` durch den Hook gehen; zuletzt der
-   Projekte-Ordner, der dieselbe Stelle im Installer berührt.
+1. **[F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md)** — Windows-Strang, solange
+   der Windows-Rechner bereitsteht: der Projekte-Ordner, den der Installer heute unter
+   `Documents` vorschlägt — unter Windows oft ein Sync-Ordner.
 2. **[F-068](F-068-dokumentmodell-migration-verlustfrei.md)** — die Migration verliert still Inhalt; zuerst der Nachweis, der das Löschen
    der Altdateien sperrt.
 3. **[F-070](F-070-merge-klassen-und-hunk-rueckstellung.md) → [F-071](F-071-erstabgleich-ohne-verlust.md)** — der Merge übernimmt ungesehen, der Erstabgleich verliert
@@ -89,7 +89,6 @@ Stand 2026-11-24.
 | [F-053](F-053-gitlab-als-git-host.md) | GitLab als Git-Host | BACKLOG |  |
 | [F-054](F-054-forgejo-als-git-host.md) | Forgejo als Git-Host | BACKLOG |  |
 | [F-063](F-063-projekt-als-fork-eines-github-repos.md) | Neues Projekt als Fork eines GitHub-Repos anlegen | BACKLOG |  |
-| [F-067](F-067-installer-unter-windows-git-bash.md) | Installer unter Windows in Git Bash lauffähig machen | IN-PROGRESS |  |
 | [F-068](F-068-dokumentmodell-migration-verlustfrei.md) | Dokumentmodell-Migration verlustfrei und nachweisbar machen | BACKLOG |  |
 | [F-070](F-070-merge-klassen-und-hunk-rueckstellung.md) | Merge-Klassen korrigieren und einzelne Hunks zurückstellen | BACKLOG |  |
 | [F-071](F-071-erstabgleich-ohne-verlust.md) | Erstabgleich von Bestandsprojekten ohne Verlust führen | BACKLOG |  |
@@ -121,6 +120,7 @@ Stand 2026-11-24.
 
 | ID | Title | Status | Done |
 |----|-------|--------|------|
+| [F-067](F-067-installer-unter-windows-git-bash.md) | Installer unter Windows in Git Bash lauffähig machen | DONE | 2026-11-24 |
 | [F-097](F-097-mise-aktivierung-unter-windows.md) | mise-Aktivierung unter Windows erkennen und anbieten | DONE | 2026-11-24 |
 | [F-027](F-027-stop-hook-plattformfaehig-machen-windows.md) | Hooks unter Windows verifizieren und Git-Bash-Pflicht dokumentieren | DONE | 2026-11-23 |
 | [F-069](F-069-private-inhalte-im-abgleich-schuetzen.md) | Private Inhalte beim Abgleich und im Privacy-Lint schützen | DONE | 2026-11-23 |

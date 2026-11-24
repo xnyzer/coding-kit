@@ -22,6 +22,8 @@
 #   6. Checks that the mise shims reach every shell (template-sync.sh mise-check); offers
 #      the activation line for the end of the shell's startup file (Windows: offers to
 #      put the shims first in the user PATH, template-sync.sh set-mise-path).
+# In its own window on Windows (double-click) it waits for Enter at the end, so the
+# window stays open after success and failure alike.
 #
 # Usage:
 #   ./install.sh            # normal run (marketplace from GitHub)
@@ -154,6 +156,21 @@ case "$(uname -s)" in
   MINGW* | MSYS* | CYGWIN*) PLATFORM=windows ;;
   *) PLATFORM=unknown ;;
 esac
+
+# One handler for the end of every run — finished, fail or an error. It removes the work
+# folder of step 3 and, when the installer has its own window on Windows (a double-click:
+# a terminal as input and the first shell of the window, SHLVL 1), waits for Enter so
+# the window does not close over the last lines. A run inside an open Git Bash has
+# SHLVL 2 and does not wait.
+ENV_WORK=""
+on_exit() {
+  [ -z "$ENV_WORK" ] || rm -rf "$ENV_WORK"
+  if [ "$PLATFORM" = windows ] && [ -t 0 ] && [ "${SHLVL:-}" = 1 ]; then
+    printf '\nEnter drücken, um das Fenster zu schließen … '
+    read -r _ || true
+  fi
+}
+trap on_exit EXIT
 
 # --- 1. Preconditions --------------------------------------------------------
 say "Voraussetzungen prüfen"
@@ -312,7 +329,6 @@ else
   # addresses with the comments of the kit rules. The result moves into place with
   # owner-only rights.
   ENV_WORK="$(mktemp -d)"
-  trap 'rm -rf "$ENV_WORK"' EXIT
   {
     echo "# coding-kit personal config — created by install.sh, NEVER commit this file."
     echo "# Skills resolve identity at runtime (git config / gh api) where possible;"

@@ -2,10 +2,10 @@
 id: F-067
 title: Installer unter Windows in Git Bash lauffähig machen
 type: feature
-status: IN-PROGRESS
+status: DONE
 size: M
 created: 2026-11-22
-done:
+done: 2026-11-24
 depends-on: F-025, F-097
 superseded-by:
 ---
@@ -84,19 +84,23 @@ Plugin-Hooks. Den Vorschlag des Projekte-Ordners behandelt F-096.
   Hinweis mit Eintrag für env), win-gitbash-env und win-gitbash-settings (Variable
   gesetzt: kein Hinweis), ready (kein Hinweis außerhalb von Windows); auf dem
   Windows-Rechner kein Hinweis (Git am Standardort)
-- [ ] AC-5 — Gegeben Windows, ein Terminal als Eingabe und der Installer als erste Shell
+- [x] AC-5 — Gegeben Windows, ein Terminal als Eingabe und der Installer als erste Shell
   seines Fensters (`SHLVL` 1), wenn der Lauf endet — fertig oder abgebrochen —, dann
   wartet er auf Enter, bevor sich das Fenster schließt; in jedem anderen Fall wartet er
-  nicht.
+  nicht. — belegt: Installer-Fälle windows und win-abort (Eingabe aus einer Datei: kein
+  Warten); Doppelklick auf dem Windows-Rechner: das Fenster wartet auf Enter
 - [x] AC-6 — Gegeben eine Eingabe, die kein Terminal ist (Pipe, Datei), wenn der
   Installer fragt, dann endet jede Frage mit einem Zeilenumbruch — auf allen Systemen.
   — belegt: Installer-Fall „a question ends its line without a terminal“
 - [x] AC-7 — Gegeben WSL, wenn der Installer startet, dann sagt die Warnung zusätzlich,
   dass für Claude Code unter Windows der Installer in Git Bash laufen muss. — belegt:
   Installer-Fall wsl prüft den Hinweis auf Git Bash
-- [ ] AC-8 — Gegeben der Windows-Rechner und ein frisches Test-Home
+- [x] AC-8 — Gegeben der Windows-Rechner und ein frisches Test-Home
   (`HOME`, `CLAUDE_CONFIG_DIR`), wenn der Installer in Git Bash ganz durchläuft, dann
-  endet er ohne Fehler, mit Personal-Config, Plugin und Toolchain.
+  endet er ohne Fehler, mit Personal-Config, Plugin und Toolchain. — belegt: Lauf mit
+  frischem Test-Home in Git Bash auf dem Windows-Rechner — Plugin installiert,
+  Personal-Config mit Pfad in der Form `C:/…`, Toolchain vorhanden, mise aktiv, ohne
+  Fehler
 
 ### Randfälle
 
@@ -274,3 +278,30 @@ nennen die Windows-Teile.
 F-067a. Dazu kam ein Satz im Windows-Abschnitt der README.
 
 **Funde:** keine.
+
+### F-067c — fertig 2026-11-24
+
+**Umgesetzt:** Ein gemeinsamer Handler `on_exit` für `EXIT` direkt nach der
+Plattform-Erkennung räumt den Arbeitsordner von Schritt 3 auf (der eigene `trap` dort
+entfällt) und wartet unter Windows auf Enter, wenn die Eingabe ein Terminal ist und
+`SHLVL` 1 — so bleibt das per Doppelklick geöffnete Fenster nach „Fertig.“ wie nach
+einem Abbruch offen. Die Installer-Fälle `windows` und `win-abort` prüfen, dass bei
+Eingabe aus einer Datei nicht gewartet wird; die README nennt die Ausnahme beim Rat
+gegen den Doppelklick.
+
+**Entscheidungen:**
+- Das Warten selbst prüft kein automatischer Test, denn die Tests haben kein Terminal;
+  belegt per Doppelklick. Eine Gegenprobe ohne die Terminal-Bedingung ließ die beiden
+  neuen Checks scheitern.
+- Keine neue Version und kein CHANGELOG-Eintrag, wie bei F-067a und F-067b.
+
+**Abweichung vom Plan:** „CHANGELOG ergänzen“ entfällt wie bei F-067a; dazu kam der
+Satz in der README.
+
+**Funde:**
+- Der Test `memory-dir` (`tests/template-sync/settings.sh`) legt unter Windows ein Repo
+  mit dem ungültigen Ordnernamen `C:\Users\demo` an; git meldet `fatal: cannot change
+  to …`, der Check bleibt grün. Gehört nicht zu F-067 — auf Wunsch eine eigene
+  `fix`-Nummer.
+- Der Installer schlägt den Projekte-Ordner unter `Documents` vor, wenn es den gibt —
+  unter Windows oft ein Sync-Ordner; das regelt F-096.

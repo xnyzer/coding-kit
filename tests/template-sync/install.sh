@@ -542,6 +542,17 @@ EOF
   refute "install: Windows asks nothing about brew" in_says windows "brew install mise"
   check "install: Windows without mise, mise is open" \
     in_says windows "Offen: mise just lefthook gitleaks"
+  # The installer runs as the first shell (env -i: SHLVL 1) like after a double-click,
+  # but reads from a file: no wait for Enter at the end.
+  refute "install: Windows with input from a file waits for no Enter" \
+    in_says windows "Enter drücken"
+
+  # Windows without gh, run aborted: no wait for Enter either.
+  in_new win-abort
+  in_run win-abort PATH="$IN_BIN:$IN_WIN" IN_UNAME_S=MINGW64_NT-10.0-19045
+  check "install: Windows without gh aborts" in_status win-abort 1
+  refute "install: Windows abort with input from a file waits for no Enter" \
+    in_says win-abort "Enter drücken"
 
   # Windows with winget: mise lands in winget's package folder, off PATH; the installer
   # finds it there in the same run and goes on with mise use -g.
