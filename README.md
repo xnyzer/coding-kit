@@ -32,7 +32,8 @@ Installer kann auch das.
 Repo klonen und den Installer ausführen — er prüft die Voraussetzungen, richtet
 Marketplace + Plugin ein, legt die Personal-Config an (via `gh api` vorbefüllt bzw. ohne
 GitHub abgefragt), meldet den Stand der [globalen Kit-Regeln](#globale-kit-regeln) und
-prüft die Toolchain (auf Wunsch mise über brew oder pacman, den Rest über mise). Die
+prüft die Toolchain (auf Wunsch mise über brew oder pacman, unter Windows über winget
+oder scoop, den Rest über mise). Die
 Kit-Regeln schreibt er nicht; die richtest du danach in einer Claude-Session mit
 `/coding-kit:update-conventions global` ein:
 
@@ -103,8 +104,9 @@ schreibt. Was dabei mit deinen Einstellungen geschieht:
 
 **4. Toolchain** — `mise`, `just`, `lefthook`, `gitleaks`: die Skills rufen die
 just-Standardrezepte, die Projekt-Hooks nutzen lefthook + gitleaks. Nur mise kommt über
-den Paketmanager — `brew install mise` (macOS, Linux mit brew) bzw. `sudo pacman -S mise`
-(Arch) —, die übrigen drei global über mise:
+den Paketmanager — `brew install mise` (macOS, Linux mit brew), `sudo pacman -S mise`
+(Arch) bzw. `winget install jdx.mise` oder `scoop install mise` (Windows) —, die übrigen
+drei global über mise:
 
 ```bash
 mise use -g just lefthook gitleaks
@@ -148,8 +150,9 @@ Frisch installierte Skills sind ggf. erst nach einem Session-Neustart sichtbar.
 > `install.sh` und die Snippets in derselben Umgebung ausführen, in der `claude` läuft:
 > in Git Bash ist `$HOME` das Windows-Benutzerverzeichnis, ein Lauf unter WSL schreibt
 > dagegen ins WSL-Home und bleibt für eine native Windows-Installation unsichtbar. mise
-> kommt dort von Hand über `winget install jdx.mise` oder `scoop install mise` — der
-> Installer installiert auf Windows nichts selbst.
+> bietet der Installer dort über `winget install jdx.mise` an, ohne winget über
+> `scoop install mise`; winget setzt den PATH erst für neue Shells, deshalb sucht der
+> Installer mise danach im Paketordner von winget und macht im selben Lauf weiter.
 
 ### Ohne GitHub (nur Git)
 

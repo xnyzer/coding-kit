@@ -12,8 +12,9 @@
 #   4. Reports the kit's global rules; it never writes them or ~/.claude/CLAUDE.md —
 #      setting them up is /coding-kit:update-conventions global in a Claude session.
 #   5. Checks the base toolchain (mise, just, lefthook, gitleaks) outside any project
-#      (template-sync.sh tool-check). Offers mise through brew or pacman, else names the
-#      way by hand (Windows and unknown systems: by hand only); then offers just,
+#      (template-sync.sh tool-check). Offers mise through brew or pacman (Windows: winget
+#      or scoop; after winget it finds mise in winget's package folder in the same run),
+#      else names the way by hand (unknown systems: by hand only); then offers just,
 #      lefthook and gitleaks through mise use -g. A closing line names what is open.
 #   6. Checks that the mise shims reach every shell (template-sync.sh mise-check); offers
 #      the activation line for the end of the shell's startup file (Windows: offers to
@@ -124,6 +125,14 @@ default_projects_dir() {
   fi
   printf '%s/Coding-Projects' "${docs:-$HOME}"
 }
+
+# The platform, for the steps that differ on it.
+case "$(uname -s)" in
+  Darwin) PLATFORM=macos ;;
+  Linux) PLATFORM=linux ;;
+  MINGW* | MSYS* | CYGWIN*) PLATFORM=windows ;;
+  *) PLATFORM=unknown ;;
+esac
 
 # --- 1. Preconditions --------------------------------------------------------
 say "Voraussetzungen prüfen"
@@ -309,12 +318,6 @@ say "Toolchain (mise, just, lefthook, gitleaks)"
 # Only mise itself comes from a package manager of the platform; just, lefthook and
 # gitleaks then come through mise (`mise use -g`), the same way everywhere.
 MISE_DOCS="https://mise.jdx.dev/installing-mise.html"
-case "$(uname -s)" in
-  Darwin) PLATFORM=macos ;;
-  Linux) PLATFORM=linux ;;
-  MINGW* | MSYS* | CYGWIN*) PLATFORM=windows ;;
-  *) PLATFORM=unknown ;;
-esac
 # WSL runs a Linux kernel built by Microsoft.
 if [ "$PLATFORM" = linux ] && uname -r | grep -qi microsoft; then
   warn "WSL erkannt — die Einrichtung gilt nur für ein Claude Code innerhalb von WSL"
@@ -338,22 +341,54 @@ missing_tools() {
   done <<< "$check"
 }
 
-# offer_install COMMAND… — runs COMMAND after a yes (default no); a no or a failure is
-# named, so the closing line "Offen: …" has a hint above it.
+# offer_install COMMAND… — runs COMMAND after a yes (default no) and succeeds only when it
+# ran and succeeded; a no or a failure is named, so the closing line "Offen: …" has a
+# hint above it.
 offer_install() {
   if ! ask_yes_no "mise installieren ($*)?" n; then
     warn "übersprungen — von Hand: $*"
-    return 0
+    return 1
   fi
-  "$@" || warn "$* ist gescheitert"
+  "$@" && return 0
+  warn "$* ist gescheitert"
+  return 1
+}
+
+# find_winget_mise — winget puts the package folder of mise on the user PATH, but only
+# for shells started afterwards. When mise lies there, its folder goes first on PATH for
+# the rest of this run.
+find_winget_mise() {
+  local base dir
+  if [ -n "${LOCALAPPDATA:-}" ]; then
+    base="$(cygpath -u "$LOCALAPPDATA")"
+  else
+    base="$HOME/AppData/Local"
+  fi
+  for dir in "$base"/Microsoft/WinGet/Packages/jdx.mise_*/mise/bin; do
+    if [ -f "$dir/mise" ] || [ -f "$dir/mise.exe" ]; then
+      PATH="$dir:$PATH"
+      return 0
+    fi
+  done
+  return 1
 }
 
 # offer_mise — offers mise through the package manager of the platform, or names the way
-# by hand; Windows and unknown systems get only the way by hand.
+# by hand; unknown systems get only the way by hand.
 offer_mise() {
   case "$PLATFORM" in
     windows)
-      warn "Auf Windows installiert der Installer nichts — mise von Hand: winget install jdx.mise oder scoop install mise (Windows-Unterstützung: F-067)"
+      if find_winget_mise; then
+        ok "mise liegt im Paketordner von winget — eine neue Git Bash findet es von selbst"
+      elif command -v winget >/dev/null 2>&1; then
+        if offer_install winget install jdx.mise && ! find_winget_mise; then
+          warn "mise ist nicht im Paketordner von winget — Git Bash neu starten, dann erneut ausführen"
+        fi
+      elif command -v scoop >/dev/null 2>&1; then
+        offer_install scoop install mise || true
+      else
+        warn "Weder winget noch scoop — mise von Hand: winget install jdx.mise oder scoop install mise, danach Git Bash neu starten und erneut ausführen"
+      fi
       return 0
       ;;
     unknown)
@@ -362,9 +397,9 @@ offer_mise() {
       ;;
   esac
   if command -v brew >/dev/null 2>&1; then
-    offer_install brew install mise
+    offer_install brew install mise || true
   elif command -v pacman >/dev/null 2>&1; then
-    offer_install sudo pacman -S mise
+    offer_install sudo pacman -S mise || true
   else
     # Never run here: the official script comes from the network, and the folder it
     # installs into must be on PATH first.

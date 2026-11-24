@@ -2,8 +2,9 @@
 # kit's install.sh with bash in an empty environment (env -i): a test HOME, the answers on
 # stdin, and a PATH of fake folders only — wrappers for the system tools the installer and
 # template-sync.sh call (sh is the shell of the pass), fakes for claude and uname, and per
-# case fakes for gh, brew, pacman with sudo, mise or xdg-user-dir. A real gh, brew or mise
-# of the machine never takes part. The fakes log their calls to $IN_LOG.
+# case fakes for gh, brew, pacman with sudo, winget, scoop, mise or xdg-user-dir. A real
+# gh, brew, winget, scoop or mise of the machine never takes part. The fakes log their
+# calls to $IN_LOG.
 
 IN=$ROOT/install.sh
 IN_BASH=$(command -v bash || true)
@@ -13,8 +14,8 @@ IN_TOOLS='awk basename cat chmod cksum cp cut date dirname env find git grep hea
 mkdir mktemp mv od rm sed sort tail tr wc xargs'
 
 # in_new NAME — a fresh case folder: HOME in $IN_HOME, the state of the fakes in
-# $TMP/in/NAME/state, and $IN_PKG — the folder brew and pacman install mise into (put it
-# on PATH to see it).
+# $TMP/in/NAME/state, and $IN_PKG — the folder brew, pacman and scoop install mise into
+# (put it on PATH to see it; winget installs into its package folder instead).
 in_new() {
   rm -rf "${TMP:?}/in/$1"
   mkdir -p "$TMP/in/$1/test-home" "$TMP/in/$1/state/bin"
@@ -86,16 +87,19 @@ run_install_cases() {
   fi
 
   # The folders on PATH: base (system tools, sh, claude, uname), gh, brew, pacman with
-  # sudo, mise, the three tools mise installs, xdg-user-dir.
+  # sudo, winget, scoop, mise, the three tools mise installs, xdg-user-dir.
   rm -rf "${TMP:?}/in"
   IN_BIN=$TMP/in/bin
   IN_GH=$TMP/in/gh-bin
   IN_BREW=$TMP/in/brew-bin
   IN_PACMAN=$TMP/in/pacman-bin
+  IN_WINGET=$TMP/in/winget-bin
+  IN_SCOOP=$TMP/in/scoop-bin
   IN_MISE=$TMP/in/mise-bin
   IN_TOOLS_BIN=$TMP/in/tools-bin
   IN_XDG=$TMP/in/xdg-bin
-  mkdir -p "$IN_BIN" "$IN_GH" "$IN_BREW" "$IN_PACMAN" "$IN_MISE" "$IN_TOOLS_BIN" "$IN_XDG"
+  mkdir -p "$IN_BIN" "$IN_GH" "$IN_BREW" "$IN_PACMAN" "$IN_WINGET" "$IN_SCOOP" "$IN_MISE" \
+    "$IN_TOOLS_BIN" "$IN_XDG"
   for it_tool in $IN_TOOLS; do
     it_path=$(command -v "$it_tool") && wrap_tool "$it_path" "$IN_BIN/$it_tool"
   done
@@ -174,6 +178,31 @@ EOF
 #!/bin/sh
 printf 'sudo %s\n' "$*" >> "$IN_LOG"
 exec "$@"
+EOF
+  # winget installs the mise fake into its package folder below LOCALAPPDATA (a POSIX
+  # path here; the cygpath stand-in keeps it), off PATH as on Windows; it fails with
+  # IN_WINGET_FAIL=1 and installs elsewhere with IN_WINGET_ELSEWHERE=1. scoop installs
+  # it into $IN_STATE/bin, which its shims stand for.
+  in_fake "$IN_WINGET/winget" <<'EOF'
+#!/bin/sh
+printf 'winget %s\n' "$*" >> "$IN_LOG"
+[ "${IN_WINGET_FAIL:-}" != 1 ] || exit 1
+if [ "$*" = "install jdx.mise" ]; then
+  if [ "${IN_WINGET_ELSEWHERE:-}" = 1 ]; then
+    dir=$LOCALAPPDATA/Programs/mise
+  else
+    dir=$LOCALAPPDATA/Microsoft/WinGet/Packages/jdx.mise_Test/mise/bin
+  fi
+  mkdir -p "$dir"
+  cp "$(dirname "$0")/../mise-bin/mise" "$dir/mise"
+fi
+EOF
+  in_fake "$IN_SCOOP/scoop" <<'EOF'
+#!/bin/sh
+printf 'scoop %s\n' "$*" >> "$IN_LOG"
+if [ "$*" = "install mise" ]; then
+  cp "$(dirname "$0")/../mise-bin/mise" "$IN_STATE/bin/mise"
+fi
 EOF
   for it_tool in just lefthook gitleaks; do
     printf '%s\n' '#!/bin/sh' | in_fake "$IN_TOOLS_BIN/$it_tool"
@@ -496,16 +525,89 @@ EOF
   mt_os_fakes "$IN_WIN"
   rm -f "$IN_WIN/uname"
 
-  # Windows (Git Bash) with brew on PATH: no package manager, the way by hand, F-067.
+  # Windows (Git Bash) with brew on PATH, without winget and scoop: the ways by hand.
   in_new windows
   in_config
   in_run windows PATH="$IN_PKG:$IN_BREW:$IN_BIN:$IN_WIN" IN_UNAME_S=MINGW64_NT-10.0-19045
   check "install: Windows runs through" in_status windows 0
+  check "install: Windows without winget and scoop says so" in_says windows "Weder winget noch scoop"
   check "install: Windows names winget" in_says windows "winget install jdx.mise"
   check "install: Windows names scoop" in_says windows "scoop install mise"
-  check "install: Windows points to F-067" in_says windows "F-067"
   refute "install: Windows offers no brew" in_calls_like windows '^brew'
   refute "install: Windows asks nothing about brew" in_says windows "brew install mise"
+  check "install: Windows without mise, mise is open" \
+    in_says windows "Offen: mise just lefthook gitleaks"
+
+  # Windows with winget: mise lands in winget's package folder, off PATH; the installer
+  # finds it there in the same run and goes on with mise use -g.
+  in_new win-winget
+  in_config
+  in_input win-winget j j
+  in_run win-winget PATH="$IN_PKG:$IN_WINGET:$IN_SCOOP:$IN_BIN:$IN_WIN" \
+    IN_UNAME_S=MINGW64_NT-10.0-19045 LOCALAPPDATA="$TMP/in/win-winget/local"
+  check "install: Windows with winget runs through" in_status win-winget 0
+  check "install: Windows offers and runs winget install jdx.mise" \
+    in_called win-winget "winget install jdx.mise"
+  refute "install: Windows with winget does not use scoop" in_calls_like win-winget '^scoop'
+  check "install: after winget, mise use -g in the same run" \
+    in_called win-winget "mise use -g just lefthook gitleaks"
+  refute "install: after winget, nothing open" in_says win-winget "Offen:"
+  check "install: after winget, step 6 runs" in_says win-winget "mise in jeder Shell"
+  in_new win-winget-no
+  in_config
+  in_run win-winget-no PATH="$IN_PKG:$IN_WINGET:$IN_BIN:$IN_WIN" \
+    IN_UNAME_S=MINGW64_NT-10.0-19045 LOCALAPPDATA="$TMP/in/win-winget-no/local"
+  refute "install: declined winget installs nothing" in_calls_like win-winget-no '^winget'
+  check "install: declined winget gets the way by hand" \
+    in_says win-winget-no "übersprungen — von Hand: winget install jdx.mise"
+  check "install: declined winget, mise is open" \
+    in_says win-winget-no "Offen: mise just lefthook gitleaks"
+  in_new win-winget-fail
+  in_config
+  in_input win-winget-fail j
+  in_run win-winget-fail PATH="$IN_PKG:$IN_WINGET:$IN_BIN:$IN_WIN" \
+    IN_UNAME_S=MINGW64_NT-10.0-19045 LOCALAPPDATA="$TMP/in/win-winget-fail/local" \
+    IN_WINGET_FAIL=1
+  check "install: a failed winget still runs through" in_status win-winget-fail 0
+  check "install: a failed winget is named" \
+    in_says win-winget-fail "winget install jdx.mise ist gescheitert"
+  check "install: after a failed winget, mise is open" \
+    in_says win-winget-fail "Offen: mise just lefthook gitleaks"
+  in_new win-winget-elsewhere
+  in_config
+  in_input win-winget-elsewhere j
+  in_run win-winget-elsewhere PATH="$IN_PKG:$IN_WINGET:$IN_BIN:$IN_WIN" \
+    IN_UNAME_S=MINGW64_NT-10.0-19045 LOCALAPPDATA="$TMP/in/win-winget-elsewhere/local" \
+    IN_WINGET_ELSEWHERE=1
+  check "install: mise not in winget's package folder — restart and run again" \
+    in_says win-winget-elsewhere "Git Bash neu starten, dann erneut ausführen"
+  check "install: mise not in winget's package folder, mise is open" \
+    in_says win-winget-elsewhere "Offen: mise just lefthook gitleaks"
+  # Installed by winget before, the shell not restarted since: found, not offered again.
+  in_new win-winget-before
+  in_config
+  in_win_pkg=$TMP/in/win-winget-before/local/Microsoft/WinGet/Packages/jdx.mise_Test/mise/bin
+  mkdir -p "$in_win_pkg"
+  cp "$IN_MISE/mise" "$in_win_pkg/mise"
+  in_run win-winget-before PATH="$IN_PKG:$IN_WINGET:$IN_TOOLS_BIN:$IN_BIN:$IN_WIN" \
+    IN_UNAME_S=MINGW64_NT-10.0-19045 LOCALAPPDATA="$TMP/in/win-winget-before/local"
+  check "install: mise from an earlier winget run is found" \
+    in_says win-winget-before "mise liegt im Paketordner von winget"
+  refute "install: mise from an earlier winget run is not installed again" \
+    in_calls_like win-winget-before '^winget'
+  refute "install: mise from an earlier winget run, nothing open" \
+    in_says win-winget-before "Offen:"
+
+  # Windows without winget, with scoop: scoop install mise.
+  in_new win-scoop
+  in_config
+  in_input win-scoop j
+  in_run win-scoop PATH="$IN_PKG:$IN_SCOOP:$IN_TOOLS_BIN:$IN_BIN:$IN_WIN" \
+    IN_UNAME_S=MINGW64_NT-10.0-19045 LOCALAPPDATA="$TMP/in/win-scoop/local"
+  check "install: Windows with scoop runs through" in_status win-scoop 0
+  check "install: Windows offers and runs scoop install mise" \
+    in_called win-scoop "scoop install mise"
+  check "install: after scoop, mise is installed" in_says win-scoop "mise installiert"
 
   # Windows with mise (step 6): the shims below %LOCALAPPDATA%\mise; the stand-in
   # PowerShell logs what set-mise-path hands it to the case's pslog. Declined at the end

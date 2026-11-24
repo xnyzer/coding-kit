@@ -2,7 +2,7 @@
 id: F-067
 title: Installer unter Windows in Git Bash lauffähig machen
 type: feature
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-11-22
 done:
@@ -57,13 +57,17 @@ Plugin-Hooks. Den Vorschlag des Projekte-Ordners behandelt F-096.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben Windows ohne mise, aber mit winget, wenn der Nutzer in Schritt 5
+- [x] AC-1 — Gegeben Windows ohne mise, aber mit winget, wenn der Nutzer in Schritt 5
   zustimmt, dann läuft `winget install jdx.mise`, der Installer findet mise im selben
   Lauf im Paketordner von winget und macht mit `mise use -g` und Schritt 6 weiter;
-  lehnt der Nutzer ab, nennt er den Weg von Hand, und mise bleibt offen.
-- [ ] AC-2 — Gegeben Windows ohne mise und ohne winget, aber mit scoop, wenn der Nutzer
+  lehnt der Nutzer ab, nennt er den Weg von Hand, und mise bleibt offen. — belegt:
+  Installer-Fälle win-winget (winget install, mise im Paketordner gefunden, mise use -g
+  im selben Lauf, nichts offen, Schritt 6 läuft) und win-winget-no (abgelehnt: kein
+  Aufruf, Weg von Hand, mise offen)
+- [x] AC-2 — Gegeben Windows ohne mise und ohne winget, aber mit scoop, wenn der Nutzer
   zustimmt, dann läuft `scoop install mise`; ohne beide nennt der Installer beide Wege
-  von Hand und installiert nichts.
+  von Hand und installiert nichts. — belegt: Installer-Fälle win-scoop (scoop install
+  mise) und windows (weder winget noch scoop: beide Wege von Hand, nichts installiert)
 - [ ] AC-3 — Gegeben Windows und keine Personal-Config, wenn der Installer sie anlegt,
   dann steht der Projekte-Ordner in der Form `C:/Users/…`, und die Meldung behauptet
   kein `chmod 600`, sondern nennt den Schutz über das Benutzerprofil; auf macOS und
@@ -209,3 +213,30 @@ keine Dependency. Keine neue Config, keine Endpunkte.
   frischem Test-Home (`HOME`, `CLAUDE_CONFIG_DIR`) in Git Bash.
 - CHANGELOG ergänzen.
 - Erfüllt AC-5, AC-8.
+
+## Verlauf
+
+### F-067a — fertig 2026-11-24
+
+**Umgesetzt:** `install.sh` erkennt die Plattform jetzt am Anfang (`PLATFORM`).
+`offer_mise` bietet unter Windows `winget install jdx.mise` an, ohne winget
+`scoop install mise`, sonst beide Wege von Hand. `find_winget_mise` sucht mise im
+Paketordner von winget unter `LOCALAPPDATA` und stellt ihn für den Rest des Laufs vorn
+in den PATH — vor dem Angebot (von einem früheren Lauf installiert, Shell nicht neu
+gestartet) und nach der Installation. Die Installer-Tests haben Attrappen für winget
+und scoop; die README nennt beide Wege.
+
+**Entscheidungen:**
+- `offer_install` meldet jetzt, ob die Installation lief; die Aufrufe mit brew und
+  pacman nehmen das mit `|| true` hin (das Skript läuft mit `set -e`).
+- mise wird vor dem Angebot im Paketordner gesucht, damit ein früherer winget-Lauf nicht
+  zu einer zweiten Installation führt.
+- Keine neue Version und kein CHANGELOG-Eintrag: Die Versionsregel zählt nur
+  `plugins/coding-kit/{skills,hooks,scripts,template,global}` zum Plugin, der
+  Installer im Repo-Root gehört nicht dazu (wie bei F-025b). Das unabhängige Review
+  verlangte beides mit Verweis auf den Plan — verworfen aus diesem Grund.
+
+**Abweichung vom Plan:** Der Plan sah „CHANGELOG mit neuer Version“ vor; entfällt, siehe
+Entscheidungen.
+
+**Funde:** keine.
