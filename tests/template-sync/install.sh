@@ -229,6 +229,11 @@ EOF
   check "install: gh ready asks no other address" in_value ready EMAIL_AZURE "(unset)"
   check "install: default projects folder below Documents" \
     in_value ready PROJECTS_DIR "$TMP/in/ready/test-home/Documents/Coding-Projects"
+  check "install: off Windows the config is reported as chmod 600" \
+    in_says ready "angelegt (chmod 600)"
+  # Input from a file echoes no Enter: each question ends its own line.
+  check "install: a question ends its line without a terminal" \
+    grep -q 'Git-Host neuer Projekte (github | azure | git) \[github\]: $' "$TMP/in/ready.out"
   check_owner_only "install: the personal config is owner-only" "$(in_env ready)"
   check "install: set-global adds the comment of the kit rules" \
     grep -q '^CODING_KIT_DEFAULT_HOST="github"  # ' "$(in_env ready)"
@@ -678,9 +683,46 @@ EOF
   in_config
   in_run wsl IN_UNAME_S=Linux IN_UNAME_R=5.15.153-microsoft-standard-WSL2
   check "install: WSL is named" in_says wsl "WSL erkannt"
+  check "install: WSL points to Git Bash for Claude Code on Windows" \
+    in_says wsl "für Claude Code unter Windows den Installer in Git Bash ausführen"
   check "install: WSL is treated as Linux" in_says wsl "curl https://mise.run | sh"
   in_new linux-not-wsl
   in_config
   in_run linux-not-wsl IN_UNAME_S=Linux IN_UNAME_R=6.8.0-45-generic
   refute "install: plain Linux is not WSL" in_says linux-not-wsl "WSL erkannt"
+
+  # Windows, a new personal config: the projects folder in the form C:/… (the drive X: of
+  # the cygpath stand-in is the case folder), the message without chmod 600. The bash of
+  # the run lies outside C:\Program Files\Git here, so the Git Bash hint comes.
+  in_new win-config
+  : > "$TMP/in/win-config/state/logged-in"
+  in_run win-config PATH="$IN_GH:$IN_BIN:$IN_WIN" IN_UNAME_S=MINGW64_NT-10.0-19045 \
+    MT_DRIVE="$TMP/in/win-config"
+  check "install: Windows, a new config runs through" in_status win-config 0
+  check "install: Windows, the projects folder in the form C:/…" \
+    in_value win-config PROJECTS_DIR "X:/test-home/Coding-Projects"
+  check "install: Windows, the projects folder is offered in that form" \
+    in_says win-config "Projekte-Verzeichnis [X:/test-home/Coding-Projects]"
+  refute "install: Windows, no chmod 600 in the message" in_says win-config "chmod 600"
+  check "install: Windows, the message names the user profile" \
+    in_says win-config "geschützt durch die Rechte deines Benutzerprofils"
+  check "install: Windows, Git Bash outside the standard folder is named" \
+    in_says win-config '"CLAUDE_CODE_GIT_BASH_PATH": "'
+  # The hint stays away when the variable is set, in the environment or in settings.json.
+  in_new win-gitbash-env
+  in_config
+  in_run win-gitbash-env PATH="$IN_BIN:$IN_WIN" IN_UNAME_S=MINGW64_NT-10.0-19045 \
+    CLAUDE_CODE_GIT_BASH_PATH='D:\Git\bin\bash.exe'
+  check "install: Windows with CLAUDE_CODE_GIT_BASH_PATH set runs through" \
+    in_status win-gitbash-env 0
+  refute "install: Windows, the variable in the environment — no hint" \
+    in_says win-gitbash-env "Die Git Bash liegt nicht unter"
+  in_new win-gitbash-settings
+  in_config
+  printf '%s\n' '{' '  "env": { "CLAUDE_CODE_GIT_BASH_PATH": "D:\\Git\\bin\\bash.exe" }' '}' \
+    > "$IN_HOME/.claude/settings.json"
+  in_run win-gitbash-settings PATH="$IN_BIN:$IN_WIN" IN_UNAME_S=MINGW64_NT-10.0-19045
+  refute "install: Windows, the variable in settings.json — no hint" \
+    in_says win-gitbash-settings "Die Git Bash liegt nicht unter"
+  refute "install: the Git Bash hint stays off Windows" in_says ready "Die Git Bash liegt nicht unter"
 }

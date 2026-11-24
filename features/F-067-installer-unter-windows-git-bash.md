@@ -68,23 +68,32 @@ Plugin-Hooks. Den Vorschlag des Projekte-Ordners behandelt F-096.
   zustimmt, dann läuft `scoop install mise`; ohne beide nennt der Installer beide Wege
   von Hand und installiert nichts. — belegt: Installer-Fälle win-scoop (scoop install
   mise) und windows (weder winget noch scoop: beide Wege von Hand, nichts installiert)
-- [ ] AC-3 — Gegeben Windows und keine Personal-Config, wenn der Installer sie anlegt,
+- [x] AC-3 — Gegeben Windows und keine Personal-Config, wenn der Installer sie anlegt,
   dann steht der Projekte-Ordner in der Form `C:/Users/…`, und die Meldung behauptet
   kein `chmod 600`, sondern nennt den Schutz über das Benutzerprofil; auf macOS und
-  Linux bleiben Pfad und Meldung, wie sie sind.
-- [ ] AC-4 — Gegeben Windows, wenn die `bash.exe` des Laufs nicht unter
+  Linux bleiben Pfad und Meldung, wie sie sind. — belegt: Installer-Fall win-config
+  (CODING_KIT_PROJECTS_DIR "X:/test-home/Coding-Projects", Vorschlag schon in dieser
+  Form, Meldung „geschützt durch die Rechte deines Benutzerprofils“, kein chmod 600) und
+  ready (macOS: chmod 600 wie bisher); auf dem Windows-Rechner liefert `cygpath -m`
+  `C:/Users/…`
+- [x] AC-4 — Gegeben Windows, wenn die `bash.exe` des Laufs nicht unter
   `C:\Program Files\Git` liegt und `CLAUDE_CODE_GIT_BASH_PATH` weder in der Umgebung noch
   in der `settings.json` steht, dann nennt der Installer ihren Pfad und den Eintrag für
   `env` in der `settings.json`; sonst sagt er dazu nichts. Er schreibt die `settings.json`
-  nicht.
+  nicht. — belegt: Installer-Fälle win-config (bash außerhalb des Standardordners:
+  Hinweis mit Eintrag für env), win-gitbash-env und win-gitbash-settings (Variable
+  gesetzt: kein Hinweis), ready (kein Hinweis außerhalb von Windows); auf dem
+  Windows-Rechner kein Hinweis (Git am Standardort)
 - [ ] AC-5 — Gegeben Windows, ein Terminal als Eingabe und der Installer als erste Shell
   seines Fensters (`SHLVL` 1), wenn der Lauf endet — fertig oder abgebrochen —, dann
   wartet er auf Enter, bevor sich das Fenster schließt; in jedem anderen Fall wartet er
   nicht.
-- [ ] AC-6 — Gegeben eine Eingabe, die kein Terminal ist (Pipe, Datei), wenn der
+- [x] AC-6 — Gegeben eine Eingabe, die kein Terminal ist (Pipe, Datei), wenn der
   Installer fragt, dann endet jede Frage mit einem Zeilenumbruch — auf allen Systemen.
-- [ ] AC-7 — Gegeben WSL, wenn der Installer startet, dann sagt die Warnung zusätzlich,
-  dass für Claude Code unter Windows der Installer in Git Bash laufen muss.
+  — belegt: Installer-Fall „a question ends its line without a terminal“
+- [x] AC-7 — Gegeben WSL, wenn der Installer startet, dann sagt die Warnung zusätzlich,
+  dass für Claude Code unter Windows der Installer in Git Bash laufen muss. — belegt:
+  Installer-Fall wsl prüft den Hinweis auf Git Bash
 - [ ] AC-8 — Gegeben der Windows-Rechner und ein frisches Test-Home
   (`HOME`, `CLAUDE_CONFIG_DIR`), wenn der Installer in Git Bash ganz durchläuft, dann
   endet er ohne Fehler, mit Personal-Config, Plugin und Toolchain.
@@ -238,5 +247,30 @@ und scoop; die README nennt beide Wege.
 
 **Abweichung vom Plan:** Der Plan sah „CHANGELOG mit neuer Version“ vor; entfällt, siehe
 Entscheidungen.
+
+**Funde:** keine.
+
+### F-067b — fertig 2026-11-24
+
+**Umgesetzt:** `config_path` wandelt unter Windows den Projekte-Ordner per
+`cygpath -m` in die Form `C:/…`, für den Vorschlag wie für die Antwort; die Meldung
+nach dem Anlegen nennt dort die Rechte des Benutzerprofils statt `chmod 600`. Schritt 1
+nennt unter Windows `CLAUDE_CODE_GIT_BASH_PATH` samt Eintrag für `env`, wenn `$BASH`
+nicht unter `C:\Program Files\Git` liegt und die Variable weder in der Umgebung noch in
+der `settings.json` steht. `end_question` schließt jede Frage mit einem Zeilenumbruch
+ab, wenn die Eingabe kein Terminal ist; die WSL-Warnung verweist auf Git Bash. Die
+Attrappe `cygpath` kann jetzt auch `-m`; README und Kopfkommentar von `install.sh`
+nennen die Windows-Teile.
+
+**Entscheidungen:**
+- Die Meldung sagt „geschützt durch die Rechte deines Benutzerprofils“, nicht „nur für
+  dein Konto lesbar“ — SYSTEM und Administratoren dürfen auf das Profil ebenfalls zu.
+- Der Pfad im Hinweis auf die Git Bash steht mit verdoppelten Backslashes, damit er sich
+  so in die JSON-Datei übernehmen lässt.
+- Keine neue Version und kein CHANGELOG-Eintrag, wie bei F-067a: Installer und Tests
+  sind kein Inhalt des Plugins.
+
+**Abweichung vom Plan:** Der Plan sah „CHANGELOG ergänzen“ vor; entfällt wie bei
+F-067a. Dazu kam ein Satz im Windows-Abschnitt der README.
 
 **Funde:** keine.

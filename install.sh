@@ -4,11 +4,13 @@
 # What it does (each step checks state first, nothing runs twice):
 #   1. Preconditions: claude must be installed. gh decides whether the run uses GitHub:
 #      ready, logged out (offers gh auth login) or missing; without GitHub the run goes
-#      on only after a confirmation.
+#      on only after a confirmation. On Windows it names CLAUDE_CODE_GIT_BASH_PATH for
+#      settings.json when Git Bash lies outside C:\Program Files\Git (never writes it).
 #   2. Adds the xnyzer marketplace and installs the coding-kit plugin.
 #   3. Creates the personal config ~/.claude/coding-kit.env — prefilled via gh api, or
 #      asked for without GitHub; host and commit addresses go through template-sync.sh
-#      set-global.
+#      set-global. On Windows the projects folder is stored as C:/…, and the report
+#      names the user profile instead of chmod 600.
 #   4. Reports the kit's global rules; it never writes them or ~/.claude/CLAUDE.md —
 #      setting them up is /coding-kit:update-conventions global in a Claude session.
 #   5. Checks the base toolchain (mise, just, lefthook, gitleaks) outside any project
@@ -16,6 +18,7 @@
 #      or scoop; after winget it finds mise in winget's package folder in the same run),
 #      else names the way by hand (unknown systems: by hand only); then offers just,
 #      lefthook and gitleaks through mise use -g. A closing line names what is open.
+#      Under WSL it warns that Claude Code on Windows needs the run in Git Bash.
 #   6. Checks that the mise shims reach every shell (template-sync.sh mise-check); offers
 #      the activation line for the end of the shell's startup file (Windows: offers to
 #      put the shims first in the user PATH, template-sync.sh set-mise-path).
@@ -44,10 +47,17 @@ fail() { printf '    \033[31m✗\033[0m %s\n' "$*"; exit 1; }
 
 # Questions go to stdout with printf, not `read -p`: read prints its prompt only when the
 # input is a terminal.
+
+# end_question — after an answer: a terminal echoes the Enter, input from a pipe or file
+# does not, so the next output would join the question's line.
+end_question() {
+  [ -t 0 ] || echo
+}
 ask_yes_no() { # $1 question, $2 default (j/n)
   local answer="" default="${2:-n}"
   printf '    %s [%s] ' "$1" "$([ "$default" = j ] && echo "J/n" || echo "j/N")"
   read -r answer || true
+  end_question
   answer="${answer:-$default}"
   [[ "$answer" =~ ^[jJyY] ]]
 }
@@ -67,6 +77,7 @@ ask_value() {
       printf '    %s: ' "$question"
     fi
     read -r line || at_end=true
+    end_question
     ANSWER="${line:-$default}"
     if "$check" "$ANSWER"; then
       return 0
@@ -126,6 +137,16 @@ default_projects_dir() {
   printf '%s/Coding-Projects' "${docs:-$HOME}"
 }
 
+# config_path PATH — the path as the personal config holds it: on Windows in the form
+# C:/…, which Git Bash, PowerShell and Windows programs all read; elsewhere unchanged.
+config_path() {
+  if [ "$PLATFORM" = windows ]; then
+    cygpath -m "$1"
+  else
+    printf '%s' "$1"
+  fi
+}
+
 # The platform, for the steps that differ on it.
 case "$(uname -s)" in
   Darwin) PLATFORM=macos ;;
@@ -139,6 +160,23 @@ say "Voraussetzungen prüfen"
 
 command -v claude >/dev/null 2>&1 || fail "claude (Claude Code) fehlt — siehe https://code.claude.com/docs"
 ok "claude installiert ($(claude --version 2>/dev/null | head -1))"
+
+# On Windows Claude Code runs hooks through Git Bash; outside the standard folder it may
+# not find it, and then the hooks fail in PowerShell. CLAUDE_CODE_GIT_BASH_PATH in the env
+# of settings.json names it — only reported here, never written.
+if [ "$PLATFORM" = windows ] && [ -z "${CLAUDE_CODE_GIT_BASH_PATH:-}" ] \
+  && ! grep -qs CLAUDE_CODE_GIT_BASH_PATH "$CONFIG_DIR/settings.json"; then
+  GIT_BASH="$(cygpath -w "$BASH")"
+  GIT_BASH="${GIT_BASH%.exe}.exe"
+  case "$(printf '%s' "$GIT_BASH" | tr '[:upper:]' '[:lower:]')" in
+    'c:\program files\git\'*) ;;
+    *)
+      warn "Die Git Bash liegt nicht unter C:\\Program Files\\Git — findet Claude Code sie" \
+        "nicht, scheitern die Hooks. In $CONFIG_DIR/settings.json unter \"env\" eintragen:" \
+        "\"CLAUDE_CODE_GIT_BASH_PATH\": \"$(printf '%s' "$GIT_BASH" | sed 's/\\/\\\\/g')\""
+      ;;
+  esac
+fi
 
 if ! command -v gh >/dev/null 2>&1; then
   GH_STATE=missing
@@ -261,13 +299,14 @@ else
     [ "$ANSWER" != - ] || ANSWER=""
     EMAIL_ARGS+=("$HOST_KEY=$ANSWER")
   fi
-  ask_value "Projekte-Verzeichnis" "$(default_projects_dir)" config_value
+  ask_value "Projekte-Verzeichnis" "$(config_path "$(default_projects_dir)")" config_value
   PROJECTS_DIR="$ANSWER"
   # Inside quotes the shell never expands a leading ~.
   case "$PROJECTS_DIR" in
     "~") PROJECTS_DIR="$HOME" ;;
     "~/"*) PROJECTS_DIR="$HOME/${PROJECTS_DIR#"~/"}" ;;
   esac
+  PROJECTS_DIR="$(config_path "$PROJECTS_DIR")"
 
   # The keys only the installer writes go into a base file; set-global adds host and
   # addresses with the comments of the kit rules. The result moves into place with
@@ -290,7 +329,12 @@ else
   mkdir -p "$(dirname "$ENV_FILE")"
   (umask 077 && cp "$ENV_WORK/out/coding-kit.env" "$ENV_FILE")
   chmod 600 "$ENV_FILE"
-  ok "angelegt (chmod 600) — Host neuer Projekte: $HOST"
+  if [ "$PLATFORM" = windows ]; then
+    # Git Bash cannot set file modes on NTFS; the rights of the user profile protect it.
+    ok "angelegt (geschützt durch die Rechte deines Benutzerprofils) — Host neuer Projekte: $HOST"
+  else
+    ok "angelegt (chmod 600) — Host neuer Projekte: $HOST"
+  fi
 fi
 
 # --- 4. Global kit rules ------------------------------------------------------
@@ -320,7 +364,8 @@ say "Toolchain (mise, just, lefthook, gitleaks)"
 MISE_DOCS="https://mise.jdx.dev/installing-mise.html"
 # WSL runs a Linux kernel built by Microsoft.
 if [ "$PLATFORM" = linux ] && uname -r | grep -qi microsoft; then
-  warn "WSL erkannt — die Einrichtung gilt nur für ein Claude Code innerhalb von WSL"
+  warn "WSL erkannt — die Einrichtung gilt nur für ein Claude Code innerhalb von WSL;" \
+    "für Claude Code unter Windows den Installer in Git Bash ausführen"
 fi
 
 # missing_tools TOOL… — leaves the tools tool-check does not find in MISSING, reporting

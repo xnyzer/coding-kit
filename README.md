@@ -152,7 +152,10 @@ Frisch installierte Skills sind ggf. erst nach einem Session-Neustart sichtbar.
 > dagegen ins WSL-Home und bleibt für eine native Windows-Installation unsichtbar. mise
 > bietet der Installer dort über `winget install jdx.mise` an, ohne winget über
 > `scoop install mise`; winget setzt den PATH erst für neue Shells, deshalb sucht der
-> Installer mise danach im Paketordner von winget und macht im selben Lauf weiter.
+> Installer mise danach im Paketordner von winget und macht im selben Lauf weiter. Den
+> Projekte-Ordner schreibt er dort in der Form `C:/Users/…` in die Personal-Config — die
+> gilt in Git Bash, PowerShell und für Windows-Programme; liegt die Git Bash nicht unter
+> `C:\Program Files\Git`, nennt er den Eintrag `CLAUDE_CODE_GIT_BASH_PATH` dafür.
 
 ### Ohne GitHub (nur Git)
 

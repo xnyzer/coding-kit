@@ -9,7 +9,8 @@ mt_exe() {  # PATH
 
 # Stand-ins for what the check asks the system, written into DIR: uname names the system
 # from MT_UNAME_S (macOS unless set); cygpath turns Windows paths into POSIX ones (-u, -p
-# for a list) and back (-w), with the drive X: as the folder MT_DRIVE; powershell.exe
+# for a list) and back (-w, -m with forward slashes), with the drive X: as the folder
+# MT_DRIVE; powershell.exe
 # prints the user PATH from MT_USERPATH, or fails with MT_PS=fail — asked to write it
 # (set-mise-path), it appends the folder it got in CODING_KIT_SHIMS to the file
 # MT_PSLOG instead.
@@ -19,14 +20,18 @@ mt_os_fakes() {  # DIR
 #!/bin/sh
 mode=$1
 shift
-if [ "$mode" = -w ]; then
+if [ "$mode" = -w ] || [ "$mode" = -m ]; then
   s=$1
   if [ -n "${MT_DRIVE:-}" ]; then
     case $s in
       "$MT_DRIVE"/*) s="X:${s#"$MT_DRIVE"}" ;;
     esac
   fi
-  printf '%s\n' "$s" | tr / '\\'
+  if [ "$mode" = -w ]; then
+    printf '%s\n' "$s" | tr / '\\'
+  else
+    printf '%s\n' "$s"
+  fi
   exit
 fi
 list=no
