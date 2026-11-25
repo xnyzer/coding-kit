@@ -42,12 +42,12 @@ with its reasons.
 
 ## Recommended order
 
-Stand 2026-11-24.
+Stand 2026-11-25.
 
 1. **[F-098](F-098-skript-tests-gruppen-parallel.md) → [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md)** — Windows-Strang, solange der Windows-Rechner bereitsteht: zuerst
    die schnelleren Skript-Tests, die jeden folgenden Commit hier verkürzen; dann der
    Projekte-Ordner, den der Installer heute unter `Documents` vorschlägt — unter Windows
-   oft ein Sync-Ordner.
+   oft ein Sync-Ordner. F-096c und die Mac-Messung von [F-098](F-098-skript-tests-gruppen-parallel.md) (AC-7) folgen auf dem Mac.
 2. **[F-068](F-068-dokumentmodell-migration-verlustfrei.md)** — die Migration verliert still Inhalt; zuerst der Nachweis, der das Löschen
    der Altdateien sperrt.
 3. **[F-070](F-070-merge-klassen-und-hunk-rueckstellung.md) → [F-071](F-071-erstabgleich-ohne-verlust.md)** — der Merge übernimmt ungesehen, der Erstabgleich verliert
@@ -115,7 +115,7 @@ Stand 2026-11-24.
 | [F-091](F-091-migrationsprotokoll-nach-jedem-abgleich.md) | Migrationsprotokoll und Kit-Vorschläge nach jedem Abgleich schreiben | BACKLOG |  |
 | [F-092](F-092-projekt-mit-template-vergleichen.md) | Projekt jederzeit vollständig mit dem aktuellen Template vergleichen | BACKLOG |  |
 | [F-093](F-093-ssh-remotes-im-privacy-lint-erlauben.md) | Privacy-Lint erlaubt SSH-Remotes öffentlicher Git-Hosts | BACKLOG |  |
-| [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md) | Projekte-Ordner außerhalb synchronisierter Ordner vorschlagen | BACKLOG |  |
+| [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md) | Projekte-Ordner außerhalb synchronisierter Ordner vorschlagen | PLANNED |  |
 | [F-098](F-098-skript-tests-gruppen-parallel.md) | Skript-Tests nach Gruppen auswählen und parallel ausführen | IN-PROGRESS |  |
 
 ### Closed
