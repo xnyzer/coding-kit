@@ -9,22 +9,35 @@
 # script must behave the same in both. Then one more pass under the first shell for each
 # of mawk and gawk that is installed but not the default awk: awk implementations differ
 # (mawk is the default on Debian and Ubuntu, gawk on Fedora and Arch, and the macOS awk
-# accepts more than either). Prints failures only, then a summary that names the shells
-# and awks tested and the checks skipped where the file system has no file modes.
+# accepts more than either). The summary names the shells and awks tested and the checks
+# skipped where the file system has no file modes.
 #
 # The cases come in groups, one file per group (ALL_GROUPS below). Without arguments all
 # groups run; with arguments only the named ones, in the order of ALL_GROUPS.
 # scripts/script-tests.sh picks the groups a change touches.
 #
+# A job is one group under one shell (or under the extra awk). The jobs run in parallel,
+# as many at once as the machine has cores minus one (at least one); TEST_JOBS sets
+# another number. Each finished job prints a progress line; failures follow at the end,
+# ordered by group and shell, then the summary.
+#
 #   sh tests/template-sync/run.sh                 all groups
 #   sh tests/template-sync/run.sh install hook    only these groups
+#   sh tests/template-sync/run.sh --plan [GROUP…] print the jobs and how many run at once
+#   TEST_JOBS=1 sh tests/template-sync/run.sh     one job at a time
 
 set -u
 
-# The groups in the order they run: tests/template-sync/NAME.sh defines run_NAME_cases,
-# with - in NAME as _.
-ALL_GROUPS='render sync zones global hook lock detect features license privacy migrate
-settings host mise release-notes publish-release install selection'
+# The groups in the order their jobs start, the longest first, so that no lane runs alone
+# at the end: tests/template-sync/NAME.sh defines run_NAME_cases, with - in NAME as _.
+ALL_GROUPS='install sync zones render detect global host mise features privacy hook
+settings migrate lock selection runner publish-release license release-notes'
+
+plan=no
+if [ "${1:-}" = --plan ]; then
+  plan=yes
+  shift
+fi
 
 # The groups to run, in the order of ALL_GROUPS: all of them, or those named as arguments.
 # An argument that names no group stops the run before any test.
@@ -48,13 +61,41 @@ for arg in "$@"; do
   done
   if [ "$known" = no ]; then
     printf 'unknown group: %s\n' "$arg" >&2
-    printf 'usage: sh tests/template-sync/run.sh [GROUP…]\n' >&2
+    printf 'usage: sh tests/template-sync/run.sh [--plan] [GROUP…]\n' >&2
     # $ALL_GROUPS unquoted: one line, the names separated by spaces.
     printf 'groups: %s\n' "$(echo $ALL_GROUPS)" >&2
     exit 2
   fi
 done
 partial=$#
+
+# The number of cores, 1 when neither getconf nor nproc can tell.
+count_cores() {
+  cc_n=$(getconf _NPROCESSORS_ONLN 2> /dev/null) || cc_n=
+  case $cc_n in
+    '' | *[!0-9]*) cc_n=$(nproc 2> /dev/null) || cc_n= ;;
+  esac
+  case $cc_n in
+    '' | *[!0-9]* | 0) cc_n=1 ;;
+  esac
+  echo "$cc_n"
+}
+
+# How many jobs may run at once: TEST_JOBS when set, else the cores minus one. Any other
+# value than a number from 1 to 9999 written without leading zero stops the run before
+# any test; the limit keeps the arithmetic far from overflow.
+if [ -n "${TEST_JOBS:-}" ]; then
+  case $TEST_JOBS in
+    *[!0-9]* | 0* | ?????*)
+      printf 'TEST_JOBS must be a number from 1 to 9999 without leading zero, not: %s\n' \
+        "$TEST_JOBS" >&2
+      exit 2 ;;
+  esac
+  slots=$TEST_JOBS
+else
+  slots=$(($(count_cores) - 1))
+  [ "$slots" -ge 1 ] || slots=1
+fi
 
 # The cases build git repositories of their own. In a pre-commit hook git exports the
 # index and directory of the kit repo, which would point their git calls there.
@@ -76,7 +117,7 @@ failures=0
 skipped=0
 SH=
 TMP=
-# Pass name in failure lines: the shell, plus the awk when it is not the default one.
+# Job name in failure lines: group/shell, plus /awk when it is not the default one.
 LABEL=
 
 # --- harness --------------------------------------------------------------------
@@ -319,15 +360,6 @@ if [ -z "$shells" ]; then
   exit 1
 fi
 
-# The cases of the selected groups with $SH, their files below DIR.
-run_cases() {  # DIR
-  TMP=$1
-  mkdir -p "$TMP"
-  for rc_group in $selected; do
-    "run_$(printf '%s' "$rc_group" | tr - _)_cases"
-  done
-}
-
 # The awk implementation behind COMMAND: mawk or gawk by their -W version line, "other"
 # for anything else (the macOS awk prints no version there).
 awk_kind() {  # COMMAND
@@ -339,38 +371,160 @@ awk_kind() {  # COMMAND
   esac
 }
 
-for SH in $shells; do
-  LABEL=$SH
-  run_cases "$BASE_TMP/$SH"
-done
-
-# One more pass under the first shell for each extra awk, found as `awk` through a wrapper
-# at the front of PATH, so the script and the test helpers both use it.
+# Each extra awk, installed but not the default one, gets jobs under the first shell.
 default_awk=$(awk_kind awk)
 if [ "$default_awk" = other ]; then awks='system awk'; else awks=$default_awk; fi
+extras=
 not_installed=
-first_shell=${shells# }
-first_shell=${first_shell%% *}
 for extra in mawk gawk; do
   [ "$extra" != "$default_awk" ] || continue
-  if ! command -v "$extra" > /dev/null 2>&1; then
+  if command -v "$extra" > /dev/null 2>&1; then
+    extras="$extras $extra"
+    awks="$awks, $extra"
+  else
     not_installed="$not_installed $extra"
-    continue
   fi
+done
+first_shell=${shells# }
+first_shell=${first_shell%% *}
+
+# The jobs, one per line in $BASE_TMP/jobs: GROUP SHELL AWK, with - for the default awk.
+: > "$BASE_TMP/jobs"
+n_jobs=0
+for group in $selected; do
+  for s in $shells; do
+    echo "$group $s -" >> "$BASE_TMP/jobs"
+    n_jobs=$((n_jobs + 1))
+  done
+  for extra in $extras; do
+    echo "$group $first_shell $extra" >> "$BASE_TMP/jobs"
+    n_jobs=$((n_jobs + 1))
+  done
+done
+lanes=$slots
+[ "$lanes" -le "$n_jobs" ] || lanes=$n_jobs
+
+job_label() {  # GROUP SHELL AWK
+  if [ "$3" = - ]; then echo "$1/$2"; else echo "$1/$2/$3"; fi
+}
+
+if [ "$plan" = yes ]; then
+  printf 'jobs: %d, at once: %d\n' "$n_jobs" "$lanes"
+  while read -r p_group p_shell p_awk; do
+    job_label "$p_group" "$p_shell" "$p_awk"
+  done < "$BASE_TMP/jobs"
+  exit 0
+fi
+
+# An extra awk is found as `awk` through a wrapper at the front of PATH, so the script and
+# the test helpers both use it.
+for extra in $extras; do
   mkdir -p "$BASE_TMP/bin-$extra"
   wrap_tool "$(command -v "$extra")" "$BASE_TMP/bin-$extra/awk"
-  saved_path=$PATH
-  PATH=$BASE_TMP/bin-$extra:$PATH
-  export PATH
-  SH=$first_shell
-  LABEL=$first_shell/$extra
-  run_cases "$BASE_TMP/$extra"
-  PATH=$saved_path
-  export PATH
-  awks="$awks, $extra"
 done
 
-summary="shells:$shells; awk: $awks"
+# Per job NUMBER: claim/NUMBER (taken by one lane), out/NUMBER (its output), result/NUMBER
+# ("checks failures skipped", written only when the job got to the end), done/NUMBER;
+# pid/LANE is the job a lane runs right now.
+mkdir "$BASE_TMP/claim" "$BASE_TMP/out" "$BASE_TMP/result" "$BASE_TMP/done" \
+  "$BASE_TMP/pid"
+
+# The cases of GROUP with SHELL (and AWK), files below their own folder. Runs in a
+# subshell: the counters, PATH and TMP stay the job's own. Stopped (SIGTERM), it ends after
+# the command it runs, so nothing is left running.
+run_job() {  # NUMBER GROUP SHELL AWK
+  trap 'exit 143' TERM
+  SH=$3
+  LABEL=$(job_label "$2" "$3" "$4")
+  if [ "$4" != - ]; then
+    PATH=$BASE_TMP/bin-$4:$PATH
+    export PATH
+  fi
+  TMP=$BASE_TMP/job-$1
+  mkdir -p "$TMP"
+  "run_$(printf '%s' "$2" | tr - _)_cases"
+  printf '%d %d %d\n' "$checks" "$failures" "$skipped" > "$BASE_TMP/result/$1"
+}
+
+# A lane takes the next job nobody claimed (mkdir succeeds once), runs it, prints a
+# progress line, and goes on until no job is left or the run is stopped.
+run_lane() {  # LANE
+  rl_lane=$1
+  rl_i=0
+  while [ "$rl_i" -lt "$n_jobs" ]; do
+    rl_i=$((rl_i + 1))
+    [ ! -f "$BASE_TMP/stop" ] || return 0
+    mkdir "$BASE_TMP/claim/$rl_i" 2> /dev/null || continue
+    rl_spec=$(sed -n "${rl_i}p" "$BASE_TMP/jobs")
+    # $rl_spec unquoted: three words without spaces or patterns.
+    (run_job "$rl_i" $rl_spec) > "$BASE_TMP/out/$rl_i" 2>&1 &
+    rl_pid=$!
+    echo "$rl_pid" > "$BASE_TMP/pid/$rl_lane"
+    # A stop that came after the check above but before the pid file: stop the job here.
+    [ ! -f "$BASE_TMP/stop" ] || kill "$rl_pid" 2> /dev/null
+    wait "$rl_pid"
+    # The job is gone; a stop must not kill its pid, which the system may give away again.
+    rm -f "$BASE_TMP/pid/$rl_lane"
+    [ ! -f "$BASE_TMP/stop" ] || return 0
+    : > "$BASE_TMP/done/$rl_i"
+    if [ -f "$BASE_TMP/result/$rl_i" ]; then
+      read -r rl_checks rl_failures rl_skipped < "$BASE_TMP/result/$rl_i"
+      if [ "$rl_failures" -eq 0 ]; then rl_state=ok; else rl_state="$rl_failures failed"; fi
+    else
+      rl_state="ended without a result"
+    fi
+    rl_done=$(ls "$BASE_TMP/done" | wc -l)
+    # $rl_spec unquoted again; $rl_done may carry the blanks of wc.
+    printf '%s %s — %d of %d\n' "$(job_label $rl_spec)" "$rl_state" $rl_done "$n_jobs"
+  done
+}
+
+# Ctrl+C or a stop. Background jobs ignore SIGINT in a script, so they are told by hand:
+# the stop file keeps the lanes from starting another job, SIGTERM ends each running job
+# after its current command. Then the run waits for all of them, and the EXIT trap clears
+# the temp folder with nothing left writing to it.
+stop_lanes() {
+  trap '' INT TERM HUP
+  printf 'template-sync tests: stopping after the commands running now\n' >&2
+  : > "$BASE_TMP/stop"
+  for sl_file in "$BASE_TMP"/pid/*; do
+    [ -f "$sl_file" ] && kill "$(cat "$sl_file")" 2> /dev/null
+  done
+  wait
+  exit 130
+}
+
+trap stop_lanes INT TERM HUP
+lane=0
+while [ "$lane" -lt "$lanes" ]; do
+  lane=$((lane + 1))
+  run_lane "$lane" &
+done
+wait
+trap - INT TERM HUP
+
+# The output of each job in the order of the jobs, then the totals. A job without a
+# result line ended early (it crashed or exited) and counts as a failure.
+checks=0
+failures=0
+skipped=0
+n=0
+while read -r t_group t_shell t_awk; do
+  n=$((n + 1))
+  cat "$BASE_TMP/out/$n"
+  if [ -f "$BASE_TMP/result/$n" ]; then
+    read -r t_checks t_failures t_skipped < "$BASE_TMP/result/$n"
+    checks=$((checks + t_checks))
+    failures=$((failures + t_failures))
+    skipped=$((skipped + t_skipped))
+  else
+    failures=$((failures + 1))
+    printf 'FAIL [%s] the job ended without a result\n' \
+      "$(job_label "$t_group" "$t_shell" "$t_awk")"
+  fi
+done < "$BASE_TMP/jobs"
+
+summary="shells:$shells; awk: $awks; $n_jobs jobs, $lanes at once"
 if [ "$partial" -gt 0 ]; then summary="groups:$selected; $summary"; fi
 if [ -n "$not_installed" ]; then summary="$summary; not installed:$not_installed"; fi
 if [ "$skipped" -gt 0 ]; then summary="$summary; $skipped skipped (no file modes)"; fi

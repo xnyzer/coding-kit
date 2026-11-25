@@ -26,7 +26,8 @@ features-index:
 validate:
     uv run --with pyyaml python scripts/validate.py
 
-# Tests of the plugin scripts under dash and bash, plus mawk and gawk when installed
+# Tests of the plugin scripts under dash and bash, plus mawk and gawk when installed, in
+# parallel on the cores minus one (TEST_JOBS=1: one job at a time)
 test:
     sh tests/template-sync/run.sh
 

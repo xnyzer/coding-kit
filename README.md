@@ -587,6 +587,10 @@ private/                          Gitignoriert — private Notizen/Quellen
   Die Zuordnung steht in `scripts/script-tests.sh`, `--list` zeigt die Auswahl;
   `sh tests/template-sync/run.sh GRUPPE…` startet einzelne Gruppen von Hand.
   `just check-all` prüft immer alles und ist das Gate der CI.
+- Die Skript-Tests laufen parallel: je Gruppe und Shell ein Job, so viele gleichzeitig
+  wie der Rechner Kerne hat, minus einen. Je fertigem Job erscheint eine Zeile mit Stand,
+  Fehler stehen gesammelt am Ende. `TEST_JOBS=1` lässt sie nacheinander laufen,
+  `sh tests/template-sync/run.sh --plan` zeigt die Jobs, ohne zu testen.
 - Für Arbeit an `template-sync.sh` mawk installieren (`brew install mawk`), optional
   gawk: Die Skript-Tests laufen dann zusätzlich mit ihnen. mawk ist das Standard-awk auf
   Debian und Ubuntu, gawk auf Fedora und Arch, und das macOS-awk nimmt mehr hin als beide.

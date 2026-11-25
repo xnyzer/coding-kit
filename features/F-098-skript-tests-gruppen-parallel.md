@@ -77,17 +77,26 @@ Windows) auf, beide `DONE`.
   Gruppe eindeutig zugeordnet ist, wenn die Tests starten, dann laufen alle Gruppen.
   — belegt: Testgruppe `selection` (Fälle core, fixtures, runner, self, empty);
   `--list` im Arbeitsstand ergibt `all`
-- [ ] AC-3 — Gegeben ein Rechner mit N Kernen, wenn die Tests laufen, dann laufen
+- [x] AC-3 — Gegeben ein Rechner mit N Kernen, wenn die Tests laufen, dann laufen
   höchstens N−1 Jobs gleichzeitig (mindestens einer); ein Job ist eine Gruppe unter einer
   Shell bzw. einem zusätzlichen awk. `TEST_JOBS` setzt die Zahl anders; ein Wert, der
   keine positive ganze Zahl ist, bricht mit einer Meldung ab, bevor ein Test läuft.
-- [ ] AC-4 — Gegeben derselbe Stand, wenn die Tests parallel laufen, dann stimmen die
+  — belegt: Testgruppe `runner` (Kernzahl als Attrappe: 8 → 7, 1 → 1, nproc-Fallback,
+  ohne Kernzahl → 1; `TEST_JOBS` 5, 1, mehr als Jobs; abgelehnt 0, 07, abc, -2, 10000,
+  „3 4“ mit Exit 2 vor dem ersten Job)
+- [x] AC-4 — Gegeben derselbe Stand, wenn die Tests parallel laufen, dann stimmen die
   Zahlen der Checks, Fehler und übersprungenen Checks mit einem Lauf mit `TEST_JOBS=1`
   überein, der Exit-Code ist bei einem Fehler nicht 0, und jede Fehlerzeile nennt Shell
   (ggf. awk) und Gruppe.
-- [ ] AC-5 — Gegeben ein laufender Testlauf, wenn ein Job fertig ist, dann erscheint
+  — belegt: global, lock und license mit `TEST_JOBS=1` und parallel, je 508 Checks,
+  0 Fehler, 2 übersprungen; Probelauf mit scheiterndem Check und abbrechendem Job: Exit 1,
+  Fehlerzeilen `FAIL [license/dash] …`, `FAIL [release-notes/bash] the job ended without
+  a result`
+- [x] AC-5 — Gegeben ein laufender Testlauf, wenn ein Job fertig ist, dann erscheint
   eine Zeile mit Gruppe, Shell und Stand („k von n“); Fehlerzeilen erscheinen erst am
   Ende, geordnet nach Gruppe und Shell, danach die Zusammenfassung wie heute.
+  — belegt: Gesamtlauf unter Windows („install/bash ok — 38 of 38“, Fehlerzeilen danach,
+  dann die Zusammenfassung)
 - [ ] AC-6 — Gegeben `just check-all` bzw. die CI, wenn sie laufen, dann laufen alle
   Gruppen, ebenfalls parallel.
 - [ ] AC-7 — Gegeben der Windows-Rechner und eine Änderung nur an `install.sh`, wenn
@@ -251,3 +260,51 @@ Keine Version und kein CHANGELOG-Eintrag (kein Plugin-Inhalt).
   `lefthook.yml` beschrieb noch „alles oder nichts“ und ist angepasst.
 - **Funde:** Unter Windows schreibt der memory-dir-Fall in `settings.sh` „fatal: cannot
   change to …“ auf stderr, ohne zu scheitern (bekannt aus F-067c); keine neue Aufgabe.
+
+### F-098b — fertig 2026-11-25
+
+- **Umgesetzt:** `tests/template-sync/run.sh` schreibt je Gruppe und Shell (und je
+  zusätzlichem awk) einen Job in eine Liste. Es startet so viele Bahnen, wie Jobs
+  gleichzeitig laufen dürfen: Kerne minus eins aus `getconf`, sonst `nproc`, sonst 1,
+  oder `TEST_JOBS`, höchstens so viele wie Jobs. Jede Bahn holt sich den nächsten freien
+  Job per `mkdir`. Er läuft in einer Subshell mit eigenem `$TMP` und eigener
+  Ausgabedatei und schreibt am Ende eine Ergebniszeile; fehlt sie, zählt der Job als
+  Fehler (EC-2). Je fertigem Job erscheint eine Fortschrittszeile. Danach folgen die
+  Ausgaben in fester Reihenfolge und die Summen. Ohne Kernzahl läuft ein Job zurzeit
+  (EC-1). `--plan` nennt die Jobs, ohne zu testen. Bei Strg+C hält eine Stop-Datei die
+  Bahnen an, und die laufenden Jobs enden nach ihrem aktuellen Befehl. Danach räumt der
+  Lauf den Temp-Ordner auf (EC-4: Exit 130, kein Prozess übrig, Temp-Ordner leer). Neue
+  Testgruppe `runner`; Doku in README und `justfile`.
+- **Entscheidungen:**
+  - Parallel bringt auch unter Windows viel: Ein Gesamtlauf braucht 1841 s statt rund
+    4800 s, also 2,6-mal schneller. Die Annahme in der Spezifikation („parallele Forks
+    laufen faktisch nacheinander“) gilt für einzelne Fork-Schleifen, nicht für die
+    Testgruppen.
+  - `TEST_JOBS` nimmt 1 bis 9999 ohne führende Null. Die Grenze hält die Rechnung fern
+    von einem Überlauf, und die Meldung nennt sie.
+- **Messung (Windows, 20 Kerne, 19 gleichzeitig):**
+  - Gesamtlauf: 38 Jobs, 3054 Checks, 1841 s.
+  - global, lock und license: 213 s parallel, 416 s mit `TEST_JOBS=1`.
+  - Drei kleine Gruppen: 33,5 s statt 66 s.
+  - install/bash endet als letzter Job; die längste Gruppe bestimmt die Dauer des
+    Gesamtlaufs.
+- **Abweichung vom Plan:**
+  - Die Gruppen starten in der Reihenfolge ihrer gemessenen Dauer, die längste zuerst.
+  - Die Fortschrittszeile ist englisch wie alle Ausgaben der Tests: „install/dash ok —
+    12 of 38“ statt „fertig — 12 von 34“.
+  - Der Abbruch lief zuerst über ein hartes Beenden. Danach liefen Befehle verwaister
+    Jobs weiter und legten Ordner im gelöschten Temp-Ordner an. Jetzt gibt es die
+    Stop-Datei, Jobs enden mit SIGTERM nach dem aktuellen Befehl, und der Lauf wartet
+    auf sie.
+- **Funde:**
+  - Der host-Fall „stops at TF401019 without waiting“ maß 10 s gegen eine Verbindung,
+    die 20 s offen bleibt. Unter der Last des parallelen Laufs scheiterte er. Jetzt bleibt
+    die Verbindung 60 s offen, und die Grenze liegt bei 40 s; die Gruppe ist grün.
+  - Das unabhängige Review fand zwei Dinge, beide behoben:
+    - Eine Bahn ließ die pid ihres letzten Jobs stehen. Strg+C hätte so einen fremden
+      Prozess treffen können.
+    - Die Meldung zu `TEST_JOBS` nannte die Grenze nicht.
+  - Zu AC-7: Am Viertel gemessen wurde in F-098a gegen den seriellen Gesamtlauf. Gegen
+    den parallelen Gesamtlauf (1841 s) bleibt ein Lauf nur von install darüber, weil
+    install den Gesamtlauf begrenzt. Den install-Lauf aufzuteilen, wäre eine eigene
+    Nummer.

@@ -266,11 +266,14 @@ EOF
   refute "remote-check: the URL is never printed" grep -q 'v3/org' "$TMP/rc5.rc"
   refute "remote-check: git's messages are never printed" grep -q TF401019 "$TMP/rc5.rc"
   refute "remote-check: the user's ssh command stays as it is" grep -q BatchMode "$TMP/rc5.ssh"
+  # The connection stays open 60 s; a check that waits for it takes that long. The limit
+  # leaves room for a machine under load (the test jobs run in parallel), where the forks
+  # of remote-check alone can take more than ten seconds.
   rc_start=$(date +%s)
   check "remote-check: TF401019 on a connection Azure keeps open" \
     rc_is rc16 git@ssh.dev.azure.com:v3/org/proj/r "${RC_AZ}reach\tnot-found\n" "$RC_SSH" \
-    "FAKE_SSH_ERR=$RC_TF" FAKE_SSH_SLEEP=20
-  check "remote-check: stops at TF401019 without waiting" test $(($(date +%s) - rc_start)) -lt 10
+    "FAKE_SSH_ERR=$RC_TF" FAKE_SSH_SLEEP=60
+  check "remote-check: stops at TF401019 without waiting" test $(($(date +%s) - rc_start)) -lt 40
   check "remote-check: no answer within the limit" \
     rc_is rc17 git@ssh.dev.azure.com:v3/org/proj/r "${RC_AZ}reach\ttimeout\n" "$RC_SSH" \
     FAKE_SSH_SLEEP=20 REMOTE_CHECK_SECONDS=1
