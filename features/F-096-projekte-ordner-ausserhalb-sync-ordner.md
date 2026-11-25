@@ -59,11 +59,14 @@ liegt, damit meine Repos nicht vom Sync-Dienst beschädigt werden.
   Rückfrage durch.
   — belegt: Testgruppe install, Fälle `synced-no`, `synced-yes` und `ready` (lokaler
   Ordner ohne Rückfrage)
-- [ ] AC-4 — Gegeben eine bestehende Personal-Config, deren `CODING_KIT_PROJECTS_DIR` in
+- [x] AC-4 — Gegeben eine bestehende Personal-Config, deren `CODING_KIT_PROJECTS_DIR` in
   einem Sync-Ordner liegt, wenn der Installer läuft oder `/coding-kit:update-conventions
   global` (auch im Modus `status`), dann erscheint ein Hinweis mit Dienst und Ordner und
   dem Satz, dass nichts verschoben wird; die Config bleibt unverändert. Liegt der Ordner
   außerhalb oder fehlt der Schlüssel, erscheint kein Hinweis.
+  — belegt: Testgruppe install, Fälle `exists-synced` und `exists`; update-conventions
+  G1; `synced-folder --config` auf dem Windows-Rechner (`synced` im echten OneDrive,
+  `local` für die eigene Config, `none` für eine leere)
 - [ ] AC-5 — Gegeben ein Mac, wenn ein Pfad unter iCloud Drive
   (`~/Library/Mobile Documents`), unter `~/Library/CloudStorage/…` oder — bei
   eingeschaltetem „Schreibtisch & Dokumente“ — unter `~/Documents` bzw. `~/Desktop`
@@ -216,3 +219,20 @@ keine Dependency. Keine neue Config; die OneDrive-Variablen werden nur gelesen.
     als lokalen Pfad.
 - **Messung:** install 376 Checks in 975 s (zwei Jobs parallel), synced 54 Checks.
 - **Funde:** keine; das unabhängige Review fand nichts.
+
+### F-096b — fertig 2026-11-25
+
+- **Umgesetzt:** `/coding-kit:update-conventions` Teil G, G1 ruft `template-sync.sh
+  synced-folder --config <config>/coding-kit.env` auf; bei `synced` steht ein Hinweis
+  mit Dienst und Ordner im Bericht (auch im Modus `status`), samt dem Satz, dass das Kit
+  nichts verschiebt. CHANGELOG unter 3.8.4, README-Zeile des Skills.
+- **Entscheidungen:**
+  - Die Skill-Übersicht in `HOW-TO-CODE-WITH-CLAUDE.md` bleibt unverändert: Sie ist
+    Template-Inhalt und ginge in alle Projekte, für einen Hinweis ohne eigene Aktion.
+  - Der Hinweis erscheint in jedem Lauf von Teil G, nicht nur mit `global`, weil G1
+    dort immer läuft.
+- **Abweichung vom Plan:** Einen ganzen Lauf des Skills gab es nicht (die Session läuft
+  mit dem installierten Plugin); belegt ist der Befehl, den G1 aufruft, auf dem
+  Windows-Rechner mit dem echten OneDrive.
+- **Funde:** Das unabhängige Review fand, dass der Satz „nichts wird verschoben“ als
+  Anweisung an den Skill statt als Teil des Hinweises stand; behoben.

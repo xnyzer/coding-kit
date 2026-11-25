@@ -25,6 +25,9 @@ hier.
   Kleinschreibung. Der Installer schlägt jetzt `~/Coding-Projects` vor statt eines
   Ordners unter den Dokumenten, fragt vor einem Ordner in einem Sync-Ordner nach und
   weist bei einer bestehenden Personal-Config darauf hin.
+- **`/coding-kit:update-conventions global` (G1)** weist ebenso darauf hin, wenn der
+  Projekte-Ordner der Personal-Config in einem Sync-Ordner liegt, auch im Modus
+  `status`; er verschiebt nichts und schreibt nichts (F-096).
 
 ## 3.8.3 — unveröffentlicht
 

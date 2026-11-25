@@ -664,6 +664,15 @@ Basis noch Settings noch Startdatei. G7 und G8 laufen nur mit `global`.
   `key`-Zeilen zeigen, was gesetzt (`set`), bewusst leer (`empty`) oder noch nie
   festgelegt ist (`missing`). Die env-Datei nicht ausgeben, die `key`-Zeilen von
   `render-global` genügen — sie enthält auch Identitätswerte.
+- **Projekte-Ordner:** `sh <skript> synced-folder --config <config>/coding-kit.env`.
+  Meldet er `synced <dienst> <ordner>`, kommt ein Hinweis in den Bericht, auch im Modus
+  `status`: Der Projekte-Ordner (`CODING_KIT_PROJECTS_DIR`) liegt im Ordner von OneDrive
+  (`onedrive`) bzw. Dropbox (`dropbox`), `<ordner>` — der Sync kann Git-Repos dort mit
+  Konflikten und Sperren beschädigen. Sicherer ist ein Ordner außerhalb, etwa
+  `~/Coding-Projects`: die Projekte dorthin verschieben und den Wert in der
+  Personal-Config von Hand anpassen; das Kit verschiebt nichts. Der Satz, dass nichts
+  verschoben wird, gehört in den Hinweis. Der Skill schreibt deswegen auch nichts in die
+  Personal-Config. `local` und `none` → nichts melden.
 
 ### G2. Werte ergänzen
 
