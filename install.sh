@@ -9,8 +9,11 @@
 #   2. Adds the xnyzer marketplace and installs the coding-kit plugin.
 #   3. Creates the personal config ~/.claude/coding-kit.env — prefilled via gh api, or
 #      asked for without GitHub; host and commit addresses go through template-sync.sh
-#      set-global. On Windows the projects folder is stored as C:/…, and the report
-#      names the user profile instead of chmod 600.
+#      set-global. It proposes ~/Coding-Projects as projects folder and asks again
+#      before it takes one in the folder of a sync service (OneDrive, Dropbox;
+#      template-sync.sh synced-folder); an existing config only gets a hint when its
+#      folder lies in one. On Windows the projects folder is stored as C:/…, and the
+#      report names the user profile instead of chmod 600.
 #   4. Reports the kit's global rules; it never writes them or ~/.claude/CLAUDE.md —
 #      setting them up is /coding-kit:update-conventions global in a Claude session.
 #   5. Checks the base toolchain (mise, just, lefthook, gitleaks) outside any project
@@ -67,8 +70,9 @@ ask_yes_no() { # $1 question, $2 default (j/n)
 # ask_value QUESTION DEFAULT CHECK — asks until the answer (empty = DEFAULT) passes the
 # function CHECK, then leaves it in ANSWER. CHECK prints its reason when it rejects. At
 # the end of the input the default counts once; a rejected answer then aborts instead of
-# asking forever.
+# asking forever. ANSWER_AT_END tells the caller the input has ended.
 ANSWER=""
+ANSWER_AT_END=false
 ask_value() {
   local question="$1" default="$2" check="$3" line at_end
   while true; do
@@ -81,6 +85,7 @@ ask_value() {
     read -r line || at_end=true
     end_question
     ANSWER="${line:-$default}"
+    ANSWER_AT_END="$at_end"
     if "$check" "$ANSWER"; then
       return 0
     fi
@@ -126,17 +131,21 @@ env_quote() {
   printf '%s' "$1" | sed 's/[\\"$`]/\\&/g'
 }
 
-# ~/Documents when it exists; else the documents folder of the desktop (xdg-user-dir, e.g.
-# ~/Dokumente) when it exists and is not the home folder itself; else the home folder.
-default_projects_dir() {
-  local docs=""
-  if [ -d "$HOME/Documents" ]; then
-    docs="$HOME/Documents"
-  elif command -v xdg-user-dir >/dev/null 2>&1; then
-    docs="$(xdg-user-dir DOCUMENTS 2>/dev/null || true)"
-    if [ "$docs" = "$HOME" ] || [ ! -d "$docs" ]; then docs=""; fi
-  fi
-  printf '%s/Coding-Projects' "${docs:-$HOME}"
+# synced_folder ARG… — runs template-sync.sh synced-folder (a folder, or --config FILE)
+# and leaves the sync service in SYNC_NAME and its folder in SYNC_ROOT; both stay empty
+# when the folder is local or the check fails.
+synced_folder() {
+  local line state service root
+  SYNC_NAME="" SYNC_ROOT=""
+  line="$(sh "$TEMPLATE_SYNC" synced-folder "$@" 2>/dev/null)" || return 0
+  IFS=$'\t' read -r state service root <<< "$line"
+  [ "$state" = synced ] || return 0
+  case "$service" in
+    onedrive) SYNC_NAME=OneDrive ;;
+    dropbox) SYNC_NAME=Dropbox ;;
+    *) SYNC_NAME="$service" ;;
+  esac
+  SYNC_ROOT="$root"
 }
 
 # config_path PATH — the path as the personal config holds it: on Windows in the form
@@ -276,6 +285,12 @@ say "Personal-Config ($ENV_FILE)"
 
 if [ -f "$ENV_FILE" ]; then
   ok "existiert bereits — wird nicht angefasst (löschen und erneut ausführen zum Neuanlegen)"
+  synced_folder --config "$ENV_FILE"
+  if [ -n "$SYNC_NAME" ]; then
+    warn "der Projekte-Ordner (CODING_KIT_PROJECTS_DIR) liegt in $SYNC_NAME ($SYNC_ROOT):"
+    warn "der Sync kann Git-Repos dort mit Konflikten und Sperren beschädigen — ein Ordner"
+    warn "außerhalb ist sicherer. Das Kit verschiebt nichts."
+  fi
 else
   # Prefill what is resolvable at runtime; skills still prefer live resolution,
   # this file is the offline fallback plus the non-resolvable personal choices.
@@ -316,14 +331,25 @@ else
     [ "$ANSWER" != - ] || ANSWER=""
     EMAIL_ARGS+=("$HOST_KEY=$ANSWER")
   fi
-  ask_value "Projekte-Verzeichnis" "$(config_path "$(default_projects_dir)")" config_value
-  PROJECTS_DIR="$ANSWER"
-  # Inside quotes the shell never expands a leading ~.
-  case "$PROJECTS_DIR" in
-    "~") PROJECTS_DIR="$HOME" ;;
-    "~/"*) PROJECTS_DIR="$HOME/${PROJECTS_DIR#"~/"}" ;;
-  esac
-  PROJECTS_DIR="$(config_path "$PROJECTS_DIR")"
+  # A folder in the folder of a sync service only after a second yes: the sync can break
+  # the repos there with conflicts and locks.
+  while true; do
+    ask_value "Projekte-Verzeichnis" "$(config_path "$HOME/Coding-Projects")" config_value
+    PROJECTS_DIR="$ANSWER"
+    # Inside quotes the shell never expands a leading ~.
+    case "$PROJECTS_DIR" in
+      "~") PROJECTS_DIR="$HOME" ;;
+      "~/"*) PROJECTS_DIR="$HOME/${PROJECTS_DIR#"~/"}" ;;
+    esac
+    PROJECTS_DIR="$(config_path "$PROJECTS_DIR")"
+    synced_folder "$PROJECTS_DIR"
+    [ -n "$SYNC_NAME" ] || break
+    warn "$PROJECTS_DIR liegt in $SYNC_NAME ($SYNC_ROOT) — der Sync kann Git-Repos dort"
+    warn "mit Konflikten und Sperren beschädigen"
+    ask_yes_no "Trotzdem verwenden?" n && break
+    [ "$ANSWER_AT_END" = false ] ||
+      fail "Eingabe zu Ende, bevor ein Ordner feststand — erneut ausführen"
+  done
 
   # The keys only the installer writes go into a base file; set-global adds host and
   # addresses with the comments of the kit rules. The result moves into place with

@@ -2,7 +2,7 @@
 id: F-096
 title: Projekte-Ordner außerhalb synchronisierter Ordner vorschlagen
 type: feature
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-11-23
 done:
@@ -39,20 +39,26 @@ liegt, damit meine Repos nicht vom Sync-Dienst beschädigt werden.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben ein Rechner ohne Personal-Config, wenn der Installer nach dem
+- [x] AC-1 — Gegeben ein Rechner ohne Personal-Config, wenn der Installer nach dem
   Projekte-Ordner fragt, dann schlägt er auf jeder Plattform `~/Coding-Projects` vor
   (unter Windows in der Form `C:/…`) — auch wenn es `~/Documents` oder einen
   xdg-Dokumente-Ordner gibt.
-- [ ] AC-2 — Gegeben ein Pfad unter einem Sync-Ordner — OneDrive laut einer der
+  — belegt: Testgruppe install, Fälle `ready` (`~/Coding-Projects` trotz `Documents`)
+  und `win-config` (`X:/test-home/Coding-Projects`)
+- [x] AC-2 — Gegeben ein Pfad unter einem Sync-Ordner — OneDrive laut einer der
   Umgebungsvariablen `OneDrive`, `OneDriveConsumer`, `OneDriveCommercial`, oder
   `~/Dropbox` —, wenn `template-sync.sh synced-folder PFAD` ihn prüft, dann meldet es den
   Dienst und den Sync-Ordner; ein Pfad außerhalb, auch der Home-Ordner über dem
   Sync-Ordner, ergibt „nicht synchronisiert“. Pfade in den Formen `C:/…`, `C:\…` und
   `/c/…` gelten als gleich, Laufwerkspfade ohne Rücksicht auf Groß- und Kleinschreibung.
-- [ ] AC-3 — Gegeben eine Antwort des Installers, die in einem Sync-Ordner liegt, wenn er
+  — belegt: Testgruppe `synced`, 27 Fälle je Shell (drei Pfadformen, beliebige
+  Schreibweise, drei OneDrive-Variablen, Dropbox, Nachbarordner, Home-Ordner darüber)
+- [x] AC-3 — Gegeben eine Antwort des Installers, die in einem Sync-Ordner liegt, wenn er
   sie prüft, dann warnt er mit dem Dienst und fragt „Trotzdem verwenden?“ mit Vorgabe
   Nein; bei Nein fragt er den Ordner neu, bei Ja gilt er. Ein Ordner außerhalb geht ohne
   Rückfrage durch.
+  — belegt: Testgruppe install, Fälle `synced-no`, `synced-yes` und `ready` (lokaler
+  Ordner ohne Rückfrage)
 - [ ] AC-4 — Gegeben eine bestehende Personal-Config, deren `CODING_KIT_PROJECTS_DIR` in
   einem Sync-Ordner liegt, wenn der Installer läuft oder `/coding-kit:update-conventions
   global` (auch im Modus `status`), dann erscheint ein Hinweis mit Dienst und Ordner und
@@ -185,3 +191,28 @@ Fassung im Skill nicht testbar.
 
 **Erkennung (Standards und Module):** entfällt — keine neue Sprache, kein Framework,
 keine Dependency. Keine neue Config; die OneDrive-Variablen werden nur gelesen.
+
+## Verlauf
+
+### F-096a — fertig 2026-11-25
+
+- **Umgesetzt:** `template-sync.sh synced-folder PFAD` bzw. `--config DATEI` vergleicht
+  einen Pfad mit den Sync-Ordnern aus `OneDrive`, `OneDriveConsumer`,
+  `OneDriveCommercial` und `~/Dropbox` (nur wenn es ihn gibt), beide Seiten
+  vereinheitlicht (`sync_form`); Ausgabe `synced`, `local` oder `none`. `--config` liest
+  `CODING_KIT_PROJECTS_DIR` mit `load_env`, ohne die Datei auszuführen. `install.sh`
+  schlägt `~/Coding-Projects` vor (die Logik mit `~/Documents` und `xdg-user-dir`
+  entfällt), fragt vor einem Ordner in einem Sync-Ordner „Trotzdem verwenden?“ und
+  weist bei bestehender Config auf einen solchen Ordner hin. Neue Testgruppe `synced`,
+  neue Fälle in install, README, Version 3.8.4.
+- **Entscheidungen:** keine über die Spezifikation hinaus.
+- **Abweichung vom Plan:**
+  - Liegt schon die Vorgabe in einem Sync-Ordner (der Home-Ordner selbst in OneDrive)
+    und ist die Eingabe zu Ende, bricht der Installer ab, statt endlos neu zu fragen;
+    dafür meldet `ask_value` das Ende der Eingabe (`ANSWER_AT_END`).
+  - `--config` liest `~`, `$HOME` und `${HOME}` am Anfang als Home-Ordner, weil die
+    README die Config von Hand mit `$HOME` zeigt.
+  - Die Testpfade heißen `C:/Profiles/u/…`: Die Privacy-Prüfung meldet `/Users/<name>`
+    als lokalen Pfad.
+- **Messung:** install 376 Checks in 975 s (zwei Jobs parallel), synced 54 Checks.
+- **Funde:** keine; das unabhängige Review fand nichts.

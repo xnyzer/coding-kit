@@ -2,8 +2,8 @@
 # kit's install.sh with bash in an empty environment (env -i): a test HOME, the answers on
 # stdin, and a PATH of fake folders only — wrappers for the system tools the installer and
 # template-sync.sh call (sh is the shell of the pass), fakes for claude and uname, and per
-# case fakes for gh, brew, pacman with sudo, winget, scoop, mise or xdg-user-dir. A real
-# gh, brew, winget, scoop or mise of the machine never takes part. The fakes log their
+# case fakes for gh, brew, pacman with sudo, winget, scoop or mise. A real gh, brew,
+# winget, scoop or mise of the machine never takes part. The fakes log their
 # calls to $IN_LOG.
 
 IN=$ROOT/install.sh
@@ -87,7 +87,7 @@ run_install_cases() {
   fi
 
   # The folders on PATH: base (system tools, sh, claude, uname), gh, brew, pacman with
-  # sudo, winget, scoop, mise, the three tools mise installs, xdg-user-dir.
+  # sudo, winget, scoop, mise, the three tools mise installs.
   rm -rf "${TMP:?}/in"
   IN_BIN=$TMP/in/bin
   IN_GH=$TMP/in/gh-bin
@@ -97,9 +97,8 @@ run_install_cases() {
   IN_SCOOP=$TMP/in/scoop-bin
   IN_MISE=$TMP/in/mise-bin
   IN_TOOLS_BIN=$TMP/in/tools-bin
-  IN_XDG=$TMP/in/xdg-bin
   mkdir -p "$IN_BIN" "$IN_GH" "$IN_BREW" "$IN_PACMAN" "$IN_WINGET" "$IN_SCOOP" "$IN_MISE" \
-    "$IN_TOOLS_BIN" "$IN_XDG"
+    "$IN_TOOLS_BIN"
   for it_tool in $IN_TOOLS; do
     it_path=$(command -v "$it_tool") && wrap_tool "$it_path" "$IN_BIN/$it_tool"
   done
@@ -207,10 +206,6 @@ EOF
   for it_tool in just lefthook gitleaks; do
     printf '%s\n' '#!/bin/sh' | in_fake "$IN_TOOLS_BIN/$it_tool"
   done
-  in_fake "$IN_XDG/xdg-user-dir" <<'EOF'
-#!/bin/sh
-printf '%s\n' "$IN_XDG_DIR"
-EOF
   in_noreply=42+octo@users.noreply.github.com
 
   # gh ready, end of input at once: the defaults — GitHub prefill, host github.
@@ -227,8 +222,8 @@ EOF
   check "install: gh ready writes host github" in_value ready DEFAULT_HOST github
   check "install: gh ready writes the noreply address" in_value ready EMAIL_GITHUB "$in_noreply"
   check "install: gh ready asks no other address" in_value ready EMAIL_AZURE "(unset)"
-  check "install: default projects folder below Documents" \
-    in_value ready PROJECTS_DIR "$TMP/in/ready/test-home/Documents/Coding-Projects"
+  check "install: the projects folder in the home folder, even with Documents" \
+    in_value ready PROJECTS_DIR "$TMP/in/ready/test-home/Coding-Projects"
   check "install: off Windows the config is reported as chmod 600" \
     in_says ready "angelegt (chmod 600)"
   # Input from a file echoes no Enter: each question ends its own line.
@@ -403,29 +398,69 @@ EOF
   refute "install: with a config no login is offered" in_says exists "gh auth login"
   refute "install: with a config no question about GitHub" in_says exists "Ohne GitHub"
 
-  # The projects folder without ~/Documents: the documents folder of the desktop, unless
-  # it is the home folder itself or missing; else the home folder.
-  in_new xdg
-  mkdir "$IN_HOME/Dokumente"
-  in_input xdg j
-  in_run xdg PATH="$IN_XDG:$IN_BIN" IN_XDG_DIR="$IN_HOME/Dokumente"
-  check "install: projects folder in the desktop's documents folder" \
-    in_value xdg PROJECTS_DIR "$TMP/in/xdg/test-home/Dokumente/Coding-Projects"
-  in_new xdg-home
-  in_input xdg-home j
-  in_run xdg-home PATH="$IN_XDG:$IN_BIN" IN_XDG_DIR="$IN_HOME"
-  check "install: documents folder = home, projects folder in the home folder" \
-    in_value xdg-home PROJECTS_DIR "$TMP/in/xdg-home/test-home/Coding-Projects"
-  in_new xdg-missing
-  in_input xdg-missing j
-  in_run xdg-missing PATH="$IN_XDG:$IN_BIN" IN_XDG_DIR="$IN_HOME/Gone"
-  check "install: a missing documents folder counts as none" \
-    in_value xdg-missing PROJECTS_DIR "$TMP/in/xdg-missing/test-home/Coding-Projects"
-  in_new no-docs
-  in_input no-docs j
-  in_run no-docs
-  check "install: no documents folder, projects folder in the home folder" \
-    in_value no-docs PROJECTS_DIR "$TMP/in/no-docs/test-home/Coding-Projects"
+  # A folder in the folder of a sync service only after a second yes (OneDrive by its
+  # variable, here a folder of the case). No: the folder is asked again.
+  in_new synced-no
+  in_od=$TMP/in/synced-no/OneDrive
+  mkdir "$in_od"
+  in_input synced-no j '' '' '' "$in_od/p" n "$TMP/in/synced-no/q"
+  in_run synced-no OneDrive="$in_od"
+  check "install: a synced folder, no, another one runs through" in_status synced-no 0
+  check "install: a synced folder is named with its service" \
+    in_says synced-no "$in_od/p liegt in OneDrive ($in_od)"
+  check "install: a synced folder needs a second yes" in_says synced-no "Trotzdem verwenden? [j/N]"
+  check "install: after no the folder asked again is written" \
+    in_value synced-no PROJECTS_DIR "$TMP/in/synced-no/q"
+  in_new synced-yes
+  in_od=$TMP/in/synced-yes/OneDrive
+  mkdir "$in_od"
+  in_input synced-yes j '' '' '' "$in_od/p" j
+  in_run synced-yes OneDrive="$in_od"
+  check "install: a synced folder, yes, runs through" in_status synced-yes 0
+  check "install: after yes the synced folder is written" \
+    in_value synced-yes PROJECTS_DIR "$in_od/p"
+  refute "install: a local folder needs no second yes" in_says ready "Trotzdem verwenden?"
+  # The input ends after the synced folder: no counts, the default comes, and it is local.
+  in_new synced-eof
+  in_od=$TMP/in/synced-eof/OneDrive
+  mkdir "$in_od"
+  in_input synced-eof j '' '' '' "$in_od/p"
+  in_run synced-eof OneDrive="$in_od"
+  check "install: a synced folder at the end of input runs through" in_status synced-eof 0
+  check "install: at the end of input the default is written" \
+    in_value synced-eof PROJECTS_DIR "$TMP/in/synced-eof/test-home/Coding-Projects"
+  # The home folder itself in OneDrive: the default is synced too, so the end of input
+  # aborts instead of asking forever.
+  in_new synced-home
+  in_input synced-home j
+  in_run synced-home OneDrive="$TMP/in/synced-home/test-home"
+  check "install: a synced default at the end of input aborts" in_status synced-home 1
+  check "install: the abort names the end of input" in_says synced-home "Eingabe zu Ende"
+  refute "install: the abort writes no config" in_has_env synced-home
+  # Dropbox in the home folder: a folder there is synced too.
+  in_new dropbox
+  mkdir "$IN_HOME/Dropbox"
+  in_input dropbox j '' '' '' '~/Dropbox/p' n
+  in_run dropbox
+  check "install: a folder in ~/Dropbox is named with Dropbox" \
+    in_says dropbox "liegt in Dropbox ($TMP/in/dropbox/test-home/Dropbox)"
+  check "install: after no in Dropbox the default is written" \
+    in_value dropbox PROJECTS_DIR "$TMP/in/dropbox/test-home/Coding-Projects"
+
+  # An existing config with its projects folder in a sync folder: a hint, nothing changed.
+  in_new exists-synced
+  mkdir -p "$IN_HOME/.claude" "$IN_HOME/OneDrive"
+  printf '%s\n' 'CODING_KIT_PROJECTS_DIR="$HOME/OneDrive/Projects"' \
+    > "$IN_HOME/.claude/coding-kit.env"
+  cksum < "$IN_HOME/.claude/coding-kit.env" > "$TMP/in/exists-synced.before"
+  in_run exists-synced OneDrive="$IN_HOME/OneDrive"
+  check "install: an existing synced config runs through" in_status exists-synced 0
+  check "install: an existing synced config gets a hint" \
+    in_says exists-synced "liegt in OneDrive ($IN_HOME/OneDrive)"
+  check "install: the hint says nothing is moved" in_says exists-synced "Das Kit verschiebt nichts"
+  check "install: an existing synced config stays as it is" \
+    [ "$(cksum < "$IN_HOME/.claude/coding-kit.env")" = "$(cat "$TMP/in/exists-synced.before")" ]
+  refute "install: an existing local config gets no hint" in_says exists "liegt in"
 
   # --- toolchain (step 5); an existing config, so only step 5 asks ---
 

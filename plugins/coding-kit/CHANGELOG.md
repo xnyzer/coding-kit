@@ -15,6 +15,17 @@ hier.
   Template-Reihe und lesen nur „project-template bis 0.16.0"; Aufgaben-Nummern des
   Templates heißen dort `TPL-NNN`.
 
+## 3.8.4 — unveröffentlicht
+
+- **`template-sync.sh synced-folder`** (neu, F-096): meldet, ob ein Ordner — oder mit
+  `--config` der Projekte-Ordner der Personal-Config — im Ordner eines Sync-Dienstes
+  liegt: OneDrive über die Variablen `OneDrive`, `OneDriveConsumer` und
+  `OneDriveCommercial`, Dropbox über `~/Dropbox`. Die Pfadformen `C:/…`, `C:\…` und
+  `/c/…` gelten als gleich, Laufwerkspfade ohne Rücksicht auf Groß- und
+  Kleinschreibung. Der Installer schlägt jetzt `~/Coding-Projects` vor statt eines
+  Ordners unter den Dokumenten, fragt vor einem Ordner in einem Sync-Ordner nach und
+  weist bei einer bestehenden Personal-Config darauf hin.
+
 ## 3.8.3 — unveröffentlicht
 
 - **`template-sync.sh set-mise-path`** (neu, F-097): trägt unter Windows den Shim-Ordner

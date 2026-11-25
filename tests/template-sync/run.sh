@@ -31,7 +31,7 @@ set -u
 # The groups in the order their jobs start, the longest first, so that no lane runs alone
 # at the end: tests/template-sync/NAME.sh defines run_NAME_cases, with - in NAME as _.
 ALL_GROUPS='install sync zones render detect global host mise features privacy hook
-settings migrate lock selection runner publish-release license release-notes'
+settings migrate lock selection runner synced publish-release license release-notes'
 
 plan=no
 if [ "${1:-}" = --plan ]; then

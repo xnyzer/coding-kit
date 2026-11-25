@@ -213,6 +213,15 @@
 #       personal config ENV (read, never executed). Line: default-host <host>
 #       <config|none|invalid> [value]; without the key github (none), a value that is no
 #       name of HOSTS gives github with invalid and the value.
+#   synced-folder PATH | synced-folder --config ENV
+#       Whether the folder PATH — or the projects folder CODING_KIT_PROJECTS_DIR of the
+#       personal config ENV (read, never executed; a leading ~, $HOME or ${HOME} counts
+#       as HOME) — lies in the folder of a sync service: OneDrive by the variables
+#       OneDrive, OneDriveConsumer and OneDriveCommercial, Dropbox by $HOME/Dropbox when
+#       it exists. Both sides are compared in one form: \ as /, a leading /x/ (Git Bash)
+#       as X:/, no / at the end, a drive path in any case. Line: synced <onedrive|dropbox>
+#       <sync folder as given>, local, or none (ENV without the key). Writes nothing.
+#       Refused: an empty PATH, a tab or line break in it.
 #   mise-check
 #       Whether the tools a project pins with mise reach this shell. Terminals, VS Code
 #       and Claude Code take their PATH from an interactive shell, so the activation line
@@ -306,6 +315,7 @@ SNAPSHOT_OPT=
 INDEX_OPT=
 SECTIONS_OPT=Intake,Plan,History
 RENAME_LEGACY=0
+CONFIG_OPT=
 CHANGED=0
 SEEDS=0
 
@@ -335,6 +345,7 @@ usage: sh template-sync.sh render [--seeds] TEMPLATE ANSWERS OUT
        sh template-sync.sh remote-check URL
        sh template-sync.sh commit-email [--answers FILE] ENV PROJECT
        sh template-sync.sh default-host ENV
+       sh template-sync.sh synced-folder PATH | --config ENV
        sh template-sync.sh mise-check
        sh template-sync.sh set-mise RC OUT
        sh template-sync.sh set-mise-path
@@ -989,6 +1000,7 @@ parse_opts() {  # COMMAND ARGS…
       --snapshot) po_for='status changed merge snapshot zones' po_n=2 ;;
       --index | --sections) po_for=migrate po_n=2 ;;
       --rename-legacy) po_for=set-global po_n=1 ;;
+      --config) po_for=synced-folder po_n=2 ;;
       --*)
         printf 'template-sync: unknown option %s\n' "$1" >&2
         usage
@@ -1025,6 +1037,7 @@ parse_opts() {  # COMMAND ARGS…
         ;;
       --sections) SECTIONS_OPT=$2 ;;
       --rename-legacy) RENAME_LEGACY=1 ;;
+      --config) CONFIG_OPT=$2 ;;
     esac
     shift "$po_n"
     OPTS_SHIFT=$((OPTS_SHIFT + po_n))
@@ -3784,6 +3797,77 @@ default_host() {
   fi
 }
 
+# --- synced-folder: does a folder lie in the folder of a sync service? -------------
+
+# PATH in the form both sides of the comparison take: \ as /, a leading /x/ of Git Bash
+# as X:/, no / at the end; a drive path in lower case, as Windows ignores case there.
+sync_form() {  # PATH
+  printf '%s\n' "$1" | awk '{
+    gsub(/\\/, "/")
+    if ($0 ~ /^\/[A-Za-z](\/|$)/) $0 = substr($0, 2, 1) ":" substr($0, 3)
+    while (length($0) > 1 && $0 ~ /\/$/ && $0 !~ /^[A-Za-z]:\/$/) $0 = substr($0, 1, length($0) - 1)
+    if ($0 ~ /^[A-Za-z]:/) $0 = tolower($0)
+    print
+  }'
+}
+
+# Sets SF_HIT to "SERVICE<tab>ROOT" when $SF_WANT lies in ROOT and nothing matched before.
+# An empty ROOT, or one with a tab or line break, counts as no sync folder.
+sync_check() {  # SERVICE ROOT
+  [ -z "$SF_HIT" ] || return 0
+  case $2 in
+    '' | *"$TAB"* | *'
+'*) return 0 ;;
+  esac
+  sc_root=$(sync_form "$2")
+  case $SF_WANT in
+    "$sc_root" | "$sc_root"/*) SF_HIT="$1$TAB$2" ;;
+  esac
+}
+
+synced_folder() {
+  if [ -n "$CONFIG_OPT" ]; then
+    [ $# -eq 0 ] || usage
+    setup_work
+    : > "$WORK/env.tsv"
+    if [ -f "$CONFIG_OPT" ]; then
+      load_env "$CONFIG_OPT" > "$WORK/env.tsv" || die "personal config is invalid: $CONFIG_OPT"
+    fi
+    if ! sf_path=$(env_value PROJECTS_DIR) || [ -z "$sf_path" ]; then
+      echo none
+      return 0
+    fi
+  else
+    [ $# -eq 1 ] && [ -n "$1" ] || usage
+    sf_path=$1
+  fi
+  case $sf_path in
+    *"$TAB"* | *'
+'*) die "the path holds a tab or line break" ;;
+  esac
+  # A hand-written config may start with ~ or $HOME, which the shell expands there.
+  sf_home=${HOME:-}
+  case $sf_path in
+    '~' | '$HOME' | '${HOME}') sf_path=$sf_home ;;
+    '~/'*) sf_path=$sf_home/${sf_path#'~/'} ;;
+    '$HOME/'*) sf_path=$sf_home/${sf_path#'$HOME/'} ;;
+    '${HOME}/'*) sf_path=$sf_home/${sf_path#'${HOME}/'} ;;
+  esac
+  SF_WANT=$(sync_form "$sf_path")
+  SF_HIT=
+  sync_check onedrive "${OneDrive:-}"
+  sync_check onedrive "${OneDriveConsumer:-}"
+  sync_check onedrive "${OneDriveCommercial:-}"
+  if [ -n "$sf_home" ] && [ -d "$sf_home/Dropbox" ]; then
+    sync_check dropbox "$sf_home/Dropbox"
+  fi
+  if [ -n "$SF_HIT" ]; then
+    printf 'synced\t%s\n' "$SF_HIT"
+  else
+    echo local
+  fi
+}
+
 # Before the keys per host the personal config had one address, always GitHub's.
 LEGACY_EMAIL_KEY=GIT_NOREPLY_EMAIL
 
@@ -4256,6 +4340,7 @@ case $cmd in
   remote-check) remote_check "$@" ;;
   commit-email) commit_email "$@" ;;
   default-host) default_host "$@" ;;
+  synced-folder) synced_folder "$@" ;;
   mise-check) mise_check "$@" ;;
   set-mise-path) set_mise_path "$@" ;;
   set-mise) set_mise "$@" ;;

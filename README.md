@@ -49,8 +49,12 @@ git clone https://github.com/xnyzer/coding-kit.git && cd coding-kit && ./install
 > soll (Standard: Nein — dann bricht er ab, bevor er etwas einrichtet). Ohne GitHub ruft
 > er `gh` nicht mehr auf und fragt Autorname, Host (`git` oder `azure`), Commit-Adresse
 > und Projekte-Verzeichnis ab; Name und Adresse schlägt er aus `git config --global` vor
-> (`-` statt einer Adresse heißt: beim Commit fragen).
-> Gibt es die Personal-Config schon, fasst er sie nicht an und meldet `gh` nur. Und ihn
+> (`-` statt einer Adresse heißt: beim Commit fragen). Als Projekte-Verzeichnis schlägt er
+> `~/Coding-Projects` vor; liegt die Antwort im Ordner eines Sync-Dienstes (OneDrive,
+> Dropbox), warnt er und fragt nach, denn der Sync kann Git-Repos dort mit Konflikten und
+> Sperren beschädigen.
+> Gibt es die Personal-Config schon, fasst er sie nicht an, meldet `gh` nur und weist
+> darauf hin, wenn ihr Projekte-Verzeichnis in einem Sync-Ordner liegt. Und ihn
 > in einer **Shell** starten, nicht per Doppelklick: bei einem Abbruch schließt sich das
 > per Dateizuordnung geöffnete Fenster mitsamt der Fehlermeldung. Ausnahme Windows: per
 > Doppelklick in der Git Bash gestartet, wartet er am Ende — fertig oder abgebrochen —
@@ -83,12 +87,14 @@ cat > ~/.claude/coding-kit.env <<EOF
 CODING_KIT_GITHUB_LOGIN="$(gh api user --jq .login)"
 CODING_KIT_GIT_AUTHOR_NAME="$(gh api user --jq '.name // .login')"
 CODING_KIT_EMAIL_GITHUB="$(gh api user --jq .id)+$(gh api user --jq .login)@users.noreply.github.com"
-CODING_KIT_PROJECTS_DIR="$HOME/Documents/Coding-Projects"
+CODING_KIT_PROJECTS_DIR="$HOME/Coding-Projects"
 EOF
 chmod 600 ~/.claude/coding-kit.env
 ```
 
-Projekte-Verzeichnis vorher prüfen und ggf. anpassen. Schlüssel-Referenz:
+Projekte-Verzeichnis vorher prüfen und ggf. anpassen — nicht in einen Ordner, den
+OneDrive, iCloud oder Dropbox synchronisiert (unter Windows liegt der Dokumente-Ordner oft
+in OneDrive, auf dem Mac mit „Schreibtisch & Dokumente“ in iCloud). Schlüssel-Referenz:
 [Personal-Config](#personal-config).
 
 **3. Globale Kit-Regeln** — optional: Das Kit funktioniert ohne. Sie setzen die
@@ -182,7 +188,7 @@ beantworten. Er erledigt dann die Schritte unten. Von Hand geht es so:
    CODING_KIT_GIT_AUTHOR_NAME="Vorname Nachname"
    CODING_KIT_DEFAULT_HOST="git"
    CODING_KIT_EMAIL_GIT="adresse@example.org"
-   CODING_KIT_PROJECTS_DIR="$HOME/Documents/Coding-Projects"
+   CODING_KIT_PROJECTS_DIR="$HOME/Coding-Projects"
    EOF
    chmod 600 ~/.claude/coding-kit.env
    ```
