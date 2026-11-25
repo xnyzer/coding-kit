@@ -12,9 +12,49 @@
 # accepts more than either). Prints failures only, then a summary that names the shells
 # and awks tested and the checks skipped where the file system has no file modes.
 #
-#   sh tests/template-sync/run.sh
+# The cases come in groups, one file per group (ALL_GROUPS below). Without arguments all
+# groups run; with arguments only the named ones, in the order of ALL_GROUPS.
+# scripts/script-tests.sh picks the groups a change touches.
+#
+#   sh tests/template-sync/run.sh                 all groups
+#   sh tests/template-sync/run.sh install hook    only these groups
 
 set -u
+
+# The groups in the order they run: tests/template-sync/NAME.sh defines run_NAME_cases,
+# with - in NAME as _.
+ALL_GROUPS='render sync zones global hook lock detect features license privacy migrate
+settings host mise release-notes publish-release install selection'
+
+# The groups to run, in the order of ALL_GROUPS: all of them, or those named as arguments.
+# An argument that names no group stops the run before any test.
+selected=
+for group in $ALL_GROUPS; do
+  if [ $# -eq 0 ]; then
+    selected="$selected $group"
+    continue
+  fi
+  for arg in "$@"; do
+    if [ "$arg" = "$group" ]; then
+      selected="$selected $group"
+      break
+    fi
+  done
+done
+for arg in "$@"; do
+  known=no
+  for group in $ALL_GROUPS; do
+    if [ "$arg" = "$group" ]; then known=yes; fi
+  done
+  if [ "$known" = no ]; then
+    printf 'unknown group: %s\n' "$arg" >&2
+    printf 'usage: sh tests/template-sync/run.sh [GROUP…]\n' >&2
+    # $ALL_GROUPS unquoted: one line, the names separated by spaces.
+    printf 'groups: %s\n' "$(echo $ALL_GROUPS)" >&2
+    exit 2
+  fi
+done
+partial=$#
 
 # The cases build git repositories of their own. In a pre-commit hook git exports the
 # index and directory of the kit repo, which would point their git calls there.
@@ -260,24 +300,13 @@ same_but_first_line() {  # RENDERED SOURCE
 
 # --- cases (one file per command group, sourced) --------------------------------
 
+# All group files, also those not selected: groups share helpers (most use the fixture
+# helpers of sync.sh; global those of zones.sh, hook those of global.sh, install the
+# stand-ins of mise.sh). scripts/script-tests.sh runs these groups along.
 HERE=$(cd "$(dirname "$0")" && pwd)
-. "$HERE/render.sh"
-. "$HERE/sync.sh"
-. "$HERE/zones.sh"
-. "$HERE/global.sh"
-. "$HERE/hook.sh"
-. "$HERE/lock.sh"
-. "$HERE/detect.sh"
-. "$HERE/features.sh"
-. "$HERE/license.sh"
-. "$HERE/privacy.sh"
-. "$HERE/migrate.sh"
-. "$HERE/settings.sh"
-. "$HERE/host.sh"
-. "$HERE/mise.sh"
-. "$HERE/release-notes.sh"
-. "$HERE/publish-release.sh"
-. "$HERE/install.sh"
+for group in $ALL_GROUPS; do
+  . "$HERE/$group.sh"
+done
 
 # --- main -----------------------------------------------------------------------
 
@@ -290,27 +319,13 @@ if [ -z "$shells" ]; then
   exit 1
 fi
 
-# All cases with $SH, their files below DIR.
+# The cases of the selected groups with $SH, their files below DIR.
 run_cases() {  # DIR
   TMP=$1
   mkdir -p "$TMP"
-  run_render_cases
-  run_sync_cases
-  run_zones_cases
-  run_global_cases
-  run_hook_cases
-  run_lock_cases
-  run_detect_cases
-  run_features_cases
-  run_license_cases
-  run_privacy_cases
-  run_migrate_cases
-  run_settings_cases
-  run_host_cases
-  run_mise_cases
-  run_release_notes_cases
-  run_publish_release_cases
-  run_install_cases
+  for rc_group in $selected; do
+    "run_$(printf '%s' "$rc_group" | tr - _)_cases"
+  done
 }
 
 # The awk implementation behind COMMAND: mawk or gawk by their -W version line, "other"
@@ -356,6 +371,7 @@ for extra in mawk gawk; do
 done
 
 summary="shells:$shells; awk: $awks"
+if [ "$partial" -gt 0 ]; then summary="groups:$selected; $summary"; fi
 if [ -n "$not_installed" ]; then summary="$summary; not installed:$not_installed"; fi
 if [ "$skipped" -gt 0 ]; then summary="$summary; $skipped skipped (no file modes)"; fi
 printf 'template-sync tests: %d checks, %d failed (%s)\n' "$checks" "$failures" "$summary"

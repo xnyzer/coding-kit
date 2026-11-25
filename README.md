@@ -554,7 +554,7 @@ docs/                             Pflege-Doku (Skill-Authoring, Renovate-Preset,
 install.sh                        Neuer-Rechner-Bootstrap (idempotent)
 scripts/validate.py               Validator für Kit, Template und Vertrag (`just check` + CI)
 scripts/version-rule.py           Versionsregel (Pre-Commit + CI, `just version-rule`)
-scripts/script-tests.sh           Skript-Tests nur bei passenden Änderungen (`just check` + Pre-Commit)
+scripts/script-tests.sh           Skript-Tests nur für die geänderten Gruppen (`just check` + Pre-Commit)
 scripts/release-notes.sh          Text eines GitHub-Releases aus dem CHANGELOG (`just release-notes`)
 scripts/publish-release.sh        GitHub-Release zu einem Tag anlegen (Workflow `.github/workflows/release.yml`, `just publish-release`)
 tests/template-sync/              Tests des Skripts, des Session-Hinweises, der Template-Skripte (Feature-Index, Lizenzprüfung) und der Release-Skripte (`release-notes.sh`, `publish-release.sh`) unter dash und bash, dazu mawk/gawk (`just test`)
@@ -581,8 +581,11 @@ private/                          Gitignoriert — private Notizen/Quellen
   Session im Repo läuft mit dem installierten Plugin, nicht mit dem Arbeitsstand.
 - `just setup` installiert die Git-Hooks (gitleaks, Validator, Versionsregel, die
   Skript-Tests). `just check` muss vor jedem Commit grün sein. Hook und `just check`
-  lassen die Skript-Tests nur laufen, wenn eine Änderung Skripte, Hooks, globale Regeln,
-  Template oder Tests betrifft — die Pfadliste steht in `scripts/script-tests.sh`.
+  lassen nur die Gruppen der Skript-Tests laufen, die eine Änderung betrifft — etwa nur
+  die Installer-Fälle, wenn sich allein `install.sh` ändert; Änderungen an
+  `template-sync.sh`, Template, globalen Regeln oder der Test-Harness lassen alle laufen.
+  Die Zuordnung steht in `scripts/script-tests.sh`, `--list` zeigt die Auswahl;
+  `sh tests/template-sync/run.sh GRUPPE…` startet einzelne Gruppen von Hand.
   `just check-all` prüft immer alles und ist das Gate der CI.
 - Für Arbeit an `template-sync.sh` mawk installieren (`brew install mawk`), optional
   gawk: Die Skript-Tests laufen dann zusätzlich mit ihnen. mawk ist das Standard-awk auf

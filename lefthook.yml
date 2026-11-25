@@ -5,9 +5,9 @@ pre-commit:
       run: gitleaks git --pre-commit --staged --redact
     - name: validate
       run: just validate
-    # The script tests take a few minutes; scripts/script-tests.sh runs them when a
-    # staged change touches what they test (its path list is the only one). CI runs
-    # them always (`just check-all`).
+    # The script tests take a few minutes; scripts/script-tests.sh runs only the test
+    # groups a staged change touches (its table is the only place that decides this).
+    # CI runs all groups always (`just check-all`).
     - name: script-tests
       run: sh scripts/script-tests.sh --staged
     - name: features-index

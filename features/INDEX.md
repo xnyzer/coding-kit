@@ -116,7 +116,7 @@ Stand 2026-11-24.
 | [F-092](F-092-projekt-mit-template-vergleichen.md) | Projekt jederzeit vollständig mit dem aktuellen Template vergleichen | BACKLOG |  |
 | [F-093](F-093-ssh-remotes-im-privacy-lint-erlauben.md) | Privacy-Lint erlaubt SSH-Remotes öffentlicher Git-Hosts | BACKLOG |  |
 | [F-096](F-096-projekte-ordner-ausserhalb-sync-ordner.md) | Projekte-Ordner außerhalb synchronisierter Ordner vorschlagen | BACKLOG |  |
-| [F-098](F-098-skript-tests-gruppen-parallel.md) | Skript-Tests nach Gruppen auswählen und parallel ausführen | PLANNED |  |
+| [F-098](F-098-skript-tests-gruppen-parallel.md) | Skript-Tests nach Gruppen auswählen und parallel ausführen | IN-PROGRESS |  |
 
 ### Closed
 

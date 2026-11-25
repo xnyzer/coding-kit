@@ -118,8 +118,8 @@ Details: `README.md`.
   `git config user.email` prüfen, ggf. via `gh api user` auflösen.
   **Nie automatisch committen — erst fragen.**
 - `just check` muss vor jedem Commit grün sein; der Pre-Commit-Hook prüft zusätzlich
-  gitleaks und die Versionsregel (`just setup` installiert die Hooks). Beide lassen die
-  Skript-Tests nur laufen, wenn eine Änderung sie betrifft (Pfadliste in
+  gitleaks und die Versionsregel (`just setup` installiert die Hooks). Beide lassen von
+  den Skript-Tests nur die Gruppen laufen, die eine Änderung betrifft (Zuordnung in
   `scripts/script-tests.sh`); `just check-all` prüft alles und läuft in der CI.
 - **Release:** Jede Version ab 1.0.0 erscheint als annotierter Git-Tag `vX.Y.Z` und als
   GitHub-Release mit ihrem CHANGELOG-Abschnitt; die eingefrorenen Reihen bekommen keine

@@ -30,8 +30,8 @@ validate:
 test:
     sh tests/template-sync/run.sh
 
-# The script tests only when a change since the last commit touches them; the path list
-# lives in scripts/script-tests.sh
+# Which file touches which test group lives in scripts/script-tests.sh.
+# Script tests of the groups a change since the last commit touches
 test-changed:
     sh scripts/script-tests.sh
 

@@ -2,7 +2,7 @@
 id: F-098
 title: Skript-Tests nach Gruppen auswählen und parallel ausführen
 type: change
-status: PLANNED
+status: IN-PROGRESS
 size: M
 created: 2026-11-24
 done:
@@ -64,15 +64,19 @@ Windows) auf, beide `DONE`.
 
 ### Abnahmekriterien
 
-- [ ] AC-1 — Gegeben eine Änderung nur an Dateien, die die Zuordnung in
+- [x] AC-1 — Gegeben eine Änderung nur an Dateien, die die Zuordnung in
   `scripts/script-tests.sh` bestimmten Gruppen zuweist (etwa `install.sh` → install,
   `tests/template-sync/mise.sh` → mise), wenn `just check` oder der Pre-Commit-Hook die
   Skript-Tests startet, dann laufen nur diese Gruppen, und die Meldung nennt sie; eine
   Änderung, die keine Gruppe betrifft (etwa nur Doku), überspringt die Tests wie heute.
-- [ ] AC-2 — Gegeben eine Änderung an einer gemeinsam genutzten Datei
+  — belegt: Testgruppe `selection` (Fälle doc, inst, test, stand-ins, zones, notes,
+  lock, new, staged); der Pre-Commit-Hook ruft `scripts/script-tests.sh --staged` auf
+- [x] AC-2 — Gegeben eine Änderung an einer gemeinsam genutzten Datei
   (`template-sync.sh`, `tests/template-sync/run.sh`, `justfile`,
   `scripts/script-tests.sh`) oder an einem Pfad, der die Tests betrifft, aber keiner
   Gruppe eindeutig zugeordnet ist, wenn die Tests starten, dann laufen alle Gruppen.
+  — belegt: Testgruppe `selection` (Fälle core, fixtures, runner, self, empty);
+  `--list` im Arbeitsstand ergibt `all`
 - [ ] AC-3 — Gegeben ein Rechner mit N Kernen, wenn die Tests laufen, dann laufen
   höchstens N−1 Jobs gleichzeitig (mindestens einer); ein Job ist eine Gruppe unter einer
   Shell bzw. einem zusätzlichen awk. `TEST_JOBS` setzt die Zahl anders; ein Wert, der
@@ -215,3 +219,35 @@ Keine Version und kein CHANGELOG-Eintrag (kein Plugin-Inhalt).
 
 **Hinweis:** AC-7 verlangt eine Messung auf dem Mac; ohne sie bleibt F-098 nach dem Bau
 `IN-PROGRESS`.
+
+## Verlauf
+
+### F-098a — fertig 2026-11-25
+
+- **Umgesetzt:** `tests/template-sync/run.sh` führt die Gruppen aus einer Liste
+  (`ALL_GROUPS`) und nimmt Gruppen als Argumente; ein Argument, das keine Gruppe nennt,
+  bricht vor dem ersten Test mit Exit 2 ab, und die Zusammenfassung nennt bei einer
+  Auswahl die Gruppen. `scripts/script-tests.sh` ordnet in `groups_for` jede geänderte
+  Datei Gruppen oder „alle“ zu und übergibt die Vereinigung, jede Gruppe einmal;
+  `--list` gibt die Auswahl aus, ohne zu testen. Neue Testgruppe `selection` mit
+  kleinen Temp-Repos je Fall. Doku in CLAUDE.md und README, Kommentare in `justfile` und
+  `lefthook.yml`.
+- **Entscheidungen:** `run.sh` lädt weiter alle Gruppendateien und führt nur die
+  gewählten aus, weil die Gruppen Helfer teilen. Eine Testdatei, deren Helfer andere
+  Gruppen aufrufen, startet diese mit: `sync.sh` alle, `zones.sh` zones und global,
+  `global.sh` global und hook, `mise.sh` mise und install. Ebenso startet
+  `release-notes.sh` publish-release mit (das ruft es auf), und `mise.lock` startet
+  privacy (ein Fall prüft sie).
+- **Messung (Windows, jede Gruppe allein):** alle 18 Gruppen grün, zusammen 3012 Checks
+  wie im Gesamtlauf. install 1071 s, sync 789 s, zones 603 s, render 571 s, detect
+  333 s, global 306 s, host 285 s, mise 159 s, features 143 s, privacy 141 s, hook
+  108 s, settings 104 s, migrate 65 s, lock 51 s, selection 34 s, publish-release 30 s,
+  license 25 s, release-notes 11 s; Summe 4829 s, der Gesamtlauf rund 72 min. Eine
+  Änderung nur an `install.sh` braucht damit knapp ein Viertel des Gesamtlaufs
+  (1071 s gegen rund 1080 s); der Beleg im Hook folgt mit dem ersten solchen Commit.
+- **Abweichung vom Plan:** Die Zuordnung ist feiner als geplant. Das unabhängige Review
+  fand Gruppen, die Helfer anderer Testdateien nutzen (siehe Entscheidungen); `mise.sh`
+  startet settings nicht mehr mit, weil die Gruppe es nicht nutzt. Der Kommentar in
+  `lefthook.yml` beschrieb noch „alles oder nichts“ und ist angepasst.
+- **Funde:** Unter Windows schreibt der memory-dir-Fall in `settings.sh` „fatal: cannot
+  change to …“ auf stderr, ohne zu scheitern (bekannt aus F-067c); keine neue Aufgabe.
